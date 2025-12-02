@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Testing
+coverage/
+
+# Configuration
+*.config.js
+next-env.d.ts
+
+# Misc
+public/
+

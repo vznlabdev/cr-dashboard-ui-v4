@@ -1,0 +1,62 @@
+# Docker Compose for Creation Rights Dashboard
+# For local development and deployment
+
+version: '3.8'
+
+services:
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cr-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      # API Configuration
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+      
+      # Authentication
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      
+      # Feature Flags
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=${NEXT_PUBLIC_ENABLE_ANALYTICS:-false}
+      - NEXT_PUBLIC_ENABLE_BULK_ACTIONS=${NEXT_PUBLIC_ENABLE_BULK_ACTIONS:-true}
+      - NEXT_PUBLIC_ENABLE_NOTIFICATIONS=${NEXT_PUBLIC_ENABLE_NOTIFICATIONS:-true}
+    
+    # Use .env file
+    env_file:
+      - .env.local
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Network
+    networks:
+      - cr-network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  cr-network:
+    driver: bridge
+
+# Optional: Add volume for persistent data
+# volumes:
+#   cr-data:
+#     driver: local
+

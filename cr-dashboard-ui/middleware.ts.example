@@ -1,0 +1,188 @@
+/**
+ * Authentication Middleware (Template)
+ * 
+ * Rename this file to middleware.ts to enable route protection.
+ * 
+ * This middleware runs before every request and can:
+ * - Protect dashboard routes
+ * - Redirect unauthenticated users to login
+ * - Add user info to requests
+ * 
+ * INTEGRATION:
+ * 1. Rename to middleware.ts
+ * 2. Implement authentication check (NextAuth, Clerk, etc.)
+ * 3. Configure protected routes
+ * 4. Deploy
+ */
+
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+// ==============================================
+// Configuration
+// ==============================================
+
+// Routes that require authentication
+const protectedRoutes = [
+  "/",
+  "/projects",
+  "/legal",
+  "/insurance",
+  "/integrations",
+  "/settings",
+  "/analytics",
+];
+
+// Public routes (no auth required)
+const publicRoutes = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+];
+
+// ==============================================
+// Middleware Function
+// ==============================================
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check if route is protected
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
+  // Skip auth check for public routes and static files
+  if (isPublicRoute || pathname.startsWith("/_next") || pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
+  // TODO: Implement your authentication check here
+  // Example with NextAuth:
+  // const session = await getSession({ req: request });
+  
+  // Example with Clerk:
+  // const { userId } = auth();
+  
+  // Example with custom auth:
+  // const token = request.cookies.get('auth-token')?.value;
+  // const user = await validateToken(token);
+
+  const isAuthenticated = await checkAuth(request);
+
+  // Redirect to login if not authenticated
+  if (isProtectedRoute && !isAuthenticated) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect to dashboard if already authenticated and trying to access login
+  if (isPublicRoute && isAuthenticated) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+// ==============================================
+// Helper Functions
+// ==============================================
+
+async function checkAuth(request: NextRequest): Promise<boolean> {
+  // TODO: Implement your authentication check
+  
+  // Example with cookie-based auth:
+  // const token = request.cookies.get('auth-token')?.value;
+  // if (!token) return false;
+  // return await validateToken(token);
+  
+  // Example with session:
+  // const session = request.cookies.get('session')?.value;
+  // return !!session;
+  
+  // For development: allow all requests
+  // Remove this in production!
+  if (process.env.NODE_ENV === "development") {
+    return true;
+  }
+  
+  return false;
+}
+
+// ==============================================
+// Middleware Configuration
+// ==============================================
+
+export const config = {
+  // Match all routes except static files and API routes
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico (favicon)
+     * - public folder
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+
+// ==============================================
+// Integration Examples
+// ==============================================
+
+/**
+ * NEXTAUTH EXAMPLE:
+ * 
+ * import { withAuth } from "next-auth/middleware";
+ * 
+ * export default withAuth({
+ *   callbacks: {
+ *     authorized: ({ token }) => !!token,
+ *   },
+ * });
+ * 
+ * export const config = { matcher: ["/", "/projects/:path*", ...] };
+ */
+
+/**
+ * CLERK EXAMPLE:
+ * 
+ * import { authMiddleware } from "@clerk/nextjs";
+ * 
+ * export default authMiddleware({
+ *   publicRoutes: ["/login", "/signup"],
+ * });
+ * 
+ * export const config = { matcher: ["/((?!.*\\..*|_next).*)", "/"] };
+ */
+
+/**
+ * CUSTOM AUTH EXAMPLE:
+ * 
+ * export async function middleware(request: NextRequest) {
+ *   const token = request.cookies.get('auth-token')?.value;
+ *   
+ *   if (!token) {
+ *     return NextResponse.redirect(new URL('/login', request.url));
+ *   }
+ *   
+ *   try {
+ *     const user = await fetch('https://api.example.com/verify', {
+ *       headers: { Authorization: `Bearer ${token}` }
+ *     });
+ *     
+ *     if (!user.ok) throw new Error('Invalid token');
+ *     
+ *     return NextResponse.next();
+ *   } catch {
+ *     return NextResponse.redirect(new URL('/login', request.url));
+ *   }
+ * }
+ */
+
