@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Ticket, 
   Palette, 
@@ -20,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useWorkspace } from "@/contexts/workspace-context";
+import { mockTeamMembers, mockBrands, mockTickets } from "@/lib/mock-data/creative";
 
 export default function CreativeDashboardPage() {
   const { setWorkspace } = useWorkspace();
@@ -266,30 +268,37 @@ export default function CreativeDashboardPage() {
           </CardHeader>
           <CardContent className="p-5 pt-0">
             <div className="space-y-4">
-              {teamWorkload.map((member, index) => (
-                <div key={index} className="flex items-center justify-between pb-3 border-b last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                      {member.initials}
+              {mockTeamMembers.slice(0, 4).map((member) => {
+                const assignedTickets = mockTickets.filter(t => t.assigneeId === member.id && t.status !== "delivered").length;
+                const load = Math.round((member.currentLoad / member.maxCapacity) * 100);
+                return (
+                  <div key={member.id} className="flex items-center justify-between pb-3 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarFallback className="text-xs bg-primary/10">
+                          {member.name.split(" ").map(n => n[0]).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{member.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{member.role.replace("_", " ")}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">{member.role}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${getWorkloadColor(load)}`}
+                          style={{ width: `${load}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8">
+                        {assignedTickets}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${getWorkloadColor(member.load)}`}
-                        style={{ width: `${member.load}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-8">
-                      {member.tickets}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -314,25 +323,32 @@ export default function CreativeDashboardPage() {
           </CardHeader>
           <CardContent className="p-5 pt-0">
             <div className="space-y-4">
-              {recentBrands.map((brand, index) => (
-                <div key={index} className="flex items-center gap-3 pb-3 border-b last:border-0">
-                  <div 
-                    className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                    style={{ backgroundColor: brand.color }}
-                  >
-                    {brand.initials}
+              {mockBrands.slice(0, 4).map((brand) => {
+                const activeTickets = mockTickets.filter(t => t.brandId === brand.id && t.status !== "delivered").length;
+                const primaryColor = brand.colors.find(c => c.type === "primary")?.hex || "#666";
+                return (
+                  <div key={brand.id} className="flex items-center gap-3 pb-3 border-b last:border-0">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={brand.logoUrl} alt={brand.name} />
+                      <AvatarFallback 
+                        className="text-white font-bold text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {brand.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{brand.name}</p>
+                      <p className="text-xs text-muted-foreground">{activeTickets} active tickets</p>
+                    </div>
+                    <Link href={`/creative/brands/${brand.id}`}>
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
+                    </Link>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{brand.name}</p>
-                    <p className="text-xs text-muted-foreground">{brand.tickets} active tickets</p>
-                  </div>
-                  <Link href={`/creative/brands/${brand.id}`}>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -412,20 +428,6 @@ const recentTickets = [
     bgColor: "bg-blue-500/10",
     iconColor: "text-blue-500",
   },
-];
-
-const teamWorkload = [
-  { name: "Sarah Chen", initials: "SC", role: "Senior Designer", tickets: 4, load: 80 },
-  { name: "Mike Johnson", initials: "MJ", role: "Designer", tickets: 3, load: 60 },
-  { name: "Emily Davis", initials: "ED", role: "Designer", tickets: 2, load: 40 },
-  { name: "Alex Kim", initials: "AK", role: "Junior Designer", tickets: 2, load: 50 },
-];
-
-const recentBrands = [
-  { id: "1", name: "Acme Corporation", initials: "AC", color: "#3b82f6", tickets: 5 },
-  { id: "2", name: "TechStart Inc", initials: "TS", color: "#8b5cf6", tickets: 3 },
-  { id: "3", name: "NatureFresh Foods", initials: "NF", color: "#22c55e", tickets: 2 },
-  { id: "4", name: "Urban Style Co", initials: "US", color: "#f59e0b", tickets: 2 },
 ];
 
 const outputCategories = [
