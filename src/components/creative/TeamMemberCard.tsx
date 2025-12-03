@@ -40,7 +40,7 @@ export function TeamMemberCard({
     return (
       <Link href={`/creative/team/${member.id}`} className={cn("block", className)}>
         <Card className="hover:shadow-md transition-all hover:border-primary/50">
-          <CardContent className="p-4">
+          <CardContent className="p-5">
             <div className="flex items-center gap-4">
               {/* Avatar */}
               <Avatar className="h-12 w-12">
@@ -92,53 +92,50 @@ export function TeamMemberCard({
   // Grid variant (default)
   return (
     <Link href={`/creative/team/${member.id}`} className={cn("block", className)}>
-      <Card className="group hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-1">
+      <Card className="group hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-1 py-0">
         <CardContent className="p-5">
           {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <Avatar className="h-14 w-14">
+          <div className="flex items-start justify-between mb-3">
+            <Avatar className="h-10 w-10">
               <AvatarImage src={member.avatar} alt={member.name} />
-              <AvatarFallback className="bg-primary/10 text-primary font-medium text-lg">
+              <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
                 {getInitials(member.name)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex items-center gap-2">
-              {member.isAvailable ? (
-                <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
-                  Available
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-muted-foreground">
-                  Unavailable
-                </Badge>
-              )}
-            </div>
+            <Badge variant="outline" className={cn(
+              "text-xs py-0 h-5",
+              member.isAvailable 
+                ? "text-emerald-600 border-emerald-500/30 bg-emerald-500/10" 
+                : "text-muted-foreground"
+            )}>
+              {member.isAvailable ? "Available" : "Unavailable"}
+            </Badge>
           </div>
 
           {/* Name & Email */}
-          <h3 className="font-semibold text-base group-hover:text-primary transition-colors">
+          <h3 className="font-medium text-sm group-hover:text-primary transition-colors">
             {member.name}
           </h3>
-          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
             <Mail className="h-3 w-3" />
             <span className="truncate">{member.email}</span>
           </p>
 
           {/* Role */}
-          <div className="mt-3">
+          <div className="mt-2">
             <RoleBadge role={member.role} size="sm" />
           </div>
 
           {/* Skills */}
           {member.skills.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
+            <div className="flex flex-wrap gap-1 mt-2">
               {member.skills.slice(0, 3).map((skill, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
+                <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
                   {skill}
                 </Badge>
               ))}
               {member.skills.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   +{member.skills.length - 3}
                 </Badge>
               )}
@@ -146,8 +143,8 @@ export function TeamMemberCard({
           )}
 
           {/* Workload */}
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center justify-between mb-2">
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-muted-foreground">Workload</span>
               <span className="text-xs font-medium">{assignedTickets} active tickets</span>
             </div>
@@ -155,7 +152,7 @@ export function TeamMemberCard({
               current={member.currentLoad}
               max={member.maxCapacity}
               showLabel={false}
-              size="md"
+              size="sm"
             />
           </div>
         </CardContent>

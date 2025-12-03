@@ -17,7 +17,42 @@ import {
   X,
   CheckSquare,
   Square,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+  LucideIcon,
 } from "lucide-react"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 import {
   Select,
   SelectContent,
@@ -209,11 +244,17 @@ export default function AssetsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    {config.icon} {config.label}
-                  </SelectItem>
-                ))}
+                {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => {
+                  const Icon = DESIGN_TYPE_ICONS[config.iconName] || FileText
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {config.label}
+                      </span>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
 

@@ -25,17 +25,14 @@ export function KanbanColumn({ status, tickets, className }: KanbanColumnProps) 
     >
       {/* Column Header */}
       <div className="flex items-center justify-between p-3 border-b border-border/40">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary/60" />
-          <h3 className="font-medium text-sm text-foreground/80">{config.label}</h3>
-        </div>
+        <h3 className="font-medium text-sm text-foreground/80">{config.label}</h3>
         <span className="text-xs text-muted-foreground tabular-nums">
           {tickets.length}
         </span>
       </div>
 
       {/* Column Content */}
-      <div className="flex-1 p-2 overflow-y-auto max-h-[calc(100vh-350px)] space-y-2">
+      <div className="flex flex-col gap-4 flex-1 p-3 overflow-y-auto max-h-[calc(100vh-350px)]">
         {tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 text-sm text-muted-foreground/60 border border-dashed border-border/50 rounded-lg">
             <span>No tickets</span>

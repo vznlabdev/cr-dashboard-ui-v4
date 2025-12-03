@@ -21,7 +21,42 @@ import {
   Tag,
   FileImage,
   Maximize2,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image as ImageIcon,
+  Store,
+  CreditCard,
+  Sparkles,
+  LucideIcon,
 } from "lucide-react"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image: ImageIcon,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 import { format } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
@@ -41,6 +76,7 @@ export function AssetPreviewModal({
 
   const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
+  const DesignIcon = DESIGN_TYPE_ICONS[designTypeConfig.iconName] || FileText
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,8 +200,9 @@ export function AssetPreviewModal({
                   <FileImage className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Design Type</p>
-                    <p className="text-sm font-medium">
-                      {designTypeConfig.icon} {designTypeConfig.label}
+                    <p className="text-sm font-medium flex items-center gap-1.5">
+                      <DesignIcon className="h-4 w-4" />
+                      {designTypeConfig.label}
                     </p>
                   </div>
                 </div>

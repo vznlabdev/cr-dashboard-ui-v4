@@ -50,14 +50,14 @@ export default function CreativeDashboardPage() {
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link href="/creative/tickets" className="block">
-          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
                 Active Tickets
               </CardTitle>
               <Ticket className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5 pt-0">
               <div className="text-2xl font-bold">12</div>
               <div className="flex items-center text-xs text-muted-foreground mt-1">
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
@@ -69,14 +69,14 @@ export default function CreativeDashboardPage() {
         </Link>
 
         <Link href="/creative/tickets?status=in-progress" className="block">
-          <Card className="border-amber-500/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="border-amber-500/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
                 In Production
               </CardTitle>
               <Timer className="h-4 w-4 text-amber-500" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5 pt-0">
               <div className="text-2xl font-bold">5</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Being worked on
@@ -86,14 +86,14 @@ export default function CreativeDashboardPage() {
         </Link>
 
         <Link href="/creative/brands" className="block">
-          <Card className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
                 Brand Profiles
               </CardTitle>
               <Palette className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5 pt-0">
               <div className="text-2xl font-bold">8</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Active brands
@@ -103,14 +103,14 @@ export default function CreativeDashboardPage() {
         </Link>
 
         <Link href="/creative/team" className="block">
-          <Card className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
                 Team Members
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5 pt-0">
               <div className="text-2xl font-bold">6</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Designers available
@@ -121,8 +121,8 @@ export default function CreativeDashboardPage() {
       </div>
 
       {/* Ticket Pipeline */}
-      <Card>
-        <CardHeader>
+      <Card className="py-0">
+        <CardHeader className="p-5">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg sm:text-xl">Ticket Pipeline</CardTitle>
@@ -138,7 +138,7 @@ export default function CreativeDashboardPage() {
             </Link>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5 pt-0">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {ticketPipeline.map((stage) => (
               <div key={stage.name} className="text-center">
@@ -157,14 +157,14 @@ export default function CreativeDashboardPage() {
       {/* Recent Activity & Quick Actions */}
       <div className="grid gap-6 lg:grid-cols-7">
         {/* Recent Tickets */}
-        <Card className="lg:col-span-4">
-          <CardHeader>
+        <Card className="lg:col-span-4 py-0">
+          <CardHeader className="p-5">
             <CardTitle>Recent Tickets</CardTitle>
             <CardDescription>
               Latest creative requests and their status
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="space-y-4">
               {recentTickets.map((ticket, index) => (
                 <div key={index} className="flex items-start gap-4">
@@ -194,14 +194,14 @@ export default function CreativeDashboardPage() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
+        <Card className="lg:col-span-3 py-0">
+          <CardHeader className="p-5">
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
               Common tasks and shortcuts
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="p-4 pt-0 space-y-2">
             <Link href="/creative/tickets/new">
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
@@ -247,8 +247,8 @@ export default function CreativeDashboardPage() {
       {/* Team Workload & Brands */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Team Workload */}
-        <Card>
-          <CardHeader>
+        <Card className="py-0">
+          <CardHeader className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Team Workload</CardTitle>
@@ -264,7 +264,7 @@ export default function CreativeDashboardPage() {
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="space-y-4">
               {teamWorkload.map((member, index) => (
                 <div key={index} className="flex items-center justify-between pb-3 border-b last:border-0">
@@ -295,8 +295,8 @@ export default function CreativeDashboardPage() {
         </Card>
 
         {/* Recent Brands */}
-        <Card>
-          <CardHeader>
+        <Card className="py-0">
+          <CardHeader className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Brand Profiles</CardTitle>
@@ -312,7 +312,7 @@ export default function CreativeDashboardPage() {
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="space-y-4">
               {recentBrands.map((brand, index) => (
                 <div key={index} className="flex items-center gap-3 pb-3 border-b last:border-0">

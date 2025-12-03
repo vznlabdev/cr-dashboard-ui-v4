@@ -20,7 +20,44 @@ import {
   Upload,
   MoreHorizontal,
   ExternalLink,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+  LucideIcon,
 } from "lucide-react"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
@@ -142,6 +179,7 @@ export default function TicketDetailPage() {
   }
 
   const designType = DESIGN_TYPE_CONFIG[ticket.designType]
+  const DesignIcon = DESIGN_TYPE_ICONS[designType.iconName] || FileText
   const priority = PRIORITY_CONFIG[ticket.priority]
   const brand = getBrandById(ticket.brandId)
   const isOverdue = ticket.dueDate && new Date(ticket.dueDate) < new Date() && ticket.status !== "delivered"
@@ -163,7 +201,7 @@ export default function TicketDetailPage() {
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span>{designType.icon}</span>
+                <DesignIcon className="h-4 w-4" />
                 {designType.label}
               </span>
               {brand && (

@@ -139,42 +139,42 @@ export default function TeamPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="py-0">
+          <CardHeader className="flex flex-row items-center justify-between p-5 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="text-2xl font-bold">{totalMembers}</div>
             <p className="text-xs text-muted-foreground">team members</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="py-0">
+          <CardHeader className="flex flex-row items-center justify-between p-5 pb-2">
             <CardTitle className="text-sm font-medium">Available</CardTitle>
             <UserCheck className="h-4 w-4 text-emerald-500" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="text-2xl font-bold">{availableMembers}</div>
             <p className="text-xs text-muted-foreground">ready to work</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="py-0">
+          <CardHeader className="flex flex-row items-center justify-between p-5 pb-2">
             <CardTitle className="text-sm font-medium">Active Tickets</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="text-2xl font-bold">{activeTickets}</div>
             <p className="text-xs text-muted-foreground">in progress</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="py-0">
+          <CardHeader className="flex flex-row items-center justify-between p-5 pb-2">
             <CardTitle className="text-sm font-medium">Avg Workload</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             <div className="text-2xl font-bold">{avgWorkload}%</div>
             <WorkloadBar current={avgWorkload} max={100} showLabel={false} size="sm" />
           </CardContent>

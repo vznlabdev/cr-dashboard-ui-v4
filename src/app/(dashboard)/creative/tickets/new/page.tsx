@@ -12,7 +12,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowLeft, Upload, X, Plus } from "lucide-react"
+import { 
+  ArrowLeft, 
+  Upload, 
+  X, 
+  Plus,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+  LucideIcon,
+} from "lucide-react"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useWorkspace } from "@/contexts/workspace-context"
@@ -124,14 +166,17 @@ export default function NewTicketPage() {
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          <span className="flex items-center gap-2">
-                            <span>{config.icon}</span>
-                            <span>{config.label}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
+                      {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => {
+                        const Icon = DESIGN_TYPE_ICONS[config.iconName] || FileText
+                        return (
+                          <SelectItem key={key} value={key}>
+                            <span className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span>{config.label}</span>
+                            </span>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

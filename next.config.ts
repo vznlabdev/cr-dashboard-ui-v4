@@ -8,6 +8,26 @@ const nextConfig: NextConfig = {
         hostname: "picsum.photos",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+        pathname: "/**",
+      },
     ],
   },
 };

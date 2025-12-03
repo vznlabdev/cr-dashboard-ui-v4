@@ -69,13 +69,13 @@ export function AssetCard({
     return (
       <Card
         className={cn(
-          "group cursor-pointer hover:shadow-md transition-all",
+          "group cursor-pointer hover:shadow-md transition-all py-0",
           selected && "ring-2 ring-primary",
           className
         )}
         onClick={handleClick}
       >
-        <CardContent className="p-3">
+        <CardContent className="p-5">
           <div className="flex items-center gap-4">
             {/* Checkbox */}
             {onSelect && (
@@ -152,7 +152,7 @@ export function AssetCard({
   return (
     <Card
       className={cn(
-        "group cursor-pointer overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1",
+        "group cursor-pointer overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 py-0",
         selected && "ring-2 ring-primary",
         className
       )}
@@ -213,7 +213,7 @@ export function AssetCard({
         />
       </div>
 
-      <CardContent className="p-3">
+      <CardContent className="p-5">
         {/* Name */}
         <h3 className="font-medium text-sm truncate mb-1" title={asset.name}>
           {asset.name}
@@ -229,7 +229,7 @@ export function AssetCard({
 
         {/* Design type */}
         <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-          <span>{designTypeConfig.icon}</span>
+          <span>{designTypeConfig.iconName}</span>
           <span className="truncate">{designTypeConfig.label}</span>
         </div>
       </CardContent>

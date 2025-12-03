@@ -1,18 +1,54 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Ticket, DESIGN_TYPE_CONFIG, PRIORITY_CONFIG } from "@/types/creative"
+import { Ticket, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { TicketStatusBadge } from "./TicketStatusBadge"
-import { Card } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Calendar, 
   Clock, 
   MessageSquare, 
   Paperclip,
-  Circle,
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+  LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
+
+// Map icon names to Lucide components
+const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
+  BarChart3,
+  Share2,
+  ShoppingCart,
+  Mail,
+  Palette,
+  FileText,
+  Presentation,
+  Globe,
+  Layout,
+  Shirt,
+  Package,
+  Image,
+  Store,
+  CreditCard,
+  Tag,
+  Sparkles,
+}
 
 interface TicketCardProps {
   ticket: Ticket
@@ -28,6 +64,7 @@ export function TicketCard({
   isDragging = false,
 }: TicketCardProps) {
   const designType = DESIGN_TYPE_CONFIG[ticket.designType]
+  const DesignIcon = DESIGN_TYPE_ICONS[designType.iconName] || FileText
 
   const getInitials = (name: string) => {
     return name
@@ -44,8 +81,6 @@ export function TicketCard({
       day: "numeric",
     }).format(new Date(date))
   }
-
-  const isOverdue = ticket.dueDate && new Date(ticket.dueDate) < new Date() && ticket.status !== "delivered"
 
   // Calculate progress for production tickets
   const progress = ticket.status === "production" && ticket.estimatedHours
@@ -76,20 +111,31 @@ export function TicketCard({
       <Link href={`/creative/tickets/${ticket.id}`}>
         <Card
           className={cn(
-            "p-4 hover:bg-accent/50 transition-colors cursor-pointer",
+            "py-0 hover:bg-accent/50 transition-colors cursor-pointer",
             isDragging && "shadow-lg",
             className
           )}
         >
+          <CardContent className="p-5">
           <div className="flex items-center gap-4">
             {/* Main Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm">{designType.icon}</span>
+                <DesignIcon className="h-4 w-4 text-muted-foreground" />
                 <h3 className="font-medium truncate">{ticket.title}</h3>
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{ticket.brandName}</span>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  {ticket.brandLogoUrl && (
+                    <Avatar className="h-4 w-4">
+                      <AvatarImage src={ticket.brandLogoUrl} alt={ticket.brandName} />
+                      <AvatarFallback className="text-[8px]" style={{ backgroundColor: ticket.brandColor }}>
+                        {ticket.brandName?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <span>{ticket.brandName}</span>
+                </div>
                 <span>•</span>
                 <span>{designType.label}</span>
               </div>
@@ -101,6 +147,7 @@ export function TicketCard({
             {/* Assignee */}
             {ticket.assigneeName ? (
               <Avatar className="h-7 w-7">
+                <AvatarImage src={ticket.assigneeAvatar} alt={ticket.assigneeName} />
                 <AvatarFallback className="text-xs bg-muted">
                   {getInitials(ticket.assigneeName)}
                 </AvatarFallback>
@@ -111,17 +158,13 @@ export function TicketCard({
 
             {/* Due Date */}
             {ticket.dueDate && (
-              <div
-                className={cn(
-                  "flex items-center gap-1 text-xs",
-                  isOverdue ? "text-destructive" : "text-muted-foreground"
-                )}
-              >
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 {formatDate(ticket.dueDate)}
               </div>
             )}
           </div>
+          </CardContent>
         </Card>
       </Link>
     )
@@ -132,26 +175,40 @@ export function TicketCard({
     <Link href={`/creative/tickets/${ticket.id}`}>
       <Card
         className={cn(
-          "p-3 transition-all cursor-pointer group bg-card",
+          "py-0 transition-all cursor-pointer group bg-card",
           "hover:bg-accent/50 hover:shadow-sm",
           isDragging && "shadow-md ring-1 ring-primary/20",
-          isOverdue && "border-destructive/30",
           className
         )}
       >
+        <CardContent className="p-5">
         {/* Header: Brand + Priority */}
         <div className="flex items-center justify-between gap-2 mb-2">
-          <span className="text-xs text-muted-foreground truncate">
-            {ticket.brandName}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {ticket.brandLogoUrl && (
+              <Avatar className="h-4 w-4 shrink-0">
+                <AvatarImage src={ticket.brandLogoUrl} alt={ticket.brandName} />
+                <AvatarFallback className="text-[8px]" style={{ backgroundColor: ticket.brandColor }}>
+                  {ticket.brandName?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <span className="text-xs text-muted-foreground truncate">
+              {ticket.brandName}
+            </span>
+          </div>
+          <span className={cn(
+            "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
+            ticket.priority === "urgent" && "bg-red-500/15 text-red-600",
+            ticket.priority === "high" && "bg-orange-500/15 text-orange-600",
+            ticket.priority === "medium" && "bg-blue-500/15 text-blue-600",
+            ticket.priority === "low" && "bg-slate-500/15 text-slate-500",
+          )}>
+            {ticket.priority === "urgent" && "Urgent"}
+            {ticket.priority === "high" && "High"}
+            {ticket.priority === "medium" && "Medium"}
+            {ticket.priority === "low" && "Low"}
           </span>
-          {(ticket.priority === "urgent" || ticket.priority === "high") && (
-            <Circle 
-              className={cn(
-                "h-2 w-2 fill-current",
-                ticket.priority === "urgent" ? "text-destructive" : "text-primary"
-              )} 
-            />
-          )}
         </div>
 
         {/* Title */}
@@ -161,7 +218,7 @@ export function TicketCard({
 
         {/* Design Type */}
         <div className="flex items-center gap-1.5 mb-3 text-muted-foreground">
-          <span className="text-sm">{designType.icon}</span>
+          <DesignIcon className="h-3.5 w-3.5" />
           <span className="text-xs">{designType.label}</span>
         </div>
 
@@ -182,6 +239,7 @@ export function TicketCard({
           {/* Assignee */}
           {ticket.assigneeName ? (
             <Avatar className="h-5 w-5">
+              <AvatarImage src={ticket.assigneeAvatar} alt={ticket.assigneeName} />
               <AvatarFallback className="text-[10px] bg-muted">
                 {getInitials(ticket.assigneeName)}
               </AvatarFallback>
@@ -207,18 +265,14 @@ export function TicketCard({
             )}
 
             {ticket.dueDate && (
-              <div
-                className={cn(
-                  "flex items-center gap-0.5 text-xs",
-                  isOverdue && "text-destructive"
-                )}
-              >
+              <div className="flex items-center gap-0.5 text-xs">
                 <Clock className="h-3 w-3" />
                 <span>{formatDate(ticket.dueDate)}</span>
               </div>
             )}
           </div>
         </div>
+        </CardContent>
       </Card>
     </Link>
   )
