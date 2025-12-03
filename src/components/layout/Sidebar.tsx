@@ -11,6 +11,10 @@ import {
   Plug,
   Settings,
   ChevronLeft,
+  Ticket,
+  Palette,
+  Users,
+  FileImage,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -18,6 +22,8 @@ import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
 import { useSidebar } from "./sidebar-context"
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
+import { useWorkspace, WorkspaceType } from "@/contexts/workspace-context"
 
 interface NavItem {
   title: string
@@ -25,7 +31,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const navItems: NavItem[] = [
+// Stats Workspace navigation
+const statsNavItems: NavItem[] = [
   {
     title: "Home",
     href: "/",
@@ -53,11 +60,48 @@ const navItems: NavItem[] = [
   },
 ]
 
+// Creative Workspace navigation
+const creativeNavItems: NavItem[] = [
+  {
+    title: "Home",
+    href: "/creative",
+    icon: Home,
+  },
+  {
+    title: "Tickets",
+    href: "/creative/tickets",
+    icon: Ticket,
+  },
+  {
+    title: "Brands",
+    href: "/creative/brands",
+    icon: Palette,
+  },
+  {
+    title: "Team",
+    href: "/creative/team",
+    icon: Users,
+  },
+  {
+    title: "Assets",
+    href: "/creative/assets",
+    icon: FileImage,
+  },
+]
+
+// Get nav items based on workspace
+const getNavItems = (workspace: WorkspaceType): NavItem[] => {
+  return workspace === "creative" ? creativeNavItems : statsNavItems
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
+  const { currentWorkspace } = useWorkspace()
   const [mounted, setMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
+  
+  const navItems = getNavItems(currentWorkspace)
   
   useEffect(() => {
     setMounted(true)
@@ -124,12 +168,21 @@ export function Sidebar() {
           )}
         </div>
 
+        {/* Workspace Switcher */}
+        <div className="px-3 pt-3">
+          <WorkspaceSwitcher variant="sidebar" />
+        </div>
+
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname === item.href
+              // Check if this is the home page for the workspace
+              const isHome = item.href === "/" || item.href === "/creative"
+              const isActive = isHome 
+                ? pathname === item.href 
+                : pathname.startsWith(item.href)
               
               return (
                 <Link

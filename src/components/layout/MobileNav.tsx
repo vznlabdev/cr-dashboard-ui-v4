@@ -10,6 +10,10 @@ import {
   Shield,
   Plug,
   Settings,
+  Ticket,
+  Palette,
+  Users,
+  FileImage,
 } from "lucide-react"
 import {
   Sheet,
@@ -23,6 +27,9 @@ import { Menu } from "lucide-react"
 import { useState } from "react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
+import { useWorkspace, WorkspaceType } from "@/contexts/workspace-context"
+import { Separator } from "@/components/ui/separator"
 
 interface NavItem {
   title: string
@@ -30,7 +37,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const navItems: NavItem[] = [
+// Stats Workspace navigation
+const statsNavItems: NavItem[] = [
   {
     title: "Home",
     href: "/",
@@ -56,17 +64,49 @@ const navItems: NavItem[] = [
     href: "/integrations",
     icon: Plug,
   },
+]
+
+// Creative Workspace navigation
+const creativeNavItems: NavItem[] = [
   {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
+    title: "Home",
+    href: "/creative",
+    icon: Home,
+  },
+  {
+    title: "Tickets",
+    href: "/creative/tickets",
+    icon: Ticket,
+  },
+  {
+    title: "Brands",
+    href: "/creative/brands",
+    icon: Palette,
+  },
+  {
+    title: "Team",
+    href: "/creative/team",
+    icon: Users,
+  },
+  {
+    title: "Assets",
+    href: "/creative/assets",
+    icon: FileImage,
   },
 ]
+
+// Get nav items based on workspace
+const getNavItems = (workspace: WorkspaceType): NavItem[] => {
+  return workspace === "creative" ? creativeNavItems : statsNavItems
+}
 
 export function MobileNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { theme } = useTheme()
+  const { currentWorkspace } = useWorkspace()
+  
+  const navItems = getNavItems(currentWorkspace)
 
   // Determine which logo to use based on theme
   const logoIcon = theme === "dark" 
@@ -96,10 +136,17 @@ export function MobileNav() {
             </Link>
           </SheetTitle>
         </SheetHeader>
+        <div className="px-4 pt-4">
+          <WorkspaceSwitcher variant="mobile" />
+        </div>
         <nav className="flex flex-col gap-1 p-4">
           {navItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href
+            // Check if this is the home page for the workspace
+            const isHome = item.href === "/" || item.href === "/creative"
+            const isActive = isHome 
+              ? pathname === item.href 
+              : pathname.startsWith(item.href)
 
             return (
               <Link
@@ -119,6 +166,24 @@ export function MobileNav() {
               </Link>
             )
           })}
+          
+          <Separator className="my-2" />
+          
+          {/* Settings - always shown */}
+          <Link
+            href="/settings"
+            onClick={() => setOpen(false)}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "hover:bg-accent hover:text-accent-foreground",
+              pathname === "/settings"
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "text-muted-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5 shrink-0" />
+            <span>Settings</span>
+          </Link>
         </nav>
       </SheetContent>
     </Sheet>
