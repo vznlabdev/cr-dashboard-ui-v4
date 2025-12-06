@@ -31,28 +31,7 @@ import {
   CreditCard,
   Tag,
   Sparkles,
-  LucideIcon,
 } from "lucide-react"
-
-// Map icon names to Lucide components
-const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  Palette,
-  FileText,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Package,
-  Image,
-  Store,
-  CreditCard,
-  Tag,
-  Sparkles,
-}
 import {
   Select,
   SelectContent,
@@ -60,7 +39,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockAssets, mockBrands, formatFileSize } from "@/lib/mock-data/creative"
+import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
+import { getDesignTypeIcon } from "@/lib/design-icons"
+import { formatFileSize } from "@/lib/format-utils"
+import { PageContainer } from "@/components/layout/PageContainer"
 import { AssetCard, AssetPreviewModal } from "@/components/creative"
 import { Asset, AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { cn } from "@/lib/utils"
@@ -135,7 +117,7 @@ export default function AssetsPage() {
   const hasActiveFilters = searchQuery || brandFilter !== "all" || fileTypeFilter !== "all" || designTypeFilter !== "all"
 
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -245,7 +227,7 @@ export default function AssetsPage() {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => {
-                  const Icon = DESIGN_TYPE_ICONS[config.iconName] || FileText
+                  const Icon = getDesignTypeIcon(config.iconName)
                   return (
                     <SelectItem key={key} value={key}>
                       <span className="flex items-center gap-2">
@@ -375,6 +357,6 @@ export default function AssetsPage() {
         open={!!previewAsset}
         onOpenChange={(open) => !open && setPreviewAsset(null)}
       />
-    </div>
+    </PageContainer>
   )
 }

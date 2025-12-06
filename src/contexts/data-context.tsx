@@ -232,7 +232,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * setProjects(prev => [project, ...prev]);
    */
   const createProject = useCallback(async (projectData: Omit<Project, "id" | "assets" | "compliance" | "updated" | "createdDate">) => {
-    // TODO: Replace this simulation with real API call
+    // INTEGRATION POINT: Replace this simulation with real API call
+    // Example: const response = await api.projects.create(projectData)
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const newProject: Project = {
@@ -260,7 +261,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * setProjects(prev => prev.map(p => p.id === id ? project : p));
    */
   const updateProject = useCallback(async (id: string, updates: Partial<Project>) => {
-    // TODO: Replace with API call
+    // INTEGRATION POINT: Replace with API call
+    // Example: await api.projects.update(id, updates)
     await new Promise(resolve => setTimeout(resolve, 300));
     
     setProjects(prev => prev.map(p => 
@@ -277,7 +279,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * await api.projects.delete(id);
    */
   const deleteProject = useCallback(async (id: string) => {
-    // TODO: Replace with API call
+    // INTEGRATION POINT: Replace with API call
+    // Example: await api.projects.delete(id)
     await new Promise(resolve => setTimeout(resolve, 300));
     
     setProjects(prev => prev.filter(p => p.id !== id));
@@ -304,7 +307,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
    * // Update state with returned asset
    */
   const createAsset = useCallback(async (projectId: string, assetData: Omit<Asset, "id" | "projectId" | "updated" | "createdDate">) => {
-    // TODO: Replace with API call
+    // INTEGRATION POINT: Replace with API call
+    // Example: const response = await api.assets.create(projectId, assetData)
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const newAsset: Asset = {

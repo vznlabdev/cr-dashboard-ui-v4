@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { EmptyState, TableSkeleton } from "@/components/cr";
 import { downloadCSV, prepareLegalIssuesForExport } from "@/lib/export-utils";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function LegalPage() {
   const chartTheme = useChartTheme();
@@ -84,7 +85,7 @@ export default function LegalPage() {
     });
   };
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -400,7 +401,7 @@ export default function LegalPage() {
         itemName={actionDialog.itemName}
         onConfirm={handleConfirmAction}
       />
-    </div>
+    </PageContainer>
   );
 }
 

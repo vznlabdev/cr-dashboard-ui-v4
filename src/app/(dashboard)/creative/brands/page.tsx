@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ColorSwatches } from "@/components/creative/ColorPalette"
+import { PageContainer } from "@/components/layout/PageContainer"
 
 type ViewType = "grid" | "list"
 
@@ -38,7 +39,7 @@ export default function BrandsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -201,6 +202,6 @@ export default function BrandsPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

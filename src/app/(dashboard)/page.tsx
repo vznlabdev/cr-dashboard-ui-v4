@@ -31,13 +31,14 @@ import {
 } from "recharts";
 import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { toast } from "sonner";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function DashboardPage() {
   const chartTheme = useChartTheme();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -377,7 +378,7 @@ export default function DashboardPage() {
         open={newProjectDialogOpen}
         onOpenChange={setNewProjectDialogOpen}
       />
-    </div>
+    </PageContainer>
   );
 }
 

@@ -42,10 +42,21 @@ export class ErrorBoundary extends Component<Props, State> {
     // Log error to error reporting service (e.g., Sentry)
     console.error("Error caught by boundary:", error, errorInfo);
     
-    // TODO: Send to error tracking service
-    // if (process.env.NODE_ENV === 'production') {
-    //   Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
-    // }
+    /**
+     * INTEGRATION POINT: Add error tracking service
+     * Recommended: Sentry, Datadog, or similar
+     * 
+     * Example with Sentry:
+     * if (process.env.NODE_ENV === 'production') {
+     *   Sentry.captureException(error, { 
+     *     contexts: { 
+     *       react: { 
+     *         componentStack: errorInfo.componentStack 
+     *       } 
+     *     } 
+     *   })
+     * }
+     */
   }
 
   handleReset = () => {

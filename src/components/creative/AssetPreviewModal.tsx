@@ -1,7 +1,7 @@
 "use client"
 
 import { Asset, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
-import { formatFileSize } from "@/lib/mock-data/creative"
+import { formatFileSize, formatDateLong } from "@/lib/format-utils"
 import {
   Dialog,
   DialogContent,
@@ -21,43 +21,8 @@ import {
   Tag,
   FileImage,
   Maximize2,
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  FileText,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Package,
-  Image as ImageIcon,
-  Store,
-  CreditCard,
-  Sparkles,
-  LucideIcon,
 } from "lucide-react"
-
-// Map icon names to Lucide components
-const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  Palette,
-  FileText,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Package,
-  Image: ImageIcon,
-  Store,
-  CreditCard,
-  Tag,
-  Sparkles,
-}
-import { format } from "date-fns"
+import { getDesignTypeIcon } from "@/lib/design-icons"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -76,7 +41,7 @@ export function AssetPreviewModal({
 
   const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
-  const DesignIcon = DESIGN_TYPE_ICONS[designTypeConfig.iconName] || FileText
+  const DesignIcon = getDesignTypeIcon(designTypeConfig.iconName)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -220,7 +185,7 @@ export function AssetPreviewModal({
                   <div>
                     <p className="text-xs text-muted-foreground">Date</p>
                     <p className="text-sm font-medium">
-                      {format(asset.createdAt, "MMMM d, yyyy")}
+                      {formatDateLong(asset.createdAt)}
                     </p>
                   </div>
                 </div>

@@ -55,6 +55,7 @@ import { EmptyState, TableSkeleton, NewProjectDialog, EditProjectDialog, DeleteP
 import { toast } from "sonner";
 import { downloadCSV, downloadJSON, prepareProjectsForExport } from "@/lib/export-utils";
 import { useData, type Project } from "@/contexts/data-context";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 type SortField = "name" | "status" | "assets" | "compliance" | "risk" | "updated";
 type SortDirection = "asc" | "desc";
@@ -100,7 +101,7 @@ export default function ProjectsPage() {
       const exportData = prepareProjectsForExport(filteredAndSortedProjects);
       downloadCSV(exportData, `projects-export-${new Date().toISOString().split('T')[0]}`);
       toast.success(`Exported ${exportData.length} projects to CSV`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to export projects");
     }
   };
@@ -109,7 +110,7 @@ export default function ProjectsPage() {
     try {
       downloadJSON(filteredAndSortedProjects, `projects-export-${new Date().toISOString().split('T')[0]}`);
       toast.success(`Exported ${filteredAndSortedProjects.length} projects to JSON`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to export projects");
     }
   };
@@ -143,7 +144,7 @@ export default function ProjectsPage() {
       }
       toast.success(`${selectedProjects.size} project(s) approved successfully`);
       setSelectedProjects(new Set());
-    } catch (error) {
+    } catch {
       toast.error("Failed to approve projects");
     } finally {
       setIsLoading(false);
@@ -225,7 +226,7 @@ export default function ProjectsPage() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, riskFilter]);
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -645,7 +646,7 @@ export default function ProjectsPage() {
         onOpenChange={(open) => !open && setDeleteProject(null)}
         project={deleteProject}
       />
-    </div>
+    </PageContainer>
   );
 }
 

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-import { formatFileSize } from "@/lib/mock-data/creative"
+import { formatFileSize } from "@/lib/format-utils"
 import { format } from "date-fns"
 import {
   Download,

@@ -27,6 +27,7 @@ import {
 import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { toast } from "sonner";
 import { downloadJSON, prepareRiskDataForExport } from "@/lib/export-utils";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function InsurancePage() {
   const chartTheme = useChartTheme();
@@ -43,7 +44,7 @@ export default function InsurancePage() {
   };
   
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -362,7 +363,7 @@ export default function InsurancePage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }
 

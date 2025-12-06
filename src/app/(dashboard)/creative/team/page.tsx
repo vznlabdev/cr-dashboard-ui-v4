@@ -19,6 +19,7 @@ import { mockTeamMembers, mockTickets } from "@/lib/mock-data/creative"
 import { TeamMemberCard, WorkloadBar } from "@/components/creative"
 import { WorkflowRole, WORKFLOW_ROLE_CONFIG } from "@/types/creative"
 import { cn } from "@/lib/utils"
+import { PageContainer } from "@/components/layout/PageContainer"
 import {
   Dialog,
   DialogContent,
@@ -79,7 +80,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -268,6 +269,6 @@ export default function TeamPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

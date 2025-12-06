@@ -10,45 +10,10 @@ import {
   Clock, 
   MessageSquare, 
   Paperclip,
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  Palette,
-  FileText,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Package,
-  Image,
-  Store,
-  CreditCard,
-  Tag,
-  Sparkles,
-  LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
-
-// Map icon names to Lucide components
-const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  Palette,
-  FileText,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Package,
-  Image,
-  Store,
-  CreditCard,
-  Tag,
-  Sparkles,
-}
+import { getDesignTypeIcon } from "@/lib/design-icons"
+import { getInitials, formatDateShort } from "@/lib/format-utils"
 
 interface TicketCardProps {
   ticket: Ticket
@@ -64,23 +29,7 @@ export function TicketCard({
   isDragging = false,
 }: TicketCardProps) {
   const designType = DESIGN_TYPE_CONFIG[ticket.designType]
-  const DesignIcon = DESIGN_TYPE_ICONS[designType.iconName] || FileText
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-    }).format(new Date(date))
-  }
+  const DesignIcon = getDesignTypeIcon(designType.iconName)
 
   // Calculate progress for production tickets
   const progress = ticket.status === "production" && ticket.estimatedHours
@@ -160,7 +109,7 @@ export function TicketCard({
             {ticket.dueDate && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
-                {formatDate(ticket.dueDate)}
+                {formatDateShort(ticket.dueDate)}
               </div>
             )}
           </div>
@@ -272,7 +221,7 @@ export function TicketCard({
             {ticket.dueDate && (
               <div className="flex items-center gap-1 text-xs">
                 <Clock className="h-3.5 w-3.5" />
-                <span className="font-medium">{formatDate(ticket.dueDate)}</span>
+                <span className="font-medium">{formatDateShort(ticket.dueDate)}</span>
               </div>
             )}
           </div>

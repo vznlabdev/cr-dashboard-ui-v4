@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { InviteMemberDialog } from "@/components/cr";
 import { useState } from "react";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
   Select,
   SelectContent,
@@ -176,7 +177,7 @@ export default function SettingsPage() {
   const [approvalStages, setApprovalStages] = useState("3");
   
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">
@@ -852,7 +853,7 @@ export default function SettingsPage() {
         open={inviteMemberOpen}
         onOpenChange={setInviteMemberOpen}
       />
-    </div>
+    </PageContainer>
   );
 }
 

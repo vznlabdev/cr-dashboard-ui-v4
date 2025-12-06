@@ -12,6 +12,7 @@ import { KanbanBoard, TicketCard } from "@/components/creative"
 import { mockTickets, getTicketCountByStatus } from "@/lib/mock-data/creative"
 import { Ticket, TicketStatus } from "@/types/creative"
 import { cn } from "@/lib/utils"
+import { PageContainer } from "@/components/layout/PageContainer"
 
 type ViewMode = "kanban" | "list"
 
@@ -56,7 +57,7 @@ export default function TicketsPage() {
   return (
     <>
       {/* Header and Filters - Contained */}
-      <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+      <PageContainer className="space-y-6 animate-fade-in">
         {/* Page Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -181,7 +182,7 @@ export default function TicketsPage() {
             )}
           </>
         )}
-      </div>
+      </PageContainer>
 
       {/* Kanban View - Full Width with edge gradients (shown when "All" is selected) */}
       {selectedStatus === "all" && (

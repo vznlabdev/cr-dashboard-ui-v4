@@ -95,9 +95,14 @@ class APIClient {
   }
 
   private getAuthHeaders(): Record<string, string> {
-    // TODO: Implement authentication
-    // Get token from your auth provider (NextAuth, Clerk, etc.)
-    // const token = getToken();
+    /**
+     * INTEGRATION POINT: Implement authentication
+     * Get token from your auth provider (NextAuth, Clerk, Supabase, etc.)
+     * 
+     * Example:
+     * const token = await getToken()
+     * return { Authorization: `Bearer ${token}` }
+     */
     // return token ? { Authorization: `Bearer ${token}` } : {};
     return {};
   }

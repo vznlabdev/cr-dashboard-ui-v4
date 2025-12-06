@@ -14,10 +14,11 @@ import {
   Key,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function IntegrationsPage() {
   return (
-    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
+    <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -176,7 +177,7 @@ export default function IntegrationsPage() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
