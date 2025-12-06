@@ -44,7 +44,7 @@ export default function TicketsPage() {
   const totalCount = Object.values(statusCounts).reduce((a, b) => a + b, 0)
 
   const statusTabs: { key: TicketStatus | "all"; label: string; count: number }[] = [
-    { key: "all", label: "All", count: totalCount },
+    { key: "all", label: "Board View", count: totalCount },
     { key: "submitted", label: "Submitted", count: statusCounts.submitted },
     { key: "assessment", label: "Assessment", count: statusCounts.assessment },
     { key: "assigned", label: "Assigned", count: statusCounts.assigned },
@@ -84,27 +84,32 @@ export default function TicketsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" title="Filter">
-              <Filter className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "kanban" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("kanban")}
-              title="Kanban view"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("list")}
-              title="List view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" title="Filter">
+            <Filter className="h-4 w-4" />
+          </Button>
+          {/* Show grid/list view toggles only when filtering by specific status */}
+          {selectedStatus !== "all" && (
+            <>
+              <Button
+                variant={viewMode === "kanban" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("kanban")}
+                title="Grid view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+                title="List view"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
         </div>
 
         {/* Status Tabs */}
@@ -126,40 +131,60 @@ export default function TicketsPage() {
           ))}
         </div>
 
-        {/* List View - Stays in Container */}
-        {viewMode === "list" && (
-          <div className="space-y-2">
-            {filteredTickets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="rounded-full bg-muted p-4 mb-4">
-                  <Search className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="font-medium mb-1">No tickets found</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {searchQuery
-                    ? "Try adjusting your search or filter"
-                    : "Create a new request to get started"}
-                </p>
-                {!searchQuery && (
-                  <Link href="/creative/tickets/new">
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      New Request
-                    </Button>
-                  </Link>
+        {/* Grid/List View - Stays in Container (shown when specific status is selected) */}
+        {selectedStatus !== "all" && (
+          <>
+            {/* Grid View */}
+            {viewMode === "kanban" && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredTickets.length === 0 ? (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <Search className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium mb-1">No tickets found</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {searchQuery
+                        ? "Try adjusting your search or filter"
+                        : "No tickets in this status"}
+                    </p>
+                  </div>
+                ) : (
+                  filteredTickets.map((ticket) => (
+                    <TicketCard key={ticket.id} ticket={ticket} variant="kanban" />
+                  ))
                 )}
               </div>
-            ) : (
-              filteredTickets.map((ticket) => (
-                <TicketCard key={ticket.id} ticket={ticket} variant="list" />
-              ))
             )}
-          </div>
+
+            {/* List View */}
+            {viewMode === "list" && (
+              <div className="space-y-2">
+                {filteredTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <Search className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium mb-1">No tickets found</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {searchQuery
+                        ? "Try adjusting your search or filter"
+                        : "No tickets in this status"}
+                    </p>
+                  </div>
+                ) : (
+                  filteredTickets.map((ticket) => (
+                    <TicketCard key={ticket.id} ticket={ticket} variant="list" />
+                  ))
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Kanban View - Full Width with edge gradients */}
-      {viewMode === "kanban" && (
+      {/* Kanban View - Full Width with edge gradients (shown when "All" is selected) */}
+      {selectedStatus === "all" && (
         <div className="relative">
           {/* Left fade indicator at viewport edge */}
           {showLeftFade && (
@@ -178,7 +203,7 @@ export default function TicketsPage() {
           )}
 
           <KanbanBoard 
-            tickets={selectedStatus === "all" ? tickets : filteredTickets}
+            tickets={searchQuery ? filteredTickets : tickets}
             onScrollChange={(showLeft, showRight) => {
               setShowLeftFade(showLeft)
               setShowRightFade(showRight)
