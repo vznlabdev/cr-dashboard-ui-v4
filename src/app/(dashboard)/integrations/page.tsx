@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export default function IntegrationsPage() {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -175,7 +175,7 @@ export default function SettingsPage() {
   const [approvalStages, setApprovalStages] = useState("3");
   
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">
@@ -184,14 +184,16 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="policies" className="space-y-4">
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-          <TabsTrigger value="policies" className="whitespace-nowrap">Policies</TabsTrigger>
-          <TabsTrigger value="risk" className="whitespace-nowrap">Risk Thresholds</TabsTrigger>
-          <TabsTrigger value="team" className="whitespace-nowrap">Team</TabsTrigger>
-          <TabsTrigger value="talent" className="whitespace-nowrap">Talent Rights</TabsTrigger>
-          <TabsTrigger value="ai-tools" className="whitespace-nowrap">AI Tools</TabsTrigger>
-          <TabsTrigger value="integrations" className="whitespace-nowrap">Integrations</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="inline-flex w-auto">
+            <TabsTrigger value="policies" className="whitespace-nowrap">Policies</TabsTrigger>
+            <TabsTrigger value="risk" className="whitespace-nowrap">Risk Thresholds</TabsTrigger>
+            <TabsTrigger value="team" className="whitespace-nowrap">Team</TabsTrigger>
+            <TabsTrigger value="talent" className="whitespace-nowrap">Talent Rights</TabsTrigger>
+            <TabsTrigger value="ai-tools" className="whitespace-nowrap">AI Tools</TabsTrigger>
+            <TabsTrigger value="integrations" className="whitespace-nowrap">Integrations</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Company Policies */}
         <TabsContent value="policies" className="space-y-4">
