@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in mx-auto max-w-7xl w-full">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

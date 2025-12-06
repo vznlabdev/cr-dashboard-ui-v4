@@ -193,5 +193,61 @@
   .animate-spin-slow {
     animation: spin-slow 3s linear infinite;
   }
+
+  /* Minimal custom scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(128, 128, 128, 0.5);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Dark mode adjustments */
+  .dark .scrollbar-thin {
+    scrollbar-color: rgba(200, 200, 200, 0.3) transparent;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(200, 200, 200, 0.3);
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(200, 200, 200, 0.5);
+  }
+
+  /* Force scrollbar styles on overflow containers */
+  .overflow-x-auto.scrollbar-thin,
+  .overflow-y-auto.scrollbar-thin {
+    scrollbar-width: thin !important;
+  }
+
+  .overflow-x-auto.scrollbar-thin::-webkit-scrollbar,
+  .overflow-y-auto.scrollbar-thin::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+  }
 }
 
