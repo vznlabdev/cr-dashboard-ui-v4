@@ -13,6 +13,7 @@ import {
   Palette,
   Users,
   FileImage,
+  FolderKanban,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -34,6 +35,11 @@ const navItems: NavItem[] = [
     title: "Home",
     href: "/",
     icon: Home,
+  },
+  {
+    title: "Projects",
+    href: "/projects",
+    icon: FolderKanban,
   },
   {
     title: "Tasks",

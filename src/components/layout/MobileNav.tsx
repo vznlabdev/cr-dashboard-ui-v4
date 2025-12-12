@@ -12,6 +12,7 @@ import {
   Palette,
   Users,
   FileImage,
+  FolderKanban,
 } from "lucide-react"
 import {
   Sheet,
@@ -40,6 +41,11 @@ const navItems: NavItem[] = [
     title: "Home",
     href: "/",
     icon: Home,
+  },
+  {
+    title: "Projects",
+    href: "/projects",
+    icon: FolderKanban,
   },
   {
     title: "Tasks",
