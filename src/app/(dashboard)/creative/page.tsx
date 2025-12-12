@@ -19,18 +19,10 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { useEffect } from "react";
-import { useWorkspace } from "@/contexts/workspace-context";
 import { mockTeamMembers, mockBrands, mockTickets } from "@/lib/mock-data/creative";
 import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function CreativeDashboardPage() {
-  const { setWorkspace } = useWorkspace();
-
-  // Ensure workspace is set to creative when visiting this page
-  useEffect(() => {
-    setWorkspace("creative");
-  }, [setWorkspace]);
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">

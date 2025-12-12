@@ -56,8 +56,7 @@ const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
   Sparkles,
 }
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { useWorkspace } from "@/contexts/workspace-context"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { mockBrands } from "@/lib/mock-data/creative"
 import { DESIGN_TYPE_CONFIG, DesignType } from "@/types/creative"
@@ -65,7 +64,6 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function NewTicketPage() {
-  const { setWorkspace } = useWorkspace()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -79,10 +77,6 @@ export default function NewTicketPage() {
   const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">("medium")
   const [dueDate, setDueDate] = useState("")
   const [attachments, setAttachments] = useState<File[]>([])
-
-  useEffect(() => {
-    setWorkspace("creative")
-  }, [setWorkspace])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

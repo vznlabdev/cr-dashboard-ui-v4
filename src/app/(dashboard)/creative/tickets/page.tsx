@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Filter, LayoutGrid, List } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { useWorkspace } from "@/contexts/workspace-context"
+import { useState } from "react"
 import { useSidebar } from "@/components/layout/sidebar-context"
 import { KanbanBoard, TicketCard } from "@/components/creative"
 import { mockTickets, getTicketCountByStatus } from "@/lib/mock-data/creative"
@@ -17,7 +16,6 @@ import { PageContainer } from "@/components/layout/PageContainer"
 type ViewMode = "kanban" | "list"
 
 export default function TicketsPage() {
-  const { setWorkspace } = useWorkspace()
   const { collapsed } = useSidebar()
   const [viewMode, setViewMode] = useState<ViewMode>("kanban")
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus | "all">("all")
@@ -25,10 +23,6 @@ export default function TicketsPage() {
   const [tickets] = useState<Ticket[]>(mockTickets)
   const [showLeftFade, setShowLeftFade] = useState(false)
   const [showRightFade, setShowRightFade] = useState(false)
-
-  useEffect(() => {
-    setWorkspace("creative")
-  }, [setWorkspace])
 
   // Filter tickets
   const filteredTickets = tickets.filter((ticket) => {
