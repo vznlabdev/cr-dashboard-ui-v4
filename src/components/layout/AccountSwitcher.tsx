@@ -9,8 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, ChevronsUpDown } from "lucide-react"
+import { Building2, ChevronsUpDown, Check } from "lucide-react"
 import { useSidebar } from "./sidebar-context"
+import { useAccount } from "@/contexts/account-context"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface AccountSwitcherProps {
   variant?: "sidebar" | "mobile"
@@ -18,13 +20,20 @@ interface AccountSwitcherProps {
 
 export function AccountSwitcher({ variant = "sidebar" }: AccountSwitcherProps) {
   const { collapsed } = useSidebar()
+  const { currentCompany, setCompany, getAllCompanies } = useAccount()
 
   const isMobile = variant === "mobile"
   const isCollapsed = !isMobile && collapsed
+  const companies = getAllCompanies()
 
-  // TODO: Replace with actual account data from auth context
-  const accountName = "My Account"
-  const accountEmail = "user@example.com"
+  const handleCompanyChange = (companyId: string) => {
+    if (companyId !== currentCompany?.id) {
+      setCompany(companyId)
+    }
+  }
+
+  // Fallback if no company is selected
+  const displayCompany = currentCompany || companies[0]
 
   return (
     <DropdownMenu>
@@ -37,9 +46,18 @@ export function AccountSwitcher({ variant = "sidebar" }: AccountSwitcherProps) {
         )}
       >
         <div className="flex items-center gap-2">
-          <User className="h-4 w-4 shrink-0 text-primary" />
+          {displayCompany?.logo ? (
+            <Avatar className="h-4 w-4">
+              <AvatarImage src={displayCompany.logo} alt={displayCompany.name} />
+              <AvatarFallback className="text-xs">
+                {displayCompany.name.split(" ").map(n => n[0]).join("")}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <Building2 className="h-4 w-4 shrink-0 text-primary" />
+          )}
           {!isCollapsed && (
-            <span className="truncate">{accountName}</span>
+            <span className="truncate">{displayCompany?.name || "Company"}</span>
           )}
         </div>
         {!isCollapsed && (
@@ -53,22 +71,68 @@ export function AccountSwitcher({ variant = "sidebar" }: AccountSwitcherProps) {
         className="w-64"
       >
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          Account
+          Switch Company
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{accountName}</p>
-          <p className="text-xs text-muted-foreground">{accountEmail}</p>
-        </div>
+        {companies.map((company) => {
+          const isActive = company.id === displayCompany?.id
+
+          return (
+            <DropdownMenuItem
+              key={company.id}
+              onClick={() => handleCompanyChange(company.id)}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 py-2.5",
+                isActive && "bg-accent"
+              )}
+            >
+              <div
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-md",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {company.logo ? (
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={company.logo} alt={company.name} />
+                    <AvatarFallback className="text-xs">
+                      {company.name.split(" ").map(n => n[0]).join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Building2 className="h-4 w-4" />
+                )}
+              </div>
+              <div className="flex flex-1 flex-col gap-0.5">
+                <span className="font-medium">{company.name}</span>
+                {company.description && (
+                  <span className="text-xs text-muted-foreground">
+                    {company.description}
+                  </span>
+                )}
+                {company.industry && (
+                  <span className="text-xs text-muted-foreground">
+                    {company.industry}
+                  </span>
+                )}
+              </div>
+              {isActive && (
+                <Check className="h-4 w-4 shrink-0 text-primary" />
+              )}
+            </DropdownMenuItem>
+          )
+        })}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer">
-          Profile Settings
+          Company Settings
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">
           Billing
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">
-          Sign Out
+          Add Company
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
