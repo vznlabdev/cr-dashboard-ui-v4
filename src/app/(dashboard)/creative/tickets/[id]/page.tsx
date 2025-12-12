@@ -61,7 +61,6 @@ const DESIGN_TYPE_ICONS: Record<string, LucideIcon> = {
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { useWorkspace } from "@/contexts/workspace-context"
 import { TicketStatusBadge } from "@/components/creative"
 import { getTicketById, getBrandById } from "@/lib/mock-data/creative"
 import { DESIGN_TYPE_CONFIG, PRIORITY_CONFIG, Ticket, Comment } from "@/types/creative"
@@ -76,17 +75,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function TicketDetailPage() {
-  const { setWorkspace } = useWorkspace()
   const params = useParams()
   const ticketId = params.id as string
   
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [newComment, setNewComment] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    setWorkspace("creative")
-  }, [setWorkspace])
 
   useEffect(() => {
     // Simulate loading ticket data

@@ -5,10 +5,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   Home,
-  FolderKanban,
   Scale,
   Shield,
-  Plug,
   Settings,
   ChevronLeft,
   Ticket,
@@ -22,8 +20,7 @@ import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
 import { useSidebar } from "./sidebar-context"
-import { WorkspaceSwitcher } from "./WorkspaceSwitcher"
-import { useWorkspace, WorkspaceType } from "@/contexts/workspace-context"
+import { AccountSwitcher } from "./AccountSwitcher"
 
 interface NavItem {
   title: string
@@ -31,44 +28,15 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-// Stats Workspace navigation
-const statsNavItems: NavItem[] = [
+// Navigation items
+const navItems: NavItem[] = [
   {
     title: "Home",
     href: "/",
     icon: Home,
   },
   {
-    title: "Projects",
-    href: "/projects",
-    icon: FolderKanban,
-  },
-  {
-    title: "Legal Review",
-    href: "/legal",
-    icon: Scale,
-  },
-  {
-    title: "Insurance Risk",
-    href: "/insurance",
-    icon: Shield,
-  },
-  {
-    title: "Integrations",
-    href: "/integrations",
-    icon: Plug,
-  },
-]
-
-// Creative Workspace navigation
-const creativeNavItems: NavItem[] = [
-  {
-    title: "Home",
-    href: "/creative",
-    icon: Home,
-  },
-  {
-    title: "Tickets",
+    title: "Tasks",
     href: "/creative/tickets",
     icon: Ticket,
   },
@@ -78,30 +46,32 @@ const creativeNavItems: NavItem[] = [
     icon: Palette,
   },
   {
+    title: "Assets",
+    href: "/creative/assets",
+    icon: FileImage,
+  },
+  {
     title: "Team",
     href: "/creative/team",
     icon: Users,
   },
   {
-    title: "Assets",
-    href: "/creative/assets",
-    icon: FileImage,
+    title: "Legal",
+    href: "/legal",
+    icon: Scale,
+  },
+  {
+    title: "Insurance",
+    href: "/insurance",
+    icon: Shield,
   },
 ]
-
-// Get nav items based on workspace
-const getNavItems = (workspace: WorkspaceType): NavItem[] => {
-  return workspace === "creative" ? creativeNavItems : statsNavItems
-}
 
 export function Sidebar() {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
-  const { currentWorkspace } = useWorkspace()
   const [mounted, setMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
-  
-  const navItems = getNavItems(currentWorkspace)
   
   useEffect(() => {
     setMounted(true)
@@ -168,9 +138,9 @@ export function Sidebar() {
           )}
         </div>
 
-        {/* Workspace Switcher */}
+        {/* Account Switcher */}
         <div className="px-3 pt-3">
-          <WorkspaceSwitcher variant="sidebar" />
+          <AccountSwitcher variant="sidebar" />
         </div>
 
         {/* Navigation */}
@@ -178,8 +148,8 @@ export function Sidebar() {
           <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
-              // Check if this is the home page for the workspace
-              const isHome = item.href === "/" || item.href === "/creative"
+              // Check if this is the home page
+              const isHome = item.href === "/"
               const isActive = isHome 
                 ? pathname === item.href 
                 : pathname.startsWith(item.href)
