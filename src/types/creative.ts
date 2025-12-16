@@ -150,6 +150,24 @@ export interface Brand {
 
 export type AssetFileType = "image" | "video" | "pdf" | "document" | "archive" | "other"
 
+export type PromptRole = "user" | "assistant" | "system"
+
+export interface PromptMessage {
+  id: string
+  role: PromptRole
+  content: string
+  timestamp: Date
+  model?: string
+  parameters?: Record<string, any>
+}
+
+export interface PromptHistory {
+  messages: PromptMessage[]
+  aiTool?: string
+  modelVersion?: string
+  generationDate?: Date
+}
+
 export interface Asset {
   id: string
   name: string
@@ -172,6 +190,7 @@ export interface Asset {
   uploadedByName: string
   createdAt: Date
   updatedAt: Date
+  promptHistory?: PromptHistory
 }
 
 export interface AssetFilterConfig {

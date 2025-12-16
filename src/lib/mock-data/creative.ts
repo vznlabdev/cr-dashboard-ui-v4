@@ -901,6 +901,45 @@ export const mockAssets: Asset[] = [
     uploadedByName: "Mike Johnson",
     createdAt: new Date("2025-11-28"),
     updatedAt: new Date("2025-11-28"),
+    promptHistory: {
+      messages: [
+        {
+          id: "msg-1",
+          role: "user",
+          content: "Create a vibrant holiday sale banner for our homepage. It should feature festive colors, include 'Holiday Sale' text prominently, and have a modern, professional look that matches our brand.",
+          timestamp: new Date("2025-11-28T10:00:00"),
+        },
+        {
+          id: "msg-2",
+          role: "assistant",
+          content: "I'll create a holiday sale banner with festive colors and professional design. Let me generate a few options for you.",
+          timestamp: new Date("2025-11-28T10:00:15"),
+          model: "DALL-E 3",
+        },
+        {
+          id: "msg-3",
+          role: "user",
+          content: "Can you make it more winter-themed? Add snowflakes and use a blue and white color scheme instead.",
+          timestamp: new Date("2025-11-28T10:05:00"),
+        },
+        {
+          id: "msg-4",
+          role: "assistant",
+          content: "Perfect! I've updated the banner with a winter theme, snowflakes, and a blue and white color palette. The design maintains the professional look while adding the festive winter elements you requested.",
+          timestamp: new Date("2025-11-28T10:05:20"),
+          model: "DALL-E 3",
+          parameters: {
+            style: "professional",
+            aspect_ratio: "16:5",
+            color_scheme: "blue and white",
+            elements: ["snowflakes", "holiday text", "winter theme"],
+          },
+        },
+      ],
+      aiTool: "DALL-E",
+      modelVersion: "3",
+      generationDate: new Date("2025-11-28T10:05:20"),
+    },
   },
   {
     id: "asset-2",
@@ -965,6 +1004,46 @@ export const mockAssets: Asset[] = [
     uploadedByName: "Sarah Chen",
     createdAt: new Date("2025-12-02"),
     updatedAt: new Date("2025-12-02"),
+    promptHistory: {
+      messages: [
+        {
+          id: "msg-logo-1",
+          role: "user",
+          content: "Design a modern, minimalist logo for 'Urban Style Co'. It should be sleek, contemporary, and work well in both light and dark backgrounds. The logo should represent urban fashion and style.",
+          timestamp: new Date("2025-12-02T09:30:00"),
+        },
+        {
+          id: "msg-logo-2",
+          role: "assistant",
+          content: "I've created several logo concepts for Urban Style Co. Here are three options with different styles - one geometric, one typographic, and one icon-based. Which direction would you like to explore further?",
+          timestamp: new Date("2025-12-02T09:30:25"),
+          model: "Midjourney",
+        },
+        {
+          id: "msg-logo-3",
+          role: "user",
+          content: "I like the geometric one, but can you make it more abstract and use a monochrome color scheme? Also, ensure it's scalable for small sizes.",
+          timestamp: new Date("2025-12-02T09:45:00"),
+        },
+        {
+          id: "msg-logo-4",
+          role: "assistant",
+          content: "Perfect! I've refined the geometric logo with a more abstract design, using a monochrome palette. The design is optimized for scalability and will work well at any size from business cards to billboards.",
+          timestamp: new Date("2025-12-02T09:45:30"),
+          model: "Midjourney",
+          parameters: {
+            style: "geometric abstract",
+            color_mode: "monochrome",
+            format: "SVG",
+            scalability: "optimized",
+            version: "v6",
+          },
+        },
+      ],
+      aiTool: "Midjourney",
+      modelVersion: "6.0",
+      generationDate: new Date("2025-12-02T09:45:30"),
+    },
   },
   {
     id: "asset-5",
