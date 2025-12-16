@@ -150,6 +150,8 @@ export interface Brand {
 
 export type AssetFileType = "image" | "video" | "pdf" | "document" | "archive" | "other"
 
+export type AssetContentType = "original" | "ai_generated"
+
 export type PromptRole = "user" | "assistant" | "system"
 
 export interface PromptMessage {
@@ -175,6 +177,7 @@ export interface Asset {
   thumbnailUrl: string
   fileUrl: string
   fileType: AssetFileType
+  contentType: AssetContentType
   mimeType: string
   fileSize: number // in bytes
   dimensions?: { width: number; height: number }
@@ -205,6 +208,28 @@ export const ASSET_FILE_TYPE_CONFIG: Record<AssetFileType, AssetFilterConfig> = 
   document: { label: "Documents", icon: "📝" },
   archive: { label: "Archives", icon: "📦" },
   other: { label: "Other", icon: "📎" },
+}
+
+export interface AssetContentTypeConfig {
+  label: string
+  iconName: string
+  color: string
+  bgColor: string
+}
+
+export const ASSET_CONTENT_TYPE_CONFIG: Record<AssetContentType, AssetContentTypeConfig> = {
+  original: {
+    label: "Original",
+    iconName: "FileText",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted/50",
+  },
+  ai_generated: {
+    label: "AI Generated",
+    iconName: "Sparkles",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted/50",
+  },
 }
 
 // =============================================================================

@@ -1,6 +1,6 @@
 "use client"
 
-import { Asset, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { Asset, ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
 import {
   Dialog,
@@ -13,20 +13,19 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import {
   Download,
-  X,
   Calendar,
   User,
   Palette,
   Ticket,
   Tag,
   FileImage,
-  Maximize2,
+  Sparkles,
 } from "lucide-react"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PromptHistory } from "./PromptHistory"
+import { PromptContent } from "./PromptContent"
 import { useState } from "react"
 
 interface AssetPreviewModalProps {
@@ -44,9 +43,10 @@ export function AssetPreviewModal({
   
   if (!asset) return null
 
-  const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
+  const contentTypeConfig = ASSET_CONTENT_TYPE_CONFIG[asset.contentType]
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
   const DesignIcon = getDesignTypeIcon(designTypeConfig.iconName)
+  const isAIGenerated = asset.contentType === "ai_generated"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,10 +56,14 @@ export function AssetPreviewModal({
             <div className="space-y-1">
               <DialogTitle className="text-xl">{asset.name}</DialogTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Badge variant="outline" className="text-xs">
-                  {fileTypeConfig.icon} {fileTypeConfig.label}
-                </Badge>
-                <span>•</span>
+                {isAIGenerated && (
+                  <>
+                    <div className="bg-yellow-400 rounded p-1">
+                      <Sparkles className="h-4 w-4 text-black" />
+                    </div>
+                    <span>•</span>
+                  </>
+                )}
                 <span>{formatFileSize(asset.fileSize)}</span>
                 {asset.dimensions && (
                   <>
@@ -76,9 +80,9 @@ export function AssetPreviewModal({
           <TabsList className="shrink-0">
             <TabsTrigger value="preview">Preview</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
-            {asset.promptHistory && (
-              <TabsTrigger value="prompt-history">Prompt History</TabsTrigger>
-            )}
+          {asset.promptHistory && (
+            <TabsTrigger value="prompt-history">Prompt</TabsTrigger>
+          )}
           </TabsList>
 
           <TabsContent value="preview" className="flex-1 overflow-auto mt-4 scrollbar-thin">
@@ -185,6 +189,20 @@ export function AssetPreviewModal({
                     </p>
                   </div>
                 </div>
+
+                {isAIGenerated && (
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-400 rounded p-1 mt-0.5">
+                      <Sparkles className="h-4 w-4 text-black" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Content Type</p>
+                      <p className="text-sm font-medium flex items-center gap-1.5">
+                        {contentTypeConfig.label}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
@@ -335,6 +353,20 @@ export function AssetPreviewModal({
                     </div>
                   </div>
 
+                  {isAIGenerated && (
+                    <div className="flex items-start gap-3">
+                      <div className="bg-yellow-400 rounded p-1 mt-0.5">
+                        <Sparkles className="h-4 w-4 text-black" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Content Type</p>
+                        <p className="text-sm font-medium flex items-center gap-1.5">
+                          {contentTypeConfig.label}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-3">
                     <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
@@ -381,7 +413,7 @@ export function AssetPreviewModal({
 
           {asset.promptHistory && (
             <TabsContent value="prompt-history" className="flex-1 overflow-auto mt-4 scrollbar-thin">
-              <PromptHistory history={asset.promptHistory} />
+              <PromptContent history={asset.promptHistory} />
             </TabsContent>
           )}
         </Tabs>
