@@ -10,6 +10,7 @@ import {
   Search,
   LayoutGrid,
   List,
+  Table as TableIcon,
   Download,
   FileImage,
   FileText,
@@ -31,6 +32,7 @@ import {
   CreditCard,
   Tag,
   Sparkles,
+  ExternalLink,
 } from "lucide-react"
 import {
   Select,
@@ -39,6 +41,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
@@ -47,8 +57,11 @@ import { AssetCard, AssetPreviewModal } from "@/components/creative"
 import { Asset, AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { Checkbox } from "@/components/ui/checkbox"
+import { format } from "date-fns"
+import NextImage from "next/image"
 
-type ViewType = "grid" | "list"
+type ViewType = "grid" | "list" | "table"
 
 export default function AssetsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -256,6 +269,13 @@ export default function AssetsPage() {
               >
                 <List className="h-4 w-4" />
               </Button>
+              <Button
+                variant={view === "table" ? "secondary" : "outline"}
+                size="icon"
+                onClick={() => setView("table")}
+              >
+                <TableIcon className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -305,7 +325,7 @@ export default function AssetsPage() {
         </div>
       </div>
 
-      {/* Asset Grid/List */}
+      {/* Asset Grid/List/Table */}
       {view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filteredAssets.map((asset) => (
@@ -319,7 +339,7 @@ export default function AssetsPage() {
             />
           ))}
         </div>
-      ) : (
+      ) : view === "list" ? (
         <div className="space-y-2">
           {filteredAssets.map((asset) => (
             <AssetCard
@@ -332,10 +352,151 @@ export default function AssetsPage() {
             />
           ))}
         </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedAssets.size === filteredAssets.length && filteredAssets.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Asset</TableHead>
+                  <TableHead>Brand</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAssets.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <FileImage className="h-8 w-8 text-muted-foreground/50" />
+                        <p className="text-sm text-muted-foreground">
+                          {hasActiveFilters
+                            ? "No assets found matching your filters."
+                            : "No assets in the library yet."}
+                        </p>
+                        {hasActiveFilters && (
+                          <Button variant="outline" size="sm" onClick={clearFilters} className="mt-2">
+                            Clear Filters
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAssets.map((asset) => {
+                    const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
+                    const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
+                    const DesignIcon = getDesignTypeIcon(designTypeConfig.iconName)
+                    const isSelected = selectedAssets.has(asset.id)
+
+                    return (
+                      <TableRow
+                        key={asset.id}
+                        className={cn(
+                          "cursor-pointer",
+                          isSelected && "bg-muted/50"
+                        )}
+                        onClick={() => setPreviewAsset(asset)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelect(asset.id, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-10 w-10 rounded overflow-hidden bg-muted shrink-0">
+                              <NextImage
+                                src={asset.thumbnailUrl}
+                                alt={asset.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{asset.name}</p>
+                              {asset.description && (
+                                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                  {asset.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {asset.brandColor && (
+                              <div
+                                className="h-3 w-3 rounded-full shrink-0"
+                                style={{ backgroundColor: asset.brandColor }}
+                              />
+                            )}
+                            <span className="text-sm">{asset.brandName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {fileTypeConfig.icon} {fileTypeConfig.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <DesignIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {designTypeConfig.label}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatFileSize(asset.fileSize)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(asset.createdAt, "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-2">
+                            <a
+                              href={asset.fileUrl}
+                              download
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2 hover:bg-muted rounded-md transition-colors"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setPreviewAsset(asset)
+                              }}
+                              className="p-2 hover:bg-muted rounded-md transition-colors"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Empty State */}
-      {filteredAssets.length === 0 && (
+      {/* Empty State (for grid and list views) */}
+      {filteredAssets.length === 0 && view !== "table" && (
         <div className="text-center py-12">
           <FileImage className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
           <p className="text-muted-foreground mb-4">

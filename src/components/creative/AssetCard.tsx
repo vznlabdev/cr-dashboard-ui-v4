@@ -1,8 +1,7 @@
 "use client"
 
-import { Asset, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { Asset, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { formatFileSize } from "@/lib/format-utils"
@@ -10,11 +9,7 @@ import { format } from "date-fns"
 import {
   Download,
   ExternalLink,
-  FileImage,
-  FileVideo,
-  FileText,
-  File,
-  Package,
+  Sparkles,
 } from "lucide-react"
 import Image from "next/image"
 
@@ -27,23 +22,6 @@ interface AssetCardProps {
   className?: string
 }
 
-const FileTypeIcon = ({ fileType }: { fileType: Asset["fileType"] }) => {
-  switch (fileType) {
-    case "image":
-      return <FileImage className="h-5 w-5" />
-    case "video":
-      return <FileVideo className="h-5 w-5" />
-    case "pdf":
-      return <FileText className="h-5 w-5" />
-    case "document":
-      return <FileText className="h-5 w-5" />
-    case "archive":
-      return <Package className="h-5 w-5" />
-    default:
-      return <File className="h-5 w-5" />
-  }
-}
-
 export function AssetCard({
   asset,
   variant = "grid",
@@ -52,8 +30,8 @@ export function AssetCard({
   onClick,
   className,
 }: AssetCardProps) {
-  const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
+  const isAIGenerated = asset.contentType === "ai_generated"
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger onClick if clicking on checkbox
@@ -117,10 +95,14 @@ export function AssetCard({
               </span>
             </div>
 
-            {/* Type Badge */}
-            <Badge variant="outline" className="shrink-0">
-              {fileTypeConfig.icon} {fileTypeConfig.label}
-            </Badge>
+            {/* Content Type Icon */}
+            {isAIGenerated && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="bg-yellow-400 rounded p-1">
+                  <Sparkles className="h-4 w-4 text-black" />
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -199,12 +181,12 @@ export function AssetCard({
           </div>
         )}
 
-        {/* File type badge */}
-        <div className="absolute top-2 right-2">
-          <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm text-xs">
-            {fileTypeConfig.icon}
-          </Badge>
-        </div>
+        {/* Content type icon */}
+        {isAIGenerated && (
+          <div className="absolute top-2 right-2 bg-yellow-400 rounded p-1.5">
+            <Sparkles className="h-4 w-4 text-black" />
+          </div>
+        )}
 
         {/* Brand color bar */}
         <div
