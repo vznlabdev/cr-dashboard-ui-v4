@@ -34,11 +34,10 @@ npm install
 
 ```bash
 # Create environment file
-cp ENV_SETUP.md .env.local
+# See ENV_VARIABLES.md for complete documentation
 
-# Edit .env.local and add your values
-# Minimum required:
-# NEXT_PUBLIC_API_URL=http://localhost:8000/api
+# Create .env.local and add:
+# NEXT_PUBLIC_API_URL=http://localhost:4000/api
 ```
 
 ### 4. Run Development Server
@@ -85,19 +84,36 @@ npm install --save-dev husky lint-staged prettier prettier-plugin-tailwindcss
 npx husky init
 
 # Create pre-commit hook
-echo "npx lint-staged" > .husky/pre-commit
+# Windows (PowerShell):
+New-Item -Path .husky/pre-commit -ItemType File -Force
+Set-Content -Path .husky/pre-commit -Value "npx lint-staged"
 
-# Make it executable (Mac/Linux)
+# Mac/Linux:
+echo "npx lint-staged" > .husky/pre-commit
 chmod +x .husky/pre-commit
 ```
-
-See `HUSKY_SETUP.md` for detailed instructions.
 
 **What it does:**
 - Automatically formats code with Prettier
 - Runs ESLint and fixes issues
 - Type-checks TypeScript
 - Prevents committing broken code
+
+**What Happens on Commit:**
+1. Prettier formats your code automatically
+2. ESLint fixes auto-fixable issues
+3. TypeScript checks for type errors
+4. If everything passes, commit proceeds
+5. If errors found, commit is blocked
+
+**Skipping Hooks (Emergency Only):**
+```bash
+git commit --no-verify -m "emergency fix"
+```
+
+**Troubleshooting:**
+- If hooks not running, make sure hooks are executable: `chmod +x .husky/pre-commit` (Mac/Linux)
+- Run manually to see errors: `npx lint-staged`
 
 ---
 
@@ -120,7 +136,7 @@ npm run test:watch   # Run tests in watch mode
 npm run test:coverage # Generate coverage report
 ```
 
-**Note:** Test scripts require installing testing dependencies first. See `TESTING_SETUP.md`.
+**Note:** Test scripts require installing testing dependencies first. See `TESTING.md` for setup instructions.
 
 ---
 

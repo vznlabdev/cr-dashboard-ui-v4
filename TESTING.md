@@ -6,13 +6,15 @@ Complete guide for testing the Creation Rights Dashboard application.
 
 ## Setup
 
-### Install Testing Dependencies
+### Step 1: Install Testing Dependencies
+
+**Note:** Testing dependencies are not included in package.json by default to keep the initial install lightweight.
 
 ```bash
-npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom @types/jest
 ```
 
-### Add Test Scripts to package.json
+### Step 2: Add Test Scripts to package.json
 
 Add these scripts to your `package.json`:
 
@@ -26,6 +28,28 @@ Add these scripts to your `package.json`:
   }
 }
 ```
+
+### Step 3: Verify Setup
+
+```bash
+# Run example tests
+npm test
+
+# Expected: 3 test suites, 15+ tests passing
+```
+
+### Configuration Files
+
+Already created:
+- `jest.config.js` - Jest configuration
+- `jest.setup.js` - Test environment setup
+
+### Example Tests Included
+
+1. **src/lib/__tests__/export-utils.test.ts** - Tests for CSV/JSON export functions (7 test cases)
+2. **src/lib/__tests__/type-guards.test.ts** - Tests for type validators (10+ test cases)
+3. **src/components/cr/__tests__/EmptyState.test.tsx** - Component rendering tests (4 test cases)
+4. **src/contexts/__tests__/data-context.test.tsx** - Integration tests for CRUD operations (6 test cases)
 
 ---
 
