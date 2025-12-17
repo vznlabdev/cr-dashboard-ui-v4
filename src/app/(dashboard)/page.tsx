@@ -18,7 +18,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ComplianceScoreGauge, RiskIndexBadge, NewProjectDialog } from "@/components/cr";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  calculateTIV,
+  calculateEAL,
+  formatLargeCurrency,
+  calculateRiskScore,
+  getRiskGrade,
+} from "@/lib/insurance-utils";
+import type { RiskScores } from "@/types";
+import { DollarSign, TrendingDown } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -36,6 +45,33 @@ import { PageContainer } from "@/components/layout/PageContainer";
 export default function DashboardPage() {
   const chartTheme = useChartTheme();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  
+  // Calculate portfolio insurance metrics
+  const portfolioRiskScores: RiskScores = useMemo(() => ({
+    documentation: 88,
+    toolSafety: 92,
+    copyrightCheck: 96,
+    aiModelTrust: 82,
+    trainingDataQuality: 78,
+  }), []);
+
+  const portfolioRiskScore = useMemo(() => {
+    return calculateRiskScore(portfolioRiskScores);
+  }, [portfolioRiskScores]);
+
+  const portfolioTIV = useMemo(() => {
+    // Calculate from all projects (simplified for demo)
+    const totalAssetValue = 2_450_000;
+    const avgRiskMultiplier = 2.0;
+    const avgDistributionMultiplier = 2.5; // National
+    return calculateTIV(totalAssetValue, avgRiskMultiplier, avgDistributionMultiplier);
+  }, []);
+
+  const portfolioEAL = useMemo(() => {
+    return calculateEAL(portfolioTIV, portfolioRiskScores.documentation);
+  }, [portfolioTIV, portfolioRiskScores.documentation]);
+
+  const criticalIssuesCount: number = 2; // From insurance dashboard issues
   
   return (
     <PageContainer className="space-y-6 animate-fade-in">
@@ -120,6 +156,70 @@ export default function DashboardPage() {
           </Card>
         </Link>
       </div>
+
+      {/* Insurance Summary */}
+      <Link href="/insurance" className="block">
+        <Card className="border-primary/20 bg-primary/5 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg sm:text-xl">Insurance & Risk Summary</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Portfolio-level insurance metrics and risk assessment
+                </CardDescription>
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Total Insured Value</span>
+                </div>
+                <p className="text-2xl font-bold">{formatLargeCurrency(portfolioTIV)}</p>
+                <p className="text-xs text-muted-foreground">Portfolio TIV</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Shield className="h-4 w-4" />
+                  <span>Expected Annual Loss</span>
+                </div>
+                <p className="text-2xl font-bold">{formatLargeCurrency(portfolioEAL)}</p>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <TrendingDown className="mr-1 h-3 w-3 text-green-500" />
+                  <span className="text-green-500">Low risk exposure</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Critical Issues</span>
+                </div>
+                <p className="text-2xl font-bold">{criticalIssuesCount}</p>
+                <p className="text-xs text-muted-foreground">
+                  {criticalIssuesCount === 0 ? "All clear" : "Require attention"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Portfolio Risk Score</p>
+                  <p className="text-xs text-muted-foreground">Weighted from 5 key metrics</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{portfolioRiskScore}</p>
+                  <Badge variant="default" className="mt-1">
+                    {getRiskGrade(portfolioRiskScore)} Grade
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Activity Trends Chart */}
       <Card>

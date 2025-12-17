@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState, AddAssetDialog } from "@/components/cr";
+import { EmptyState, AddAssetDialog, WorkflowTracker } from "@/components/cr";
 import {
   Download,
   FileText,
@@ -16,6 +16,9 @@ import {
   FolderOpen,
   Trash2,
   MoreHorizontal,
+  DollarSign,
+  Shield,
+  ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -44,7 +47,15 @@ import {
 import { useData } from "@/contexts/data-context";
 import { notFound, useParams } from "next/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  calculateTIV,
+  calculatePortfolioTIV,
+  formatLargeCurrency,
+  calculateWorkflowCompletion,
+  getRiskLevelFromWorkflow,
+} from "@/lib/insurance-utils";
+import type { WorkflowStep, DistributionLevel } from "@/types";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -76,6 +87,96 @@ export default function ProjectDetailPage() {
       setDeletingAssetId(null);
     }
   };
+
+  // Calculate insurance metrics for project
+  const projectWorkflowSteps: WorkflowStep[] = useMemo(() => {
+    // Aggregate workflow from all assets in the project
+    // For demo, we'll create a project-level workflow based on asset completion
+    const completedAssets = assets.filter(a => a.status === "Approved").length;
+    const totalAssets = assets.length;
+    const completionRate = totalAssets > 0 ? completedAssets / totalAssets : 0;
+    
+    // Map completion rate to 7-step workflow
+    const stepsCompleted = Math.round(completionRate * 7);
+    
+    return [
+      {
+        id: 1,
+        name: "Task Assignment",
+        status: stepsCompleted >= 1 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 1 ? new Date() : undefined,
+      },
+      {
+        id: 2,
+        name: "Approved Tool Used",
+        status: stepsCompleted >= 2 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 2 ? new Date() : undefined,
+      },
+      {
+        id: 3,
+        name: "Model Documented",
+        status: stepsCompleted >= 3 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 3 ? new Date() : undefined,
+      },
+      {
+        id: 4,
+        name: "Training Data Verified",
+        status: stepsCompleted >= 4 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 4 ? new Date() : undefined,
+      },
+      {
+        id: 5,
+        name: "Prompt Saved",
+        status: stepsCompleted >= 5 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 5 ? new Date() : undefined,
+      },
+      {
+        id: 6,
+        name: "Output Documented",
+        status: stepsCompleted >= 6 ? "completed" : "incomplete",
+        completedAt: stepsCompleted >= 6 ? new Date() : undefined,
+      },
+      {
+        id: 7,
+        name: "Copyright Check Passed",
+        status: stepsCompleted >= 7 ? "completed" : "pending",
+        completedAt: stepsCompleted >= 7 ? new Date() : undefined,
+      },
+    ];
+  }, [assets]);
+
+  const workflowCompletion = useMemo(() => {
+    return calculateWorkflowCompletion(projectWorkflowSteps);
+  }, [projectWorkflowSteps]);
+
+  // Calculate project TIV
+  const projectTIV = useMemo(() => {
+    const distributionLevel: DistributionLevel = "National" as DistributionLevel; // Default for projects
+    const baseValuePerAsset = 2000; // Average base value per asset
+    
+    const assetsWithFinancials = assets.map(asset => {
+      const riskMultiplier = asset.risk === "Low" ? 1.0 : asset.risk === "Medium" ? 1.5 : 2.0;
+    const distributionMultiplier: number = distributionLevel === "Internal" ? 1.0 :
+                                      distributionLevel === "Regional" ? 1.5 :
+                                      distributionLevel === "National" ? 2.5 : 4.0;
+      
+      return {
+        baseValue: baseValuePerAsset,
+        riskMultiplier,
+        distributionMultiplier,
+      };
+    });
+    
+    return calculatePortfolioTIV(assetsWithFinancials);
+  }, [assets]);
+
+  // Calculate risk score (simplified for project level)
+  const projectRiskScore = useMemo(() => {
+    // Base risk score from compliance and workflow
+    const complianceScore = project.compliance;
+    const workflowScore = workflowCompletion.completionRate;
+    return Math.round((complianceScore * 0.6 + workflowScore * 0.4));
+  }, [project.compliance, workflowCompletion.completionRate]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -137,7 +238,7 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Project Stats */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -169,6 +270,42 @@ export default function ProjectDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Insured Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatLargeCurrency(projectTIV)}</div>
+            <p className="text-xs text-muted-foreground mt-1">TIV</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Workflow</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {workflowCompletion.completedSteps}/{workflowCompletion.totalSteps}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {workflowCompletion.completionRate}% complete
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projectRiskScore}</div>
+            <p className="text-xs text-muted-foreground mt-1">0-100 scale</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Approved</CardTitle>
           </CardHeader>
           <CardContent>
@@ -177,18 +314,27 @@ export default function ProjectDetailPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assets.filter(a => a.status === "Review" || a.status === "Draft").length}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Insurance Quick Link */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">Insurance & Risk Assessment</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                View comprehensive insurance metrics and risk analysis for this project
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/insurance">
+                View Insurance Dashboard
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabbed Content */}
       <Tabs defaultValue="assets" className="space-y-4">
@@ -295,37 +441,35 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="workflow" className="space-y-4">
+          <WorkflowTracker 
+            steps={projectWorkflowSteps} 
+            showRiskLevel={true}
+          />
           <Card>
             <CardHeader>
-              <CardTitle>Workflow Status</CardTitle>
+              <CardTitle>Workflow Summary</CardTitle>
               <CardDescription>
-                Current approval workflow state
+                Project-level compliance workflow status
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-8">
-                {workflowSteps.map((step, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      step.completed ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {step.completed ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : step.active ? (
-                        <Clock className="h-5 w-5" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{step.title}</h4>
-                      <p className="text-sm text-muted-foreground">{step.description}</p>
-                      {step.date && (
-                        <p className="text-xs text-muted-foreground mt-1">{step.date}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Completion Rate</p>
+                  <p className="text-2xl font-bold">{workflowCompletion.completionRate}%</p>
+                  <p className="text-xs text-muted-foreground">
+                    {workflowCompletion.completedSteps} of {workflowCompletion.totalSteps} steps completed
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Risk Level</p>
+                  <Badge variant={getRiskVariant(workflowCompletion.riskLevel)} className="text-lg px-3 py-1">
+                    {workflowCompletion.riskLevel} Risk
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    Based on workflow completion
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -412,30 +556,6 @@ export default function ProjectDetailPage() {
   );
 }
 
-// Workflow mock data
-const workflowSteps = [
-  {
-    title: "Draft",
-    description: "Asset created and uploaded",
-    completed: true,
-    active: false,
-    date: "June 15, 2024 at 10:30 AM",
-  },
-  {
-    title: "Review",
-    description: "Legal and compliance review in progress",
-    completed: true,
-    active: false,
-    date: "June 18, 2024 at 2:15 PM",
-  },
-  {
-    title: "Approved",
-    description: "Assets cleared for production use",
-    completed: false,
-    active: true,
-    date: null,
-  },
-];
 
 const auditLogs = [
   {

@@ -30,4 +30,7 @@ export { DeleteProjectDialog } from "./delete-project-dialog";
 export { NotificationCenter } from "./notification-center";
 export { AddAssetDialog } from "./add-asset-dialog";
 export { InviteMemberDialog } from "./invite-member-dialog";
+export { WorkflowTracker } from "./workflow-tracker";
+export { RiskScoresPanel } from "./risk-scores-panel";
+export { IssuesAlertsPanel } from "./issues-alerts-panel";
 

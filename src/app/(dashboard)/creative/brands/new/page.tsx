@@ -148,7 +148,7 @@ export default function NewBrandPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button

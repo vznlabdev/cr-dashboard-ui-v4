@@ -11,6 +11,10 @@ import {
   History,
   CheckCircle2,
   GitBranch,
+  DollarSign,
+  Shield,
+  AlertCircle,
+  XCircle,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -23,6 +27,13 @@ import {
 import { useData } from "@/contexts/data-context";
 import { notFound, useParams } from "next/navigation";
 import { toast } from "sonner";
+import { WorkflowTracker } from "@/components/cr";
+import {
+  calculateTIV,
+  formatLargeCurrency,
+  calculateAssetFinancialBreakdown,
+} from "@/lib/insurance-utils";
+import type { WorkflowStep, DistributionLevel } from "@/types";
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -44,6 +55,103 @@ export default function AssetDetailPage() {
   const handleExportLegalRecord = () => {
     toast.success("Legal record exported successfully");
   };
+
+  // Mock data for asset insurance features
+  const approvalStatus: "Approved" | "Blocked" = asset.status === "Approved" ? "Approved" : "Blocked";
+  const similarityScore = 18; // 18% similarity (pass threshold is <30%)
+  const legalApproval = similarityScore < 30;
+  const toolUsed = "Midjourney";
+  const modelUsed = "v6.0";
+  const trainingDataSources = [
+    "Licensed Stock Photos (Adobe Stock)",
+    "Public Domain Images (CC0)",
+    "Company-owned Assets",
+  ];
+  const distributionLevel: DistributionLevel = "National" as DistributionLevel;
+
+  // 7-step workflow for this asset
+  const assetWorkflowSteps: WorkflowStep[] = [
+    {
+      id: 1,
+      name: "Task Assignment",
+      status: "completed",
+      completedAt: new Date("2024-06-15"),
+      evidence: [
+        { id: "1", type: "log", name: "Assignment log", timestamp: new Date("2024-06-15") },
+      ],
+    },
+    {
+      id: 2,
+      name: "Approved Tool Used",
+      status: "completed",
+      completedAt: new Date("2024-06-16"),
+      evidence: [
+        { id: "2", type: "file", name: "Tool approval certificate", timestamp: new Date("2024-06-16") },
+      ],
+    },
+    {
+      id: 3,
+      name: "Model Documented",
+      status: "completed",
+      completedAt: new Date("2024-06-17"),
+      evidence: [
+        { id: "3", type: "file", name: "Model documentation", timestamp: new Date("2024-06-17") },
+      ],
+    },
+    {
+      id: 4,
+      name: "Training Data Verified",
+      status: "completed",
+      completedAt: new Date("2024-06-18"),
+      evidence: [
+        { id: "4", type: "file", name: "Training data verification", timestamp: new Date("2024-06-18") },
+      ],
+    },
+    {
+      id: 5,
+      name: "Prompt Saved",
+      status: "completed",
+      completedAt: new Date("2024-06-19"),
+      evidence: [
+        { id: "5", type: "log", name: "Prompt record", timestamp: new Date("2024-06-19") },
+      ],
+    },
+    {
+      id: 6,
+      name: "Output Documented",
+      status: "completed",
+      completedAt: new Date("2024-06-20"),
+      evidence: [
+        { id: "6", type: "file", name: "Output documentation", timestamp: new Date("2024-06-20") },
+      ],
+    },
+    {
+      id: 7,
+      name: "Copyright Check Passed",
+      status: legalApproval ? "completed" : "pending",
+      completedAt: legalApproval ? new Date("2024-06-21") : undefined,
+      evidence: legalApproval
+        ? [
+            {
+              id: "7",
+              type: "certificate",
+              name: "Copyright scan certificate",
+              timestamp: new Date("2024-06-21"),
+            },
+          ]
+        : undefined,
+    },
+  ];
+
+  // Financial breakdown
+  const baseValue = 5000; // Base asset value
+  const riskMultiplier = asset.risk === "Low" ? 1.0 : asset.risk === "Medium" ? 1.5 : 2.0;
+  const distributionMultiplier = distributionLevel === "Internal" ? 1.0 : distributionLevel === "Regional" ? 1.5 : distributionLevel === "National" ? 2.5 : 4.0;
+  const financialBreakdown = calculateAssetFinancialBreakdown(
+    baseValue,
+    riskMultiplier,
+    distributionMultiplier
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -76,6 +184,9 @@ export default function AssetDetailPage() {
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-all">{asset.name}</h1>
             <Badge variant={getStatusVariant(asset.status)}>{asset.status}</Badge>
+            <Badge variant={approvalStatus === "Approved" ? "default" : "destructive"}>
+              {approvalStatus}
+            </Badge>
             <Badge variant="outline">{asset.type}</Badge>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base">
@@ -126,19 +237,25 @@ export default function AssetDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">AI Method</CardTitle>
+            <CardTitle className="text-sm font-medium">Similarity Score</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium">{asset.aiMethod}</p>
+            <div className={`text-2xl font-bold ${similarityScore < 30 ? "text-green-500" : "text-red-500"}`}>
+              {similarityScore}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {legalApproval ? "Passed" : "Failed"} (&lt;30% threshold)
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Type</CardTitle>
+            <CardTitle className="text-sm font-medium">Insured Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{asset.type}</p>
+            <div className="text-2xl font-bold">{formatLargeCurrency(financialBreakdown.finalInsuredValue)}</div>
+            <p className="text-xs text-muted-foreground mt-1">TIV</p>
           </CardContent>
         </Card>
       </div>
@@ -162,15 +279,67 @@ export default function AssetDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Financial Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Breakdown</CardTitle>
+          <CardDescription>
+            Insurance calculation details for this asset
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4" />
+                <span>Base Value</span>
+              </div>
+              <p className="text-2xl font-bold">{formatLargeCurrency(financialBreakdown.baseValue)}</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <AlertCircle className="h-4 w-4" />
+                <span>Risk Multiplier</span>
+              </div>
+              <p className="text-2xl font-bold">{financialBreakdown.riskMultiplier}×</p>
+              <p className="text-xs text-muted-foreground">Based on {asset.risk} risk</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Shield className="h-4 w-4" />
+                <span>Distribution Multiplier</span>
+              </div>
+              <p className="text-2xl font-bold">{financialBreakdown.distributionMultiplier}×</p>
+              <p className="text-xs text-muted-foreground">{distributionLevel} distribution</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4" />
+                <span>Final Insured Value</span>
+              </div>
+              <p className="text-2xl font-bold text-primary">
+                {formatLargeCurrency(financialBreakdown.finalInsuredValue)}
+              </p>
+              <p className="text-xs text-muted-foreground">TIV = Base × Risk × Distribution</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tabbed Content */}
-      <Tabs defaultValue="lineage" className="space-y-4">
+      <Tabs defaultValue="workflow" className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
+          <TabsTrigger value="workflow" className="whitespace-nowrap">Workflow</TabsTrigger>
           <TabsTrigger value="lineage" className="whitespace-nowrap">Lineage</TabsTrigger>
           <TabsTrigger value="ai-metadata" className="whitespace-nowrap">AI Metadata</TabsTrigger>
           <TabsTrigger value="rights" className="whitespace-nowrap">Rights & Licensing</TabsTrigger>
           <TabsTrigger value="conflicts" className="whitespace-nowrap">Conflict Checks</TabsTrigger>
           <TabsTrigger value="versions" className="whitespace-nowrap">Version History</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="workflow" className="space-y-4">
+          <WorkflowTracker steps={assetWorkflowSteps} showRiskLevel={true} />
+        </TabsContent>
 
         <TabsContent value="lineage" className="space-y-4">
           <Card>
@@ -275,6 +444,21 @@ export default function AssetDetailPage() {
               </div>
 
               <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Training Data Sources</h4>
+                <div className="space-y-2">
+                  {trainingDataSources.map((source, index) => (
+                    <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      <p className="text-sm font-medium">{source}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  All training data sources have been verified and licensed
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <h4 className="text-sm font-medium text-muted-foreground">Generation Parameters</h4>
                 <div className="grid gap-2 md:grid-cols-3">
                   <div className="p-3 rounded-lg bg-muted">
@@ -344,18 +528,96 @@ export default function AssetDetailPage() {
                 Automated and manual copyright validation results
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-green-500">No Conflicts Detected</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
+            <CardContent className="space-y-4">
+              {/* Similarity Score & Legal Approval */}
+              <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+                legalApproval
+                  ? "bg-green-500/10 border-green-500/20"
+                  : "bg-red-500/10 border-red-500/20"
+              }`}>
+                {legalApproval ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className={`font-medium ${legalApproval ? "text-green-500" : "text-red-500"}`}>
+                      {legalApproval ? "Copyright Check Passed" : "Copyright Check Failed"}
+                    </h4>
+                    <Badge variant={legalApproval ? "default" : "destructive"}>
+                      {similarityScore}% Similarity
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {legalApproval
+                      ? `Similarity score of ${similarityScore}% is below the 30% threshold. Asset is approved for use.`
+                      : `Similarity score of ${similarityScore}% exceeds the 30% threshold. Asset requires review before approval.`}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
                     Last scanned: 2 hours ago
                   </p>
                   <Button variant="outline" size="sm" className="mt-3">
                     Run New Scan
                   </Button>
                 </div>
+              </div>
+
+              {/* Legal Approval Status */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Similarity Score</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Current Score</span>
+                        <span className={`text-2xl font-bold ${similarityScore < 30 ? "text-green-500" : "text-red-500"}`}>
+                          {similarityScore}%
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Threshold</span>
+                        <span className="text-sm font-medium">30%</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            similarityScore < 30 ? "bg-green-500" : "bg-red-500"
+                          }`}
+                          style={{ width: `${Math.min(similarityScore, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Legal Approval</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <Badge variant={legalApproval ? "default" : "destructive"}>
+                          {legalApproval ? "Approved" : "Blocked"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Approved By</span>
+                        <span className="text-sm font-medium">Legal Team</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Approval Date</span>
+                        <span className="text-sm font-medium">
+                          {legalApproval ? "June 21, 2024" : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>

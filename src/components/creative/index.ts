@@ -11,5 +11,6 @@ export { WorkloadBar, WorkloadIndicator } from "./WorkloadBar"
 export { RoleBadge } from "./RoleBadge"
 export { AssetCard } from "./AssetCard"
 export { AssetPreviewModal } from "./AssetPreviewModal"
+export { UploadAssetDialog } from "./upload-asset-dialog"
 export { PromptHistory } from "./PromptHistory"
 
