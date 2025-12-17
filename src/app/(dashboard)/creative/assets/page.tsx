@@ -18,21 +18,9 @@ import {
   X,
   CheckSquare,
   Square,
-  BarChart3,
-  Share2,
-  ShoppingCart,
-  Mail,
-  Palette,
-  Presentation,
-  Globe,
-  Layout,
-  Shirt,
-  Image,
-  Store,
-  CreditCard,
-  Tag,
-  Sparkles,
   ExternalLink,
+  AlertTriangle,
+  ArrowRight,
 } from "lucide-react"
 import {
   Select,
@@ -60,6 +48,7 @@ import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import NextImage from "next/image"
+import Link from "next/link"
 
 type ViewType = "grid" | "list" | "table"
 
@@ -130,8 +119,42 @@ export default function AssetsPage() {
 
   const hasActiveFilters = searchQuery || brandFilter !== "all" || fileTypeFilter !== "all" || designTypeFilter !== "all"
 
+  // Count assets pending approval
+  const pendingApprovalCount = useMemo(() => {
+    return mockAssets.filter(
+      (asset) => asset.approvalStatus === "pending" && asset.copyrightCheckStatus === "completed"
+    ).length
+  }, [])
+
   return (
     <PageContainer className="space-y-6 animate-fade-in">
+      {/* Pending Approval Banner */}
+      {pendingApprovalCount > 0 && (
+        <Card className="border-amber-500 bg-amber-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="font-medium text-amber-900 dark:text-amber-100">
+                    {pendingApprovalCount} asset{pendingApprovalCount !== 1 ? "s" : ""} pending approval
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Review and approve assets flagged during copyright checks
+                  </p>
+                </div>
+              </div>
+              <Link href="/creative/assets/approvals">
+                <Button variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-500 hover:text-white">
+                  Review Now
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

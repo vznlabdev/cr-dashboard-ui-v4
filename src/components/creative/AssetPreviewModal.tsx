@@ -20,8 +20,11 @@ import {
   Tag,
   FileImage,
   Sparkles,
+  Shield,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react"
-import { getDesignTypeIcon } from "@/lib/design-icons"
 import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -45,7 +48,6 @@ export function AssetPreviewModal({
 
   const contentTypeConfig = ASSET_CONTENT_TYPE_CONFIG[asset.contentType]
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
-  const DesignIcon = getDesignTypeIcon(designTypeConfig.iconName)
   const isAIGenerated = asset.contentType === "ai_generated"
 
   return (
@@ -182,8 +184,7 @@ export function AssetPreviewModal({
                   <FileImage className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Design Type</p>
-                    <p className="text-sm font-medium flex items-center gap-1.5">
-                      <DesignIcon className="h-4 w-4" />
+                    <p className="text-sm font-medium">
                       {designTypeConfig.label}
                     </p>
                   </div>
@@ -243,6 +244,95 @@ export function AssetPreviewModal({
                   </div>
                 )}
               </div>
+
+              {/* Copyright Check Status */}
+              {asset.copyrightCheckStatus && asset.copyrightCheckData && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="text-sm font-medium">Copyright Check</h4>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Similarity Score</span>
+                        <Badge
+                          variant={
+                            asset.copyrightCheckData.similarityScore < 30
+                              ? "default"
+                              : "destructive"
+                          }
+                          className={
+                            asset.copyrightCheckData.similarityScore < 30
+                              ? "bg-green-500 hover:bg-green-600"
+                              : ""
+                          }
+                        >
+                          {asset.copyrightCheckData.similarityScore}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Risk Level</span>
+                        <Badge
+                          variant={
+                            asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
+                              ? "default"
+                              : asset.copyrightCheckData.riskBreakdown.riskLevel === "medium"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
+                          {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
+                        </Badge>
+                      </div>
+                      {asset.copyrightCheckData.matchedSources.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground text-xs">
+                            {asset.copyrightCheckData.matchedSources.length} match
+                            {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {asset.approvalStatus && (
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground text-xs">Approval Status</span>
+                          <Badge
+                            variant={
+                              asset.approvalStatus === "approved"
+                                ? "default"
+                                : asset.approvalStatus === "rejected"
+                                ? "destructive"
+                                : "outline"
+                            }
+                            className={
+                              asset.approvalStatus === "approved"
+                                ? "bg-green-500 hover:bg-green-600"
+                                : asset.approvalStatus === "pending"
+                                ? "text-amber-600 border-amber-500"
+                                : ""
+                            }
+                          >
+                            {asset.approvalStatus === "approved" && (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            )}
+                            {asset.approvalStatus === "rejected" && (
+                              <XCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {asset.approvalStatus === "pending" && (
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                            )}
+                            {asset.approvalStatus.charAt(0).toUpperCase() +
+                              asset.approvalStatus.slice(1)}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           </TabsContent>

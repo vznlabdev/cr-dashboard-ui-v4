@@ -14,6 +14,7 @@ import {
   Users,
   FileImage,
   FolderKanban,
+  CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -55,6 +56,11 @@ const navItems: NavItem[] = [
     title: "Assets",
     href: "/creative/assets",
     icon: FileImage,
+  },
+  {
+    title: "Asset Approvals",
+    href: "/creative/assets/approvals",
+    icon: CheckCircle2,
   },
   {
     title: "Team",

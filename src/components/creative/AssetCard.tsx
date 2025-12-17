@@ -3,6 +3,7 @@
 import { Asset, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { formatFileSize } from "@/lib/format-utils"
 import { format } from "date-fns"
@@ -10,6 +11,8 @@ import {
   Download,
   ExternalLink,
   Sparkles,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react"
 import Image from "next/image"
 
@@ -32,6 +35,11 @@ export function AssetCard({
 }: AssetCardProps) {
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
   const isAIGenerated = asset.contentType === "ai_generated"
+  const copyrightStatus = asset.copyrightCheckStatus
+  const approvalStatus = asset.approvalStatus
+  const needsApproval = approvalStatus === "pending"
+  const isApproved = approvalStatus === "approved"
+  const isRejected = approvalStatus === "rejected"
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger onClick if clicking on checkbox
@@ -102,6 +110,35 @@ export function AssetCard({
                   <Sparkles className="h-4 w-4 text-black" />
                 </div>
               </div>
+            )}
+
+            {/* Copyright check status */}
+            {copyrightStatus === "completed" && (
+              <div className="flex items-center gap-1 shrink-0">
+                {asset.copyrightCheckData?.similarityScore !== undefined &&
+                asset.copyrightCheckData.similarityScore < 30 ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-amber-500" />
+                )}
+                {needsApproval && (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-500">
+                    Review
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Approval status */}
+            {isApproved && (
+              <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs">
+                Approved
+              </Badge>
+            )}
+            {isRejected && (
+              <Badge variant="destructive" className="text-xs">
+                Rejected
+              </Badge>
             )}
 
             {/* Actions */}
@@ -181,12 +218,39 @@ export function AssetCard({
           </div>
         )}
 
-        {/* Content type icon */}
-        {isAIGenerated && (
-          <div className="absolute top-2 right-2 bg-yellow-400 rounded p-1.5">
-            <Sparkles className="h-4 w-4 text-black" />
-          </div>
-        )}
+            {/* Content type icon */}
+            {isAIGenerated && (
+              <div className="absolute top-2 right-2 bg-yellow-400 rounded p-1.5">
+                <Sparkles className="h-4 w-4 text-black" />
+              </div>
+            )}
+
+            {/* Copyright check status */}
+            {copyrightStatus === "completed" && (
+              <div className="absolute top-2 left-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded px-1.5 py-0.5">
+                {asset.copyrightCheckData?.similarityScore !== undefined &&
+                asset.copyrightCheckData.similarityScore < 30 ? (
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                ) : (
+                  <XCircle className="h-3 w-3 text-amber-500" />
+                )}
+                {needsApproval && (
+                  <span className="text-xs font-medium text-amber-600">Review</span>
+                )}
+              </div>
+            )}
+
+            {/* Approval status badge */}
+            {isApproved && (
+              <div className="absolute bottom-2 right-2 bg-green-500 text-white rounded px-2 py-0.5 text-xs font-medium">
+                Approved
+              </div>
+            )}
+            {isRejected && (
+              <div className="absolute bottom-2 right-2 bg-red-500 text-white rounded px-2 py-0.5 text-xs font-medium">
+                Rejected
+              </div>
+            )}
 
         {/* Brand color bar */}
         <div
