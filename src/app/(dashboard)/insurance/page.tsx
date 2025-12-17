@@ -10,6 +10,8 @@ import {
   FileCheck,
   Download,
   AlertTriangle,
+  Info,
+  Users,
 } from "lucide-react";
 import {
   AreaChart,
@@ -17,6 +19,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,19 +32,187 @@ import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { toast } from "sonner";
 import { downloadJSON, prepareRiskDataForExport } from "@/lib/export-utils";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { WorkflowTracker, RiskScoresPanel, IssuesAlertsPanel } from "@/components/cr";
+import {
+  calculateRiskScore,
+  getRiskGrade,
+  calculateTIV,
+  calculateEAL,
+  calculateLiability,
+  formatLargeCurrency,
+  calculateAIUsagePercentage,
+  isAIUsageExcessive,
+} from "@/lib/insurance-utils";
+import type {
+  RiskScores,
+  WorkflowStep,
+  InsuranceIssue,
+  PortfolioMix,
+  ClientConcentration,
+  RiskGrade,
+} from "@/types";
 
 export default function InsurancePage() {
   const chartTheme = useChartTheme();
   
+  // Calculate risk metrics from mock data
+  const riskScores: RiskScores = {
+    documentation: 88, // (6/7) * 100 = 85.7, rounded to 88
+    toolSafety: 92,
+    copyrightCheck: 96,
+    aiModelTrust: 82,
+    trainingDataQuality: 78,
+  };
+
+  const riskScore = calculateRiskScore(riskScores);
+  const riskGrade: RiskGrade = getRiskGrade(riskScore);
+  
+  // Financial calculations
+  const totalAssetValue = 2_450_000; // Base value
+  const avgRiskMultiplier = 2.0; // Average from portfolio mix
+  const avgDistributionMultiplier = 2.5; // National distribution
+  const tiv = calculateTIV(totalAssetValue, avgRiskMultiplier, avgDistributionMultiplier);
+  const eal = calculateEAL(tiv, riskScores.documentation);
+  const liability = calculateLiability(eal);
+
+  // Portfolio mix data
+  const portfolioMix: PortfolioMix[] = [
+    { type: "Pure Human", count: 245, percentage: 20, riskMultiplier: 1.0, totalValue: 245_000 },
+    { type: "AI-Assisted", count: 490, percentage: 40, riskMultiplier: 1.5, totalValue: 735_000 },
+    { type: "Hybrid", count: 245, percentage: 20, riskMultiplier: 2.0, totalValue: 490_000 },
+    { type: "AI-Generated", count: 245, percentage: 20, riskMultiplier: 3.0, totalValue: 735_000 },
+  ];
+
+  const aiUsagePercentage = calculateAIUsagePercentage(portfolioMix);
+  const aiUsageExcessive = isAIUsageExcessive(aiUsagePercentage, 60);
+
+  // Client concentration data
+  const clientConcentration: ClientConcentration[] = [
+    { clientId: "1", clientName: "Acme Corp", insuredValue: 980_000, percentageOfPortfolio: 40, riskFlagged: true, assetCount: 392 },
+    { clientId: "2", clientName: "TechStart Inc", insuredValue: 490_000, percentageOfPortfolio: 20, riskFlagged: false, assetCount: 196 },
+    { clientId: "3", clientName: "Global Media", insuredValue: 367_500, percentageOfPortfolio: 15, riskFlagged: false, assetCount: 147 },
+    { clientId: "4", clientName: "Digital Solutions", insuredValue: 245_000, percentageOfPortfolio: 10, riskFlagged: false, assetCount: 98 },
+    { clientId: "5", clientName: "Creative Agency", insuredValue: 367_500, percentageOfPortfolio: 15, riskFlagged: false, assetCount: 147 },
+  ];
+
+  // Workflow steps for portfolio
+  const portfolioWorkflowSteps: WorkflowStep[] = [
+    { id: 1, name: "Task Assignment", status: "completed", completedAt: new Date("2024-11-01") },
+    { id: 2, name: "Approved Tool Used", status: "completed", completedAt: new Date("2024-11-02") },
+    { id: 3, name: "Model Documented", status: "completed", completedAt: new Date("2024-11-03") },
+    { id: 4, name: "Training Data Verified", status: "completed", completedAt: new Date("2024-11-04") },
+    { id: 5, name: "Prompt Saved", status: "completed", completedAt: new Date("2024-11-05") },
+    { id: 6, name: "Output Documented", status: "completed", completedAt: new Date("2024-11-06") },
+    { id: 7, name: "Copyright Check Passed", status: "pending" },
+  ];
+
+  // Issues & Alerts
+  const issues: InsuranceIssue[] = [
+    {
+      id: "1",
+      title: "Failed Copyright Scan",
+      description: "Asset #1234 failed similarity scan with 45% match",
+      severity: "Critical",
+      category: "copyright",
+      assetId: "1234",
+      createdAt: new Date("2024-11-25"),
+      resolved: false,
+    },
+    {
+      id: "2",
+      title: "Unapproved AI Tool Detected",
+      description: "Midjourney v6 used without approval",
+      severity: "Critical",
+      category: "tool",
+      assetId: "5678",
+      createdAt: new Date("2024-11-24"),
+      resolved: false,
+    },
+    {
+      id: "3",
+      title: "Missing Copyright Check",
+      description: "12 assets missing copyright verification",
+      severity: "Urgent",
+      category: "copyright",
+      dueDate: new Date("2024-12-25"),
+      createdAt: new Date("2024-11-20"),
+      resolved: false,
+    },
+    {
+      id: "4",
+      title: "License Expiring",
+      description: "Adobe Stock license expires in 25 days",
+      severity: "Urgent",
+      category: "license",
+      dueDate: new Date("2024-12-20"),
+      createdAt: new Date("2024-11-15"),
+      resolved: false,
+    },
+    {
+      id: "5",
+      title: "Incomplete Workflows",
+      description: "8 assets with incomplete 7-step workflow",
+      severity: "Important",
+      category: "workflow",
+      createdAt: new Date("2024-11-10"),
+      resolved: false,
+    },
+  ];
+
   const handleExportRiskReport = () => {
     const riskData = prepareRiskDataForExport({
-      riskIndex: "A",
-      provenanceScore: 94.2,
-      totalAssets: 2847,
-      compliancePercentage: 87,
+      riskIndex: riskGrade,
+      provenanceScore: riskScore,
+      totalAssets: 1225,
+      compliancePercentage: riskScores.documentation,
     });
     downloadJSON(riskData, `risk-report-${new Date().toISOString().split('T')[0]}`);
     toast.success("Risk report exported successfully");
+  };
+
+  const handleIssueClick = (issue: InsuranceIssue) => {
+    if (issue.assetId) {
+      toast.info(`Navigating to asset ${issue.assetId}`);
+      // Navigate to asset detail page
+    }
+  };
+
+  const getRiskGradeColor = (grade: RiskGrade) => {
+    switch (grade) {
+      case "A":
+        return "text-green-500 border-green-500";
+      case "B":
+        return "text-blue-500 border-blue-500";
+      case "C":
+        return "text-yellow-500 border-yellow-500";
+      case "D":
+        return "text-orange-500 border-orange-500";
+      case "E":
+        return "text-red-500 border-red-500";
+      case "F":
+        return "text-red-700 border-red-700";
+      default:
+        return "text-muted-foreground border-muted";
+    }
+  };
+
+  const getRiskGradeBgColor = (grade: RiskGrade) => {
+    switch (grade) {
+      case "A":
+        return "bg-green-500/10 border-green-500/20";
+      case "B":
+        return "bg-blue-500/10 border-blue-500/20";
+      case "C":
+        return "bg-yellow-500/10 border-yellow-500/20";
+      case "D":
+        return "bg-orange-500/10 border-orange-500/20";
+      case "E":
+        return "bg-red-500/10 border-red-500/20";
+      case "F":
+        return "bg-red-700/10 border-red-700/20";
+      default:
+        return "bg-muted border-muted";
+    }
   };
   
   return (
@@ -63,46 +235,81 @@ export default function InsurancePage() {
         </Button>
       </div>
 
-      {/* Risk Index Card */}
-      <Card className="border-green-500/20 bg-green-500/5">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Portfolio Risk Index</CardTitle>
-              <CardDescription className="mt-1">
-                Overall risk assessment grade
-              </CardDescription>
-            </div>
-            <div className="text-center">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-green-500 bg-green-500/10">
-                <span className="text-4xl font-bold text-green-500">A</span>
+      {/* Portfolio Snapshot - Risk Grade, Risk Score, TIV */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className={`border-2 ${getRiskGradeBgColor(riskGrade)}`}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Risk Grade</CardTitle>
+                <CardDescription>Portfolio assessment</CardDescription>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">Low Risk</p>
+              <div className={`text-4xl font-bold ${getRiskGradeColor(riskGrade)}`}>
+                {riskGrade}
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500" />
-            <span className="text-green-500 font-medium">Improved from B+</span>
-            <span className="text-muted-foreground">last quarter</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <span className="text-green-500 font-medium">Improved from B</span>
+              <span className="text-muted-foreground">last quarter</span>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Stats Grid */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Risk Score</CardTitle>
+                <CardDescription>Weighted from 5 metrics</CardDescription>
+              </div>
+              <div className="text-4xl font-bold">{riskScore}</div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 text-sm">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">0-100 scale</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Total Insured Value</CardTitle>
+                <CardDescription>TIV calculation</CardDescription>
+              </div>
+              <div className="text-2xl font-bold">{formatLargeCurrency(tiv)}</div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <p>Asset Value × Risk × Distribution</p>
+              <p className="font-mono">
+                ${(totalAssetValue / 1000).toFixed(0)}K × {avgRiskMultiplier}× × {avgDistributionMultiplier}×
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Financial Metrics Grid */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Provenance Score
+              Expected Annual Loss
             </CardTitle>
-            <FileCheck className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">94.2</div>
+            <div className="text-2xl font-bold">{formatLargeCurrency(eal)}</div>
             <p className="text-xs text-muted-foreground">
-              +2.1 from last month
+              TIV × Probability × (1 - Doc Score)
             </p>
           </CardContent>
         </Card>
@@ -112,12 +319,12 @@ export default function InsurancePage() {
             <CardTitle className="text-sm font-medium">
               Liability Estimate
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12.4K</div>
+            <div className="text-2xl font-bold">{formatLargeCurrency(liability)}</div>
             <p className="text-xs text-muted-foreground">
-              Potential exposure
+              EAL × 1.5 safety buffer
             </p>
           </CardContent>
         </Card>
@@ -142,7 +349,7 @@ export default function InsurancePage() {
             <CardTitle className="text-sm font-medium">
               Claims Evidence
             </CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <FileCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">847</div>
@@ -224,7 +431,157 @@ export default function InsurancePage() {
         </CardContent>
       </Card>
 
-      {/* Risk Breakdown */}
+      {/* Five Key Risk Scores */}
+      <RiskScoresPanel scores={riskScores} />
+
+      {/* Portfolio Mix & Workflow */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Portfolio Mix with Risk Multipliers */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Portfolio Mix & Risk Multipliers</CardTitle>
+                <CardDescription>
+                  Content type distribution with risk multipliers
+                </CardDescription>
+              </div>
+              {aiUsageExcessive && (
+                <Badge variant="destructive">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  AI Usage {aiUsagePercentage}%
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="overflow-hidden">
+            <div className="w-full overflow-x-auto">
+              <ResponsiveContainer width="100%" height={300} minWidth={280}>
+                <BarChart data={portfolioMix}>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke={chartTheme.gridColor}
+                    opacity={0.3}
+                  />
+                  <XAxis 
+                    dataKey="type" 
+                    tick={{ 
+                      fill: chartTheme.textColor,
+                      fontSize: 11
+                    }}
+                    stroke={chartTheme.gridColor}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    tick={{ 
+                      fill: chartTheme.textColor,
+                      fontSize: 12
+                    }}
+                    stroke={chartTheme.gridColor}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: chartTheme.tooltipBg,
+                      border: `1px solid ${chartTheme.tooltipBorder}`,
+                      borderRadius: '6px',
+                      color: chartTheme.tooltipText,
+                    }}
+                    labelStyle={{ 
+                      color: chartTheme.tooltipText
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#3ECF8E" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-2 mt-4">
+              {portfolioMix.map((item) => (
+                <div key={item.type} className="flex items-center justify-between p-2 rounded-md border bg-card">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{item.type}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {item.riskMultiplier}×
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold">{item.count} assets</div>
+                    <div className="text-xs text-muted-foreground">{item.percentage}%</div>
+                  </div>
+                </div>
+              ))}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">AI Usage</span>
+                  <span className={aiUsageExcessive ? "font-bold text-destructive" : "font-bold"}>
+                    {aiUsagePercentage}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 7-Step Workflow Tracker */}
+        <WorkflowTracker steps={portfolioWorkflowSteps} />
+      </div>
+
+      {/* Issues & Alerts & Client Concentration */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <IssuesAlertsPanel issues={issues} onIssueClick={handleIssueClick} />
+
+        {/* Client Concentration Risk */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Client Concentration Risk</CardTitle>
+            <CardDescription>
+              Top 5 clients by insured value
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {clientConcentration.map((client) => (
+                <div
+                  key={client.clientId}
+                  className={`p-3 rounded-md border ${
+                    client.riskFlagged
+                      ? "border-red-500/20 bg-red-500/5"
+                      : "bg-card"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{client.clientName}</span>
+                      {client.riskFlagged && (
+                        <Badge variant="destructive" className="text-xs">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Risk
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-sm font-bold">
+                      {formatLargeCurrency(client.insuredValue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{client.percentageOfPortfolio}% of portfolio</span>
+                    <span>{client.assetCount} assets</span>
+                  </div>
+                  {client.riskFlagged && (
+                    <div className="mt-2 text-xs text-red-500">
+                      ⚠️ Exceeds 30% threshold - concentration risk
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Risk Breakdown - Original Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="min-w-0">
           <CardHeader>
@@ -311,11 +668,11 @@ export default function InsurancePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b">
                 <span className="text-sm font-medium">Total Assets Insured</span>
-                <span className="text-sm font-bold">1,247</span>
+                <span className="text-sm font-bold">1,225</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b">
                 <span className="text-sm font-medium">Avg. Compliance Percentage</span>
-                <span className="text-sm font-bold">87%</span>
+                <span className="text-sm font-bold">{riskScores.documentation}%</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b">
                 <span className="text-sm font-medium">Full Provenance Records</span>
@@ -331,7 +688,7 @@ export default function InsurancePage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Last Audit Date</span>
-                <span className="text-sm font-bold">Nov 28, 2025</span>
+                <span className="text-sm font-bold">Nov 28, 2024</span>
               </div>
             </div>
           </CardContent>

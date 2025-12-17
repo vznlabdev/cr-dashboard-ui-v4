@@ -40,27 +40,75 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { NewProjectDialog, EditProjectDialog, DeleteProjectDialog } from "@/components/cr"
 import { useData, type Project } from "@/contexts/data-context"
 import { PageContainer } from "@/components/layout/PageContainer"
+import {
+  calculateTIV,
+  formatLargeCurrency,
+  calculatePortfolioTIV,
+} from "@/lib/insurance-utils"
+import type { DistributionLevel } from "@/types"
+import { DollarSign, Shield } from "lucide-react"
 
 export default function ProjectsPage() {
   const { projects, updateProject, deleteProject } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [riskFilter, setRiskFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<"name" | "tiv" | "compliance" | "risk">("name")
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null)
 
-  // Filter projects
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch = 
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  // Calculate TIV for each project
+  const projectsWithTIV = useMemo(() => {
+    const distributionLevel: DistributionLevel = "National" as DistributionLevel
+    const baseValuePerAsset = 2000
+    
+    return projects.map(project => {
+      const riskMultiplier = project.risk === "Low" ? 1.0 : project.risk === "Medium" ? 1.5 : 2.0
+      const distributionMultiplier: number = distributionLevel === "Internal" ? 1.0 :
+                                      distributionLevel === "Regional" ? 1.5 :
+                                      distributionLevel === "National" ? 2.5 : 4.0
+      
+      const totalAssetValue = project.assets * baseValuePerAsset
+      const tiv = calculateTIV(totalAssetValue, riskMultiplier, distributionMultiplier)
+      
+      return { ...project, tiv }
+    })
+  }, [projects])
+
+  // Filter and sort projects
+  const filteredProjects = useMemo(() => {
+    let filtered = projectsWithTIV.filter((project) => {
+      const matchesSearch = 
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = statusFilter === "all" || project.status === statusFilter
+      const matchesRisk = riskFilter === "all" || project.risk === riskFilter
+      return matchesSearch && matchesStatus && matchesRisk
+    })
+
+    // Sort projects
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "tiv":
+          return b.tiv - a.tiv
+        case "compliance":
+          return b.compliance - a.compliance
+        case "risk":
+          const riskOrder = { "High": 3, "Medium": 2, "Low": 1 }
+          return (riskOrder[b.risk as keyof typeof riskOrder] || 0) - (riskOrder[a.risk as keyof typeof riskOrder] || 0)
+        case "name":
+        default:
+          return a.name.localeCompare(b.name)
+      }
+    })
+
+    return filtered
+  }, [projectsWithTIV, searchQuery, statusFilter, riskFilter, sortBy])
 
   // Stats calculations
   const totalProjects = projects.length
@@ -88,41 +136,68 @@ export default function ProjectsPage() {
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex-1 sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search projects..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Review">Review</SelectItem>
-            <SelectItem value="Draft">Draft</SelectItem>
-            <SelectItem value="Approved">Approved</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Review">Review</SelectItem>
+              <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="Approved">Approved</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {(searchQuery || statusFilter !== "all") && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setSearchQuery("")
-              setStatusFilter("all")
-            }}
-          >
-            Clear Filters
-          </Button>
-        )}
+          <Select value={riskFilter} onValueChange={setRiskFilter}>
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Risk Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Risk Levels</SelectItem>
+              <SelectItem value="Low">Low Risk</SelectItem>
+              <SelectItem value="Medium">Medium Risk</SelectItem>
+              <SelectItem value="High">High Risk</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="tiv">Insured Value</SelectItem>
+              <SelectItem value="compliance">Compliance</SelectItem>
+              <SelectItem value="risk">Risk Level</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(searchQuery || statusFilter !== "all" || riskFilter !== "all") && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSearchQuery("")
+                setStatusFilter("all")
+                setRiskFilter("all")
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -206,6 +281,12 @@ export default function ProjectsPage() {
                   <TableHead>Assets</TableHead>
                   <TableHead>Compliance</TableHead>
                   <TableHead>Risk</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      Insured Value
+                    </div>
+                  </TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -213,7 +294,7 @@ export default function ProjectsPage() {
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -251,6 +332,12 @@ export default function ProjectsPage() {
                         <Badge variant={getRiskVariant(project.risk)}>
                           {project.risk}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-medium">{formatLargeCurrency(project.tiv)}</span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {project.updated}

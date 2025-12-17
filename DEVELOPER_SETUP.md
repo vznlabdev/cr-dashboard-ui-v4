@@ -17,11 +17,8 @@ Quick setup guide for developers joining the Creation Rights Dashboard project.
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/vznlabdev/cr-dashboard-ui.git
-cd cr-dashboard-ui
-
-# Checkout handoff branch
-git checkout handoff
+git clone <repo-url>
+cd cr-dashboard-ui-v4
 ```
 
 ### 2. Install Dependencies
@@ -284,9 +281,10 @@ import type { Project } from '@/types';
 ## Getting Help
 
 ### Documentation
-- Start with `DEVELOPER_HANDOFF.md`
+- Start with `README.md` for project overview
 - Check `API_INTEGRATION.md` for API details
 - See `TESTING.md` for testing help
+- Review `ARCHITECTURE.md` for code structure
 
 ### Common Questions
 

@@ -53,7 +53,7 @@ import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { AssetCard, AssetPreviewModal } from "@/components/creative"
+import { AssetCard, AssetPreviewModal, UploadAssetDialog } from "@/components/creative"
 import { Asset, AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -71,6 +71,7 @@ export default function AssetsPage() {
   const [designTypeFilter, setDesignTypeFilter] = useState<DesignType | "all">("all")
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set())
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 
   // Filter assets
   const filteredAssets = useMemo(() => {
@@ -139,7 +140,7 @@ export default function AssetsPage() {
             Browse and manage deliverables and creative assets
           </p>
         </div>
-        <Button className="w-full sm:w-auto">
+        <Button className="w-full sm:w-auto" onClick={() => setUploadDialogOpen(true)}>
           <Upload className="mr-2 h-4 w-4" />
           Upload Assets
         </Button>
@@ -517,6 +518,12 @@ export default function AssetsPage() {
         asset={previewAsset}
         open={!!previewAsset}
         onOpenChange={(open) => !open && setPreviewAsset(null)}
+      />
+
+      {/* Upload Dialog */}
+      <UploadAssetDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
       />
     </PageContainer>
   )

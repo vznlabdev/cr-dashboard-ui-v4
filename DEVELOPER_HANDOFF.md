@@ -32,7 +32,7 @@
 ```bash
 # Clone repository
 git clone <repo-url>
-cd cr-dashboard-ui-v3
+cd cr-dashboard-ui-v4
 
 # Install dependencies
 npm install

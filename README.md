@@ -1,4 +1,4 @@
-# Creation Rights Dashboard v2
+# Creation Rights Dashboard v4
 
 > **AI Content Provenance & Governance Platform with Creative Workspace**
 
@@ -78,7 +78,7 @@ A modern, professional dashboard for managing AI-generated content with full pro
 ```bash
 # Clone repository
 git clone <repo-url>
-cd cr-dashboard-ui-v2
+cd cr-dashboard-ui-v4
 
 # Install dependencies
 npm install
@@ -241,18 +241,28 @@ The UI is 100% complete and ready for backend integration. All integration point
 3. **Notification Context** (`src/contexts/notification-context.tsx`) - Connect to WebSocket or polling
 4. **Authentication** - Add auth provider and protect routes
 
-**See `DEVELOPER_HANDOFF.md` for complete step-by-step integration guide.**
+**See `API_INTEGRATION.md` for complete API endpoint specifications and integration guide.**
 
 ---
 
-## 🎯 Recent Improvements (Latest Release)
+## 🎯 Recent Improvements (v4.0)
 
-### Refactoring
+### Refactoring & Code Quality
 - ✅ **Eliminated code duplication** - Centralized icon mappings
 - ✅ **Shared utilities** - Common formatting functions
 - ✅ **PageContainer component** - Consistent layouts
 - ✅ **Export organization** - Barrel exports for cleaner imports
 - ✅ **Build optimization** - Zero errors, fast builds
+- ✅ **Consistent creation flows** - Standardized modal vs page patterns
+- ✅ **Type safety** - Fixed all TypeScript literal type issues
+
+### Insurance & Risk Features
+- ✅ **7-Step Workflow Tracker** - Complete compliance workflow visualization
+- ✅ **Risk Scores Panel** - Five key risk metrics with targets
+- ✅ **Issues & Alerts Panel** - Severity-based issue management
+- ✅ **Portfolio Mix Analysis** - AI usage breakdown and risk multipliers
+- ✅ **Client Concentration Risk** - Top clients and concentration flags
+- ✅ **Financial Calculations** - TIV, EAL, and Liability estimates
 
 ### Creative Workspace Enhancements
 - ✅ **Full-width Kanban** - Maximum space utilization
@@ -261,6 +271,7 @@ The UI is 100% complete and ready for backend integration. All integration point
 - ✅ **Custom scrollbars** - Consistent minimal design
 - ✅ **View switching** - Dynamic Kanban vs. grid/list views
 - ✅ **Mobile responsive** - Works on all devices
+- ✅ **Asset Upload** - File upload with AI metadata support
 
 ### Security
 - ✅ **Next.js 16.0.7** - Latest security patches
@@ -272,8 +283,7 @@ The UI is 100% complete and ready for backend integration. All integration point
 ## 📚 Documentation
 
 ### Getting Started
-- **`DEVELOPER_HANDOFF.md`** - **START HERE** - Complete developer handoff guide with integration steps
-- **`DEVELOPER_SETUP.md`** - Developer onboarding and setup instructions
+- **`DEVELOPER_SETUP.md`** - **START HERE** - Quick setup and onboarding guide
 - **`ARCHITECTURE.md`** - Code structure, patterns, and best practices
 
 ### Integration & Development
@@ -461,7 +471,7 @@ Required variables:
 NEXT_PUBLIC_API_URL=your_api_url
 ```
 
-See `ENV_SETUP.md` for complete list.
+See `ENV_VARIABLES.md` for complete list.
 
 ---
 
@@ -506,11 +516,10 @@ See `ENV_SETUP.md` for complete list.
 ## 🔄 Next Steps
 
 ### For Backend Integration:
-1. Read `DEVELOPER_HANDOFF.md`
-2. Review `API_INTEGRATION.md`
-3. Set up environment variables
-4. Replace Context methods with API calls
-5. Test with real data
+1. Review `API_INTEGRATION.md` for endpoint specifications
+2. Set up environment variables (see `ENV_VARIABLES.md`)
+3. Replace Context methods with API calls in `src/contexts/data-context.tsx`
+4. Test with real data
 
 ### For Deployment:
 1. Run `npm run build` to verify
@@ -539,4 +548,4 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 **Built with ❤️ for the Creation Rights team**
 
-*Version 2.0 - December 2024*
+*Version 4.0 - December 2024*

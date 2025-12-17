@@ -319,3 +319,134 @@ export interface NotificationContextType {
   unreadCount: number;
 }
 
+// ==============================================
+// Insurance & Risk Types
+// ==============================================
+
+export type RiskGrade = "A" | "B" | "C" | "D" | "E" | "F";
+export type WorkflowStepStatus = "completed" | "incomplete" | "pending";
+export type IssueSeverity = "Critical" | "Urgent" | "Important";
+export type DistributionLevel = "Internal" | "Regional" | "National" | "Global";
+export type PortfolioMixType = "Pure Human" | "AI-Assisted" | "Hybrid" | "AI-Generated";
+
+/**
+ * 7-Step Compliance Workflow
+ */
+export interface WorkflowStep {
+  id: number;
+  name: string;
+  status: WorkflowStepStatus;
+  completedAt?: Date;
+  evidence?: WorkflowEvidence[];
+}
+
+export interface WorkflowEvidence {
+  id: string;
+  type: "log" | "file" | "approval" | "certificate";
+  name: string;
+  url?: string;
+  timestamp: Date;
+}
+
+/**
+ * Workflow completion tracking
+ */
+export interface WorkflowCompletion {
+  completedSteps: number;
+  totalSteps: number;
+  completionRate: number; // 0-100
+  riskLevel: RiskLevel;
+  steps: WorkflowStep[];
+}
+
+/**
+ * Five Key Risk Scores
+ */
+export interface RiskScores {
+  documentation: number; // 0-100, target >85
+  toolSafety: number; // 0-100, target >90
+  copyrightCheck: number; // 0-100, target >95
+  aiModelTrust: number; // 0-100, target >80
+  trainingDataQuality: number; // 0-100, target >75 (highest weight)
+}
+
+/**
+ * Portfolio Risk Metrics
+ */
+export interface PortfolioRiskMetrics {
+  riskGrade: RiskGrade;
+  riskScore: number; // 0-100 (weighted from 5 key metrics)
+  tiv: number; // Total Insured Value
+  eal: number; // Expected Annual Loss
+  liability: number; // Liability Estimate
+  riskScores: RiskScores;
+  workflowCompletion: WorkflowCompletion;
+}
+
+/**
+ * Portfolio Mix & Risk Multipliers
+ */
+export interface PortfolioMix {
+  type: PortfolioMixType;
+  count: number;
+  percentage: number;
+  riskMultiplier: number; // 1.0x, 1.5x, 2.0x, 3.0x
+  totalValue: number;
+}
+
+/**
+ * Issues & Alerts
+ */
+export interface InsuranceIssue {
+  id: string;
+  title: string;
+  description: string;
+  severity: IssueSeverity;
+  category: "copyright" | "tool" | "license" | "workflow" | "training-data";
+  assetId?: string;
+  projectId?: string;
+  dueDate?: Date;
+  createdAt: Date;
+  resolved: boolean;
+}
+
+/**
+ * Client Concentration Risk
+ */
+export interface ClientConcentration {
+  clientId: string;
+  clientName: string;
+  insuredValue: number;
+  percentageOfPortfolio: number;
+  riskFlagged: boolean; // true if >30%
+  assetCount: number;
+}
+
+/**
+ * Asset Financial Breakdown
+ */
+export interface AssetFinancialBreakdown {
+  baseValue: number;
+  riskMultiplier: number;
+  distributionMultiplier: number;
+  finalInsuredValue: number; // TIV for this asset
+}
+
+/**
+ * Enhanced Asset with Insurance Data
+ */
+export interface InsuranceAsset extends Asset {
+  workflow: WorkflowCompletion;
+  financialBreakdown: AssetFinancialBreakdown;
+  riskScores: RiskScores;
+  distributionLevel: DistributionLevel;
+  approvalStatus: "Approved" | "Blocked";
+  similarityScore?: number; // 0-100, <30% = pass
+  legalApproval?: boolean;
+  toolUsed?: string;
+  modelUsed?: string;
+  trainingDataSources?: string[];
+  promptRecord?: string;
+  outputVersions?: string[];
+}
+

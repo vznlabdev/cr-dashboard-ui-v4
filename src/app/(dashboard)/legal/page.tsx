@@ -12,8 +12,9 @@ import {
   FileText,
   Download,
   XCircle,
+  ArrowUpRight,
 } from "lucide-react";
-import { ComplianceScoreGauge } from "@/components/cr";
+import { ComplianceScoreGauge, IssuesAlertsPanel } from "@/components/cr";
 import {
   LineChart,
   Line,
@@ -23,6 +24,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import type { InsuranceIssue } from "@/types";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -39,7 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ActionDialog, type ActionType } from "@/components/cr/action-dialog";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { EmptyState, TableSkeleton } from "@/components/cr";
@@ -84,6 +87,32 @@ export default function LegalPage() {
       description: actionDialog.itemName,
     });
   };
+
+  // Convert legal issues to insurance issues format
+  const insuranceIssues: InsuranceIssue[] = useMemo(() => {
+    return mockIssues.map((issue) => ({
+      id: issue.id.toString(),
+      title: `${issue.type}: ${issue.asset}`,
+      description: `Issue detected in ${issue.project} project`,
+      severity: issue.severity === "Critical" ? "Critical" : 
+                issue.severity === "High" ? "Urgent" : "Important",
+      category: issue.type.includes("Copyright") ? "copyright" :
+                issue.type.includes("License") ? "license" :
+                issue.type.includes("Rights") ? "copyright" : "workflow",
+      assetId: issue.asset,
+      projectId: issue.project,
+      createdAt: new Date(),
+      resolved: false,
+    }));
+  }, []);
+
+  const handleIssueClick = (issue: InsuranceIssue) => {
+    if (issue.assetId) {
+      toast.info(`Navigating to asset: ${issue.assetId}`);
+      // In real app, navigate to asset detail page
+    }
+  };
+
   return (
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -240,6 +269,12 @@ export default function LegalPage() {
         </Card>
       </div>
 
+      {/* Insurance Issues & Alerts */}
+      <IssuesAlertsPanel 
+        issues={insuranceIssues} 
+        onIssueClick={handleIssueClick}
+      />
+
       {/* Tabbed Content */}
       <Tabs defaultValue="issues" className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
@@ -247,6 +282,7 @@ export default function LegalPage() {
           <TabsTrigger value="queue" className="whitespace-nowrap">Clearance Queue</TabsTrigger>
           <TabsTrigger value="conflicts" className="whitespace-nowrap">IP Conflicts</TabsTrigger>
           <TabsTrigger value="audit" className="whitespace-nowrap">Audit Log</TabsTrigger>
+          <TabsTrigger value="insurance" className="whitespace-nowrap">Insurance Impact</TabsTrigger>
         </TabsList>
 
         <TabsContent value="issues" className="space-y-4">
@@ -388,6 +424,93 @@ export default function LegalPage() {
                   onClick: () => toast.info("Full audit log feature coming soon"),
                 }}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="insurance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Insurance Impact Analysis</CardTitle>
+                  <CardDescription>
+                    How legal issues affect insurance risk and coverage
+                  </CardDescription>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/insurance">
+                    View Insurance Dashboard
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Risk Impact</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Critical Issues</span>
+                        <Badge variant="destructive">
+                          {insuranceIssues.filter(i => i.severity === "Critical").length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Blocks Approval</span>
+                        <Badge variant="destructive">
+                          {insuranceIssues.filter(i => i.severity === "Critical" && !i.resolved).length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Affects TIV</span>
+                        <Badge variant="secondary">
+                          {insuranceIssues.filter(i => i.category === "copyright" && !i.resolved).length}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Resolution Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Resolved</span>
+                        <Badge variant="default">
+                          {insuranceIssues.filter(i => i.resolved).length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Pending</span>
+                        <Badge variant="secondary">
+                          {insuranceIssues.filter(i => !i.resolved).length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Total Issues</span>
+                        <span className="font-bold">{insuranceIssues.length}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="rounded-lg border p-4 bg-muted/50">
+                <p className="text-sm font-medium mb-2">Insurance Recommendations</p>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Resolve critical copyright issues to maintain insurance coverage</li>
+                  <li>Complete workflow steps for all assets to reduce risk premiums</li>
+                  <li>Review similarity scores to ensure compliance with insurance thresholds</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
