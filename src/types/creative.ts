@@ -170,6 +170,34 @@ export interface PromptHistory {
   generationDate?: Date
 }
 
+export type CopyrightCheckStatus = "pending" | "checking" | "completed" | "failed"
+export type ApprovalStatus = "pending" | "approved" | "rejected"
+
+export interface MatchedSource {
+  id: string
+  title: string
+  url?: string
+  similarity: number // 0-100
+  type: "image" | "text" | "video" | "audio"
+  source: string // e.g., "Getty Images", "Shutterstock", etc.
+}
+
+export interface RiskBreakdown {
+  copyrightRisk: number // 0-100
+  trademarkRisk: number // 0-100
+  overallRisk: number // 0-100
+  riskLevel: "low" | "medium" | "high"
+}
+
+export interface CopyrightCheckData {
+  similarityScore: number // 0-100, threshold is typically 30%
+  matchedSources: MatchedSource[]
+  riskBreakdown: RiskBreakdown
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number // in milliseconds
+}
+
 export interface Asset {
   id: string
   name: string
@@ -194,6 +222,14 @@ export interface Asset {
   createdAt: Date
   updatedAt: Date
   promptHistory?: PromptHistory
+  // Copyright check fields
+  copyrightCheckStatus?: CopyrightCheckStatus
+  copyrightCheckProgress?: number // 0-100
+  copyrightCheckData?: CopyrightCheckData
+  approvalStatus?: ApprovalStatus
+  approvedBy?: string // admin user ID
+  approvedAt?: Date
+  rejectionReason?: string
 }
 
 export interface AssetFilterConfig {

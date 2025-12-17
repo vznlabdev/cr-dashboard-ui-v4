@@ -12,5 +12,6 @@ export { RoleBadge } from "./RoleBadge"
 export { AssetCard } from "./AssetCard"
 export { AssetPreviewModal } from "./AssetPreviewModal"
 export { UploadAssetDialog } from "./upload-asset-dialog"
+export { CopyrightCheckReview } from "./copyright-check-review"
 export { PromptHistory } from "./PromptHistory"
 

@@ -26,6 +26,7 @@
  */
 
 import type { Project, Asset, Notification, APIResponse } from "@/types";
+import type { CopyrightCheckData, CopyrightCheckStatus, ApprovalStatus } from "@/types/creative";
 import { APIError, NetworkError, parseAPIError, isNetworkError } from "@/lib/api-errors";
 
 // ==============================================
@@ -191,6 +192,71 @@ export const api = {
     
     delete: (projectId: string, assetId: string) =>
       client.delete<{ success: boolean }>(`/projects/${projectId}/assets/${assetId}`),
+    
+    /**
+     * INTEGRATION POINT: Copyright Check API
+     * Trigger copyright check for an uploaded asset
+     */
+    checkCopyright: (assetId: string, metadata?: Record<string, any>) =>
+      client.post<{ 
+        checkId: string;
+        status: CopyrightCheckStatus;
+        estimatedDuration?: number;
+      }>(`/assets/${assetId}/copyright-check`, metadata),
+    
+    /**
+     * INTEGRATION POINT: Get Copyright Check Status
+     * Poll this endpoint to get real-time progress of copyright check
+     */
+    getCopyrightCheckStatus: (assetId: string, checkId: string) =>
+      client.get<{
+        status: CopyrightCheckStatus;
+        progress: number; // 0-100
+        data?: CopyrightCheckData;
+      }>(`/assets/${assetId}/copyright-check/${checkId}`),
+    
+    /**
+     * INTEGRATION POINT: Approve Asset
+     * Admin approval for assets flagged during copyright check
+     */
+    approveAsset: (assetId: string, approvedBy: string, notes?: string) =>
+      client.post<{ success: boolean; asset: Asset }>(`/assets/${assetId}/approve`, {
+        approvedBy,
+        notes,
+      }),
+    
+    /**
+     * INTEGRATION POINT: Reject Asset
+     * Admin rejection for assets flagged during copyright check
+     */
+    rejectAsset: (assetId: string, rejectedBy: string, reason: string) =>
+      client.post<{ success: boolean }>(`/assets/${assetId}/reject`, {
+        rejectedBy,
+        reason,
+      }),
+    
+    /**
+     * INTEGRATION POINT: Get Pending Approvals
+     * Get all assets pending admin approval
+     */
+    getPendingApprovals: (filters?: {
+      brandId?: string;
+      riskLevel?: "low" | "medium" | "high";
+      status?: CopyrightCheckStatus;
+    }) => {
+      let endpoint = "/assets/pending-approvals"
+      if (filters) {
+        const params = new URLSearchParams()
+        if (filters.brandId) params.append("brandId", filters.brandId)
+        if (filters.riskLevel) params.append("riskLevel", filters.riskLevel)
+        if (filters.status) params.append("status", filters.status)
+        const queryString = params.toString()
+        if (queryString) {
+          endpoint += `?${queryString}`
+        }
+      }
+      return client.get<{ assets: Asset[] }>(endpoint)
+    },
   },
 
   // Notifications
@@ -335,6 +401,80 @@ export async function uploadFile(
     method: "POST",
     body: formData,
     // Note: Don't set Content-Type header, browser will set it with boundary
+  });
+
+  if (!response.ok) {
+    throw await parseAPIError(response);
+  }
+
+  return response.json();
+}
+
+/**
+ * INTEGRATION POINT: Check Copyright for File
+ * 
+ * This function triggers a copyright check for a file during upload.
+ * It should be called after the file is uploaded but before the asset is created.
+ * 
+ * USAGE:
+ * const result = await checkCopyright(file, {
+ *   contentType: 'ai_generated',
+ *   aiTool: 'Midjourney',
+ *   prompt: '...'
+ * });
+ */
+export async function checkCopyright(
+  file: File,
+  metadata?: Record<string, any>
+): Promise<{
+  checkId: string;
+  status: CopyrightCheckStatus;
+  estimatedDuration?: number;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  if (metadata) {
+    Object.entries(metadata).forEach(([key, value]) => {
+      formData.append(key, typeof value === "object" ? JSON.stringify(value) : value);
+    });
+  }
+
+  const response = await fetch(`${API_URL}/copyright/check`, {
+    method: "POST",
+    body: formData,
+    // Note: Don't set Content-Type header, browser will set it with boundary
+  });
+
+  if (!response.ok) {
+    throw await parseAPIError(response);
+  }
+
+  return response.json();
+}
+
+/**
+ * INTEGRATION POINT: Get Copyright Check Status
+ * 
+ * Poll this endpoint to get real-time progress of copyright check.
+ * Use this for progress bar updates during copyright checking.
+ * 
+ * USAGE:
+ * const status = await getCopyrightCheckStatus(checkId);
+ * // status.progress will be 0-100
+ */
+export async function getCopyrightCheckStatus(
+  checkId: string
+): Promise<{
+  status: CopyrightCheckStatus;
+  progress: number; // 0-100
+  data?: CopyrightCheckData;
+}> {
+  const response = await fetch(`${API_URL}/copyright/check/${checkId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
   if (!response.ok) {
