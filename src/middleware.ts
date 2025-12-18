@@ -142,23 +142,21 @@ async function checkAuth(request: NextRequest): Promise<AuthResult> {
   //   isCreatorAuthenticated: !!creatorToken && await validateCreatorToken(creatorToken),
   // };
 
-  // For development: allow all requests
-  // Remove this in production!
-  if (process.env.NODE_ENV === "development") {
-    return {
-      isAdminAuthenticated: true,
-      isCreatorAuthenticated: true,
-    };
-  }
+  // DEMO MODE: Allow all requests without authentication
+  // Remove this when implementing real authentication!
+  return {
+    isAdminAuthenticated: true,
+    isCreatorAuthenticated: true,
+  };
 
   // Production: check cookies or tokens
-  const adminToken = request.cookies.get("admin-auth-token")?.value;
-  const creatorToken = request.cookies.get("creator-auth-token")?.value;
-
-  return {
-    isAdminAuthenticated: !!adminToken,
-    isCreatorAuthenticated: !!creatorToken,
-  };
+  // const adminToken = request.cookies.get("admin-auth-token")?.value;
+  // const creatorToken = request.cookies.get("creator-auth-token")?.value;
+  // 
+  // return {
+  //   isAdminAuthenticated: !!adminToken,
+  //   isCreatorAuthenticated: !!creatorToken,
+  // };
 }
 
 // ==============================================
