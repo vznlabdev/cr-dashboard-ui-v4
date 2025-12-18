@@ -6,7 +6,7 @@
  */
 
 import type { Creator, CreatorInvitation } from "@/types/creators";
-import { generateCreatorRightsID, calculateRightsStatus, calculateCreatorRiskLevel } from "@/lib/creator-utils";
+import { calculateRightsStatus, calculateCreatorRiskLevel } from "@/lib/creator-utils";
 
 // ==============================================
 // Mock Creators
@@ -30,7 +30,7 @@ export const mockCreators: Creator[] = [
     id: "creator-1",
     email: "sarah.voice@example.com",
     fullName: "Sarah Johnson",
-    creatorRightsId: generateCreatorRightsID(2024),
+    creatorRightsId: "CR-2024-00123",
     creatorType: "Real Person",
     avatarUrl: "https://i.pravatar.cc/150?u=sarah.voice",
     validFrom: threeMonthsAgo,
@@ -66,7 +66,7 @@ export const mockCreators: Creator[] = [
     id: "creator-2",
     email: "mascot@brandco.com",
     fullName: "Brandy the Bear",
-    creatorRightsId: generateCreatorRightsID(2024),
+    creatorRightsId: "CR-2024-00245",
     creatorType: "Brand Mascot",
     avatarUrl: "https://i.pravatar.cc/150?u=brandy.bear",
     validFrom: new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000), // 6 months ago
@@ -111,7 +111,7 @@ export const mockCreators: Creator[] = [
     id: "creator-3",
     email: "alex.character@example.com",
     fullName: "Alex the Adventurer",
-    creatorRightsId: generateCreatorRightsID(2024),
+    creatorRightsId: "CR-2024-00367",
     creatorType: "Character",
     avatarUrl: "https://i.pravatar.cc/150?u=alex.adventurer",
     validFrom: new Date(now.getTime() - 2 * 30 * 24 * 60 * 60 * 1000), // 2 months ago
@@ -131,7 +131,7 @@ export const mockCreators: Creator[] = [
     id: "creator-4",
     email: "michael.actor@example.com",
     fullName: "Michael Chen",
-    creatorRightsId: generateCreatorRightsID(2024),
+    creatorRightsId: "CR-2024-00489",
     creatorType: "Real Person",
     avatarUrl: "https://i.pravatar.cc/150?u=michael.actor",
     validFrom: new Date(now.getTime() - 1 * 30 * 24 * 60 * 60 * 1000), // 1 month ago
@@ -165,7 +165,7 @@ export const mockCreators: Creator[] = [
     id: "creator-5",
     email: "emma.mascot@example.com",
     fullName: "Emma the Elephant",
-    creatorRightsId: generateCreatorRightsID(2024),
+    creatorRightsId: "CR-2024-00501",
     creatorType: "Brand Mascot",
     avatarUrl: "https://i.pravatar.cc/150?u=emma.elephant",
     validFrom: new Date(now.getTime() - 4 * 30 * 24 * 60 * 60 * 1000), // 4 months ago
