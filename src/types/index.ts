@@ -20,6 +20,7 @@ export interface Project {
   updated: string;
   createdDate: string;
   owner: string;
+  creatorIds?: string[]; // Creators credited on this project
 }
 
 export interface Asset {
@@ -34,6 +35,7 @@ export interface Asset {
   updated: string;
   createdDate: string;
   creator: string;
+  creatorIds?: string[]; // Creators credited on this asset
 }
 
 export interface Notification {
@@ -402,9 +404,10 @@ export interface InsuranceIssue {
   title: string;
   description: string;
   severity: IssueSeverity;
-  category: "copyright" | "tool" | "license" | "workflow" | "training-data";
+  category: "copyright" | "tool" | "license" | "workflow" | "training-data" | "creator-rights";
   assetId?: string;
   projectId?: string;
+  creatorId?: string;
   dueDate?: Date;
   createdAt: Date;
   resolved: boolean;

@@ -29,7 +29,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PromptContent } from "./PromptContent"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { useCreators } from "@/contexts/creators-context"
+import { CreatorAvatarBadge } from "@/components/creators"
 
 interface AssetPreviewModalProps {
   asset: Asset | null
@@ -43,6 +45,23 @@ export function AssetPreviewModal({
   onOpenChange,
 }: AssetPreviewModalProps) {
   const [activeTab, setActiveTab] = useState("preview")
+  const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators()
+  
+  // Get creators for this asset (before early return to maintain hook order)
+  const creditedCreators = asset ? getCreatorsByAsset(asset.id) : []
+  
+  // Get credits with roles for this asset
+  const assetCreditsWithRoles = useMemo(() => {
+    if (!asset) return []
+    return creditedCreators.map((creator) => {
+      const creatorCredits = getAllCreditsByCreator(creator.id)
+      const assetCredit = creatorCredits.find((credit) => credit.assetId === asset.id)
+      return {
+        creator,
+        role: assetCredit?.role,
+      }
+    })
+  }, [creditedCreators, asset?.id, getAllCreditsByCreator])
   
   if (!asset) return null
 
@@ -211,6 +230,27 @@ export function AssetPreviewModal({
                     <p className="text-sm font-medium">{asset.uploadedByName}</p>
                   </div>
                 </div>
+
+                {creditedCreators.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground mb-2">Credited Creators</p>
+                      <div className="flex flex-wrap gap-2">
+                        {assetCreditsWithRoles.map(({ creator, role }) => (
+                          <div key={creator.id} className="flex flex-col items-center gap-1">
+                            <CreatorAvatarBadge creator={creator} size="sm" />
+                            {role && (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                                {role}
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />

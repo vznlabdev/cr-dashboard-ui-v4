@@ -49,6 +49,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import NextImage from "next/image"
 import Link from "next/link"
+import { useCreators } from "@/contexts/creators-context"
+import { User } from "lucide-react"
 
 type ViewType = "grid" | "list" | "table"
 
@@ -77,10 +79,13 @@ export default function AssetsPage() {
   }, [searchQuery, brandFilter, fileTypeFilter, designTypeFilter])
 
   // Calculate stats
+  const { creators } = useCreators()
+  
   const totalSize = mockAssets.reduce((acc, a) => acc + a.fileSize, 0)
   const imageCount = mockAssets.filter((a) => a.fileType === "image").length
   const documentCount = mockAssets.filter((a) => a.fileType === "pdf" || a.fileType === "document").length
   const archiveCount = mockAssets.filter((a) => a.fileType === "archive").length
+  const creatorCount = creators.length
 
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
@@ -170,7 +175,7 @@ export default function AssetsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -211,6 +216,18 @@ export default function AssetsPage() {
             <p className="text-xs text-muted-foreground">ZIP packages</p>
           </CardContent>
         </Card>
+        <Link href="/creative/creators">
+          <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Creators</CardTitle>
+              <User className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{creatorCount}</div>
+              <p className="text-xs text-muted-foreground">Creator Rights</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Search & Filters */}

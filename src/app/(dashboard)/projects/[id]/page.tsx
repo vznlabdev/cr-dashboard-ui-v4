@@ -8,8 +8,6 @@ import { EmptyState, AddAssetDialog, WorkflowTracker } from "@/components/cr";
 import {
   Download,
   FileText,
-  Clock,
-  CheckCircle2,
   AlertCircle,
   Eye,
   History,
@@ -45,9 +43,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useData } from "@/contexts/data-context";
+import { useCreators } from "@/contexts/creators-context";
 import { notFound, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
+import { CreditCreatorDialog, ManageCreatorCreditsDialog, CreatorAvatarsGroup } from "@/components/creators";
+import { UserPlus, Users, CheckCircle2, Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { getRightsStatusVariant, formatCreatorExpiration } from "@/lib/creator-utils";
 import {
   calculateTIV,
   calculatePortfolioTIV,
@@ -61,11 +63,15 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { getProjectById, getProjectAssets, deleteAsset } = useData();
+  const { getCreatorsByProject } = useCreators();
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [addAssetDialogOpen, setAddAssetDialogOpen] = useState(false);
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [manageCreditsDialogOpen, setManageCreditsDialogOpen] = useState(false);
   
   const project = getProjectById(id);
   const assets = getProjectAssets(id);
+  const creditedCreators = getCreatorsByProject(id);
 
   if (!project) {
     notFound();
@@ -214,6 +220,11 @@ export default function ProjectDetailPage() {
             <span className="hidden sm:inline">•</span>
             <span>Owner: {project.owner}</span>
           </div>
+          {creditedCreators.length > 0 && (
+            <div className="mt-3">
+              <CreatorAvatarsGroup creators={creditedCreators} showLabel={true} />
+            </div>
+          )}
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button 
@@ -340,6 +351,7 @@ export default function ProjectDetailPage() {
       <Tabs defaultValue="assets" className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
           <TabsTrigger value="assets" className="whitespace-nowrap">Assets</TabsTrigger>
+          <TabsTrigger value="creators" className="whitespace-nowrap">Credited Creators</TabsTrigger>
           <TabsTrigger value="workflow" className="whitespace-nowrap">Workflow</TabsTrigger>
           <TabsTrigger value="audit" className="whitespace-nowrap">Audit Trail</TabsTrigger>
           <TabsTrigger value="ai-metadata" className="whitespace-nowrap">AI Metadata</TabsTrigger>
@@ -545,6 +557,24 @@ export default function ProjectDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Credit Dialogs */}
+      <CreditCreatorDialog
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
+        projectId={id}
+        onSuccess={() => {
+          // Refresh will happen automatically via context
+        }}
+      />
+      <ManageCreatorCreditsDialog
+        open={manageCreditsDialogOpen}
+        onOpenChange={setManageCreditsDialogOpen}
+        projectId={id}
+        onSuccess={() => {
+          // Refresh will happen automatically via context
+        }}
+      />
 
       {/* Add Asset Dialog */}
       <AddAssetDialog
