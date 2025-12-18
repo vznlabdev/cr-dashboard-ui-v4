@@ -12,6 +12,7 @@ import {
   Ticket,
   Palette,
   Users,
+  User,
   FileImage,
   FolderKanban,
   CheckCircle2,
@@ -56,6 +57,11 @@ const navItems: NavItem[] = [
     title: "Assets",
     href: "/creative/assets",
     icon: FileImage,
+  },
+  {
+    title: "Creators",
+    href: "/creative/creators",
+    icon: User,
   },
   {
     title: "Asset Approvals",

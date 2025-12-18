@@ -27,6 +27,18 @@
 
 import type { Project, Asset, Notification, APIResponse } from "@/types";
 import type { CopyrightCheckData, CopyrightCheckStatus, ApprovalStatus } from "@/types/creative";
+import type {
+  Creator,
+  CreatorInvitation,
+  CreatorCredit,
+  InviteCreatorForm,
+  RegisterCreatorForm,
+  UpdateCreatorProfileForm,
+  CreatorResponse,
+  CreatorsResponse,
+  CreatorInvitationsResponse,
+  CreatorCreditsResponse,
+} from "@/types/creators";
 import { APIError, NetworkError, parseAPIError, isNetworkError } from "@/lib/api-errors";
 
 // ==============================================
@@ -352,6 +364,82 @@ export const api = {
     
     riskReport: () =>
       client.get<Blob>("/export/risk-report"),
+  },
+
+  // Creators
+  creators: {
+    // Admin Endpoints
+    getAll: () => client.get<CreatorsResponse>("/creators"),
+    getById: (id: string) => client.get<CreatorResponse>(`/creators/${id}`),
+    invite: (data: InviteCreatorForm) =>
+      client.post<CreatorInvitation>("/creators/invite", data),
+    resendInvitation: (invitationId: string) =>
+      client.post<void>(`/creators/invitations/${invitationId}/resend`, {}),
+    revokeInvitation: (invitationId: string) =>
+      client.delete<void>(`/creators/invitations/${invitationId}`),
+    getInvitations: () => client.get<CreatorInvitationsResponse>("/creators/invitations"),
+    getInvitationStatus: (email: string) =>
+      client.get<CreatorInvitation | null>(`/creators/invitations/status?email=${encodeURIComponent(email)}`),
+    creditToAsset: (creatorId: string, assetId: string, role?: string) =>
+      client.post<void>(`/creators/${creatorId}/credits/assets`, { assetId, role }),
+    creditToProject: (creatorId: string, projectId: string, role?: string) =>
+      client.post<void>(`/creators/${creatorId}/credits/projects`, { projectId, role }),
+    removeAssetCredit: (creatorId: string, assetId: string) =>
+      client.delete<void>(`/creators/${creatorId}/credits/assets/${assetId}`),
+    removeProjectCredit: (creatorId: string, projectId: string) =>
+      client.delete<void>(`/creators/${creatorId}/credits/projects/${projectId}`),
+    getLinkedAssets: (id: string) => client.get<string[]>(`/creators/${id}/assets`),
+    getLinkedProjects: (id: string) => client.get<string[]>(`/creators/${id}/projects`),
+    
+    // Creator Self-Service
+    getByToken: (token: string) => client.get<CreatorInvitation>(`/creators/invite/${token}`),
+    acceptInvitation: (token: string, data: RegisterCreatorForm) =>
+      client.post<Creator>(`/creators/invite/${token}/accept`, data),
+    register: (data: RegisterCreatorForm) => client.post<Creator>("/creators/register", data),
+    checkEmail: (email: string) =>
+      client.get<{ exists: boolean }>(`/creators/check-email?email=${encodeURIComponent(email)}`),
+    getMyProfile: () => client.get<CreatorResponse>("/creators/me"),
+    updateMyProfile: (data: UpdateCreatorProfileForm) =>
+      client.put<CreatorResponse>("/creators/me", data),
+    uploadMyReference: (file: File, type: "photo" | "voice_sample" | "guideline" | "other") => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+      return fetch(`${API_URL}/creators/me/references`, {
+        method: "POST",
+        body: formData,
+      }).then((res) => {
+        if (!res.ok) throw new Error("Upload failed");
+        return res.json();
+      });
+    },
+    uploadMyRightsAgreement: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return fetch(`${API_URL}/creators/me/rights-agreement`, {
+        method: "POST",
+        body: formData,
+      }).then((res) => {
+        if (!res.ok) throw new Error("Upload failed");
+        return res.json();
+      });
+    },
+    getMyAssetCredits: () => client.get<CreatorCreditsResponse>("/creators/me/credits/assets"),
+    getMyProjectCredits: () => client.get<CreatorCreditsResponse>("/creators/me/credits/projects"),
+    getMyAllCredits: () => client.get<CreatorCreditsResponse>("/creators/me/credits"),
+    getMyProfileCompletion: () =>
+      client.get<{ completion: number; missingFields: string[] }>("/creators/me/completion"),
+    extendRights: (newValidThrough: Date) =>
+      client.post<CreatorResponse>("/creators/me/extend-rights", { newValidThrough }),
+    
+    // Authentication
+    login: (email: string, password: string) =>
+      client.post<{ creator: Creator; token: string }>("/creators/auth/login", { email, password }),
+    logout: () => client.post<void>("/creators/auth/logout", {}),
+    forgotPassword: (email: string) =>
+      client.post<void>("/creators/auth/forgot-password", { email }),
+    resetPassword: (token: string, newPassword: string) =>
+      client.post<void>("/creators/auth/reset-password", { token, newPassword }),
   },
 };
 

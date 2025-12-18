@@ -9,7 +9,6 @@ import {
   FileText,
   Eye,
   History,
-  CheckCircle2,
   GitBranch,
   DollarSign,
   Shield,
@@ -25,6 +24,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useData } from "@/contexts/data-context";
+import { useCreators } from "@/contexts/creators-context";
 import { notFound, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { WorkflowTracker } from "@/components/cr";
@@ -34,15 +34,36 @@ import {
   calculateAssetFinancialBreakdown,
 } from "@/lib/insurance-utils";
 import type { WorkflowStep, DistributionLevel } from "@/types";
+import { CreditCreatorDialog, ManageCreatorCreditsDialog, CreatorAvatarsGroup, CreatorAvatarBadge } from "@/components/creators";
+import { UserPlus, Users, CheckCircle2, Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { getRightsStatusVariant, formatCreatorExpiration } from "@/lib/creator-utils";
+import Link from "next/link";
+import { useState, useMemo } from "react";
 
 export default function AssetDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const assetId = params.assetId as string;
   const { getProjectById, getAssetById } = useData();
+  const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators();
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
+  const [manageCreditsDialogOpen, setManageCreditsDialogOpen] = useState(false);
   
   const project = getProjectById(id);
   const asset = getAssetById(id, assetId);
+  const creditedCreators = getCreatorsByAsset(assetId);
+  
+  // Get credits with roles for this asset
+  const assetCreditsWithRoles = useMemo(() => {
+    return creditedCreators.map((creator) => {
+      const creatorCredits = getAllCreditsByCreator(creator.id);
+      const assetCredit = creatorCredits.find((credit) => credit.assetId === assetId);
+      return {
+        creator,
+        role: assetCredit?.role,
+      };
+    });
+  }, [creditedCreators, assetId, getAllCreditsByCreator]);
 
   if (!project || !asset) {
     notFound();
@@ -199,6 +220,11 @@ export default function AssetDetailPage() {
             <span className="hidden sm:inline">•</span>
             <span>Creator: {asset.creator}</span>
           </div>
+          {creditedCreators.length > 0 && (
+            <div className="mt-3">
+              <CreatorAvatarsGroup creators={creditedCreators} showLabel={true} />
+            </div>
+          )}
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleDownload} className="flex-1 sm:flex-none">
@@ -518,6 +544,71 @@ export default function AssetDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Credited Creators Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle>Credited Creators</CardTitle>
+                  <CardDescription>
+                    Creators credited for their work on this asset
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setManageCreditsDialogOpen(true)}
+                  >
+                    Manage Credits
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setCreditDialogOpen(true)}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Credit Creator
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {creditedCreators.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    No creators credited on this asset yet
+                  </p>
+                  <Button size="sm" onClick={() => setCreditDialogOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Credit Creator
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {assetCreditsWithRoles.map(({ creator, role }) => (
+                    <div
+                      key={creator.id}
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    >
+                      <CreatorAvatarBadge creator={creator} size="md" />
+                      <div className="text-center min-w-0 w-full">
+                        <p className="text-sm font-medium truncate" title={creator.fullName}>
+                          {creator.fullName}
+                        </p>
+                        {role && (
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            {role}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="conflicts" className="space-y-4">
@@ -658,6 +749,24 @@ export default function AssetDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Credit Dialogs */}
+      <CreditCreatorDialog
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
+        assetId={assetId}
+        onSuccess={() => {
+          // Refresh will happen automatically via context
+        }}
+      />
+      <ManageCreatorCreditsDialog
+        open={manageCreditsDialogOpen}
+        onOpenChange={setManageCreditsDialogOpen}
+        assetId={assetId}
+        onSuccess={() => {
+          // Refresh will happen automatically via context
+        }}
+      />
     </div>
   );
 }

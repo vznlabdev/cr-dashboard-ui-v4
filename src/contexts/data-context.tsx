@@ -65,6 +65,7 @@ const initialProjects: Project[] = [
     updated: "2 hours ago",
     createdDate: "June 15, 2024",
     owner: "Sarah Johnson",
+    creatorIds: ["creator-1", "creator-2"], // Sarah Johnson (voice) and Brandy the Bear (mascot)
   },
   {
     id: "2",
@@ -77,6 +78,7 @@ const initialProjects: Project[] = [
     updated: "5 hours ago",
     createdDate: "July 8, 2024",
     owner: "Michael Chen",
+    creatorIds: ["creator-1"], // Sarah Johnson (voiceover)
   },
   {
     id: "3",
@@ -89,6 +91,7 @@ const initialProjects: Project[] = [
     updated: "1 day ago",
     createdDate: "August 22, 2024",
     owner: "Emma Davis",
+    creatorIds: ["creator-2"], // Brandy the Bear (brand mascot)
   },
   {
     id: "4",
@@ -113,6 +116,7 @@ const initialProjects: Project[] = [
     updated: "3 days ago",
     createdDate: "October 12, 2024",
     owner: "Sarah Johnson",
+    creatorIds: ["creator-1"], // Sarah Johnson (voice actor)
   },
 ];
 
@@ -130,6 +134,7 @@ const initialAssets: Record<string, Asset[]> = {
       updated: "2 hours ago",
       createdDate: "June 20, 2024 at 3:42 PM",
       creator: "Sarah Johnson",
+      creatorIds: ["creator-2"], // Brandy the Bear (mascot in image)
     },
     {
       id: "2",
@@ -156,6 +161,7 @@ const initialAssets: Record<string, Asset[]> = {
       updated: "1 day ago",
       createdDate: "June 22, 2024 at 2:30 PM",
       creator: "Michael Chen",
+      creatorIds: ["creator-1"], // Sarah Johnson (voice actor)
     },
     {
       id: "4",
@@ -169,6 +175,7 @@ const initialAssets: Record<string, Asset[]> = {
       updated: "2 days ago",
       createdDate: "June 23, 2024 at 11:20 AM",
       creator: "Emma Davis",
+      creatorIds: ["creator-1", "creator-2"], // Sarah Johnson (voice) and Brandy the Bear (visual)
     },
   ],
   "2": [
@@ -184,6 +191,7 @@ const initialAssets: Record<string, Asset[]> = {
       updated: "3 hours ago",
       createdDate: "July 10, 2024",
       creator: "Michael Chen",
+      creatorIds: ["creator-1"], // Sarah Johnson (voiceover)
     },
     {
       id: "2",
@@ -212,6 +220,7 @@ const initialAssets: Record<string, Asset[]> = {
       updated: "1 day ago",
       createdDate: "August 25, 2024",
       creator: "Emma Davis",
+      creatorIds: ["creator-2"], // Brandy the Bear (brand mascot)
     },
   ],
 };

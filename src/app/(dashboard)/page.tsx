@@ -14,11 +14,13 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  User,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ComplianceScoreGauge, RiskIndexBadge, NewProjectDialog } from "@/components/cr";
 import { useState, useMemo } from "react";
+import { useCreators } from "@/contexts/creators-context";
 import {
   calculateTIV,
   calculateEAL,
@@ -45,6 +47,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 export default function DashboardPage() {
   const chartTheme = useChartTheme();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const { creators, getExpiringCreators, generateCreatorRightsAlerts } = useCreators();
   
   // Calculate portfolio insurance metrics
   const portfolioRiskScores: RiskScores = useMemo(() => ({
@@ -73,6 +76,63 @@ export default function DashboardPage() {
 
   const criticalIssuesCount: number = 2; // From insurance dashboard issues
   
+  // Creator stats
+  const creatorCount = creators.length;
+  const expiringCreators = getExpiringCreators();
+  const expiringRightsCount = expiringCreators.length;
+  
+  // Generate creator rights alerts
+  const creatorAlerts = useMemo(() => generateCreatorRightsAlerts(), [generateCreatorRightsAlerts]);
+  
+  // Combine static alerts with creator alerts
+  const allAlerts = useMemo(() => {
+    const staticAlerts = [
+      {
+        icon: AlertTriangle,
+        title: "3 Legal Issues Pending",
+        description: "Copyright conflicts require immediate attention",
+        bgColor: "bg-destructive/10",
+        iconColor: "text-destructive",
+      },
+      {
+        icon: Clock,
+        title: "8 Assets in Clearance Queue",
+        description: "Awaiting legal approval for production use",
+        bgColor: "bg-amber-500/10",
+        iconColor: "text-amber-500",
+      },
+      {
+        icon: Shield,
+        title: "Risk Assessment Due",
+        description: "Quarterly insurance report needs review",
+        bgColor: "bg-blue-500/10",
+        iconColor: "text-blue-500",
+      },
+      {
+        icon: Plug,
+        title: "2 AI Tools Not Connected",
+        description: "Complete setup for full provenance tracking",
+        bgColor: "bg-purple-500/10",
+        iconColor: "text-purple-500",
+      },
+    ];
+    
+    // Add creator alerts (only show critical/urgent ones)
+    const creatorAlertItems = creatorAlerts
+      .filter(alert => alert.severity === "Critical" || alert.severity === "Urgent")
+      .slice(0, 2) // Limit to 2 most important
+      .map(alert => ({
+        icon: alert.severity === "Critical" ? AlertTriangle : Clock,
+        title: alert.title,
+        description: alert.description,
+        bgColor: alert.severity === "Critical" ? "bg-destructive/10" : "bg-amber-500/10",
+        iconColor: alert.severity === "Critical" ? "text-destructive" : "text-amber-500",
+        href: alert.creatorId ? `/creative/creators/${alert.creatorId}` : undefined,
+      }));
+    
+    return [...creatorAlertItems, ...staticAlerts];
+  }, [creatorAlerts]);
+  
   return (
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -93,7 +153,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Key Metrics with Visual Gauges */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Link href="/legal" className="block">
           <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -152,6 +212,30 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 Active integrations
               </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/creative/creators" className="block">
+          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Creators
+              </CardTitle>
+              <User className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{creatorCount}</div>
+              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                {expiringRightsCount > 0 ? (
+                  <>
+                    <AlertTriangle className="mr-1 h-3 w-3 text-amber-500" />
+                    <span className="text-amber-500">{expiringRightsCount} expiring soon</span>
+                  </>
+                ) : (
+                  <span>All rights active</span>
+                )}
+              </div>
             </CardContent>
           </Card>
         </Link>
@@ -447,7 +531,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {alerts.map((alert, index) => (
+              {allAlerts.map((alert, index) => (
                 <div key={index} className="flex items-start gap-3 pb-3 border-b last:border-0">
                   <div className={`rounded-full p-2 ${alert.bgColor}`}>
                     <alert.icon className={`h-4 w-4 ${alert.iconColor}`} />
@@ -456,16 +540,23 @@ export default function DashboardPage() {
                     <p className="text-sm font-medium">{alert.title}</p>
                     <p className="text-xs text-muted-foreground">{alert.description}</p>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      toast.info(`Reviewing: ${alert.title}`);
-                      // Could navigate to relevant page based on alert type
-                    }}
-                  >
-                    Review
-                  </Button>
+                  {"href" in alert && alert.href ? (
+                    <Link href={alert.href}>
+                      <Button variant="ghost" size="sm">
+                        Review
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        toast.info(`Reviewing: ${alert.title}`);
+                      }}
+                    >
+                      Review
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -571,36 +662,6 @@ const activeProjects = [
   },
 ];
 
-const alerts = [
-  {
-    icon: AlertTriangle,
-    title: "3 Legal Issues Pending",
-    description: "Copyright conflicts require immediate attention",
-    bgColor: "bg-destructive/10",
-    iconColor: "text-destructive",
-  },
-  {
-    icon: Clock,
-    title: "8 Assets in Clearance Queue",
-    description: "Awaiting legal approval for production use",
-    bgColor: "bg-amber-500/10",
-    iconColor: "text-amber-500",
-  },
-  {
-    icon: Shield,
-    title: "Risk Assessment Due",
-    description: "Quarterly insurance report needs review",
-    bgColor: "bg-blue-500/10",
-    iconColor: "text-blue-500",
-  },
-  {
-    icon: Plug,
-    title: "2 AI Tools Not Connected",
-    description: "Complete setup for full provenance tracking",
-    bgColor: "bg-purple-500/10",
-    iconColor: "text-purple-500",
-  },
-];
 
 // Mock data for activity trends chart
 const activityTrendData = [

@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { downloadJSON, prepareRiskDataForExport } from "@/lib/export-utils";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { WorkflowTracker, RiskScoresPanel, IssuesAlertsPanel } from "@/components/cr";
+import { useCreators } from "@/contexts/creators-context";
 import {
   calculateRiskScore,
   getRiskGrade,
@@ -51,9 +52,13 @@ import type {
   ClientConcentration,
   RiskGrade,
 } from "@/types";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 export default function InsurancePage() {
   const chartTheme = useChartTheme();
+  const router = useRouter();
+  const { generateCreatorRightsAlerts } = useCreators();
   
   // Calculate risk metrics from mock data
   const riskScores: RiskScores = {
@@ -106,8 +111,8 @@ export default function InsurancePage() {
     { id: 7, name: "Copyright Check Passed", status: "pending" },
   ];
 
-  // Issues & Alerts
-  const issues: InsuranceIssue[] = [
+  // Base issues & alerts
+  const baseIssues: InsuranceIssue[] = [
     {
       id: "1",
       title: "Failed Copyright Scan",
@@ -159,6 +164,12 @@ export default function InsurancePage() {
     },
   ];
 
+  // Get creator rights alerts
+  const creatorAlerts = useMemo(() => generateCreatorRightsAlerts(), [generateCreatorRightsAlerts]);
+
+  // Combine all issues
+  const issues = useMemo(() => [...baseIssues, ...creatorAlerts], [baseIssues, creatorAlerts]);
+
   const handleExportRiskReport = () => {
     const riskData = prepareRiskDataForExport({
       riskIndex: riskGrade,
@@ -171,6 +182,12 @@ export default function InsurancePage() {
   };
 
   const handleIssueClick = (issue: InsuranceIssue) => {
+    // Navigate to creator detail page if it's a creator-rights issue
+    if (issue.category === "creator-rights" && issue.creatorId) {
+      router.push(`/creative/creators/${issue.creatorId}`);
+      return;
+    }
+    
     if (issue.assetId) {
       toast.info(`Navigating to asset ${issue.assetId}`);
       // Navigate to asset detail page

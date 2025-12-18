@@ -99,3 +99,31 @@ export function prepareRiskDataForExport(data: {
   };
 }
 
+// Format creator data for CSV/JSON export
+export function prepareCreatorsForExport(creators: any[]) {
+  return creators.map(creator => ({
+    "Creator Name": creator.fullName || "",
+    "Email": creator.email || "",
+    "CR ID": creator.creatorRightsId || "",
+    "Type": creator.creatorType || "",
+    "Rights Status": creator.rightsStatus || "",
+    "Valid From": creator.validFrom instanceof Date 
+      ? creator.validFrom.toLocaleDateString() 
+      : new Date(creator.validFrom).toLocaleDateString(),
+    "Valid Through": creator.validThrough instanceof Date 
+      ? creator.validThrough.toLocaleDateString() 
+      : new Date(creator.validThrough).toLocaleDateString(),
+    "Risk Level": creator.riskLevel || "",
+    "Assets Count": creator.linkedAssetsCount || 0,
+    "Projects Count": creator.linkedProjectsCount || 0,
+    "Profile Completion": `${creator.profileCompletion || 0}%`,
+    "Registration Source": creator.registrationSource || "",
+    "Created": creator.createdAt instanceof Date 
+      ? creator.createdAt.toLocaleDateString() 
+      : new Date(creator.createdAt).toLocaleDateString(),
+    "Last Updated": creator.updatedAt instanceof Date 
+      ? creator.updatedAt.toLocaleDateString() 
+      : new Date(creator.updatedAt).toLocaleDateString(),
+  }));
+}
+
