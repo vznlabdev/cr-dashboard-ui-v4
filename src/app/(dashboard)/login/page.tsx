@@ -50,9 +50,8 @@ function AdminLoginForm() {
 
       toast.success("Login successful!")
 
-      // Redirect to dashboard or the page they were trying to access
-      const from = searchParams.get("from")
-      router.push(from && from.startsWith("/") ? from : "/")
+      // Redirect to dashboard
+      router.push("/")
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Invalid email or password"
