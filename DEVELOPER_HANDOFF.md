@@ -6,6 +6,7 @@
 **Purpose:** AI Content Provenance & Governance Platform with Creative Workspace  
 **Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui  
 **Status:** UI Complete - Ready for Backend Integration  
+**Authentication:** Currently disabled for demo (all routes accessible)  
 **Last Updated:** December 2024
 
 ---
@@ -83,10 +84,11 @@ npm test             # Run tests (after installing test dependencies)
 - ✅ **State Management** - Context API ready for API integration
 - ✅ **CRUD Operations** - Working with in-memory data
 - ✅ **Creative Workspace** - Full Kanban board, brands, team, assets
+- ✅ **Creator Rights Management** - Creator profiles, rights tracking, crediting
 - ✅ **Responsive Design** - Mobile, tablet, desktop
 - ✅ **Dark/Light Mode** - Fully functional
 - ⏳ **API Integration** - Ready to connect
-- ⏳ **Authentication** - Needs implementation
+- ⏳ **Authentication** - Disabled for demo (enable in `src/middleware.ts`)
 
 ---
 
@@ -158,6 +160,36 @@ npm test             # Run tests (after installing test dependencies)
 - Search & filter by brand, design type, file type
 - Grid/List views
 
+### Creator Rights Management Features
+
+**Creator Management**
+- Full CRUD for creator profiles
+- Rights documentation and tracking
+- Creator Rights ID generation (CR-YYYY-#####)
+- Rights status calculation (Authorized, Expiring Soon, Expired)
+- Risk level assessment based on rights validity
+- Profile completion tracking
+
+**Creator Crediting**
+- Link creators to assets with role attribution
+- Link creators to projects with role attribution
+- View all credits per creator
+- View all creators per asset/project
+- Creator avatar badges with status indicators
+
+**Rights Monitoring**
+- Automatic expiration detection
+- Alerts for expiring/expired rights
+- Integration with insurance dashboard alerts
+- Export functionality for compliance
+
+**Creator Portal**
+- Self-service creator dashboard
+- Profile management
+- Rights extension requests
+- View linked assets and projects
+- Password reset functionality
+
 ---
 
 ## Project Structure
@@ -214,7 +246,9 @@ src/
 ├── contexts/
 │   ├── data-context.tsx          # CRUD operations & state
 │   ├── notification-context.tsx  # Notification system
-│   └── workspace-context.tsx     # Creative workspace state
+│   ├── workspace-context.tsx     # Creative workspace state
+│   ├── creators-context.tsx      # Creator management (admin)
+│   └── creator-account-context.tsx # Creator self-service
 ├── lib/
 │   ├── api.ts                    # API client setup
 │   ├── api-errors.ts             # Error handling utilities
@@ -323,7 +357,27 @@ Replace mock data with API calls:
 - Team: `GET /api/creative/team`
 - Assets: `GET /api/creative/assets`
 
-### Step 5: Connect Notifications
+### Step 5: Connect Creator Management
+
+**File:** `src/contexts/creators-context.tsx`
+
+Replace mock data with API calls:
+- Creators: `GET /api/creators`
+- Invitations: `GET /api/creators/invitations`
+- Credits: `GET /api/creators/:id/credits`
+- Create: `POST /api/creators`
+- Update: `PUT /api/creators/:id`
+- Credit: `POST /api/creators/:id/credit`
+
+**File:** `src/contexts/creator-account-context.tsx`
+
+Replace mock data with API calls:
+- Login: `POST /api/creators/auth/login`
+- Register: `POST /api/creators/auth/register`
+- Profile: `GET /api/creators/me`
+- Update Profile: `PUT /api/creators/me`
+
+### Step 6: Connect Notifications
 
 **Option A: WebSocket (Recommended)**
 ```typescript
@@ -355,7 +409,7 @@ useEffect(() => {
 }, []);
 ```
 
-### Step 6: Implement File Upload
+### Step 7: Implement File Upload
 
 **File:** `src/components/cr/add-asset-dialog.tsx`
 
@@ -397,6 +451,43 @@ const handleSubmit = async (e) => {
 
 **Current:** In-memory state with simulated API delays  
 **To Replace:** Connect to real API endpoints
+
+### Creators Context (`src/contexts/creators-context.tsx`)
+
+**Current:** In-memory state with simulated API delays  
+**To Replace:** Connect to real API endpoints
+
+**Available Methods:**
+```typescript
+// Creators
+inviteCreator(form) => Promise<CreatorInvitation>
+getCreatorById(id) => Creator | undefined
+creditCreatorToAsset(creatorId, assetId, role) => Promise<void>
+creditCreatorToProject(creatorId, projectId, role) => Promise<void>
+getExpiringCreators() => Creator[]
+getExpiredCreators() => Creator[]
+generateCreatorRightsAlerts() => InsuranceIssue[]
+```
+
+### Creator Account Context (`src/contexts/creator-account-context.tsx`)
+
+**Current:** In-memory state with simulated API delays  
+**To Replace:** Connect to real API endpoints
+
+**Available Methods:**
+```typescript
+// Authentication
+registerCreator(form) => Promise<Creator>
+login(email, password) => Promise<Creator>
+logout() => void
+
+// Profile
+updateMyProfile(updates) => Promise<void>
+getMyCredits() => CreatorCredit[]
+extendRights(newValidThrough) => Promise<void>
+requestPasswordReset(email) => Promise<void>
+resetPassword(token, password) => Promise<void>
+```
 
 **Available Methods:**
 ```typescript
@@ -445,8 +536,21 @@ const { notifications, unreadCount, markAsRead } = useNotifications();
 ## Authentication Setup
 
 ### Current State
-- No auth implemented (placeholder user)
+- **Authentication is disabled for demo purposes**
+- All routes are accessible without login
+- Middleware exists but always returns authenticated state
 - User menu exists in header
+
+### Enabling Authentication
+
+**File:** `src/middleware.ts`
+
+The middleware currently has authentication disabled for demo mode. To enable:
+
+1. Update the `checkAuth` function to implement real authentication
+2. Remove the demo mode return statement
+3. Implement token/session validation
+4. Configure your auth provider (NextAuth, Clerk, Supabase, etc.)
 
 ### Implementation Options
 
@@ -669,14 +773,24 @@ Check:
 ### Mock Data
 - Initial data defined in Context providers
 - Creative workspace data in `src/lib/mock-data/creative.ts`
+- Creator data in `src/lib/mock-data/creators.ts`
 - Use for development/testing
 - Will be replaced by API calls
 
 ### Integration Points
 All integration points are clearly marked with `INTEGRATION POINT:` comments in the code:
-- `src/contexts/data-context.tsx`
-- `src/contexts/notification-context.tsx`
-- `src/lib/mock-data/creative.ts`
+- `src/contexts/data-context.tsx` - Projects and assets CRUD
+- `src/contexts/creators-context.tsx` - Creator management (admin)
+- `src/contexts/creator-account-context.tsx` - Creator self-service
+- `src/contexts/notification-context.tsx` - Notifications
+- `src/lib/mock-data/creative.ts` - Creative workspace data
+- `src/lib/mock-data/creators.ts` - Creator mock data
+
+### Authentication Status
+- **Currently disabled for demo** - All routes accessible without login
+- Middleware file exists at `src/middleware.ts`
+- To enable: Update `checkAuth()` function with real authentication logic
+- See "Authentication Setup" section above for implementation options
 
 ---
 
