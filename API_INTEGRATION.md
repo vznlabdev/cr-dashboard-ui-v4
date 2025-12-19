@@ -276,7 +276,272 @@ Delete asset
 
 ---
 
-## 3. Notifications API
+## 3. Creators API
+
+### **GET /api/creators**
+Get list of all creators
+
+**Response:**
+```typescript
+{
+  creators: [
+    {
+      id: string;
+      fullName: string;
+      email: string;
+      creatorRightsId: string; // Format: CR-YYYY-#####
+      creatorType: "Real Person" | "Character" | "Brand Mascot";
+      rightsStatus: "Authorized" | "Expiring Soon" | "Expired";
+      validFrom: string; // ISO 8601 date
+      validThrough: string; // ISO 8601 date
+      riskLevel: "Low" | "Medium" | "High";
+      profileCompletion: number; // 0-100
+      avatarUrl?: string;
+      // ... other creator fields
+    }
+  ]
+}
+```
+
+---
+
+### **GET /api/creators/:id**
+Get single creator
+
+**Response:**
+```typescript
+{
+  creator: { /* creator object */ }
+}
+```
+
+---
+
+### **POST /api/creators/invite**
+Invite a new creator
+
+**Request Body:**
+```typescript
+{
+  email: string; // required
+  creatorType: "Real Person" | "Character" | "Brand Mascot"; // required
+  validFrom: string; // ISO 8601 date
+  validThrough: string; // ISO 8601 date
+}
+```
+
+**Response:**
+```typescript
+{
+  invitation: {
+    id: string;
+    email: string;
+    token: string;
+    status: "pending" | "accepted" | "expired";
+    expiresAt: string; // ISO 8601 date
+  }
+}
+```
+
+---
+
+### **POST /api/creators/:id/credit**
+Credit creator to asset or project
+
+**Request Body:**
+```typescript
+{
+  assetId?: string; // Either assetId or projectId required
+  projectId?: string;
+  role?: string; // e.g., "Photographer", "Designer", "Voice Actor"
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true,
+  credit: {
+    id: string;
+    creatorId: string;
+    assetId?: string;
+    projectId?: string;
+    role?: string;
+  }
+}
+```
+
+---
+
+### **DELETE /api/creators/:id/credit**
+Remove credit from asset or project
+
+**Request Body:**
+```typescript
+{
+  assetId?: string;
+  projectId?: string;
+}
+```
+
+---
+
+### **GET /api/creators/:id/credits**
+Get all credits for a creator
+
+**Response:**
+```typescript
+{
+  credits: [
+    {
+      id: string;
+      assetId?: string;
+      projectId?: string;
+      role?: string;
+      createdAt: string; // ISO 8601 date
+    }
+  ]
+}
+```
+
+---
+
+### **GET /api/assets/:assetId/creators**
+Get all creators credited to an asset
+
+**Response:**
+```typescript
+{
+  creators: [ /* creator objects */ ]
+}
+```
+
+---
+
+### **GET /api/projects/:projectId/creators**
+Get all creators credited to a project
+
+**Response:**
+```typescript
+{
+  creators: [ /* creator objects */ ]
+}
+```
+
+---
+
+## 4. Creator Account API (Self-Service)
+
+### **POST /api/creators/auth/register**
+Register a new creator account
+
+**Request Body:**
+```typescript
+{
+  email: string;
+  password: string;
+  fullName: string;
+  creatorType: "Real Person" | "Character" | "Brand Mascot";
+  token?: string; // If registering from invitation
+}
+```
+
+**Response:**
+```typescript
+{
+  creator: { /* creator object */ },
+  token: string; // Auth token
+}
+```
+
+---
+
+### **POST /api/creators/auth/login**
+Login as creator
+
+**Request Body:**
+```typescript
+{
+  email: string;
+  password: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  creator: { /* creator object */ },
+  token: string; // Auth token
+}
+```
+
+---
+
+### **GET /api/creators/me**
+Get current creator's profile (requires auth)
+
+**Response:**
+```typescript
+{
+  creator: { /* creator object */ }
+}
+```
+
+---
+
+### **PUT /api/creators/me**
+Update current creator's profile
+
+**Request Body:**
+```typescript
+{
+  fullName?: string;
+  avatarUrl?: string;
+  contactInformation?: string;
+  // ... other updatable fields
+}
+```
+
+---
+
+### **POST /api/creators/me/rights/extend**
+Extend creator rights
+
+**Request Body:**
+```typescript
+{
+  newValidThrough: string; // ISO 8601 date
+}
+```
+
+---
+
+### **POST /api/creators/auth/forgot-password**
+Request password reset
+
+**Request Body:**
+```typescript
+{
+  email: string;
+}
+```
+
+---
+
+### **POST /api/creators/auth/reset-password**
+Reset password with token
+
+**Request Body:**
+```typescript
+{
+  token: string;
+  password: string;
+}
+```
+
+---
+
+## 5. Notifications API
 
 ### **GET /api/notifications**
 Get user notifications
@@ -351,7 +616,7 @@ Delete all notifications
 
 ---
 
-## 4. Legal Review API
+## 6. Legal Review API
 
 ### **GET /api/legal/issues**
 Get legal issues/flags
@@ -389,7 +654,7 @@ Export legal package (CSV)
 
 ---
 
-## 5. Insurance/Risk API
+## 7. Insurance/Risk API
 
 ### **GET /api/insurance/risk-data**
 Get risk assessment data
@@ -412,7 +677,7 @@ Export risk report (JSON)
 
 ---
 
-## 6. Integrations API
+## 8. Integrations API
 
 ### **GET /api/integrations**
 Get AI tool integrations
@@ -451,7 +716,7 @@ Disconnect AI tool
 
 ---
 
-## 7. Settings API
+## 9. Settings API
 
 ### **GET /api/settings**
 Get company settings
@@ -482,7 +747,7 @@ Invite team member
 
 ---
 
-## 8. Export API
+## 10. Export API
 
 ### **GET /api/export/projects**
 Export projects as CSV
@@ -606,7 +871,8 @@ Initial data in Context files can be used as test data.
 1. Authentication (protects all routes)
 2. Projects CRUD (core functionality)
 3. Assets CRUD (core functionality)
-4. Notifications API (user engagement)
+4. Creators API (creator management and crediting)
+5. Notifications API (user engagement)
 
 ### Can Wait:
 5. Export API (client-side works for now)
