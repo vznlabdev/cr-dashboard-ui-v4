@@ -50,7 +50,6 @@ import {
   calculatePortfolioTIV,
 } from "@/lib/insurance-utils"
 import type { DistributionLevel } from "@/types"
-import { DollarSign, Shield } from "lucide-react"
 
 export default function ProjectsPage() {
   const { projects, updateProject, deleteProject } = useData()
@@ -281,12 +280,6 @@ export default function ProjectsPage() {
                   <TableHead>Assets</TableHead>
                   <TableHead>Compliance</TableHead>
                   <TableHead>Risk</TableHead>
-                  <TableHead className="hidden lg:table-cell">
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
-                      Insured Value
-                    </div>
-                  </TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -294,7 +287,7 @@ export default function ProjectsPage() {
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -332,12 +325,6 @@ export default function ProjectsPage() {
                         <Badge variant={getRiskVariant(project.risk)}>
                           {project.risk}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-muted-foreground" />
-                          <span className="font-medium">{formatLargeCurrency(project.tiv)}</span>
-                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {project.updated}
