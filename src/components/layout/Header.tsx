@@ -22,7 +22,7 @@ export function Header() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border glass shadow-modern px-4 md:px-6">
       {/* Mobile Menu */}
       <div className="md:hidden">
         <MobileNav />
@@ -31,11 +31,11 @@ export function Header() {
       {/* Left side - Search */}
       <div className="flex items-center gap-4 flex-1">
         <div className="relative w-full max-w-md hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
           <Input
             type="search"
             placeholder="Search projects, assets..."
-            className="pl-10 pr-16 w-full"
+            className="pl-10 pr-16 w-full bg-background/80 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-primary/20"
             disabled
           />
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">

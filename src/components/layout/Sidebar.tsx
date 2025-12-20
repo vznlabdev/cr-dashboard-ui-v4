@@ -109,7 +109,7 @@ export function Sidebar() {
     return (
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-all duration-300 hidden md:block",
+          "fixed left-0 top-0 z-40 h-screen border-r border-border glass transition-all duration-300 hidden md:block",
           collapsed ? "w-16" : "w-60"
         )}
       >
@@ -123,7 +123,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-all duration-300 hidden md:block",
+        "fixed left-0 top-0 z-40 h-screen border-r border-border glass shadow-modern-lg transition-all duration-300 hidden md:block",
         collapsed ? "w-16" : "w-60"
       )}
     >
@@ -177,10 +177,10 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                    "hover:bg-accent hover:text-accent-foreground hover:shadow-modern",
                     isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/20"
+                      ? "bg-primary/15 text-primary shadow-modern border border-primary/20"
                       : "text-muted-foreground",
                     collapsed && "justify-center"
                   )}
@@ -199,10 +199,10 @@ export function Sidebar() {
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+              "hover:bg-accent hover:text-accent-foreground hover:shadow-modern",
               pathname === "/settings"
-                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                ? "bg-primary/15 text-primary shadow-modern border border-primary/20"
                 : "text-muted-foreground",
               collapsed && "justify-center"
             )}
