@@ -391,8 +391,8 @@ export default function InsurancePage() {
             <AreaChart data={riskTrendData}>
               <defs>
                 <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3ECF8E" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3ECF8E" stopOpacity={0}/>
+                  <stop offset="5%" stopColor={chartTheme.chart1} stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor={chartTheme.chart1} stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid 
@@ -420,8 +420,11 @@ export default function InsurancePage() {
                 contentStyle={{
                   backgroundColor: chartTheme.tooltipBg,
                   border: `1px solid ${chartTheme.tooltipBorder}`,
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   color: chartTheme.tooltipText,
+                  backdropFilter: 'blur(12px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
                 }}
                 labelStyle={{ 
                   color: chartTheme.tooltipText
@@ -437,7 +440,7 @@ export default function InsurancePage() {
                 type="monotone"
                 dataKey="score"
                 name="Risk Score"
-                stroke="#3ECF8E"
+                stroke={chartTheme.chart1}
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorRisk)"
@@ -502,14 +505,17 @@ export default function InsurancePage() {
                     contentStyle={{
                       backgroundColor: chartTheme.tooltipBg,
                       border: `1px solid ${chartTheme.tooltipBorder}`,
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       color: chartTheme.tooltipText,
+                      backdropFilter: 'blur(12px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+                      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
                     }}
                     labelStyle={{ 
                       color: chartTheme.tooltipText
                     }}
                   />
-                  <Bar dataKey="count" fill="#3ECF8E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill={chartTheme.chart1} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -649,8 +655,11 @@ export default function InsurancePage() {
                   contentStyle={{
                     backgroundColor: chartTheme.tooltipBg,
                     border: `1px solid ${chartTheme.tooltipBorder}`,
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     color: chartTheme.tooltipText,
+                    backdropFilter: 'blur(12px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
                   }}
                   labelStyle={{ 
                     color: chartTheme.tooltipText

@@ -183,8 +183,11 @@ export default function LegalPage() {
                   contentStyle={{
                     backgroundColor: chartTheme.tooltipBg,
                     border: `1px solid ${chartTheme.tooltipBorder}`,
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     color: chartTheme.tooltipText,
+                    backdropFilter: 'blur(12px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
                   }}
                   labelStyle={{ 
                     color: chartTheme.tooltipText
@@ -195,9 +198,9 @@ export default function LegalPage() {
                   type="monotone"
                   dataKey="score"
                   name="Compliance Percentage"
-                  stroke="#3ECF8E"
+                  stroke={chartTheme.chart1}
                   strokeWidth={2}
-                  dot={{ fill: '#3ECF8E' }}
+                  dot={{ fill: chartTheme.chart1 }}
                 />
               </LineChart>
             </ResponsiveContainer>

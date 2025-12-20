@@ -130,10 +130,10 @@ export function MobileNav() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "hover:bg-accent hover:text-accent-foreground hover:shadow-modern",
                   isActive
-                    ? "bg-primary/10 text-primary hover:bg-primary/20"
+                    ? "bg-primary/15 text-primary shadow-modern border border-primary/20"
                     : "text-muted-foreground"
                 )}
               >
@@ -150,10 +150,10 @@ export function MobileNav() {
             href="/settings"
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+              "hover:bg-accent hover:text-accent-foreground hover:shadow-modern",
               pathname === "/settings"
-                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                ? "bg-primary/15 text-primary shadow-modern border border-primary/20"
                 : "text-muted-foreground"
             )}
           >
