@@ -155,59 +155,63 @@ export default function DashboardPage() {
       {/* Key Metrics with Visual Gauges */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Link href="/legal" className="block">
-          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent transition-all hover:shadow-colored hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">
                 Compliance Percentage
               </CardTitle>
               <Scale className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center pt-4 pb-6">
+            <CardContent className="flex flex-col items-center pt-4 pb-6 relative z-10">
               <ComplianceScoreGauge score={87} size="md" showTrend trend={5} />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/insurance" className="block">
-          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent transition-all hover:shadow-colored hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">
                 Risk Index
               </CardTitle>
               <Shield className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent className="flex flex-col items-center pt-4 pb-6">
+            <CardContent className="flex flex-col items-center pt-4 pb-6 relative z-10">
               <RiskIndexBadge grade="A" size="md" />
             </CardContent>
           </Card>
         </Link>
 
-        <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="transition-all hover:shadow-modern-lg hover:-translate-y-0.5 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
             <CardTitle className="text-sm font-medium">
               Provenance Score
             </CardTitle>
-            <FileCheck className="h-4 w-4 text-muted-foreground" />
+            <FileCheck className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">94.2</div>
+          <CardContent className="relative z-10">
+            <div className="text-2xl font-bold gradient-text">94.2</div>
             <div className="flex items-center text-xs text-muted-foreground mt-1">
-              <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-              <span className="text-green-500">+2.1</span>
+              <TrendingUp className="mr-1 h-3 w-3 text-primary" />
+              <span className="text-primary font-medium">+2.1</span>
               <span className="ml-1">from last month</span>
             </div>
           </CardContent>
         </Card>
 
         <Link href="/integrations" className="block">
-          <Card className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="transition-all hover:shadow-modern-lg hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">
                 AI Tools Connected
               </CardTitle>
-              <Plug className="h-4 w-4 text-muted-foreground" />
+              <Plug className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="text-2xl font-bold">4/6</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Active integrations
@@ -217,14 +221,15 @@ export default function DashboardPage() {
         </Link>
 
         <Link href="/creative/creators" className="block">
-          <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent transition-all hover:shadow-colored hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">
                 Creators
               </CardTitle>
               <User className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="text-2xl font-bold">{creatorCount}</div>
               <div className="flex items-center text-xs text-muted-foreground mt-1">
                 {expiringRightsCount > 0 ? (
@@ -243,8 +248,9 @@ export default function DashboardPage() {
 
       {/* Insurance Summary */}
       <Link href="/insurance" className="block">
-        <Card className="border-primary/20 bg-primary/5 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-          <CardHeader>
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/8 via-primary/5 to-transparent transition-all hover:shadow-colored hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative z-10">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg sm:text-xl">Insurance & Risk Summary</CardTitle>
@@ -255,7 +261,7 @@ export default function DashboardPage() {
               <ArrowUpRight className="h-5 w-5 text-primary" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -306,14 +312,15 @@ export default function DashboardPage() {
       </Link>
 
       {/* Activity Trends Chart */}
-      <Card>
-        <CardHeader>
+      <Card className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-50" />
+        <CardHeader className="relative z-10">
           <CardTitle className="text-lg sm:text-xl">Activity Trends</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             Asset approvals and compliance reviews over the last 7 days
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className="overflow-x-auto relative z-10">
           <ResponsiveContainer width="100%" height={300} minWidth={300}>
             <BarChart data={activityTrendData}>
               <CartesianGrid 

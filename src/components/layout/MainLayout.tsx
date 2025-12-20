@@ -13,7 +13,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { collapsed } = useSidebar()
 
   return (
-    <div className="relative flex min-h-screen overflow-x-hidden">
+    <div className="relative flex min-h-screen overflow-x-hidden bg-background">
+      {/* Subtle background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/2 pointer-events-none -z-10" />
       <Sidebar />
       <div 
         className={cn(
