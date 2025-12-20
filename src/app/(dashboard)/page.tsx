@@ -347,8 +347,11 @@ export default function DashboardPage() {
                 contentStyle={{
                   backgroundColor: chartTheme.tooltipBg,
                   border: `1px solid ${chartTheme.tooltipBorder}`,
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   color: chartTheme.tooltipText,
+                  backdropFilter: 'blur(12px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)',
                 }}
                 labelStyle={{ 
                   color: chartTheme.tooltipText
@@ -363,13 +366,13 @@ export default function DashboardPage() {
               <Bar 
                 dataKey="approved" 
                 name="Approved Assets" 
-                fill="#3ECF8E"
+                fill={chartTheme.chart1}
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="reviewed" 
                 name="Legal Reviews" 
-                fill="#60a5fa"
+                fill={chartTheme.chart2}
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
