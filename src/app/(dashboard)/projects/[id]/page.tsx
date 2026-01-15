@@ -2,6 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,14 +12,17 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { notFound, useParams } from "next/navigation"
+import { notFound, useParams, useRouter } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getTasksByProject } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
+import { ArrowLeft, Briefcase, Scale, Shield } from "lucide-react"
+import { Suspense } from "react"
 
-export default function ProjectDetailPage() {
+function ProjectDetailContent() {
   const params = useParams()
+  const router = useRouter()
   const projectId = params.id as string
   const { getProjectById } = useData()
 
@@ -86,6 +91,17 @@ export default function ProjectDetailPage() {
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push("/projects")}
+        className="gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Projects
+      </Button>
+
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -134,37 +150,52 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Workstream Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Creator Tasks Column */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Creator Tasks ({creatorTasks.length})
-            </CardTitle>
+        <Card className="border-t-4 border-t-blue-500 shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-lg">Creator Tasks</CardTitle>
+              </div>
+              <Badge variant="secondary" className="text-base font-semibold">
+                {creatorTasks.length}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 min-h-[200px]">
             {creatorTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No creator tasks
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  No creator tasks yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tasks will appear here when assigned
+                </p>
+              </div>
             ) : (
               creatorTasks.map((task) => (
-                <Card key={task.id} className="border-l-4 border-l-blue-500">
+                <Card 
+                  key={task.id} 
+                  className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+                >
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
+                      <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs shrink-0">
                         {task.status}
                       </Badge>
                     </div>
                     {task.assignee && (
                       <p className="text-xs text-muted-foreground">
-                        Assignee: {task.assignee}
+                        👤 {task.assignee}
                       </p>
                     )}
                     {task.dueDate && (
                       <p className="text-xs text-muted-foreground">
-                        Due: {task.dueDate}
+                        📅 Due: {task.dueDate}
                       </p>
                     )}
                   </CardContent>
@@ -175,35 +206,50 @@ export default function ProjectDetailPage() {
         </Card>
 
         {/* Legal Tasks Column */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Legal Tasks ({legalTasks.length})
-            </CardTitle>
+        <Card className="border-t-4 border-t-amber-500 shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Scale className="h-5 w-5 text-amber-500" />
+                <CardTitle className="text-lg">Legal Tasks</CardTitle>
+              </div>
+              <Badge variant="secondary" className="text-base font-semibold">
+                {legalTasks.length}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 min-h-[200px]">
             {legalTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No legal tasks
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Scale className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  No legal tasks yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Legal review tasks will appear here
+                </p>
+              </div>
             ) : (
               legalTasks.map((task) => (
-                <Card key={task.id} className="border-l-4 border-l-amber-500">
+                <Card 
+                  key={task.id} 
+                  className="border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+                >
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
+                      <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs shrink-0">
                         {task.status}
                       </Badge>
                     </div>
                     {task.assignee && (
                       <p className="text-xs text-muted-foreground">
-                        Assignee: {task.assignee}
+                        👤 {task.assignee}
                       </p>
                     )}
                     {task.dueDate && (
                       <p className="text-xs text-muted-foreground">
-                        Due: {task.dueDate}
+                        📅 Due: {task.dueDate}
                       </p>
                     )}
                   </CardContent>
@@ -214,35 +260,50 @@ export default function ProjectDetailPage() {
         </Card>
 
         {/* Insurance Tasks Column */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Insurance Tasks ({insuranceTasks.length})
-            </CardTitle>
+        <Card className="border-t-4 border-t-green-500 shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-500" />
+                <CardTitle className="text-lg">Insurance Tasks</CardTitle>
+              </div>
+              <Badge variant="secondary" className="text-base font-semibold">
+                {insuranceTasks.length}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 min-h-[200px]">
             {insuranceTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No insurance tasks
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Shield className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  No insurance tasks yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Insurance verification tasks will appear here
+                </p>
+              </div>
             ) : (
               insuranceTasks.map((task) => (
-                <Card key={task.id} className="border-l-4 border-l-green-500">
+                <Card 
+                  key={task.id} 
+                  className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+                >
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
+                      <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs shrink-0">
                         {task.status}
                       </Badge>
                     </div>
                     {task.assignee && (
                       <p className="text-xs text-muted-foreground">
-                        Assignee: {task.assignee}
+                        👤 {task.assignee}
                       </p>
                     )}
                     {task.dueDate && (
                       <p className="text-xs text-muted-foreground">
-                        Due: {task.dueDate}
+                        📅 Due: {task.dueDate}
                       </p>
                     )}
                   </CardContent>
@@ -253,5 +314,32 @@ export default function ProjectDetailPage() {
         </Card>
       </div>
     </PageContainer>
+  )
+}
+
+// Loading skeleton component
+function ProjectDetailSkeleton() {
+  return (
+    <PageContainer className="space-y-6 animate-fade-in">
+      <Skeleton className="h-10 w-40" />
+      <Skeleton className="h-6 w-96" />
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full max-w-2xl" />
+        <Skeleton className="h-6 w-full max-w-xl" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    </PageContainer>
+  )
+}
+
+export default function ProjectDetailPage() {
+  return (
+    <Suspense fallback={<ProjectDetailSkeleton />}>
+      <ProjectDetailContent />
+    </Suspense>
   )
 }
