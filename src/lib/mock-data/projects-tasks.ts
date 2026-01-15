@@ -1,7 +1,7 @@
 // Mock data for Projects and Tasks
 // This will be replaced with API calls in production
 
-import type { Task } from "@/types"
+import type { Task, ProjectStatus, RiskLevel } from "@/types"
 
 // =============================================================================
 // PROJECTS DATA
@@ -10,9 +10,9 @@ import type { Task } from "@/types"
 export interface MockProject {
   id: string
   name: string
-  status: 'active' | 'review' | 'draft' | 'approved'
+  status: ProjectStatus
   compliance: number
-  risk: 'low' | 'medium' | 'high'
+  risk: RiskLevel
   description?: string
   owner?: string
   createdDate?: string
@@ -23,9 +23,9 @@ export const mockProjects: MockProject[] = [
   {
     id: 'proj-1',
     name: 'Brand Refresh Campaign',
-    status: 'active',
+    status: 'Active',
     compliance: 85,
-    risk: 'medium',
+    risk: 'Medium',
     description: 'Complete brand refresh campaign with new visual identity',
     owner: 'Sarah Johnson',
     createdDate: 'Dec 1, 2024',
@@ -34,9 +34,9 @@ export const mockProjects: MockProject[] = [
   {
     id: 'proj-2',
     name: 'Product Launch Video',
-    status: 'review',
+    status: 'Review',
     compliance: 78,
-    risk: 'medium',
+    risk: 'Medium',
     description: 'Video content for upcoming product launch',
     owner: 'Michael Chen',
     createdDate: 'Dec 5, 2024',

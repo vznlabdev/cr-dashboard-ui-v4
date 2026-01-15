@@ -55,11 +55,11 @@ export default function ProjectDetailPage() {
   // Helper function to get risk badge variant
   const getRiskVariant = (risk: string) => {
     switch (risk) {
-      case "low":
+      case "Low":
         return "default"
-      case "medium":
+      case "Medium":
         return "secondary"
-      case "high":
+      case "High":
         return "destructive"
       default:
         return "outline"
@@ -98,7 +98,7 @@ export default function ProjectDetailPage() {
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Status:</span>
-            <Badge variant={project.status === "active" ? "default" : "outline"}>
+            <Badge variant={project.status === "Active" ? "default" : "outline"}>
               {project.status}
             </Badge>
           </div>
