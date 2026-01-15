@@ -12,15 +12,17 @@ import {
 } from "@/components/ui/breadcrumb"
 import { notFound, useParams } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { mockProjects, mockTasks, getTasksByProject } from "@/lib/mock-data/projects-tasks"
+import { useData } from "@/contexts/data-context"
+import { mockTasks, getTasksByProject } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
 
 export default function ProjectDetailPage() {
   const params = useParams()
   const projectId = params.id as string
+  const { getProjectById } = useData()
 
-  // Fetch project by id
-  const project = mockProjects.find((p) => p.id === projectId)
+  // Fetch project by id from data context
+  const project = getProjectById(projectId)
 
   if (!project) {
     notFound()
@@ -34,8 +36,8 @@ export default function ProjectDetailPage() {
   const legalTasks = projectTasks.filter((t) => t.workstream === "legal")
   const insuranceTasks = projectTasks.filter((t) => t.workstream === "insurance")
 
-  // Helper function to get status badge variant
-  const getStatusVariant = (status: Task["status"]) => {
+  // Helper function to get task status badge variant
+  const getTaskStatusVariant = (status: Task["status"]) => {
     switch (status) {
       case "completed":
         return "default"
@@ -47,6 +49,22 @@ export default function ProjectDetailPage() {
         return "outline"
       case "submitted":
         return "outline"
+      default:
+        return "outline"
+    }
+  }
+
+  // Helper function to get project status badge variant
+  const getProjectStatusVariant = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "default"
+      case "Review":
+        return "secondary"
+      case "Draft":
+        return "outline"
+      case "Approved":
+        return "default"
       default:
         return "outline"
     }
@@ -98,7 +116,7 @@ export default function ProjectDetailPage() {
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Status:</span>
-            <Badge variant={project.status === "Active" ? "default" : "outline"}>
+            <Badge variant={getProjectStatusVariant(project.status)}>
               {project.status}
             </Badge>
           </div>
@@ -135,7 +153,7 @@ export default function ProjectDetailPage() {
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
                         {task.status}
                       </Badge>
                     </div>
@@ -174,7 +192,7 @@ export default function ProjectDetailPage() {
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
                         {task.status}
                       </Badge>
                     </div>
@@ -213,7 +231,7 @@ export default function ProjectDetailPage() {
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-medium text-sm">{task.title}</h3>
-                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs">
                         {task.status}
                       </Badge>
                     </div>

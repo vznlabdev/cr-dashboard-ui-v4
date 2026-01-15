@@ -6,6 +6,9 @@ import type { Task, ProjectStatus, RiskLevel } from "@/types"
 // =============================================================================
 // PROJECTS DATA
 // =============================================================================
+// NOTE: Projects should be loaded from the useData() context, not this mock data.
+// This mockProjects array is kept for reference but is not used in the app.
+// The data context (src/contexts/data-context.tsx) contains the canonical project data.
 
 export interface MockProject {
   id: string
@@ -19,6 +22,10 @@ export interface MockProject {
   updated?: string
 }
 
+/**
+ * @deprecated Use useData() context instead
+ * These mock projects are kept for reference only.
+ */
 export const mockProjects: MockProject[] = [
   {
     id: 'proj-1',
@@ -51,7 +58,7 @@ export const mockProjects: MockProject[] = [
 export const mockTasks: Task[] = [
   {
     id: 'task-1',
-    projectId: 'proj-1',
+    projectId: '1', // Links to "Summer Campaign 2024" in data context
     workstream: 'creator',
     title: 'Design hero image',
     status: 'production',
@@ -62,7 +69,7 @@ export const mockTasks: Task[] = [
   },
   {
     id: 'task-2',
-    projectId: 'proj-1',
+    projectId: '1', // Links to "Summer Campaign 2024" in data context
     workstream: 'creator',
     title: 'Write copy variations',
     status: 'submitted',
@@ -73,7 +80,7 @@ export const mockTasks: Task[] = [
   },
   {
     id: 'task-3',
-    projectId: 'proj-1',
+    projectId: '1', // Links to "Summer Campaign 2024" in data context
     workstream: 'legal',
     title: 'Review trademark usage',
     status: 'assessment',
@@ -84,7 +91,7 @@ export const mockTasks: Task[] = [
   },
   {
     id: 'task-4',
-    projectId: 'proj-1',
+    projectId: '1', // Links to "Summer Campaign 2024" in data context
     workstream: 'insurance',
     title: 'Verify AI content provenance',
     status: 'submitted',
@@ -95,7 +102,7 @@ export const mockTasks: Task[] = [
   },
   {
     id: 'task-5',
-    projectId: 'proj-2',
+    projectId: '2', // Links to "Product Launch Video" in data context
     workstream: 'creator',
     title: 'Edit product demo',
     status: 'production',
