@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Plus,
   Search,
@@ -52,6 +53,7 @@ import {
 import type { DistributionLevel } from "@/types"
 
 export default function ProjectsPage() {
+  const router = useRouter()
   const { projects, updateProject, deleteProject } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -308,7 +310,11 @@ export default function ProjectsPage() {
                   </TableRow>
                 ) : (
                   filteredProjects.map((project) => (
-                    <TableRow key={project.id}>
+                    <TableRow 
+                      key={project.id}
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                      className="cursor-pointer hover:bg-gray-800"
+                    >
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusVariant(project.status)}>
@@ -329,7 +335,7 @@ export default function ProjectsPage() {
                       <TableCell className="text-muted-foreground">
                         {project.updated}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
