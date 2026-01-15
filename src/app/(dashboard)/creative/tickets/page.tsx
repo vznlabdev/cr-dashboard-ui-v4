@@ -55,15 +55,15 @@ export default function TicketsPage() {
         {/* Page Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tickets</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tasks</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Manage creative requests and track progress
+              Manage creative tasks and track progress
             </p>
           </div>
           <Link href="/creative/tickets/new">
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              New Request
+              New Task
             </Button>
           </Link>
         </div>
@@ -73,7 +73,7 @@ export default function TicketsPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search tickets..."
+              placeholder="Search tasks..."
               className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -137,11 +137,11 @@ export default function TicketsPage() {
                     <div className="rounded-full bg-muted p-4 mb-4">
                       <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="font-medium mb-1">No tickets found</h3>
+                    <h3 className="font-medium mb-1">No tasks found</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       {searchQuery
                         ? "Try adjusting your search or filter"
-                        : "No tickets in this status"}
+                        : "No tasks in this status"}
                     </p>
                   </div>
                 ) : (
@@ -160,11 +160,11 @@ export default function TicketsPage() {
                     <div className="rounded-full bg-muted p-4 mb-4">
                       <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="font-medium mb-1">No tickets found</h3>
+                    <h3 className="font-medium mb-1">No tasks found</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       {searchQuery
                         ? "Try adjusting your search or filter"
-                        : "No tickets in this status"}
+                        : "No tasks in this status"}
                     </p>
                   </div>
                 ) : (
@@ -178,25 +178,9 @@ export default function TicketsPage() {
         )}
       </PageContainer>
 
-      {/* Kanban View - Full Width with edge gradients (shown when "All" is selected) */}
+      {/* Kanban View - Full Width (shown when "All" is selected) */}
       {selectedStatus === "all" && (
         <div className="relative">
-          {/* Left fade indicator at viewport edge */}
-          {showLeftFade && (
-            <div 
-              className={cn(
-                "fixed left-0 top-16 bottom-0 w-16 bg-gradient-to-r from-background to-transparent z-20 pointer-events-none",
-                "md:left-60",
-                collapsed && "md:left-16"
-              )}
-            />
-          )}
-          
-          {/* Right fade indicator at viewport edge */}
-          {showRightFade && (
-            <div className="fixed right-0 top-16 bottom-0 w-16 bg-gradient-to-l from-background to-transparent z-20 pointer-events-none" />
-          )}
-
           <KanbanBoard 
             tickets={searchQuery ? filteredTickets : tickets}
             onScrollChange={(showLeft, showRight) => {
