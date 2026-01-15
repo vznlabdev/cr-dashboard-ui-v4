@@ -1,24 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState, AddAssetDialog, WorkflowTracker } from "@/components/cr";
-import {
-  Download,
-  FileText,
-  AlertCircle,
-  Eye,
-  History,
-  FolderOpen,
-  Trash2,
-  MoreHorizontal,
-  DollarSign,
-  Shield,
-  ArrowUpRight,
-} from "lucide-react";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,173 +9,68 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useData } from "@/contexts/data-context";
-import { useCreators } from "@/contexts/creators-context";
-import { notFound, useParams } from "next/navigation";
-import { toast } from "sonner";
-import { useState, useMemo } from "react";
-import { CreditCreatorDialog, ManageCreatorCreditsDialog, CreatorAvatarsGroup } from "@/components/creators";
-import { UserPlus, Users, CheckCircle2, Clock, AlertTriangle, ExternalLink } from "lucide-react";
-import { getRightsStatusVariant, formatCreatorExpiration } from "@/lib/creator-utils";
-import {
-  calculateTIV,
-  calculatePortfolioTIV,
-  formatLargeCurrency,
-  calculateWorkflowCompletion,
-  getRiskLevelFromWorkflow,
-} from "@/lib/insurance-utils";
-import type { WorkflowStep, DistributionLevel } from "@/types";
+} from "@/components/ui/breadcrumb"
+import { notFound, useParams } from "next/navigation"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { mockProjects, mockTasks, getTasksByProject } from "@/lib/mock-data/projects-tasks"
+import type { Task } from "@/types"
 
 export default function ProjectDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const { getProjectById, getProjectAssets, deleteAsset } = useData();
-  const { getCreatorsByProject } = useCreators();
-  const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
-  const [addAssetDialogOpen, setAddAssetDialogOpen] = useState(false);
-  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
-  const [manageCreditsDialogOpen, setManageCreditsDialogOpen] = useState(false);
-  
-  const project = getProjectById(id);
-  const assets = getProjectAssets(id);
-  const creditedCreators = getCreatorsByProject(id);
+  const params = useParams()
+  const projectId = params.id as string
+
+  // Fetch project by id
+  const project = mockProjects.find((p) => p.id === projectId)
 
   if (!project) {
-    notFound();
+    notFound()
   }
 
-  const handleDeleteAsset = async (assetId: string, assetName: string) => {
-    if (!confirm(`Are you sure you want to delete "${assetName}"?`)) {
-      return;
+  // Fetch all tasks for this project
+  const projectTasks = getTasksByProject(projectId)
+
+  // Group tasks by workstream
+  const creatorTasks = projectTasks.filter((t) => t.workstream === "creator")
+  const legalTasks = projectTasks.filter((t) => t.workstream === "legal")
+  const insuranceTasks = projectTasks.filter((t) => t.workstream === "insurance")
+
+  // Helper function to get status badge variant
+  const getStatusVariant = (status: Task["status"]) => {
+    switch (status) {
+      case "completed":
+        return "default"
+      case "production":
+        return "secondary"
+      case "review":
+        return "outline"
+      case "assessment":
+        return "outline"
+      case "submitted":
+        return "outline"
+      default:
+        return "outline"
     }
+  }
 
-    setDeletingAssetId(assetId);
-    try {
-      await deleteAsset(id, assetId);
-      toast.success(`Asset "${assetName}" deleted successfully`);
-    } catch (err) {
-      console.error("Failed to delete asset:", err);
-      toast.error("Failed to delete asset");
-    } finally {
-      setDeletingAssetId(null);
+  // Helper function to get risk badge variant
+  const getRiskVariant = (risk: string) => {
+    switch (risk) {
+      case "low":
+        return "default"
+      case "medium":
+        return "secondary"
+      case "high":
+        return "destructive"
+      default:
+        return "outline"
     }
-  };
-
-  // Calculate insurance metrics for project
-  const projectWorkflowSteps: WorkflowStep[] = useMemo(() => {
-    // Aggregate workflow from all assets in the project
-    // For demo, we'll create a project-level workflow based on asset completion
-    const completedAssets = assets.filter(a => a.status === "Approved").length;
-    const totalAssets = assets.length;
-    const completionRate = totalAssets > 0 ? completedAssets / totalAssets : 0;
-    
-    // Map completion rate to 7-step workflow
-    const stepsCompleted = Math.round(completionRate * 7);
-    
-    return [
-      {
-        id: 1,
-        name: "Task Assignment",
-        status: stepsCompleted >= 1 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 1 ? new Date() : undefined,
-      },
-      {
-        id: 2,
-        name: "Approved Tool Used",
-        status: stepsCompleted >= 2 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 2 ? new Date() : undefined,
-      },
-      {
-        id: 3,
-        name: "Model Documented",
-        status: stepsCompleted >= 3 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 3 ? new Date() : undefined,
-      },
-      {
-        id: 4,
-        name: "Training Data Verified",
-        status: stepsCompleted >= 4 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 4 ? new Date() : undefined,
-      },
-      {
-        id: 5,
-        name: "Prompt Saved",
-        status: stepsCompleted >= 5 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 5 ? new Date() : undefined,
-      },
-      {
-        id: 6,
-        name: "Output Documented",
-        status: stepsCompleted >= 6 ? "completed" : "incomplete",
-        completedAt: stepsCompleted >= 6 ? new Date() : undefined,
-      },
-      {
-        id: 7,
-        name: "Copyright Check Passed",
-        status: stepsCompleted >= 7 ? "completed" : "pending",
-        completedAt: stepsCompleted >= 7 ? new Date() : undefined,
-      },
-    ];
-  }, [assets]);
-
-  const workflowCompletion = useMemo(() => {
-    return calculateWorkflowCompletion(projectWorkflowSteps);
-  }, [projectWorkflowSteps]);
-
-  // Calculate project TIV
-  const projectTIV = useMemo(() => {
-    const distributionLevel: DistributionLevel = "National" as DistributionLevel; // Default for projects
-    const baseValuePerAsset = 2000; // Average base value per asset
-    
-    const assetsWithFinancials = assets.map(asset => {
-      const riskMultiplier = asset.risk === "Low" ? 1.0 : asset.risk === "Medium" ? 1.5 : 2.0;
-    const distributionMultiplier: number = distributionLevel === "Internal" ? 1.0 :
-                                      distributionLevel === "Regional" ? 1.5 :
-                                      distributionLevel === "National" ? 2.5 : 4.0;
-      
-      return {
-        baseValue: baseValuePerAsset,
-        riskMultiplier,
-        distributionMultiplier,
-      };
-    });
-    
-    return calculatePortfolioTIV(assetsWithFinancials);
-  }, [assets]);
-
-  // Calculate risk score (simplified for project level)
-  const projectRiskScore = useMemo(() => {
-    // Base risk score from compliance and workflow
-    const complianceScore = project.compliance;
-    const workflowScore = workflowCompletion.completionRate;
-    return Math.round((complianceScore * 0.6 + workflowScore * 0.4));
-  }, [project.compliance, workflowCompletion.completionRate]);
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Breadcrumb Navigation */}
+    <PageContainer className="space-y-6 animate-fade-in">
+      {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href="/projects">Projects</BreadcrumbLink>
           </BreadcrumbItem>
@@ -203,442 +81,159 @@ export default function ProjectDetailPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{project.name}</h1>
-            <Badge variant={getStatusVariant(project.status)}>{project.status}</Badge>
-          </div>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            {project.description}
-          </p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3 text-xs sm:text-sm text-muted-foreground">
-            <span>Created: {project.createdDate}</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Updated: {project.updated}</span>
-            <span className="hidden sm:inline">•</span>
-            <span>Owner: {project.owner}</span>
-          </div>
-          {creditedCreators.length > 0 && (
-            <div className="mt-3">
-              <CreatorAvatarsGroup creators={creditedCreators} showLabel={true} />
-            </div>
+      {/* Project Header */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            {project.name}
+          </h1>
+          {project.description && (
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+              {project.description}
+            </p>
           )}
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button 
-            variant="outline"
-            onClick={() => toast.info("Export project data feature coming soon")}
-            className="flex-1 sm:flex-none"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-            <span className="sm:hidden">Export</span>
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => toast.success("Legal record package generated")}
-            className="flex-1 sm:flex-none"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Legal Record</span>
-            <span className="sm:hidden">Legal</span>
-          </Button>
+
+        {/* Project Stats */}
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Badge variant={project.status === "active" ? "default" : "outline"}>
+              {project.status}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Compliance:</span>
+            <span className="text-sm font-medium">{project.compliance}%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Risk:</span>
+            <Badge variant={getRiskVariant(project.risk)}>
+              {project.risk}
+            </Badge>
+          </div>
         </div>
       </div>
 
-      {/* Project Stats */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
+      {/* Workstream Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Creator Tasks Column */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Creator Tasks ({creatorTasks.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{assets.length}</div>
+          <CardContent className="space-y-3">
+            {creatorTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No creator tasks
+              </p>
+            ) : (
+              creatorTasks.map((task) => (
+                <Card key={task.id} className="border-l-4 border-l-blue-500">
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-sm">{task.title}</h3>
+                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                        {task.status}
+                      </Badge>
+                    </div>
+                    {task.assignee && (
+                      <p className="text-xs text-muted-foreground">
+                        Assignee: {task.assignee}
+                      </p>
+                    )}
+                    {task.dueDate && (
+                      <p className="text-xs text-muted-foreground">
+                        Due: {task.dueDate}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </CardContent>
         </Card>
 
+        {/* Legal Tasks Column */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Legal Tasks ({legalTasks.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getComplianceColor(project.compliance)}`}>
-              {project.compliance}%
-            </div>
+          <CardContent className="space-y-3">
+            {legalTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No legal tasks
+              </p>
+            ) : (
+              legalTasks.map((task) => (
+                <Card key={task.id} className="border-l-4 border-l-amber-500">
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-sm">{task.title}</h3>
+                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                        {task.status}
+                      </Badge>
+                    </div>
+                    {task.assignee && (
+                      <p className="text-xs text-muted-foreground">
+                        Assignee: {task.assignee}
+                      </p>
+                    )}
+                    {task.dueDate && (
+                      <p className="text-xs text-muted-foreground">
+                        Due: {task.dueDate}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </CardContent>
         </Card>
 
+        {/* Insurance Tasks Column */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Risk Level</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              Insurance Tasks ({insuranceTasks.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Badge variant={getRiskVariant(project.risk)}>{project.risk}</Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Insured Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatLargeCurrency(projectTIV)}</div>
-            <p className="text-xs text-muted-foreground mt-1">TIV</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Workflow</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {workflowCompletion.completedSteps}/{workflowCompletion.totalSteps}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {workflowCompletion.completionRate}% complete
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{projectRiskScore}</div>
-            <p className="text-xs text-muted-foreground mt-1">0-100 scale</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assets.filter(a => a.status === "Approved").length}
-            </div>
+          <CardContent className="space-y-3">
+            {insuranceTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No insurance tasks
+              </p>
+            ) : (
+              insuranceTasks.map((task) => (
+                <Card key={task.id} className="border-l-4 border-l-green-500">
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-sm">{task.title}</h3>
+                      <Badge variant={getStatusVariant(task.status)} className="text-xs">
+                        {task.status}
+                      </Badge>
+                    </div>
+                    {task.assignee && (
+                      <p className="text-xs text-muted-foreground">
+                        Assignee: {task.assignee}
+                      </p>
+                    )}
+                    {task.dueDate && (
+                      <p className="text-xs text-muted-foreground">
+                        Due: {task.dueDate}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Insurance Quick Link */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold">Insurance & Risk Assessment</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                View comprehensive insurance metrics and risk analysis for this project
-              </p>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/insurance">
-                View Insurance Dashboard
-                <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabbed Content */}
-      <Tabs defaultValue="assets" className="space-y-4">
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-          <TabsTrigger value="assets" className="whitespace-nowrap">Assets</TabsTrigger>
-          <TabsTrigger value="creators" className="whitespace-nowrap">Credited Creators</TabsTrigger>
-          <TabsTrigger value="workflow" className="whitespace-nowrap">Workflow</TabsTrigger>
-          <TabsTrigger value="audit" className="whitespace-nowrap">Audit Trail</TabsTrigger>
-          <TabsTrigger value="ai-metadata" className="whitespace-nowrap">AI Metadata</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="assets" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Project Assets</CardTitle>
-                  <CardDescription>
-                    All AI-generated and augmented assets in this project
-                  </CardDescription>
-                </div>
-                <Button onClick={() => setAddAssetDialogOpen(true)} className="w-full sm:w-auto">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Add Asset
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {assets.length === 0 ? (
-                <EmptyState
-                  icon={FolderOpen}
-                  title="No Assets Yet"
-                  description="This project doesn't have any assets yet. Upload your first AI-generated content to get started with provenance tracking."
-                />
-              ) : (
-                <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>AI Method</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Risk</TableHead>
-                      <TableHead>Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {assets.map((asset) => (
-                      <TableRow key={asset.id}>
-                        <TableCell className="font-medium">{asset.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{asset.type}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {asset.aiMethod}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(asset.status)}>
-                            {asset.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getRiskVariant(asset.risk)}>
-                            {asset.risk}
-                          </Badge>
-                        </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {asset.updated}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={deletingAssetId === asset.id}>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/projects/${id}/assets/${asset.id}`} className="cursor-pointer">
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteAsset(asset.id, asset.name)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Asset
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="workflow" className="space-y-4">
-          <WorkflowTracker 
-            steps={projectWorkflowSteps} 
-            showRiskLevel={true}
-          />
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Summary</CardTitle>
-              <CardDescription>
-                Project-level compliance workflow status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Completion Rate</p>
-                  <p className="text-2xl font-bold">{workflowCompletion.completionRate}%</p>
-                  <p className="text-xs text-muted-foreground">
-                    {workflowCompletion.completedSteps} of {workflowCompletion.totalSteps} steps completed
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Risk Level</p>
-                  <Badge variant={getRiskVariant(workflowCompletion.riskLevel)} className="text-lg px-3 py-1">
-                    {workflowCompletion.riskLevel} Risk
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">
-                    Based on workflow completion
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="audit" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Audit Trail</CardTitle>
-              <CardDescription>
-                Complete history of all project changes and approvals
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {auditLogs.map((log, index) => (
-                  <div key={index} className="flex items-start gap-3 pb-4 border-b last:border-0">
-                    <History className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{log.action}</p>
-                      <p className="text-xs text-muted-foreground">{log.user} • {log.timestamp}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ai-metadata" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Tools & Metadata</CardTitle>
-              <CardDescription>
-                AI tools used and generation metadata
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">AI Tools Used</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge>Midjourney</Badge>
-                      <Badge>ChatGPT</Badge>
-                      <Badge>ElevenLabs</Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Content Types</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">Images</Badge>
-                      <Badge variant="outline">Text</Badge>
-                      <Badge variant="outline">Audio</Badge>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Prompt Logs</h4>
-                  <p className="text-sm text-muted-foreground">
-                    142 prompts logged across all assets
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => toast.info("View All Prompts feature coming soon")}
-                  >
-                    View All Prompts
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Credit Dialogs */}
-      <CreditCreatorDialog
-        open={creditDialogOpen}
-        onOpenChange={setCreditDialogOpen}
-        projectId={id}
-        onSuccess={() => {
-          // Refresh will happen automatically via context
-        }}
-      />
-      <ManageCreatorCreditsDialog
-        open={manageCreditsDialogOpen}
-        onOpenChange={setManageCreditsDialogOpen}
-        projectId={id}
-        onSuccess={() => {
-          // Refresh will happen automatically via context
-        }}
-      />
-
-      {/* Add Asset Dialog */}
-      <AddAssetDialog
-        open={addAssetDialogOpen}
-        onOpenChange={setAddAssetDialogOpen}
-        projectId={id}
-      />
-    </div>
-  );
+    </PageContainer>
+  )
 }
-
-
-const auditLogs = [
-  {
-    action: "Asset approved: hero-image-final.jpg",
-    user: "Legal Team",
-    timestamp: "2 hours ago",
-  },
-  {
-    action: "Compliance percentage updated to 92%",
-    user: "System",
-    timestamp: "5 hours ago",
-  },
-  {
-    action: "New asset added: voice-over-v2.mp3",
-    user: "Sarah Johnson",
-    timestamp: "1 day ago",
-  },
-  {
-    action: "Project status changed to Active",
-    user: "Project Manager",
-    timestamp: "3 days ago",
-  },
-];
-
-function getStatusVariant(status: string) {
-  switch (status) {
-    case "Approved":
-      return "default";
-    case "Review":
-      return "secondary";
-    case "Draft":
-      return "outline";
-    default:
-      return "secondary";
-  }
-}
-
-function getRiskVariant(risk: string) {
-  switch (risk) {
-    case "Low":
-      return "default";
-    case "Medium":
-      return "secondary";
-    case "High":
-      return "destructive";
-    default:
-      return "secondary";
-  }
-}
-
-function getComplianceColor(score: number) {
-  if (score >= 90) return "text-green-500";
-  if (score >= 70) return "text-amber-500";
-  return "text-destructive";
-}
-
