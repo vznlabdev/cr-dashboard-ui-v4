@@ -38,6 +38,18 @@ export interface Asset {
   creatorIds?: string[]; // Creators credited on this asset
 }
 
+export interface Task {
+  id: string;
+  projectId: string;
+  workstream: 'creator' | 'legal' | 'insurance' | 'general';
+  title: string;
+  status: TaskStatus;
+  assignee?: string;
+  dueDate?: string;
+  createdDate: string;
+  updated: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
@@ -54,6 +66,7 @@ export interface Notification {
 
 export type ProjectStatus = "Active" | "Review" | "Draft" | "Approved";
 export type AssetStatus = "Draft" | "Review" | "Approved" | "Rejected";
+export type TaskStatus = "submitted" | "assessment" | "production" | "review" | "completed";
 export type RiskLevel = "Low" | "Medium" | "High";
 export type ContentType = "Image" | "Video" | "Audio" | "Text" | "AR/VR";
 export type AIMethod = "AI Augmented" | "AI Generative" | "Multimodal";

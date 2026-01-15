@@ -39,4 +39,5 @@ export {
 
 // Mock Data (for development)
 export * from "./mock-data/creative"
+export * from "./mock-data/projects-tasks"
 
