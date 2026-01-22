@@ -284,7 +284,9 @@ export default function ProjectsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="text-sm">📈</span>
-                          <span className="text-sm text-muted-foreground">On track • {Math.floor(Math.random() * 12 + 1)}mo</span>
+                          <span className="text-sm text-muted-foreground">
+                            On track • {(parseInt(project.id) % 12) + 1}mo
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
