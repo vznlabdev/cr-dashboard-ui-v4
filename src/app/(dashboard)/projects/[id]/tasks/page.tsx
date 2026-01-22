@@ -26,7 +26,9 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { 
   getTaskGroupsByProject, 
-  getTasksByTaskGroup 
+  getTasksByTaskGroup,
+  getCompanyById,
+  mockProjects
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup } from "@/types"
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock } from "lucide-react"
@@ -147,6 +149,11 @@ function FlatKanbanBoard({
   projectId,
 }: FlatKanbanBoardProps) {
   const router = useRouter()
+  
+  // Get project and company data
+  const project = mockProjects.find(p => p.id === projectId)
+  const company = project ? getCompanyById(project.companyId) : undefined
+  
   // Status filter state
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all')
 
@@ -204,10 +211,11 @@ function FlatKanbanBoard({
   const TaskCardWithGroup = ({ task }: { task: Task }) => {
     const group = getTaskGroup(task.taskGroupId)
     
-    // Get company/group color
-    const getGroupColor = () => {
-      if (!group) return '#3b82f6' // default blue
-      return group.color
+    // Get company brand color - parse from branding_colors or use default
+    const getCompanyColor = () => {
+      if (!company?.branding_colors) return '#3b82f6'
+      // branding_colors format: "#primary,#secondary,#accent"
+      return company.branding_colors.split(',')[0] || '#3b82f6'
     }
 
     // Determine priority based on workstream (for demo purposes)
@@ -252,26 +260,32 @@ function FlatKanbanBoard({
         )}
       >
         <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
-          {/* Company/Group Avatar - Top Left */}
-          <div className="flex items-start mb-3">
-            <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-              style={{ backgroundColor: getGroupColor() }}
-              title={group?.name || 'Task'}
-            >
-              <span className="text-white font-semibold text-xs">
-                {group?.name.charAt(0) || 'T'}
+          {/* Header: Brand/Company + Priority */}
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              {/* Company Avatar */}
+              <div 
+                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ring-1 ring-border/40"
+                style={{ backgroundColor: getCompanyColor() }}
+                title={company?.name || 'Company'}
+              >
+                <span className="text-white font-semibold text-[9px]">
+                  {company?.name.charAt(0) || 'C'}
+                </span>
+              </div>
+              {/* Company Name */}
+              <span className="text-xs text-muted-foreground truncate font-medium">
+                {company?.name || 'Company'}
               </span>
             </div>
+            {/* Priority Badge */}
+            <span className={cn(
+              "text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0",
+              priority.className
+            )}>
+              {priority.label}
+            </span>
           </div>
-
-          {/* Priority Badge - Absolute Top Right */}
-          <span className={cn(
-            "absolute top-3 right-3 px-2.5 py-0.5 text-xs font-medium rounded-full uppercase",
-            priority.className
-          )}>
-            {priority.label}
-          </span>
 
           {/* Task Title */}
           <h3 className="mb-2 text-base font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors">
