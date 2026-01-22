@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useData } from "@/contexts/data-context";
+import { getAllCompanies } from "@/lib/mock-data/projects-tasks";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +33,12 @@ interface NewProjectDialogProps {
 export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) {
   const { createProject } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const companies = getAllCompanies();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     owner: "",
+    companyId: companies[0]?.id || "company-1",
     riskLevel: "Low" as "Low" | "Medium" | "High",
   });
 
@@ -51,6 +54,10 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       toast.error("Project owner is required");
       return;
     }
+    if (!formData.companyId) {
+      toast.error("Company is required");
+      return;
+    }
 
     setIsSubmitting(true);
     
@@ -59,6 +66,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         name: formData.name,
         description: formData.description,
         owner: formData.owner,
+        companyId: formData.companyId,
         status: "Draft",
         risk: formData.riskLevel,
       });
@@ -70,6 +78,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         name: "",
         description: "",
         owner: "",
+        companyId: companies[0]?.id || "company-1",
         riskLevel: "Low",
       });
       
@@ -87,6 +96,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         name: "",
         description: "",
         owner: "",
+        companyId: companies[0]?.id || "company-1",
         riskLevel: "Low",
       });
       onOpenChange(false);
@@ -131,6 +141,28 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={isSubmitting}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company">
+                Company <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.companyId}
+                onValueChange={(value) => setFormData({ ...formData, companyId: value })}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="company">
+                  <SelectValue placeholder="Select company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
