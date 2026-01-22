@@ -310,6 +310,7 @@ export default function ProjectsPage() {
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-2 hover:bg-accent"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {project.priority === 'urgent' && (
                                 <>
@@ -409,6 +410,7 @@ export default function ProjectsPage() {
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-2 hover:bg-accent w-full justify-start"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {project.owner ? (
                                 <>
