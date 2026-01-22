@@ -124,7 +124,7 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Projects</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Manage AI-assisted content creation projects
+            Organize creative projects and workflows
           </p>
         </div>
         <Button 
