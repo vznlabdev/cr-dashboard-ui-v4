@@ -296,7 +296,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     
     setProjects(prev => prev.map(p => 
       p.id === id 
-        ? { ...p, ...updates, updated: "Just now" }
+        ? { ...p, ...updates }
         : p
     ));
   }, []);
