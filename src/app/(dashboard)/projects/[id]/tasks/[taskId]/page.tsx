@@ -22,7 +22,6 @@ import {
   ExternalLink,
   FileText,
   LucideIcon,
-  Folder,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -498,27 +497,6 @@ export default function TaskDetailPage() {
               )}
             </CardContent>
           </Card>
-
-          {/* Task Group */}
-          {taskGroup && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2">
-                  <Folder className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Task Group:</span>
-                  <Badge 
-                    variant="outline" 
-                    style={{ 
-                      borderColor: taskGroup.color,
-                      color: taskGroup.color 
-                    }}
-                  >
-                    {taskGroup.name}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>
