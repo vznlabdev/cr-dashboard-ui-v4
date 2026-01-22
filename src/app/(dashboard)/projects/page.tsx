@@ -301,14 +301,13 @@ export default function ProjectsPage() {
                       className="cursor-pointer hover:bg-gray-800"
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-2 hover:bg-accent"
-                              onClick={(e) => e.stopPropagation()}
                             >
                               <Building2 className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
@@ -377,14 +376,13 @@ export default function ProjectsPage() {
                           );
                         })()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-2 hover:bg-accent"
-                              onClick={(e) => e.stopPropagation()}
                             >
                               {project.priority === 'urgent' && (
                                 <>
@@ -477,14 +475,13 @@ export default function ProjectsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-2 hover:bg-accent w-full justify-start"
-                              onClick={(e) => e.stopPropagation()}
                             >
                               {project.owner ? (
                                 <>
@@ -596,14 +593,13 @@ export default function ProjectsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-8 gap-1 hover:bg-accent"
-                              onClick={(e) => e.stopPropagation()}
                             >
                               <div className="flex items-center -space-x-2">
                                 {/* Show up to 3 member avatars */}
