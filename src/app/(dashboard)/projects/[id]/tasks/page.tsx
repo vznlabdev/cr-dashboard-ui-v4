@@ -288,22 +288,22 @@ function FlatKanbanBoard({
           </div>
 
           {/* Task Title */}
-          <h3 className="mb-2 text-base font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors">
+          <h3 className="mb-2.5 text-sm font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors">
             {task.title}
           </h3>
 
           {/* Category Line */}
-          <div className="flex items-center text-sm text-gray-400 mb-auto">
-            {task.workstream === 'creator' && <span className="mr-2">✏️</span>}
-            {task.workstream === 'legal' && <span className="mr-2">⚖️</span>}
-            {task.workstream === 'insurance' && <span className="mr-2">🛡️</span>}
-            {task.workstream === 'general' && <span className="mr-2">📋</span>}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 font-medium">
+            {task.workstream === 'creator' && <span className="shrink-0">✏️</span>}
+            {task.workstream === 'legal' && <span className="shrink-0">⚖️</span>}
+            {task.workstream === 'insurance' && <span className="shrink-0">🛡️</span>}
+            {task.workstream === 'general' && <span className="shrink-0">📋</span>}
             <span>{getCategoryLabel()}</span>
           </div>
 
           {/* Task Group Badge (if exists) - Small chip */}
           {group && (
-            <div className="mt-2 mb-auto">
+            <div className="mb-3">
               <span 
                 className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                 style={{ 
@@ -318,7 +318,7 @@ function FlatKanbanBoard({
           )}
 
           {/* Bottom Metadata Row */}
-          <div className="flex justify-between items-center mt-auto pt-4">
+          <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
             {/* Left: Assignee Avatar */}
             {task.assignee ? (
               <div 
@@ -333,9 +333,9 @@ function FlatKanbanBoard({
 
             {/* Right: Due Date */}
             {task.dueDate && (
-              <div className="flex items-center text-sm text-gray-500">
-                <Clock className="w-4 h-4 mr-1.5" />
-                <span>{task.dueDate}</span>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Clock className="h-3.5 w-3.5" />
+                <span className="font-medium">{task.dueDate}</span>
               </div>
             )}
           </div>
