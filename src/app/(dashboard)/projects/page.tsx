@@ -237,7 +237,9 @@ export default function ProjectsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Project Name</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Health</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Lead</TableHead>
                   <TableHead>Assets</TableHead>
                   <TableHead>Compliance</TableHead>
                   <TableHead>Risk</TableHead>
@@ -248,7 +250,7 @@ export default function ProjectsPage() {
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -276,9 +278,25 @@ export default function ProjectsPage() {
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(project.status)}>
-                          {project.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">📈</span>
+                          <span className="text-sm text-muted-foreground">On track • {Math.floor(Math.random() * 12 + 1)}mo</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-0.5">
+                          <div className="w-1 h-4 bg-gray-600 rounded-sm"></div>
+                          <div className="w-1 h-4 bg-gray-600 rounded-sm"></div>
+                          <div className="w-1 h-4 bg-gray-400 rounded-sm"></div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                            {project.owner.charAt(0)}
+                          </div>
+                          <span className="text-sm">{project.owner.split(' ')[0].toLowerCase()}</span>
+                        </div>
                       </TableCell>
                       <TableCell>{project.assets} assets</TableCell>
                       <TableCell>
