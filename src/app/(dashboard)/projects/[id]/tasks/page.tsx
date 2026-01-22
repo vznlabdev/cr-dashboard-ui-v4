@@ -341,7 +341,12 @@ function FlatKanbanBoard({
   return (
     <div className="mt-6">
       {/* Kanban Columns - Horizontal Scroll */}
-      <div className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin">
+      <div
+        className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin"
+        style={{
+          scrollSnapType: "x proximity",
+        }}
+      >
         <div className="flex gap-6 min-h-[calc(100vh-320px)] px-4 md:px-6">
           {STATUS_COLUMNS.map((column) => (
             <div
@@ -350,9 +355,10 @@ function FlatKanbanBoard({
                 "flex flex-col min-w-[320px] max-w-[320px] rounded-lg bg-muted/30 border border-border/30",
                 "scroll-snap-align-start"
               )}
+              style={{ scrollSnapAlign: "start" }}
             >
               {/* Column Header - Sticky */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-muted/30 rounded-t-lg border-b border-border/30">
+              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-muted/30 rounded-t-lg border-b border-border/30 transition-shadow duration-200">
                 <h3 className="font-semibold text-sm text-foreground">{column.label}</h3>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                   {tasksByColumn[column.key].length}
@@ -360,7 +366,7 @@ function FlatKanbanBoard({
               </div>
 
               {/* Column Content */}
-              <div className="flex flex-col space-y-4 flex-1 p-4 overflow-y-auto max-h-[calc(100vh-360px)] scrollbar-thin">
+              <div className="flex flex-col gap-3 flex-1 p-3 overflow-y-auto max-h-[calc(100vh-360px)] scrollbar-thin">
                 {tasksByColumn[column.key].length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-32 text-sm text-muted-foreground/60 border-2 border-dashed border-border/40 rounded-lg bg-card/50">
                     <span className="text-xs">No tasks</span>
@@ -1294,7 +1300,7 @@ export default function ProjectTasksPage() {
 
       {/* Board View - Full Width (outside PageContainer) */}
       {currentView === 'board' && (
-        <div className="relative">
+        <div className="relative overflow-x-visible">
           <FlatKanbanBoard
             tasks={tasks}
             taskGroups={taskGroups}
