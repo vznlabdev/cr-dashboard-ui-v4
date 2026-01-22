@@ -353,7 +353,7 @@ function FlatKanbanBoard({
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 -mx-4 md:-mx-6">
       {/* Kanban Columns - Horizontal Scroll */}
       <div
         className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin"
