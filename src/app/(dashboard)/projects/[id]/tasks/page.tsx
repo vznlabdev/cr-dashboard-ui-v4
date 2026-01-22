@@ -947,12 +947,6 @@ export default function ProjectTasksPage() {
   }
 
   // Modal handlers
-  const openCreateModal = () => {
-    setEditingGroup(null)
-    setFormData({ name: '', description: '', color: '#3b82f6' })
-    setIsModalOpen(true)
-  }
-
   const openEditModal = (group: TaskGroup) => {
     setEditingGroup(group)
     setFormData({ name: group.name, description: group.description || '', color: group.color })
@@ -1257,15 +1251,7 @@ export default function ProjectTasksPage() {
               </Button>
             </div>
 
-            {/* Action Buttons */}
-            <Button 
-              onClick={openCreateModal} 
-              variant="outline"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Group
-            </Button>
+            {/* Action Button */}
             <Button 
               onClick={() => openTaskModal()}
               size="sm"
