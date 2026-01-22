@@ -844,15 +844,11 @@ export default function ProjectTasksPage() {
   const [formData, setFormData] = useState({ name: '', description: '', color: '#3b82f6' })
   const [taskFormData, setTaskFormData] = useState({
     title: '',
-    taskGroupId: '',
-    dueDate: '',
-    assignee: '', // Optional - can assign during creation
+    description: '',
+    priority: 'Medium' as 'Urgent' | 'High' | 'Medium' | 'Low',
   })
+  const [taskFormError, setTaskFormError] = useState('')
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
-  
-  // Task Group combobox state
-  const [taskGroupSearch, setTaskGroupSearch] = useState('')
-  const [showTaskGroupDropdown, setShowTaskGroupDropdown] = useState(false)
   
   // DAM Asset Browser state
   const [isDamModalOpen, setIsDamModalOpen] = useState(false)
@@ -1014,15 +1010,13 @@ export default function ProjectTasksPage() {
   }
 
   // Task modal handlers
-  const openTaskModal = (taskGroupId?: string) => {
-    const group = taskGroupId ? taskGroups.find(g => g.id === taskGroupId) : null
+  const openTaskModal = () => {
     setTaskFormData({
       title: '',
-      taskGroupId: taskGroupId || '',
-      dueDate: '',
-      assignee: '',
+      description: '',
+      priority: 'Medium',
     })
-    setTaskGroupSearch(group?.name || '')
+    setTaskFormError('')
     setIsTaskModalOpen(true)
   }
 
@@ -1030,12 +1024,10 @@ export default function ProjectTasksPage() {
     setIsTaskModalOpen(false)
     setTaskFormData({
       title: '',
-      taskGroupId: '',
-      dueDate: '',
-      assignee: '',
+      description: '',
+      priority: 'Medium',
     })
-    setTaskGroupSearch('')
-    setShowTaskGroupDropdown(false)
+    setTaskFormError('')
   }
 
   // Create task group inline (for combobox)
@@ -1080,26 +1072,21 @@ export default function ProjectTasksPage() {
 
   // Create task
   const handleCreateTask = () => {
-    // Validate required fields
+    // Validate required field
     if (!taskFormData.title.trim()) {
-      toast.error("Task title is required")
-      return
-    }
-
-    if (!taskFormData.taskGroupId) {
-      toast.error("Please select a Task Group")
+      setTaskFormError('Title is required')
       return
     }
 
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      taskGroupId: taskFormData.taskGroupId,
+      taskGroupId: '', // Ungrouped by default
       projectId: projectId,
-      workstream: 'general', // Default workstream
+      workstream: 'general',
       title: taskFormData.title.trim(),
-      status: 'submitted', // Always defaults to "Submitted" on create
-      assignee: taskFormData.assignee.trim() || undefined, // Optional assignee
-      dueDate: taskFormData.dueDate || undefined,
+      status: 'submitted', // Always defaults to "Submitted"
+      assignee: undefined,
+      dueDate: undefined,
       createdDate: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -1109,7 +1096,8 @@ export default function ProjectTasksPage() {
     }
 
     setTasks([...tasks, newTask])
-    toast.success(`Task "${newTask.title}" created successfully`)
+    closeTaskModal()
+    toast.success('✓ Task created')
     closeTaskModal()
   }
 
@@ -1416,161 +1404,115 @@ export default function ProjectTasksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Task Creation Modal */}
-      <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-            <DialogDescription>
-              Add a new task to this project.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-              {/* Task Group */}
-              <div className="space-y-2">
-                <Label htmlFor="taskGroupSearch">
-                  Task Group <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="taskGroupSearch"
-                    placeholder="Type to search or create..."
-                    value={taskGroupSearch}
-                    onChange={(e) => {
-                      setTaskGroupSearch(e.target.value)
-                      setShowTaskGroupDropdown(true)
-                    }}
-                    onFocus={() => setShowTaskGroupDropdown(true)}
-                    onBlur={() => {
-                      setTimeout(() => setShowTaskGroupDropdown(false), 200)
-                    }}
-                  />
-                  
-                  {showTaskGroupDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-[200px] overflow-y-auto">
-                      {(() => {
-                        const searchLower = taskGroupSearch.toLowerCase().trim()
-                        const filteredGroups = taskGroups.filter(g => 
-                          g.name.toLowerCase().includes(searchLower)
-                        )
-                        const exactMatch = taskGroups.find(g => 
-                          g.name.toLowerCase() === searchLower
-                        )
-                        
-                        return (
-                          <>
-                            {searchLower && !exactMatch && (
-                              <button
-                                type="button"
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-blue-500/10 text-blue-400 flex items-center gap-2 border-b"
-                                onMouseDown={(e) => {
-                                  e.preventDefault()
-                                  createTaskGroupInline(taskGroupSearch)
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                                <span>Create "{taskGroupSearch}"</span>
-                              </button>
-                            )}
-                            
-                            {filteredGroups.length > 0 ? (
-                              <>
-                                {filteredGroups.map((group) => (
-                                  <button
-                                    key={group.id}
-                                    type="button"
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-accent flex items-center gap-2"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault()
-                                      setTaskFormData({ ...taskFormData, taskGroupId: group.id })
-                                      setTaskGroupSearch(group.name)
-                                      setShowTaskGroupDropdown(false)
-                                    }}
-                                  >
-                                    <div 
-                                      className="w-3 h-3 rounded-full" 
-                                      style={{ backgroundColor: group.color }}
-                                    />
-                                    <span>{group.name}</span>
-                                  </button>
-                                ))}
-                              </>
-                            ) : !searchLower ? (
-                              <div className="px-3 py-2 text-sm text-muted-foreground">
-                                Start typing to search or create...
-                              </div>
-                            ) : null}
-                            
-                            <button
-                              type="button"
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-blue-500/10 text-blue-400 flex items-center gap-2 border-t"
-                              onMouseDown={(e) => {
-                                e.preventDefault()
-                                if (searchLower) {
-                                  createTaskGroupInline(taskGroupSearch)
-                                } else {
-                                  setShowTaskGroupDropdown(false)
-                                  openCreateModal()
-                                }
-                              }}
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span>Create New</span>
-                            </button>
-                          </>
-                        )
-                      })()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="taskTitle">
-                  Title <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="taskTitle"
-                  placeholder="e.g., Homepage Banner Redesign"
-                  value={taskFormData.title}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
-                />
-              </div>
-
-              {/* Due Date */}
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={taskFormData.dueDate}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
-                />
-              </div>
-
-              {/* Assignee */}
-              <div className="space-y-2">
-                <Label htmlFor="assignee">Assignee (Optional)</Label>
-                <Input
-                  id="assignee"
-                  placeholder="e.g., John Doe"
-                  value={taskFormData.assignee}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, assignee: e.target.value })}
-                />
-              </div>
+      {/* Task Creation Modal - Linear Style */}
+      <Dialog open={isTaskModalOpen} onOpenChange={(open) => {
+        if (!open) closeTaskModal()
+      }}>
+        <DialogContent 
+          className="sm:max-w-[600px] p-6 bg-card border-muted"
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+              e.preventDefault()
+              handleCreateTask()
+            }
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <FolderKanban className="h-5 w-5 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">New Task</h2>
             </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={closeTaskModal}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateTask}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Task
-            </Button>
-          </DialogFooter>
+          </div>
+
+          {/* Title Input */}
+          <div>
+            <input
+              autoFocus
+              type="text"
+              placeholder="Task title"
+              className={cn(
+                "w-full text-xl bg-transparent border-b py-3 outline-none transition-all duration-150",
+                taskFormError
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-700 focus:border-blue-500"
+              )}
+              value={taskFormData.title}
+              onChange={(e) => {
+                setTaskFormData({ ...taskFormData, title: e.target.value })
+                if (taskFormError) setTaskFormError('')
+              }}
+            />
+            {taskFormError && (
+              <p className="text-sm text-red-400 mt-1">{taskFormError}</p>
+            )}
+          </div>
+
+          {/* Description Textarea */}
+          <div>
+            <textarea
+              placeholder="Add description..."
+              className="w-full text-base bg-transparent resize-none outline-none py-3 text-gray-400 min-h-[60px] max-h-[200px] transition-all duration-150"
+              value={taskFormData.description}
+              onChange={(e) => {
+                setTaskFormData({ ...taskFormData, description: e.target.value })
+                e.target.style.height = 'auto'
+                e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'
+              }}
+            />
+          </div>
+
+          {/* Bottom Row - Task Group, Priority, More */}
+          <div className="flex items-center gap-3 mt-4">
+            {/* Task Group Placeholder */}
+            <div className="flex-1 text-sm text-gray-500 italic">
+              Task group (coming in next step)
+            </div>
+
+            {/* Priority Dropdown */}
+            <Select 
+              value={taskFormData.priority} 
+              onValueChange={(value) => setTaskFormData({ ...taskFormData, priority: value as typeof taskFormData.priority })}
+            >
+              <SelectTrigger className="w-[140px] h-9 bg-transparent border-gray-700 hover:border-gray-600 transition-all duration-150">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Urgent">🔴 Urgent</SelectItem>
+                <SelectItem value="High">🟠 High</SelectItem>
+                <SelectItem value="Medium">🟡 Medium</SelectItem>
+                <SelectItem value="Low">🟢 Low</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* More Button */}
+            <button
+              type="button"
+              className="text-sm text-gray-400 hover:text-blue-400 transition-colors duration-150 px-3 py-1.5"
+            >
+              + More...
+            </button>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6">
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={closeTaskModal}
+                className="text-gray-400 hover:text-white transition-all duration-150"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateTask}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-150"
+              >
+                Create Task
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 text-right mt-2">⌘↵ to submit</p>
+          </div>
         </DialogContent>
       </Dialog>
 
