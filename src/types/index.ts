@@ -26,6 +26,7 @@ export interface Project {
   name: string;
   description: string;
   status: ProjectStatus;
+  priority?: 'urgent' | 'high' | 'medium' | 'low' | null; // null = no priority
   assets: number;
   compliance: number;
   risk: RiskLevel;

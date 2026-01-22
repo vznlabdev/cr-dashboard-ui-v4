@@ -18,6 +18,10 @@ import {
   Edit,
   Trash2,
   Eye,
+  BarChart3,
+  BarChart2,
+  BarChart,
+  Minus,
 } from "lucide-react"
 import {
   Table,
@@ -284,11 +288,103 @@ export default function ProjectsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-0.5">
-                          <div className="w-1 h-4 bg-gray-600 rounded-sm"></div>
-                          <div className="w-1 h-4 bg-gray-600 rounded-sm"></div>
-                          <div className="w-1 h-4 bg-gray-400 rounded-sm"></div>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-2 hover:bg-accent"
+                            >
+                              {project.priority === 'urgent' && (
+                                <>
+                                  <AlertCircle className="h-4 w-4 text-red-500" />
+                                  <span className="text-sm">Urgent</span>
+                                </>
+                              )}
+                              {project.priority === 'high' && (
+                                <>
+                                  <BarChart3 className="h-4 w-4 text-orange-500" />
+                                  <span className="text-sm">High</span>
+                                </>
+                              )}
+                              {project.priority === 'medium' && (
+                                <>
+                                  <BarChart2 className="h-4 w-4 text-blue-500" />
+                                  <span className="text-sm">Medium</span>
+                                </>
+                              )}
+                              {project.priority === 'low' && (
+                                <>
+                                  <BarChart className="h-4 w-4 text-gray-500" />
+                                  <span className="text-sm">Low</span>
+                                </>
+                              )}
+                              {(!project.priority || project.priority === null) && (
+                                <>
+                                  <Minus className="h-4 w-4 text-gray-500" />
+                                  <span className="text-sm text-muted-foreground">No priority</span>
+                                </>
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-48">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, priority: null });
+                              }}
+                              className="gap-2"
+                            >
+                              <Minus className="h-4 w-4 text-gray-500" />
+                              <span className="flex-1">No priority</span>
+                              <span className="text-xs text-muted-foreground">0</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, priority: 'urgent' });
+                              }}
+                              className="gap-2"
+                            >
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                              <span className="flex-1">Urgent</span>
+                              <span className="text-xs text-muted-foreground">1</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, priority: 'high' });
+                              }}
+                              className="gap-2"
+                            >
+                              <BarChart3 className="h-4 w-4 text-orange-500" />
+                              <span className="flex-1">High</span>
+                              <span className="text-xs text-muted-foreground">2</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, priority: 'medium' });
+                              }}
+                              className="gap-2"
+                            >
+                              <BarChart2 className="h-4 w-4 text-blue-500" />
+                              <span className="flex-1">Medium</span>
+                              <span className="text-xs text-muted-foreground">3</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, priority: 'low' });
+                              }}
+                              className="gap-2"
+                            >
+                              <BarChart className="h-4 w-4 text-gray-500" />
+                              <span className="flex-1">Low</span>
+                              <span className="text-xs text-muted-foreground">4</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
