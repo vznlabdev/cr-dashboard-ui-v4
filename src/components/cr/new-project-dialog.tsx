@@ -39,7 +39,6 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     description: "",
     owner: "",
     companyId: companies[0]?.id || "company-1",
-    riskLevel: "Low" as "Low" | "Medium" | "High",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +67,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         owner: formData.owner,
         companyId: formData.companyId,
         status: "Draft",
-        risk: formData.riskLevel,
+        risk: "Low", // Default to Low risk
       });
       
       toast.success(`Project "${newProject.name}" created successfully!`);
@@ -79,7 +78,6 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         description: "",
         owner: "",
         companyId: companies[0]?.id || "company-1",
-        riskLevel: "Low",
       });
       
       onOpenChange(false);
@@ -97,7 +95,6 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         description: "",
         owner: "",
         companyId: companies[0]?.id || "company-1",
-        riskLevel: "Low",
       });
       onOpenChange(false);
     }
@@ -177,24 +174,6 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                 disabled={isSubmitting}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="risk-level">Initial Risk Level</Label>
-              <Select
-                value={formData.riskLevel}
-                onValueChange={(value: "Low" | "Medium" | "High") => setFormData({ ...formData, riskLevel: value })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="risk-level">
-                  <SelectValue placeholder="Select risk level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Low">Low Risk</SelectItem>
-                  <SelectItem value="Medium">Medium Risk</SelectItem>
-                  <SelectItem value="High">High Risk</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
