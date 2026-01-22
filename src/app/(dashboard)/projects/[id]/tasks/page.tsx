@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -29,7 +28,7 @@ import {
   getTasksByTaskGroup 
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup } from "@/types"
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, Upload } from "lucide-react"
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -823,15 +822,8 @@ export default function ProjectTasksPage() {
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     taskGroupId: '',
-    designType: '',
-    brand: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     dueDate: '',
-    projectTag: '',
-    targetAudience: '',
-    description: '',
-    attachments: [] as File[],
-    linkedAssets: [] as Array<{ assetId: string; role: 'output' | 'original' | 'inspiration' | 'source_material' }>,
+    assignee: '', // Optional - can assign during creation
   })
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
   
@@ -1004,15 +996,8 @@ export default function ProjectTasksPage() {
     setTaskFormData({
       title: '',
       taskGroupId: taskGroupId || '',
-      designType: '',
-      brand: '',
-      priority: 'medium',
       dueDate: '',
-      projectTag: '',
-      targetAudience: '',
-      description: '',
-      attachments: [],
-      linkedAssets: [],
+      assignee: '',
     })
     setTaskGroupSearch(group?.name || '')
     setIsTaskModalOpen(true)
@@ -1023,15 +1008,8 @@ export default function ProjectTasksPage() {
     setTaskFormData({
       title: '',
       taskGroupId: '',
-      designType: '',
-      brand: '',
-      priority: 'medium',
       dueDate: '',
-      projectTag: '',
-      targetAudience: '',
-      description: '',
-      attachments: [],
-      linkedAssets: [],
+      assignee: '',
     })
     setTaskGroupSearch('')
     setShowTaskGroupDropdown(false)
@@ -1090,21 +1068,6 @@ export default function ProjectTasksPage() {
       return
     }
 
-    if (!taskFormData.designType) {
-      toast.error("Design Type is required")
-      return
-    }
-
-    if (!taskFormData.brand) {
-      toast.error("Brand is required")
-      return
-    }
-
-    if (!taskFormData.description.trim()) {
-      toast.error("Description is required")
-      return
-    }
-
     const newTask: Task = {
       id: `task-${Date.now()}`,
       taskGroupId: taskFormData.taskGroupId,
@@ -1112,7 +1075,7 @@ export default function ProjectTasksPage() {
       workstream: 'general', // Default workstream
       title: taskFormData.title.trim(),
       status: 'submitted', // Always defaults to "Submitted" on create
-      assignee: undefined, // Can be assigned after creation
+      assignee: taskFormData.assignee.trim() || undefined, // Optional assignee
       dueDate: taskFormData.dueDate || undefined,
       createdDate: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
@@ -1431,15 +1394,7 @@ export default function ProjectTasksPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            {/* SECTION 1: BASIC INFORMATION */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold">Basic Information</h3>
-                <p className="text-sm text-muted-foreground">
-                  Provide the essential details for your request
-                </p>
-              </div>
+          <div className="space-y-4 py-4">
               {/* Task Group */}
               <div className="space-y-2">
                 <Label htmlFor="taskGroupSearch">
@@ -1552,7 +1507,46 @@ export default function ProjectTasksPage() {
                 />
               </div>
 
-              {/* Design Type & Brand - Two Column */}
+              {/* Due Date */}
+              <div className="space-y-2">
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={taskFormData.dueDate}
+                  onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
+                />
+              </div>
+
+              {/* Assignee */}
+              <div className="space-y-2">
+                <Label htmlFor="assignee">Assignee (Optional)</Label>
+                <Input
+                  id="assignee"
+                  placeholder="e.g., John Doe"
+                  value={taskFormData.assignee}
+                  onChange={(e) => setTaskFormData({ ...taskFormData, assignee: e.target.value })}
+                />
+              </div>
+            </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={closeTaskModal}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateTask}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DAM Asset Browser Modal - REMOVED (not needed for simple tasks) */}
+    </PageContainer>
+  )
+}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="designType">
