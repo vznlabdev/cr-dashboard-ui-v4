@@ -359,14 +359,15 @@ function FlatKanbanBoard({
         className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin"
         style={{
           scrollSnapType: "x proximity",
+          touchAction: "pan-x",
         }}
       >
-        <div className="flex gap-6 min-h-[calc(100vh-320px)] px-4 md:px-6">
+        <div className="flex gap-6 h-[calc(100vh-320px)] px-4 md:px-6">
           {STATUS_COLUMNS.map((column) => (
             <div
               key={column.key}
               className={cn(
-                "flex flex-col min-w-[320px] max-w-[320px] rounded-lg bg-muted/30 border border-border/30",
+                "flex flex-col min-w-[320px] max-w-[320px] h-full rounded-lg bg-muted/30 border border-border/30",
                 "scroll-snap-align-start"
               )}
               style={{ scrollSnapAlign: "start" }}
@@ -380,7 +381,7 @@ function FlatKanbanBoard({
               </div>
 
               {/* Column Content */}
-              <div className="flex flex-col gap-3 flex-1 p-3 overflow-y-auto max-h-[calc(100vh-360px)] scrollbar-thin">
+              <div className="flex flex-col gap-3 flex-1 p-3 overflow-y-auto scrollbar-thin">
                 {tasksByColumn[column.key].length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-32 text-sm text-muted-foreground/60 border-2 border-dashed border-border/40 rounded-lg bg-card/50">
                     <span className="text-xs">No tasks</span>
