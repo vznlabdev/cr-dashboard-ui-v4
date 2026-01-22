@@ -1300,7 +1300,7 @@ export default function ProjectTasksPage() {
 
       {/* Board View - Full Width (outside PageContainer) */}
       {currentView === 'board' && (
-        <div className="relative overflow-x-visible">
+        <div className="relative">
           <FlatKanbanBoard
             tasks={tasks}
             taskGroups={taskGroups}

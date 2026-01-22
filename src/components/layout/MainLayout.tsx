@@ -25,7 +25,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
       >
         <Header />
-        <main className="flex-1 p-4 md:p-6 overflow-x-hidden w-full">
+        <main className="flex-1 p-4 md:p-6 overflow-x-auto w-full">
           {children}
         </main>
       </div>
