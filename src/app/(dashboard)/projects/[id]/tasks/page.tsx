@@ -1076,7 +1076,7 @@ export default function ProjectTasksPage() {
     if (duplicate) {
       // Just select the existing one
       setTaskFormData({ ...taskFormData, taskGroupId: duplicate.id })
-      setTaskGroupSearch(duplicate.name)
+      setTaskGroupQuery(duplicate.name)
       setShowTaskGroupDropdown(false)
       return duplicate.id
     }
@@ -1099,7 +1099,7 @@ export default function ProjectTasksPage() {
     
     setTaskGroups([...taskGroups, newGroup])
     setTaskFormData({ ...taskFormData, taskGroupId: newGroup.id })
-    setTaskGroupSearch(newGroup.name)
+    setTaskGroupQuery(newGroup.name)
     setShowTaskGroupDropdown(false)
     toast.success(`Group "${newGroup.name}" created`)
     
