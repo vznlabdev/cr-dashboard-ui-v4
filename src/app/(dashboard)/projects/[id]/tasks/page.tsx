@@ -850,7 +850,6 @@ export default function ProjectTasksPage() {
     designType: '',
     brand: '',
     dueDate: '',
-    projectTag: '',
     targetAudience: '',
     detailedDescription: '',
   })
@@ -1036,7 +1035,6 @@ export default function ProjectTasksPage() {
       designType: '',
       brand: '',
       dueDate: '',
-      projectTag: '',
       targetAudience: '',
       detailedDescription: '',
     })
@@ -1056,7 +1054,6 @@ export default function ProjectTasksPage() {
       designType: '',
       brand: '',
       dueDate: '',
-      projectTag: '',
       targetAudience: '',
       detailedDescription: '',
     })
@@ -1500,91 +1497,8 @@ export default function ProjectTasksPage() {
             />
           </div>
 
-          {/* Bottom Row - Task Group, Priority, More */}
-          <div className="flex items-center gap-3 mt-4">
-            {/* Task Group Combobox */}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Task Group (optional)"
-                className="w-full bg-transparent border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                value={taskGroupQuery}
-                onChange={(e) => {
-                  setTaskGroupQuery(e.target.value)
-                  setShowTaskGroupDropdown(true)
-                }}
-                onFocus={() => setShowTaskGroupDropdown(true)}
-                onBlur={() => {
-                  setTimeout(() => setShowTaskGroupDropdown(false), 200)
-                }}
-              />
-              
-              {showTaskGroupDropdown && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-auto">
-                  {(() => {
-                    const searchLower = taskGroupQuery.toLowerCase().trim()
-                    const filteredGroups = taskGroups.filter(g => 
-                      g.name.toLowerCase().includes(searchLower)
-                    )
-                    const exactMatch = taskGroups.find(g => 
-                      g.name.toLowerCase() === searchLower
-                    )
-                    const showCreate = searchLower && !exactMatch
-                    
-                    return (
-                      <>
-                        {showCreate && (
-                          <button
-                            type="button"
-                            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 text-blue-400 transition-colors duration-150 border-b border-gray-700"
-                            onMouseDown={(e) => {
-                              e.preventDefault()
-                              const groupId = createTaskGroupInline(taskGroupQuery)
-                              if (groupId) {
-                                setTaskFormData({ ...taskFormData, taskGroupId: groupId })
-                              }
-                              setShowTaskGroupDropdown(false)
-                            }}
-                          >
-                            <Plus className="w-4 h-4" />
-                            <span>Create "{taskGroupQuery}"</span>
-                          </button>
-                        )}
-                        
-                        {filteredGroups.length > 0 ? (
-                          <>
-                            {filteredGroups.map((group) => (
-                              <button
-                                key={group.id}
-                                type="button"
-                                className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-800 transition-colors duration-150"
-                                onMouseDown={(e) => {
-                                  e.preventDefault()
-                                  setTaskFormData({ ...taskFormData, taskGroupId: group.id })
-                                  setTaskGroupQuery(group.name)
-                                  setShowTaskGroupDropdown(false)
-                                }}
-                              >
-                                <span 
-                                  className="w-3 h-3 rounded-full flex-shrink-0" 
-                                  style={{ backgroundColor: group.color }}
-                                />
-                                <span className="text-white">{group.name}</span>
-                              </button>
-                            ))}
-                          </>
-                        ) : !showCreate ? (
-                          <div className="px-3 py-2 text-gray-500 text-sm">
-                            {searchLower ? 'No groups found' : 'Start typing to search or create...'}
-                          </div>
-                        ) : null}
-                      </>
-                    )
-                  })()}
-                </div>
-              )}
-            </div>
-
+          {/* Bottom Row - Priority, More */}
+          <div className="flex items-center gap-3 mt-4 justify-end">
             {/* Priority Dropdown */}
             <Select 
               value={taskFormData.priority} 
@@ -1672,16 +1586,90 @@ export default function ProjectTasksPage() {
                 </div>
               </div>
 
-              {/* Project Tag */}
+              {/* Task Group */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Project Tag (optional)</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g., Q1 Campaign, Product Launch" 
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                  value={taskFormData.projectTag}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, projectTag: e.target.value })}
-                />
+                <label className="block text-sm font-medium text-gray-300 mb-2">Task Group (optional)</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search or create task group..."
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                    value={taskGroupQuery}
+                    onChange={(e) => {
+                      setTaskGroupQuery(e.target.value)
+                      setShowTaskGroupDropdown(true)
+                    }}
+                    onFocus={() => setShowTaskGroupDropdown(true)}
+                    onBlur={() => {
+                      setTimeout(() => setShowTaskGroupDropdown(false), 200)
+                    }}
+                  />
+                  
+                  {showTaskGroupDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-auto">
+                      {(() => {
+                        const searchLower = taskGroupQuery.toLowerCase().trim()
+                        const filteredGroups = taskGroups.filter(g => 
+                          g.name.toLowerCase().includes(searchLower)
+                        )
+                        const exactMatch = taskGroups.find(g => 
+                          g.name.toLowerCase() === searchLower
+                        )
+                        const showCreate = searchLower && !exactMatch
+                        
+                        return (
+                          <>
+                            {showCreate && (
+                              <button
+                                type="button"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 text-blue-400 transition-colors duration-150 border-b border-gray-700"
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  const groupId = createTaskGroupInline(taskGroupQuery)
+                                  if (groupId) {
+                                    setTaskFormData({ ...taskFormData, taskGroupId: groupId })
+                                  }
+                                  setShowTaskGroupDropdown(false)
+                                }}
+                              >
+                                <Plus className="w-4 h-4" />
+                                <span>Create "{taskGroupQuery}"</span>
+                              </button>
+                            )}
+                            
+                            {filteredGroups.length > 0 ? (
+                              <>
+                                {filteredGroups.map((group) => (
+                                  <button
+                                    key={group.id}
+                                    type="button"
+                                    className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-800 transition-colors duration-150"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      setTaskFormData({ ...taskFormData, taskGroupId: group.id })
+                                      setTaskGroupQuery(group.name)
+                                      setShowTaskGroupDropdown(false)
+                                    }}
+                                  >
+                                    <span 
+                                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                                      style={{ backgroundColor: group.color }}
+                                    />
+                                    <span className="text-white">{group.name}</span>
+                                  </button>
+                                ))}
+                              </>
+                            ) : !showCreate ? (
+                              <div className="px-3 py-2 text-gray-500 text-sm">
+                                {searchLower ? 'No groups found' : 'Start typing to search or create...'}
+                              </div>
+                            ) : null}
+                          </>
+                        )
+                      })()}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Request Details Collapsible */}
