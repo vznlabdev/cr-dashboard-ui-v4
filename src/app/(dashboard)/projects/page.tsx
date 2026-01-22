@@ -57,8 +57,6 @@ export default function ProjectsPage() {
   const { projects, updateProject, deleteProject } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [riskFilter, setRiskFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<"name" | "tiv" | "compliance" | "risk">("name")
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null)
@@ -81,35 +79,21 @@ export default function ProjectsPage() {
     })
   }, [projects])
 
-  // Filter and sort projects
+  // Filter projects
   const filteredProjects = useMemo(() => {
     let filtered = projectsWithTIV.filter((project) => {
       const matchesSearch = 
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description?.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === "all" || project.status === statusFilter
-      const matchesRisk = riskFilter === "all" || project.risk === riskFilter
-      return matchesSearch && matchesStatus && matchesRisk
+      return matchesSearch && matchesStatus
     })
 
-    // Sort projects
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "tiv":
-          return b.tiv - a.tiv
-        case "compliance":
-          return b.compliance - a.compliance
-        case "risk":
-          const riskOrder = { "High": 3, "Medium": 2, "Low": 1 }
-          return (riskOrder[b.risk as keyof typeof riskOrder] || 0) - (riskOrder[a.risk as keyof typeof riskOrder] || 0)
-        case "name":
-        default:
-          return a.name.localeCompare(b.name)
-      }
-    })
+    // Sort by name
+    filtered.sort((a, b) => a.name.localeCompare(b.name))
 
     return filtered
-  }, [projectsWithTIV, searchQuery, statusFilter, riskFilter, sortBy])
+  }, [projectsWithTIV, searchQuery, statusFilter])
 
   // Stats calculations
   const totalProjects = projects.length
@@ -139,7 +123,7 @@ export default function ProjectsPage() {
       {/* Filters & Search */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1 sm:max-w-sm">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search projects..."
@@ -150,7 +134,7 @@ export default function ProjectsPage() {
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[150px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -162,37 +146,12 @@ export default function ProjectsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={riskFilter} onValueChange={setRiskFilter}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Risk Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Risk Levels</SelectItem>
-              <SelectItem value="Low">Low Risk</SelectItem>
-              <SelectItem value="Medium">Medium Risk</SelectItem>
-              <SelectItem value="High">High Risk</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="tiv">Insured Value</SelectItem>
-              <SelectItem value="compliance">Compliance</SelectItem>
-              <SelectItem value="risk">Risk Level</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {(searchQuery || statusFilter !== "all" || riskFilter !== "all") && (
+          {(searchQuery || statusFilter !== "all") && (
             <Button
               variant="ghost"
               onClick={() => {
                 setSearchQuery("")
                 setStatusFilter("all")
-                setRiskFilter("all")
               }}
             >
               Clear Filters
