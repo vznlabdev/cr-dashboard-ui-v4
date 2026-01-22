@@ -25,6 +25,18 @@ import {
 import { toast } from "sonner";
 import { FolderPlus, Loader2 } from "lucide-react";
 
+// Team members for selection
+const TEAM_MEMBERS = [
+  { id: 'jgordon', name: 'jgordon', fullName: 'Jeff Gordon' },
+  { id: 'abdul.qadeer', name: 'abdul.qadeer', fullName: 'Abdul Qadeer' },
+  { id: 'asad', name: 'asad', fullName: 'Asad' },
+  { id: 'dev.vznlab', name: 'dev.vznlab', fullName: 'Dev Vznlab' },
+  { id: 'husnain.raza', name: 'husnain.raza', fullName: 'Husnain Raza' },
+  { id: 'jg', name: 'jg', fullName: 'JG' },
+  { id: 'ryan', name: 'ryan', fullName: 'Ryan' },
+  { id: 'zlane', name: 'zlane', fullName: 'Zlane' },
+]
+
 interface NewProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,6 +51,9 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     description: "",
     owner: "",
     companyId: companies[0]?.id || "company-1",
+    members: [] as string[],
+    startDate: "",
+    targetDate: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +65,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       return;
     }
     if (!formData.owner.trim()) {
-      toast.error("Project owner is required");
+      toast.error("Project lead is required");
       return;
     }
     if (!formData.companyId) {
@@ -78,6 +93,9 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         description: "",
         owner: "",
         companyId: companies[0]?.id || "company-1",
+        members: [],
+        startDate: "",
+        targetDate: "",
       });
       
       onOpenChange(false);
@@ -95,6 +113,9 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         description: "",
         owner: "",
         companyId: companies[0]?.id || "company-1",
+        members: [],
+        startDate: "",
+        targetDate: "",
       });
       onOpenChange(false);
     }
@@ -163,17 +184,68 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="project-owner">
-                Project Owner <span className="text-destructive">*</span>
+              <Label htmlFor="project-lead">
+                Project Lead <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="project-owner"
-                placeholder="e.g., Sarah Johnson"
+              <Select
                 value={formData.owner}
-                onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                onValueChange={(value) => setFormData({ ...formData, owner: value })}
                 disabled={isSubmitting}
-                required
-              />
+              >
+                <SelectTrigger id="project-lead">
+                  <SelectValue placeholder="Select project lead" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAM_MEMBERS.map((member) => (
+                    <SelectItem key={member.id} value={member.fullName}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="members">Members</Label>
+              <Select
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="members">
+                  <SelectValue placeholder="Select team members" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAM_MEMBERS.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Select team members for this project</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start-date">Start Date</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="target-date">Target Date</Label>
+                <Input
+                  id="target-date"
+                  type="date"
+                  value={formData.targetDate}
+                  onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 
