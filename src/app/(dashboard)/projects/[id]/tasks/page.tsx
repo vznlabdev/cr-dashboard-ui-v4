@@ -58,7 +58,9 @@ const AUTO_ASSIGN_COLORS = [
   '#64748b', // slate
 ]
 
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
+  const router = useRouter()
+  
   const getStatusVariant = (status: Task["status"]) => {
     switch (status) {
       case "delivered":
@@ -95,6 +97,7 @@ function TaskCard({ task }: { task: Task }) {
 
   return (
     <Card 
+      onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
       className={cn(
         "border-l-4 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer",
         getWorkstreamColor(task.workstream)
@@ -238,6 +241,7 @@ function FlatKanbanBoard({
     
     return (
       <Card
+        onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
         className={cn(
           "relative py-0 transition-all duration-200 cursor-pointer group",
           "bg-slate-800/50 hover:border-blue-500/50",
@@ -548,9 +552,9 @@ function TaskGroupSwimlane({
                       <p className="text-xs text-muted-foreground">No tasks</p>
                     </div>
                   ) : (
-                    tasksByColumn[column.key].map((task) => (
-                      <TaskCard key={task.id} task={task} />
-                    ))
+                  tasksByColumn[column.key].map((task) => (
+                    <TaskCard key={task.id} task={task} projectId={projectId} />
+                  ))
                   )}
                 </div>
               </div>
