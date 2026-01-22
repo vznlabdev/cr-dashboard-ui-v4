@@ -24,6 +24,7 @@ import {
   Minus,
   UserPlus,
   Check,
+  Building2,
 } from "lucide-react"
 import {
   Table,
@@ -51,6 +52,7 @@ import { useState, useMemo } from "react"
 import { NewProjectDialog, EditProjectDialog, DeleteProjectDialog } from "@/components/cr"
 import { useData, type Project } from "@/contexts/data-context"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { mockCompanies } from "@/lib/mock-data/projects-tasks"
 import {
   calculateTIV,
   formatLargeCurrency,
@@ -297,9 +299,37 @@ export default function ProjectsPage() {
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {project.companyId === 'company-1' ? 'Acme Corporation' : 'TechStart Inc'}
-                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-2 hover:bg-accent"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {mockCompanies.find(c => c.id === project.companyId)?.name || 'Select brand'}
+                              </span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} className="w-56">
+                            {mockCompanies.map((company) => (
+                              <DropdownMenuItem
+                                key={company.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateProject(project.id, { ...project, companyId: company.id });
+                                }}
+                                className="gap-2"
+                              >
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="flex-1">{company.name}</span>
+                                {project.companyId === company.id && <Check className="h-4 w-4" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
