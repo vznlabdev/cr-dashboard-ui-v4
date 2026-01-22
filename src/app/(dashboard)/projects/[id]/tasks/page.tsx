@@ -410,7 +410,8 @@ function TaskGroupSwimlane({
   onDragStart,
   onDragOver,
   onDrop,
-  isDragging
+  isDragging,
+  projectId
 }: { 
   taskGroup: TaskGroup
   tasks: Task[]
@@ -423,6 +424,7 @@ function TaskGroupSwimlane({
   onDragOver: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent) => void
   isDragging: boolean
+  projectId: string
 }) {
   // Group tasks by status column
   const tasksByColumn = useMemo(() => {
