@@ -697,32 +697,34 @@ function StreamView({
 
         {/* Status Filter Pills */}
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => onStatusSelect('all')}
+          <Badge
+            variant={selectedStatus === 'all' ? "default" : "outline"}
             className={cn(
-              "px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+              "cursor-pointer transition-colors",
               selectedStatus === 'all'
-                ? "bg-blue-600 text-white"
-                : "bg-transparent border border-gray-700 text-gray-300 hover:bg-gray-800"
+                ? ""
+                : "hover:bg-accent hover:text-accent-foreground"
             )}
+            onClick={() => onStatusSelect('all')}
           >
             All ({tasks.length})
-          </button>
+          </Badge>
           {STATUS_COLUMNS.map((column) => {
             const count = tasks.filter(t => t.status === column.key).length
             return (
-              <button
+              <Badge
                 key={column.key}
-                onClick={() => onStatusSelect(column.key)}
+                variant={selectedStatus === column.key ? "default" : "outline"}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+                  "cursor-pointer transition-colors",
                   selectedStatus === column.key
-                    ? "bg-blue-600 text-white"
-                    : "bg-transparent border border-gray-700 text-gray-300 hover:bg-gray-800"
+                    ? ""
+                    : "hover:bg-accent hover:text-accent-foreground"
                 )}
+                onClick={() => onStatusSelect(column.key)}
               >
                 {column.label} ({count})
-              </button>
+              </Badge>
             )
           })}
         </div>
@@ -1274,36 +1276,38 @@ export default function ProjectTasksPage() {
       </div>
 
       {/* Filter Pills - Task Groups */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+      <div className="flex gap-2 flex-wrap">
         {/* All Groups pill */}
-        <button
-          onClick={() => setSelectedTaskGroup(null)}
+        <Badge
+          variant={selectedTaskGroup === null ? "default" : "outline"}
           className={cn(
-            "px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+            "cursor-pointer transition-colors",
             selectedTaskGroup === null
-              ? "bg-blue-600 text-white"
-              : "bg-transparent border border-gray-700 text-gray-300 hover:bg-gray-800"
+              ? ""
+              : "hover:bg-accent hover:text-accent-foreground"
           )}
+          onClick={() => setSelectedTaskGroup(null)}
         >
           All Groups ({tasks.length})
-        </button>
-        
+        </Badge>
+
         {/* Task Group filter pills */}
         {taskGroups.map((group) => {
           const count = tasks.filter(t => t.taskGroupId === group.id).length
           return (
-            <button
+            <Badge
               key={group.id}
-              onClick={() => setSelectedTaskGroup(group.id)}
+              variant={selectedTaskGroup === group.id ? "default" : "outline"}
               className={cn(
-                "px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+                "cursor-pointer transition-colors",
                 selectedTaskGroup === group.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-transparent border border-gray-700 text-gray-300 hover:bg-gray-800"
+                  ? ""
+                  : "hover:bg-accent hover:text-accent-foreground"
               )}
+              onClick={() => setSelectedTaskGroup(group.id)}
             >
               {group.name} ({count})
-            </button>
+            </Badge>
           )
         })}
       </div>
