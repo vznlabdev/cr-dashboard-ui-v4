@@ -55,7 +55,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
       return;
     }
     if (!formData.companyId) {
-      toast.error("Company is required");
+      toast.error("Brand is required");
       return;
     }
 
@@ -145,7 +145,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
             <div className="space-y-2">
               <Label htmlFor="company">
-                Company <span className="text-destructive">*</span>
+                Brand <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.companyId}
@@ -153,7 +153,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                 disabled={isSubmitting}
               >
                 <SelectTrigger id="company">
-                  <SelectValue placeholder="Select company" />
+                  <SelectValue placeholder="Select brand" />
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
