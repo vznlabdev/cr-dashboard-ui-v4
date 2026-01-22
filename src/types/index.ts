@@ -34,6 +34,7 @@ export interface Project {
   createdDate: string;
   owner: string;
   members?: string[]; // Array of member names or IDs
+  targetDate?: string; // Target completion date (ISO string or formatted date)
   creatorIds?: string[]; // Creators credited on this project
 }
 

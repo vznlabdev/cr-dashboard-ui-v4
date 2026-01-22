@@ -27,7 +27,11 @@ import {
   Check,
   Building2,
   Send,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO } from "date-fns"
 import {
   Table,
   TableBody,
@@ -83,6 +87,7 @@ export default function ProjectsPage() {
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null)
+  const [calendarState, setCalendarState] = useState<{ [key: string]: { open: boolean; currentMonth: Date } }>({});
 
   // Calculate TIV for each project
   const projectsWithTIV = useMemo(() => {
@@ -735,11 +740,147 @@ export default function ProjectsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {/* Mock target dates based on project id */}
-                          {['Mar 15, 2024', 'Apr 30, 2024', 'May 20, 2024', 'Jun 10, 2024', 'Jul 5, 2024'][parseInt(project.id) % 5]}
-                        </span>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        {(() => {
+                          const calendarOpen = calendarState[project.id]?.open || false;
+                          const currentMonth = calendarState[project.id]?.currentMonth || 
+                            (project.targetDate ? parseISO(project.targetDate) : new Date());
+                          
+                          const setCalendarOpen = (open: boolean) => {
+                            setCalendarState(prev => ({
+                              ...prev,
+                              [project.id]: {
+                                open,
+                                currentMonth: prev[project.id]?.currentMonth || currentMonth
+                              }
+                            }));
+                          };
+                          
+                          const setCurrentMonth = (month: Date) => {
+                            setCalendarState(prev => ({
+                              ...prev,
+                              [project.id]: {
+                                open: prev[project.id]?.open || false,
+                                currentMonth: month
+                              }
+                            }));
+                          };
+                          
+                          const monthStart = startOfMonth(currentMonth);
+                          const monthEnd = endOfMonth(currentMonth);
+                          const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                          
+                          // Pad with days from previous/next month to fill grid
+                          const startDayOfWeek = monthStart.getDay();
+                          const paddedDays: (Date | null)[] = [
+                            ...Array(startDayOfWeek).fill(null),
+                            ...daysInMonth
+                          ];
+                          
+                          const selectedDate = project.targetDate ? parseISO(project.targetDate) : null;
+                          
+                          return (
+                            <DropdownMenu open={calendarOpen} onOpenChange={setCalendarOpen}>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 gap-2 hover:bg-accent text-muted-foreground"
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                  <span className="text-sm">
+                                    {project.targetDate ? format(parseISO(project.targetDate), 'MMM dd, yyyy') : 'Set date'}
+                                  </span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent 
+                                align="start" 
+                                side="bottom" 
+                                sideOffset={5} 
+                                avoidCollisions={false}
+                                className="w-[280px] p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="p-3">
+                                  {/* Month Navigation */}
+                                  <div className="flex items-center justify-between mb-3">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentMonth(subMonths(currentMonth, 1));
+                                      }}
+                                    >
+                                      <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-sm font-medium">
+                                      {format(currentMonth, 'MMMM yyyy')}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentMonth(addMonths(currentMonth, 1));
+                                      }}
+                                    >
+                                      <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  
+                                  {/* Weekday Headers */}
+                                  <div className="grid grid-cols-7 gap-1 mb-2">
+                                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                                      <div key={day} className="text-center text-xs font-medium text-muted-foreground h-8 flex items-center justify-center">
+                                        {day}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  
+                                  {/* Calendar Grid */}
+                                  <div className="grid grid-cols-7 gap-1">
+                                    {paddedDays.map((day, index) => {
+                                      if (!day) {
+                                        return <div key={`empty-${index}`} className="h-8" />;
+                                      }
+                                      
+                                      const isSelected = selectedDate && isSameDay(day, selectedDate);
+                                      const isCurrentMonth = isSameMonth(day, currentMonth);
+                                      
+                                      return (
+                                        <Button
+                                          key={day.toISOString()}
+                                          variant="ghost"
+                                          size="sm"
+                                          className={`h-8 w-full p-0 text-sm ${
+                                            isSelected 
+                                              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                              : isCurrentMonth 
+                                              ? 'hover:bg-accent' 
+                                              : 'text-muted-foreground/40 hover:bg-accent'
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateProject(project.id, {
+                                              ...project,
+                                              targetDate: format(day, 'yyyy-MM-dd')
+                                            });
+                                            setCalendarOpen(false);
+                                          }}
+                                        >
+                                          {format(day, 'd')}
+                                        </Button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {project.updated}

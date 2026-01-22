@@ -68,6 +68,7 @@ const initialProjects: Project[] = [
     createdDate: "June 15, 2024",
     owner: "Sarah Johnson",
     members: ["Jeff Gordon", "Dev Vznlab", "JG"],
+    targetDate: "2024-03-15",
     creatorIds: ["creator-1", "creator-2"], // Sarah Johnson (voice) and Brandy the Bear (mascot)
   },
   {
@@ -84,6 +85,7 @@ const initialProjects: Project[] = [
     createdDate: "July 8, 2024",
     owner: "Michael Chen",
     members: ["Asad", "Husnain Raza"],
+    targetDate: "2024-04-30",
     creatorIds: ["creator-1"], // Sarah Johnson (voiceover)
   },
   {
@@ -100,6 +102,7 @@ const initialProjects: Project[] = [
     createdDate: "August 1, 2024",
     owner: "Emily Rodriguez",
     members: ["Ryan", "Zlane", "Abdul Qadeer", "Asad"],
+    targetDate: "2024-05-20",
     creatorIds: ["creator-3"], // New creator
   },
   {
@@ -116,6 +119,7 @@ const initialProjects: Project[] = [
     createdDate: "September 5, 2024",
     owner: "James Wilson",
     members: ["Jeff Gordon"],
+    targetDate: "2024-06-10",
   },
   {
     id: "5",
@@ -131,6 +135,7 @@ const initialProjects: Project[] = [
     createdDate: "October 12, 2024",
     owner: "Sarah Johnson",
     members: ["Dev Vznlab", "Husnain Raza"],
+    targetDate: "2024-07-05",
     creatorIds: ["creator-1"], // Sarah Johnson (voice actor)
   },
 ];
