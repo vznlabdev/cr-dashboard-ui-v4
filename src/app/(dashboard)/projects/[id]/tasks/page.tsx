@@ -136,6 +136,7 @@ interface FlatKanbanBoardProps {
   taskGroups: TaskGroup[]
   selectedTaskGroup: string | null
   searchQuery: string
+  projectId: string
 }
 
 function FlatKanbanBoard({
@@ -143,7 +144,9 @@ function FlatKanbanBoard({
   taskGroups,
   selectedTaskGroup,
   searchQuery,
+  projectId,
 }: FlatKanbanBoardProps) {
+  const router = useRouter()
   // Status filter state
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all')
 
@@ -574,6 +577,7 @@ interface StreamViewProps {
   onTaskGroupSelect: (groupId: string | null) => void
   selectedStatus: string
   onStatusSelect: (status: string) => void
+  projectId: string
 }
 
 function StreamView({ 
@@ -582,7 +586,8 @@ function StreamView({
   selectedTaskGroup,
   onTaskGroupSelect,
   selectedStatus,
-  onStatusSelect
+  onStatusSelect,
+  projectId,
 }: StreamViewProps) {
   // Apply filters
   const filteredTasks = useMemo(() => {
@@ -1310,6 +1315,7 @@ export default function ProjectTasksPage() {
           taskGroups={taskGroups}
           selectedTaskGroup={selectedTaskGroup}
           searchQuery={searchQuery}
+          projectId={projectId}
         />
       ) : (
         <StreamView 
@@ -1319,6 +1325,7 @@ export default function ProjectTasksPage() {
           onTaskGroupSelect={setSelectedTaskGroup}
           selectedStatus={selectedStatus}
           onStatusSelect={setSelectedStatus}
+          projectId={projectId}
         />
       )}
 
