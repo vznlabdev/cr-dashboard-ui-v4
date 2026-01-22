@@ -27,10 +27,9 @@ import { useData } from "@/contexts/data-context"
 import { 
   getTaskGroupsByProject, 
   getTasksByTaskGroup,
-  getCompanyById,
-  mockProjects
+  getCompanyById
 } from "@/lib/mock-data/projects-tasks"
-import type { Task, TaskGroup } from "@/types"
+import type { Task, TaskGroup, Project } from "@/types"
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
@@ -139,6 +138,7 @@ interface FlatKanbanBoardProps {
   selectedTaskGroup: string | null
   searchQuery: string
   projectId: string
+  project: Project | undefined
 }
 
 function FlatKanbanBoard({
@@ -147,11 +147,11 @@ function FlatKanbanBoard({
   selectedTaskGroup,
   searchQuery,
   projectId,
+  project,
 }: FlatKanbanBoardProps) {
   const router = useRouter()
   
-  // Get project and company data
-  const project = mockProjects.find(p => p.id === projectId)
+  // Get company data from project
   const company = project ? getCompanyById(project.companyId) : undefined
   
   // Status filter state
@@ -1321,6 +1321,7 @@ export default function ProjectTasksPage() {
             selectedTaskGroup={selectedTaskGroup}
             searchQuery={searchQuery}
             projectId={projectId}
+            project={project}
           />
         </div>
       )}
