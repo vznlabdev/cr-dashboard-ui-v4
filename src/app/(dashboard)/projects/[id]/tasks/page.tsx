@@ -270,7 +270,7 @@ function FlatKanbanBoard({
                 title={company?.name || 'Company'}
               >
                 <span className="text-white font-semibold text-[9px]">
-                  {company?.name.charAt(0) || 'C'}
+                  {company?.name?.charAt(0) || 'C'}
                 </span>
               </div>
               {/* Company Name */}
