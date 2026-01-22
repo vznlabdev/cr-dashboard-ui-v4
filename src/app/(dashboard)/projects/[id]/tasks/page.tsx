@@ -30,7 +30,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -847,6 +847,12 @@ export default function ProjectTasksPage() {
     description: '',
     priority: 'Medium' as 'Urgent' | 'High' | 'Medium' | 'Low',
     taskGroupId: '' as string,
+    designType: '',
+    brand: '',
+    dueDate: '',
+    projectTag: '',
+    targetAudience: '',
+    detailedDescription: '',
   })
   const [taskFormError, setTaskFormError] = useState('')
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
@@ -854,6 +860,12 @@ export default function ProjectTasksPage() {
   // Task Group combobox state
   const [taskGroupQuery, setTaskGroupQuery] = useState('')
   const [showTaskGroupDropdown, setShowTaskGroupDropdown] = useState(false)
+  
+  // Expandable sections state
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [requestDetailsExpanded, setRequestDetailsExpanded] = useState(true)
+  const [attachmentsExpanded, setAttachmentsExpanded] = useState(true)
+  const [linkAssetsExpanded, setLinkAssetsExpanded] = useState(false)
   
   // DAM Asset Browser state
   const [isDamModalOpen, setIsDamModalOpen] = useState(false)
@@ -1021,9 +1033,16 @@ export default function ProjectTasksPage() {
       description: '',
       priority: 'Medium',
       taskGroupId: '',
+      designType: '',
+      brand: '',
+      dueDate: '',
+      projectTag: '',
+      targetAudience: '',
+      detailedDescription: '',
     })
     setTaskFormError('')
     setTaskGroupQuery('')
+    setIsExpanded(false)
     setIsTaskModalOpen(true)
   }
 
@@ -1034,10 +1053,20 @@ export default function ProjectTasksPage() {
       description: '',
       priority: 'Medium',
       taskGroupId: '',
+      designType: '',
+      brand: '',
+      dueDate: '',
+      projectTag: '',
+      targetAudience: '',
+      detailedDescription: '',
     })
     setTaskFormError('')
     setTaskGroupQuery('')
     setShowTaskGroupDropdown(false)
+    setIsExpanded(false)
+    setRequestDetailsExpanded(true)
+    setAttachmentsExpanded(true)
+    setLinkAssetsExpanded(false)
   }
 
   // Create task group inline (for combobox)
@@ -1572,14 +1601,173 @@ export default function ProjectTasksPage() {
               </SelectContent>
             </Select>
 
-            {/* More Button */}
+            {/* More/Less Toggle Button */}
             <button
               type="button"
-              className="text-sm text-gray-400 hover:text-blue-400 transition-colors duration-150 px-3 py-1.5"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1 text-sm text-gray-400 hover:text-blue-400 transition-colors duration-150 px-3 py-1.5"
             >
-              + More...
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {isExpanded ? 'Less' : 'More'}
             </button>
           </div>
+
+          {/* Expanded Section */}
+          {isExpanded && (
+            <div className="mt-6 space-y-6 border-t border-gray-800 pt-6 animate-in slide-in-from-top duration-200">
+              {/* Design Type & Brand Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Design Type</label>
+                  <select 
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                    value={taskFormData.designType}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, designType: e.target.value })}
+                  >
+                    <option value="">Select type...</option>
+                    <option value="social-media">Social Media</option>
+                    <option value="print">Print</option>
+                    <option value="web">Web</option>
+                    <option value="video">Video</option>
+                    <option value="packaging">Packaging</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Brand</label>
+                  <select 
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                    value={taskFormData.brand}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, brand: e.target.value })}
+                  >
+                    <option value="">Select brand...</option>
+                    <option value="acme">Acme Corporation</option>
+                    <option value="techstart">TechStart Inc</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Due Date & Priority Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Due Date</label>
+                  <input 
+                    type="date" 
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                    value={taskFormData.dueDate}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                  <select 
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                    value={taskFormData.priority}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as typeof taskFormData.priority })}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Project Tag */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Project Tag (optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g., Q1 Campaign, Product Launch" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                  value={taskFormData.projectTag}
+                  onChange={(e) => setTaskFormData({ ...taskFormData, projectTag: e.target.value })}
+                />
+              </div>
+
+              {/* Request Details Collapsible */}
+              <div className="border border-gray-800 rounded-lg">
+                <button 
+                  type="button" 
+                  onClick={() => setRequestDetailsExpanded(!requestDetailsExpanded)} 
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
+                >
+                  <span className="font-medium text-white">Request Details</span>
+                  {requestDetailsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                {requestDetailsExpanded && (
+                  <div className="p-4 pt-0 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Target Audience</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g., B2B decision makers, Gen Z consumers" 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskFormData.targetAudience}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Detailed Description</label>
+                      <textarea 
+                        rows={4} 
+                        placeholder="Describe your creative request in detail. Include any specific requirements, dimensions, colors, text, or other specifications..." 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none resize-none transition-all duration-150"
+                        value={taskFormData.detailedDescription}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Attachments Collapsible */}
+              <div className="border border-gray-800 rounded-lg">
+                <button 
+                  type="button" 
+                  onClick={() => setAttachmentsExpanded(!attachmentsExpanded)} 
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
+                >
+                  <span className="font-medium text-white">Attachments</span>
+                  {attachmentsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                {attachmentsExpanded && (
+                  <div className="p-4 pt-0">
+                    <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-blue-500 transition-all duration-150 cursor-pointer">
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-8 h-8 text-gray-400" />
+                        <p className="text-sm text-gray-400">Click to upload or drag and drop</p>
+                        <p className="text-xs text-gray-500">PNG, JPG, PDF, AI, PSD up to 50MB</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Link Assets from DAM Collapsible */}
+              <div className="border border-gray-800 rounded-lg">
+                <button 
+                  type="button" 
+                  onClick={() => setLinkAssetsExpanded(!linkAssetsExpanded)} 
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
+                >
+                  <span className="font-medium text-white">Link Assets from DAM</span>
+                  {linkAssetsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                {linkAssetsExpanded && (
+                  <div className="p-4 pt-0">
+                    <button 
+                      type="button" 
+                      className="w-full border border-gray-700 rounded-lg p-4 hover:bg-gray-800 transition-all duration-150 text-sm text-gray-300 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Browse Assets
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2 text-center">Link existing assets as outputs, inspiration, or source material</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="mt-6">
