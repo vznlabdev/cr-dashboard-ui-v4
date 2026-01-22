@@ -339,9 +339,9 @@ function FlatKanbanBoard({
   }
 
   return (
-    <div>
+    <div className="mt-6">
       {/* Kanban Columns - Horizontal Scroll */}
-      <div className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin -mx-4 md:-mx-6">
+      <div className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin">
         <div className="flex gap-6 min-h-[calc(100vh-320px)] px-4 md:px-6">
           {STATUS_COLUMNS.map((column) => (
             <div
@@ -1154,145 +1154,151 @@ export default function ProjectTasksPage() {
   )
 
   return (
-    <PageContainer className="space-y-6 animate-fade-in">
-      {/* Breadcrumb Navigation - Subtle */}
-      <div className="flex items-center text-xs text-gray-500">
-        <a 
-          href="/projects"
-          className="hover:text-gray-300 transition-colors"
-        >
-          Projects
-        </a>
-        <span className="mx-2">/</span>
-        <a 
-          href={`/projects/${projectId}`}
-          className="hover:text-gray-300 transition-colors"
-        >
-          {project.name}
-        </a>
-        <span className="mx-2">/</span>
-        <span className="text-gray-400">Tasks</span>
-      </div>
-
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tasks</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Manage creative tasks and track progress
-          </p>
+    <>
+      {/* Header, Breadcrumbs, Filters - Inside Container */}
+      <PageContainer className="space-y-6 animate-fade-in">
+        {/* Breadcrumb Navigation - Subtle */}
+        <div className="flex items-center text-xs text-gray-500">
+          <a 
+            href="/projects"
+            className="hover:text-gray-300 transition-colors"
+          >
+            Projects
+          </a>
+          <span className="mx-2">/</span>
+          <a 
+            href={`/projects/${projectId}`}
+            className="hover:text-gray-300 transition-colors"
+          >
+            {project.name}
+          </a>
+          <span className="mx-2">/</span>
+          <span className="text-gray-400">Tasks</span>
         </div>
-        <div className="flex items-center gap-3">
-          {/* View Toggle */}
-          <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-            <Button
-              variant={currentView === 'board' ? 'default' : 'ghost'}
+
+        {/* Page Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tasks</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+              Manage creative tasks and track progress
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* View Toggle */}
+            <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
+              <Button
+                variant={currentView === 'board' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => switchView('board')}
+                className={cn(
+                  currentView === 'board' && "bg-blue-600 hover:bg-blue-700"
+                )}
+              >
+                <LayoutGrid className="h-4 w-4 mr-1.5" />
+                Board
+              </Button>
+              <Button
+                variant={currentView === 'stream' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => switchView('stream')}
+                className={cn(
+                  currentView === 'stream' && "bg-blue-600 hover:bg-blue-700"
+                )}
+              >
+                <List className="h-4 w-4 mr-1.5" />
+                Stream
+              </Button>
+            </div>
+
+            {/* Action Buttons */}
+            <Button 
+              onClick={openCreateModal} 
+              variant="outline"
               size="sm"
-              onClick={() => switchView('board')}
-              className={cn(
-                currentView === 'board' && "bg-blue-600 hover:bg-blue-700"
-              )}
             >
-              <LayoutGrid className="h-4 w-4 mr-1.5" />
-              Board
+              <Plus className="h-4 w-4 mr-1.5" />
+              New Group
             </Button>
-            <Button
-              variant={currentView === 'stream' ? 'default' : 'ghost'}
+            <Button 
+              onClick={() => openTaskModal()}
               size="sm"
-              onClick={() => switchView('stream')}
-              className={cn(
-                currentView === 'stream' && "bg-blue-600 hover:bg-blue-700"
-              )}
             >
-              <List className="h-4 w-4 mr-1.5" />
-              Stream
+              <Plus className="h-4 w-4 mr-1.5" />
+              New Task
             </Button>
           </div>
-
-          {/* Action Buttons */}
-          <Button 
-            onClick={openCreateModal} 
-            variant="outline"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Group
-          </Button>
-          <Button 
-            onClick={() => openTaskModal()}
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Task
-          </Button>
         </div>
-      </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search tasks..."
-          className="pl-9"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tasks..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-      {/* Filter Pills - Task Groups */}
-      <div className="flex gap-2 flex-wrap">
-        {/* All Groups pill */}
-        <Badge
-          variant={selectedTaskGroup === null ? "default" : "outline"}
-          className={cn(
-            "cursor-pointer transition-colors",
-            selectedTaskGroup === null
-              ? ""
-              : "hover:bg-accent hover:text-accent-foreground"
-          )}
-          onClick={() => setSelectedTaskGroup(null)}
-        >
-          All Groups ({tasks.length})
-        </Badge>
+        {/* Filter Pills - Task Groups */}
+        <div className="flex gap-2 flex-wrap">
+          {/* All Groups pill */}
+          <Badge
+            variant={selectedTaskGroup === null ? "default" : "outline"}
+            className={cn(
+              "cursor-pointer transition-colors",
+              selectedTaskGroup === null
+                ? ""
+                : "hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setSelectedTaskGroup(null)}
+          >
+            All Groups ({tasks.length})
+          </Badge>
 
-        {/* Task Group filter pills */}
-        {taskGroups.map((group) => {
-          const count = tasks.filter(t => t.taskGroupId === group.id).length
-          return (
-            <Badge
-              key={group.id}
-              variant={selectedTaskGroup === group.id ? "default" : "outline"}
-              className={cn(
-                "cursor-pointer transition-colors",
-                selectedTaskGroup === group.id
-                  ? ""
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
-              onClick={() => setSelectedTaskGroup(group.id)}
-            >
-              {group.name} ({count})
-            </Badge>
-          )
-        })}
-      </div>
+          {/* Task Group filter pills */}
+          {taskGroups.map((group) => {
+            const count = tasks.filter(t => t.taskGroupId === group.id).length
+            return (
+              <Badge
+                key={group.id}
+                variant={selectedTaskGroup === group.id ? "default" : "outline"}
+                className={cn(
+                  "cursor-pointer transition-colors",
+                  selectedTaskGroup === group.id
+                    ? ""
+                    : "hover:bg-accent hover:text-accent-foreground"
+                )}
+                onClick={() => setSelectedTaskGroup(group.id)}
+              >
+                {group.name} ({count})
+              </Badge>
+            )
+          })}
+        </div>
 
-      {/* View Content - Board or Stream */}
-      {currentView === 'board' ? (
+        {/* Stream View - Stays in Container */}
+        {currentView === 'stream' && (
+          <StreamView 
+            tasks={tasks} 
+            taskGroups={taskGroups}
+            selectedTaskGroup={selectedTaskGroup}
+            onTaskGroupSelect={setSelectedTaskGroup}
+            selectedStatus={selectedStatus}
+            onStatusSelect={setSelectedStatus}
+            projectId={projectId}
+          />
+        )}
+      </PageContainer>
+
+      {/* Board View - Outside Container for Full Width Scroll */}
+      {currentView === 'board' && (
         <FlatKanbanBoard
           tasks={tasks}
           taskGroups={taskGroups}
           selectedTaskGroup={selectedTaskGroup}
           searchQuery={searchQuery}
-          projectId={projectId}
-        />
-      ) : (
-        <StreamView 
-          tasks={tasks} 
-          taskGroups={taskGroups}
-          selectedTaskGroup={selectedTaskGroup}
-          onTaskGroupSelect={setSelectedTaskGroup}
-          selectedStatus={selectedStatus}
-          onStatusSelect={setSelectedStatus}
           projectId={projectId}
         />
       )}
@@ -1544,6 +1550,6 @@ export default function ProjectTasksPage() {
       </Dialog>
 
       {/* DAM Asset Browser Modal - REMOVED (not needed for simple tasks) */}
-    </PageContainer>
+    </>
   )
 }
