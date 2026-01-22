@@ -15,9 +15,9 @@ import {
 import { notFound, useParams, useRouter } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
-import { mockTasks, getTasksByProject } from "@/lib/mock-data/projects-tasks"
+import { getTasksByProject } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { ArrowLeft, Briefcase, Scale, Shield } from "lucide-react"
+import { ArrowLeft, Briefcase, Scale, Shield, Folder } from "lucide-react"
 import { Suspense } from "react"
 
 function ProjectDetailContent() {
@@ -26,7 +26,7 @@ function ProjectDetailContent() {
   const projectId = params.id as string
   const { getProjectById } = useData()
 
-  // Fetch project by id from data context
+  // Fetch project from data context (consistent with projects list)
   const project = getProjectById(projectId)
 
   if (!project) {
@@ -36,19 +36,22 @@ function ProjectDetailContent() {
   // Fetch all tasks for this project
   const projectTasks = getTasksByProject(projectId)
 
-  // Group tasks by workstream
+  // Group tasks by workstream - include all 4 workstream types
   const creatorTasks = projectTasks.filter((t) => t.workstream === "creator")
   const legalTasks = projectTasks.filter((t) => t.workstream === "legal")
   const insuranceTasks = projectTasks.filter((t) => t.workstream === "insurance")
+  const generalTasks = projectTasks.filter((t) => t.workstream === "general")
 
   // Helper function to get task status badge variant
   const getTaskStatusVariant = (status: Task["status"]) => {
     switch (status) {
-      case "completed":
+      case "delivered":
         return "default"
+      case "qa_review":
+        return "secondary"
       case "production":
         return "secondary"
-      case "review":
+      case "assigned":
         return "outline"
       case "assessment":
         return "outline"
@@ -150,7 +153,7 @@ function ProjectDetailContent() {
       </div>
 
       {/* Workstream Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Creator Tasks Column */}
         <Card className="border-t-4 border-t-blue-500 shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
@@ -288,6 +291,60 @@ function ProjectDetailContent() {
                 <Card 
                   key={task.id} 
                   className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+                >
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+                      <Badge variant={getTaskStatusVariant(task.status)} className="text-xs shrink-0">
+                        {task.status}
+                      </Badge>
+                    </div>
+                    {task.assignee && (
+                      <p className="text-xs text-muted-foreground">
+                        👤 {task.assignee}
+                      </p>
+                    )}
+                    {task.dueDate && (
+                      <p className="text-xs text-muted-foreground">
+                        📅 Due: {task.dueDate}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* General Tasks Column */}
+        <Card className="border-t-4 border-t-gray-500 shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Folder className="h-5 w-5 text-gray-500" />
+                <CardTitle className="text-lg">General Tasks</CardTitle>
+              </div>
+              <Badge variant="secondary" className="text-base font-semibold">
+                {generalTasks.length}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 min-h-[200px]">
+            {generalTasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Folder className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  No general tasks yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Miscellaneous tasks will appear here
+                </p>
+              </div>
+            ) : (
+              generalTasks.map((task) => (
+                <Card 
+                  key={task.id} 
+                  className="border-l-4 border-l-gray-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
                 >
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">

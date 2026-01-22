@@ -9,8 +9,20 @@
 // Core Domain Types
 // ==============================================
 
+export interface Company {
+  id: string;
+  name: string;
+  logo_url?: string;
+  branding_colors?: string;
+  timezone: string;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
+  companyId: string;  // belongs to Company
   name: string;
   description: string;
   status: ProjectStatus;
@@ -38,16 +50,29 @@ export interface Asset {
   creatorIds?: string[]; // Creators credited on this asset
 }
 
+export interface TaskGroup {
+  id: string;
+  projectId: string;  // belongs to Project
+  name: string;
+  description?: string;
+  color: string;  // hex color for UI badges and pills
+  displayOrder: number;  // for sorting groups in UI
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Task {
   id: string;
-  projectId: string;
+  taskGroupId: string;  // belongs to Task Group
+  projectId: string;    // denormalized for quick queries
   workstream: 'creator' | 'legal' | 'insurance' | 'general';
   title: string;
   status: TaskStatus;
   assignee?: string;
   dueDate?: string;
   createdDate: string;
-  updated: string;
+  updatedAt: string;  // ISO 8601 timestamp
 }
 
 export interface Notification {
@@ -66,7 +91,7 @@ export interface Notification {
 
 export type ProjectStatus = "Active" | "Review" | "Draft" | "Approved";
 export type AssetStatus = "Draft" | "Review" | "Approved" | "Rejected";
-export type TaskStatus = "submitted" | "assessment" | "production" | "review" | "completed";
+export type TaskStatus = "submitted" | "assessment" | "assigned" | "production" | "qa_review" | "delivered";
 export type RiskLevel = "Low" | "Medium" | "High";
 export type ContentType = "Image" | "Video" | "Audio" | "Text" | "AR/VR";
 export type AIMethod = "AI Augmented" | "AI Generative" | "Multimodal";

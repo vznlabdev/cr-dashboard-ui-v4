@@ -312,7 +312,7 @@ export default function ProjectsPage() {
                   filteredProjects.map((project) => (
                     <TableRow 
                       key={project.id}
-                      onClick={() => router.push(`/projects/${project.id}`)}
+                      onClick={() => router.push(`/projects/${project.id}/tasks`)}
                       className="cursor-pointer hover:bg-gray-800"
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>

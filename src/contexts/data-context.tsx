@@ -56,6 +56,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const initialProjects: Project[] = [
   {
     id: "1",
+    companyId: "company-1",  // belongs to Acme Corporation
     name: "Summer Campaign 2024",
     description: "AI-generated marketing content for Q3 summer campaign",
     status: "Active",
@@ -69,6 +70,7 @@ const initialProjects: Project[] = [
   },
   {
     id: "2",
+    companyId: "company-1",  // belongs to Acme Corporation
     name: "Product Launch Video",
     description: "Promotional video with AI-enhanced visuals and voiceover",
     status: "Review",
@@ -82,19 +84,21 @@ const initialProjects: Project[] = [
   },
   {
     id: "3",
-    name: "Brand Refresh Assets",
-    description: "Complete rebrand with AI-generated visual assets",
-    status: "Draft",
-    assets: 1,
-    compliance: 45,
-    risk: "High",
+    companyId: "company-2",  // belongs to TechStart Inc
+    name: "Brand Refresh Campaign",
+    description: "Complete brand refresh campaign with new visual identity",
+    status: "Active",
+    assets: 8,
+    compliance: 85,
+    risk: "Medium",
     updated: "1 day ago",
-    createdDate: "August 22, 2024",
-    owner: "Emma Davis",
-    creatorIds: ["creator-2"], // Brandy the Bear (brand mascot)
+    createdDate: "August 1, 2024",
+    owner: "Emily Rodriguez",
+    creatorIds: ["creator-3"], // New creator
   },
   {
     id: "4",
+    companyId: "company-1",  // belongs to Acme Corporation
     name: "Social Media Content Q4",
     description: "Automated social media posts and graphics",
     status: "Approved",
@@ -107,6 +111,7 @@ const initialProjects: Project[] = [
   },
   {
     id: "5",
+    companyId: "company-2",  // belongs to TechStart Inc
     name: "Podcast Series AI Voices",
     description: "AI voice cloning for podcast series production",
     status: "Active",
