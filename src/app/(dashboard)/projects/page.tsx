@@ -54,7 +54,7 @@ import { useState, useMemo } from "react"
 import { NewProjectDialog, EditProjectDialog, DeleteProjectDialog } from "@/components/cr"
 import { useData, type Project } from "@/contexts/data-context"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { mockCompanies } from "@/lib/mock-data/projects-tasks"
+import { mockCompanies, getTasksByProject } from "@/lib/mock-data/projects-tasks"
 import {
   calculateTIV,
   formatLargeCurrency,
@@ -335,12 +335,32 @@ export default function ProjectsPage() {
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">📈</span>
-                          <span className="text-sm text-muted-foreground">
-                            On track • {(parseInt(project.id) % 12) + 1}mo
-                          </span>
-                        </div>
+                        {(() => {
+                          const projectTasks = getTasksByProject(project.id);
+                          const totalTasks = projectTasks.length;
+                          const completedTasks = projectTasks.filter(t => t.status === 'delivered').length;
+                          const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                          
+                          return (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">📈</span>
+                                <span className="text-sm text-muted-foreground">On track</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {totalTasks} task{totalTasks !== 1 ? 's' : ''} • {completionPercent}%
+                                </span>
+                                <div className="flex-1 max-w-[80px] h-1.5 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 transition-all"
+                                    style={{ width: `${completionPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
