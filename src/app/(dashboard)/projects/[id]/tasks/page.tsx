@@ -1292,9 +1292,9 @@ export default function ProjectTasksPage() {
         )}
       </PageContainer>
 
-      {/* Board View - Outside Container for Full Width Scroll */}
+      {/* Board View - Full Width (outside PageContainer) */}
       {currentView === 'board' && (
-        <div className="mx-auto max-w-7xl w-full">
+        <div className="relative">
           <FlatKanbanBoard
             tasks={tasks}
             taskGroups={taskGroups}
