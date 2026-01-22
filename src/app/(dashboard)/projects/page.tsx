@@ -432,7 +432,7 @@ export default function ProjectsPage() {
                               )}
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-56">
+                          <DropdownMenuContent align="start" side="bottom" className="w-56">
                             {/* No Lead Option */}
                             <DropdownMenuItem
                               onClick={(e) => {
