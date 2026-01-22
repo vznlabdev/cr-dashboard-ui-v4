@@ -1294,13 +1294,15 @@ export default function ProjectTasksPage() {
 
       {/* Board View - Outside Container for Full Width Scroll */}
       {currentView === 'board' && (
-        <FlatKanbanBoard
-          tasks={tasks}
-          taskGroups={taskGroups}
-          selectedTaskGroup={selectedTaskGroup}
-          searchQuery={searchQuery}
-          projectId={projectId}
-        />
+        <div className="mx-auto max-w-7xl w-full">
+          <FlatKanbanBoard
+            tasks={tasks}
+            taskGroups={taskGroups}
+            selectedTaskGroup={selectedTaskGroup}
+            searchQuery={searchQuery}
+            projectId={projectId}
+          />
+        </div>
       )}
 
       {/* Task Group Modal */}
