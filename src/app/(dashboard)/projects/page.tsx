@@ -256,12 +256,12 @@ export default function ProjectsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Project Name</TableHead>
+                  <TableHead>Brand</TableHead>
                   <TableHead>Health</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Lead</TableHead>
-                  <TableHead>Assets</TableHead>
-                  <TableHead>Compliance</TableHead>
-                  <TableHead>Risk</TableHead>
+                  <TableHead>Members</TableHead>
+                  <TableHead>Target Date</TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -296,6 +296,11 @@ export default function ProjectsPage() {
                       className="cursor-pointer hover:bg-gray-800"
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {project.companyId === 'company-1' ? 'Acme Corporation' : 'TechStart Inc'}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="text-sm">📈</span>
@@ -523,16 +528,35 @@ export default function ProjectsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell>{project.assets} assets</TableCell>
                       <TableCell>
-                        <span className={getComplianceColor(project.compliance)}>
-                          {project.compliance}%
-                        </span>
+                        <div className="flex items-center -space-x-2">
+                          {/* Show up to 3 member avatars */}
+                          {[1, 2, 3].slice(0, Math.min(3, (parseInt(project.id) % 4) + 1)).map((i) => {
+                            const colors = ['#ef4444', '#8b5cf6', '#10b981', '#f59e0b'];
+                            const names = ['J', 'S', 'M', 'E'];
+                            const idx = (parseInt(project.id) + i) % 4;
+                            return (
+                              <div
+                                key={i}
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-background"
+                                style={{ backgroundColor: colors[idx] }}
+                              >
+                                {names[idx]}
+                              </div>
+                            );
+                          })}
+                          {((parseInt(project.id) % 4) + 1) > 3 && (
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-700 text-white text-xs font-semibold border-2 border-background">
+                              +{((parseInt(project.id) % 4) + 1) - 3}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getRiskVariant(project.risk)}>
-                          {project.risk}
-                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {/* Mock target dates based on project id */}
+                          {['Mar 15, 2024', 'Apr 30, 2024', 'May 20, 2024', 'Jun 10, 2024', 'Jul 5, 2024'][parseInt(project.id) % 5]}
+                        </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {project.updated}
