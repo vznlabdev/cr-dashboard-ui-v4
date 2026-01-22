@@ -779,7 +779,7 @@ function StreamView({
                         <div className="flex-1">
                           <h3 className="font-medium text-base">{task.title}</h3>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {taskGroup?.name} • {task.workstream}
+                            {taskGroup?.name && <>{taskGroup.name} • </>}{task.workstream}
                           </p>
                         </div>
                         <Badge variant={getStatusVariant(task.status)} className="shrink-0">

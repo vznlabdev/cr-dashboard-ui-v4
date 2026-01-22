@@ -423,7 +423,7 @@ export default function ProjectsPage() {
                                   <div 
                                     className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
                                     style={{ 
-                                      backgroundColor: TEAM_MEMBERS.find(m => m.name === project.owner.split(' ')[0].toLowerCase())?.avatarColor || '#3b82f6' 
+                                      backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
                                     }}
                                   >
                                     {project.owner.charAt(0)}
@@ -471,7 +471,7 @@ export default function ProjectsPage() {
                                 <div 
                                   className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
                                   style={{ 
-                                    backgroundColor: TEAM_MEMBERS.find(m => m.name === project.owner.split(' ')[0].toLowerCase())?.avatarColor || '#3b82f6' 
+                                    backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
                                   }}
                                 >
                                   {project.owner.charAt(0)}
