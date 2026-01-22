@@ -138,21 +138,21 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col gap-3">
+      {/* Search & Filters - Prominent placement above stats */}
+      <div className="flex flex-col gap-3 pb-2">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search projects..."
-              className="pl-9"
+              className="pl-9 h-11"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] h-11">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -167,6 +167,7 @@ export default function ProjectsPage() {
           {(searchQuery || statusFilter !== "all") && (
             <Button
               variant="ghost"
+              className="h-11"
               onClick={() => {
                 setSearchQuery("")
                 setStatusFilter("all")
