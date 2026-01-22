@@ -1456,7 +1456,7 @@ export default function ProjectTasksPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <FolderKanban className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">New Task</h2>
+              <DialogTitle className="text-lg font-semibold">New Task</DialogTitle>
             </div>
           </div>
 
