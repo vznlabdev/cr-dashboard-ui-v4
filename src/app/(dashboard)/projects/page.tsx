@@ -743,17 +743,22 @@ export default function ProjectsPage() {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const calendarOpen = calendarState[project.id]?.open || false;
-                          const currentMonth = calendarState[project.id]?.currentMonth || 
-                            (project.targetDate ? parseISO(project.targetDate) : new Date());
                           
                           const setCalendarOpen = (open: boolean) => {
-                            setCalendarState(prev => ({
-                              ...prev,
-                              [project.id]: {
-                                open,
-                                currentMonth: prev[project.id]?.currentMonth || currentMonth
-                              }
-                            }));
+                            setCalendarState(prev => {
+                              // Initialize currentMonth when opening calendar
+                              const initialMonth = project.targetDate 
+                                ? parseISO(project.targetDate) 
+                                : new Date();
+                              
+                              return {
+                                ...prev,
+                                [project.id]: {
+                                  open,
+                                  currentMonth: prev[project.id]?.currentMonth || initialMonth
+                                }
+                              };
+                            });
                           };
                           
                           const setCurrentMonth = (month: Date) => {
@@ -766,16 +771,25 @@ export default function ProjectsPage() {
                             }));
                           };
                           
-                          const monthStart = startOfMonth(currentMonth);
-                          const monthEnd = endOfMonth(currentMonth);
-                          const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                          // Only compute calendar data if it's open
+                          let monthStart: Date | null = null;
+                          let monthEnd: Date | null = null;
+                          let daysInMonth: Date[] = [];
+                          let paddedDays: (Date | null)[] = [];
                           
-                          // Pad with days from previous/next month to fill grid
-                          const startDayOfWeek = monthStart.getDay();
-                          const paddedDays: (Date | null)[] = [
-                            ...Array(startDayOfWeek).fill(null),
-                            ...daysInMonth
-                          ];
+                          if (calendarOpen && calendarState[project.id]?.currentMonth) {
+                            const currentMonth = calendarState[project.id].currentMonth;
+                            monthStart = startOfMonth(currentMonth);
+                            monthEnd = endOfMonth(currentMonth);
+                            daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                            
+                            // Pad with days from previous/next month to fill grid
+                            const startDayOfWeek = monthStart.getDay();
+                            paddedDays = [
+                              ...Array(startDayOfWeek).fill(null),
+                              ...daysInMonth
+                            ];
+                          }
                           
                           const selectedDate = project.targetDate ? parseISO(project.targetDate) : null;
                           
@@ -810,13 +824,17 @@ export default function ProjectsPage() {
                                       className="h-7 w-7 p-0"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setCurrentMonth(subMonths(currentMonth, 1));
+                                        if (calendarState[project.id]?.currentMonth) {
+                                          setCurrentMonth(subMonths(calendarState[project.id].currentMonth, 1));
+                                        }
                                       }}
                                     >
                                       <ChevronLeft className="h-4 w-4" />
                                     </Button>
                                     <span className="text-sm font-medium">
-                                      {format(currentMonth, 'MMMM yyyy')}
+                                      {calendarState[project.id]?.currentMonth 
+                                        ? format(calendarState[project.id].currentMonth, 'MMMM yyyy')
+                                        : ''}
                                     </span>
                                     <Button
                                       variant="ghost"
@@ -824,7 +842,9 @@ export default function ProjectsPage() {
                                       className="h-7 w-7 p-0"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setCurrentMonth(addMonths(currentMonth, 1));
+                                        if (calendarState[project.id]?.currentMonth) {
+                                          setCurrentMonth(addMonths(calendarState[project.id].currentMonth, 1));
+                                        }
                                       }}
                                     >
                                       <ChevronRight className="h-4 w-4" />
@@ -848,7 +868,9 @@ export default function ProjectsPage() {
                                       }
                                       
                                       const isSelected = selectedDate && isSameDay(day, selectedDate);
-                                      const isCurrentMonth = isSameMonth(day, currentMonth);
+                                      const isCurrentMonth = calendarState[project.id]?.currentMonth 
+                                        ? isSameMonth(day, calendarState[project.id].currentMonth)
+                                        : true;
                                       
                                       return (
                                         <Button
