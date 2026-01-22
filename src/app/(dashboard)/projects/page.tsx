@@ -22,6 +22,8 @@ import {
   BarChart2,
   BarChart,
   Minus,
+  UserPlus,
+  Check,
 } from "lucide-react"
 import {
   Table,
@@ -55,6 +57,18 @@ import {
   calculatePortfolioTIV,
 } from "@/lib/insurance-utils"
 import type { DistributionLevel } from "@/types"
+
+// Team members for project lead assignment
+const TEAM_MEMBERS = [
+  { id: 'jgordon', name: 'jgordon', fullName: 'Jeff Gordon', avatarColor: '#ef4444' },
+  { id: 'abdul.qadeer', name: 'abdul.qadeer', fullName: 'Abdul Qadeer', avatarColor: '#a855f7' },
+  { id: 'asad', name: 'asad', fullName: 'Asad', avatarColor: '#06b6d4' },
+  { id: 'dev.vznlab', name: 'dev.vznlab', fullName: 'Dev Vznlab', avatarColor: '#8b5cf6' },
+  { id: 'husnain.raza', name: 'husnain.raza', fullName: 'Husnain Raza', avatarColor: '#ec4899' },
+  { id: 'jg', name: 'jg', fullName: 'JG', avatarColor: '#78350f' },
+  { id: 'ryan', name: 'ryan', fullName: 'Ryan', avatarColor: '#b45309' },
+  { id: 'zlane', name: 'zlane', fullName: 'Zlane', avatarColor: '#10b981' },
+]
 
 export default function ProjectsPage() {
   const router = useRouter()
@@ -389,12 +403,116 @@ export default function ProjectsPage() {
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
-                            {project.owner.charAt(0)}
-                          </div>
-                          <span className="text-sm">{project.owner.split(' ')[0].toLowerCase()}</span>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-2 hover:bg-accent w-full justify-start"
+                            >
+                              {project.owner ? (
+                                <>
+                                  <div 
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                    style={{ 
+                                      backgroundColor: TEAM_MEMBERS.find(m => m.name === project.owner.split(' ')[0].toLowerCase())?.avatarColor || '#3b82f6' 
+                                    }}
+                                  >
+                                    {project.owner.charAt(0)}
+                                  </div>
+                                  <span className="text-sm">{project.owner.split(' ')[0].toLowerCase()}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
+                                    <Minus className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <span className="text-sm text-muted-foreground">No lead</span>
+                                </>
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-56">
+                            {/* No Lead Option */}
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateProject(project.id, { ...project, owner: '' });
+                              }}
+                              className="gap-2"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
+                                <Minus className="h-3 w-3 text-gray-400" />
+                              </div>
+                              <span className="flex-1">No lead</span>
+                              <span className="text-xs text-muted-foreground">0</span>
+                            </DropdownMenuItem>
+                            
+                            {/* Current Selection (if exists) */}
+                            {project.owner && (
+                              <DropdownMenuItem
+                                onClick={(e) => e.stopPropagation()}
+                                className="gap-2 bg-accent"
+                              >
+                                <div 
+                                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                  style={{ 
+                                    backgroundColor: TEAM_MEMBERS.find(m => m.name === project.owner.split(' ')[0].toLowerCase())?.avatarColor || '#3b82f6' 
+                                  }}
+                                >
+                                  {project.owner.charAt(0)}
+                                </div>
+                                <span className="flex-1">{project.owner.split(' ')[0].toLowerCase()}</span>
+                                <Check className="h-4 w-4" />
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Section Header */}
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                              Users from the project team
+                            </div>
+
+                            {/* Team Members */}
+                            {TEAM_MEMBERS.filter(member => 
+                              member.name !== project.owner?.split(' ')[0].toLowerCase()
+                            ).map((member) => (
+                              <DropdownMenuItem
+                                key={member.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateProject(project.id, { ...project, owner: member.fullName });
+                                }}
+                                className="gap-2"
+                              >
+                                <div 
+                                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                  style={{ backgroundColor: member.avatarColor }}
+                                >
+                                  {member.fullName.charAt(0)}
+                                </div>
+                                <span className="flex-1">{member.name}</span>
+                              </DropdownMenuItem>
+                            ))}
+
+                            {/* Section Header */}
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-1">
+                              New user
+                            </div>
+
+                            {/* Invite Option */}
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // TODO: Open invite modal
+                                console.log('Invite new user');
+                              }}
+                              className="gap-2"
+                            >
+                              <UserPlus className="h-4 w-4 text-muted-foreground" />
+                              <span className="flex-1">Invite and add...</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell>{project.assets} assets</TableCell>
                       <TableCell>
