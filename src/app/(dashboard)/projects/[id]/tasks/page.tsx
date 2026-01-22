@@ -30,7 +30,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock } from "lucide-react"
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
