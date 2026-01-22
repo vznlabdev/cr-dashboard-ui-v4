@@ -556,7 +556,7 @@ export default function ProjectsPage() {
 
                             {/* Team Members */}
                             {TEAM_MEMBERS.filter(member => 
-                              member.name !== project.owner?.split(' ')[0].toLowerCase()
+                              member.fullName !== project.owner
                             ).map((member) => (
                               <DropdownMenuItem
                                 key={member.id}
