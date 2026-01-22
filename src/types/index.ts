@@ -33,6 +33,7 @@ export interface Project {
   updated: string;
   createdDate: string;
   owner: string;
+  members?: string[]; // Array of member names or IDs
   creatorIds?: string[]; // Creators credited on this project
 }
 

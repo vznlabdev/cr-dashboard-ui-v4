@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -25,6 +26,7 @@ import {
   UserPlus,
   Check,
   Building2,
+  Send,
 } from "lucide-react"
 import {
   Table,
@@ -77,6 +79,7 @@ export default function ProjectsPage() {
   const { projects, updateProject, deleteProject } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [memberSearchQuery, setMemberSearchQuery] = useState("")
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [deleteProjectState, setDeleteProjectState] = useState<Project | null>(null)
@@ -313,7 +316,7 @@ export default function ProjectsPage() {
                               </span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} className="w-56">
+                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} avoidCollisions={false} className="w-56">
                             {mockCompanies.map((company) => (
                               <DropdownMenuItem
                                 key={company.id}
@@ -380,7 +383,7 @@ export default function ProjectsPage() {
                               )}
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-48">
+                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} avoidCollisions={false} className="w-48">
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -559,28 +562,147 @@ export default function ProjectsPage() {
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center -space-x-2">
-                          {/* Show up to 3 member avatars */}
-                          {[1, 2, 3].slice(0, Math.min(3, (parseInt(project.id) % 4) + 1)).map((i) => {
-                            const colors = ['#ef4444', '#8b5cf6', '#10b981', '#f59e0b'];
-                            const names = ['J', 'S', 'M', 'E'];
-                            const idx = (parseInt(project.id) + i) % 4;
-                            return (
-                              <div
-                                key={i}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-background"
-                                style={{ backgroundColor: colors[idx] }}
-                              >
-                                {names[idx]}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 hover:bg-accent"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center -space-x-2">
+                                {/* Show up to 3 member avatars */}
+                                {(project.members || []).slice(0, 3).map((memberName, i) => {
+                                  const member = TEAM_MEMBERS.find(m => m.fullName === memberName);
+                                  return (
+                                    <div
+                                      key={i}
+                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-background"
+                                      style={{ backgroundColor: member?.avatarColor || '#64748b' }}
+                                    >
+                                      {memberName.charAt(0)}
+                                    </div>
+                                  );
+                                })}
+                                {(project.members || []).length > 3 && (
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-700 text-white text-xs font-semibold border-2 border-background">
+                                    +{(project.members || []).length - 3}
+                                  </div>
+                                )}
+                                {(!project.members || project.members.length === 0) && (
+                                  <span className="text-sm text-muted-foreground px-2">No members</span>
+                                )}
                               </div>
-                            );
-                          })}
-                          {((parseInt(project.id) % 4) + 1) > 3 && (
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-700 text-white text-xs font-semibold border-2 border-background">
-                              +{((parseInt(project.id) % 4) + 1) - 3}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent 
+                            align="start" 
+                            side="bottom" 
+                            sideOffset={5} 
+                            className="w-80 p-0"
+                            avoidCollisions={false}
+                          >
+                            {/* Search Input */}
+                            <div className="p-3 border-b border-border">
+                              <Input
+                                placeholder="Change members..."
+                                value={memberSearchQuery}
+                                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                                className="h-9 text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
                             </div>
-                          )}
-                        </div>
+
+                            <div className="max-h-[400px] overflow-y-auto p-2">
+                              {/* Current Members */}
+                              {(project.members || []).map((memberName) => {
+                                const member = TEAM_MEMBERS.find(m => m.fullName === memberName);
+                                if (!member) return null;
+                                
+                                const isProjectLead = project.owner === memberName;
+                                const matchesSearch = memberSearchQuery === '' || 
+                                  member.fullName.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+                                  member.name.toLowerCase().includes(memberSearchQuery.toLowerCase());
+                                
+                                if (!matchesSearch) return null;
+
+                                return (
+                                  <div
+                                    key={member.id}
+                                    className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newMembers = (project.members || []).filter(m => m !== memberName);
+                                      updateProject(project.id, { ...project, members: newMembers });
+                                    }}
+                                  >
+                                    <Checkbox checked={true} className="pointer-events-none" />
+                                    <div 
+                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                      style={{ backgroundColor: member.avatarColor }}
+                                    >
+                                      {member.fullName.charAt(0)}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="text-sm">{member.name}</div>
+                                      {isProjectLead && (
+                                        <div className="text-xs text-muted-foreground">Project lead</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {/* Section Header */}
+                              <div className="px-2 py-2 text-xs font-semibold text-muted-foreground mt-2">
+                                Users from the project team
+                              </div>
+
+                              {/* Available Team Members (not already added) */}
+                              {TEAM_MEMBERS.filter(member => 
+                                !(project.members || []).includes(member.fullName) &&
+                                (memberSearchQuery === '' || 
+                                  member.fullName.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+                                  member.name.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                              ).map((member) => (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newMembers = [...(project.members || []), member.fullName];
+                                    updateProject(project.id, { ...project, members: newMembers });
+                                  }}
+                                >
+                                  <Checkbox checked={false} className="pointer-events-none" />
+                                  <div 
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                                    style={{ backgroundColor: member.avatarColor }}
+                                  >
+                                    {member.fullName.charAt(0)}
+                                  </div>
+                                  <span className="text-sm">{member.name}</span>
+                                </div>
+                              ))}
+
+                              {/* New User Section */}
+                              <div className="px-2 py-2 text-xs font-semibold text-muted-foreground mt-2">
+                                New user
+                              </div>
+                              <div
+                                className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer text-blue-400"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement invite user functionality
+                                  console.log('Invite user clicked');
+                                }}
+                              >
+                                <Send className="h-4 w-4" />
+                                <span className="text-sm">Invite and add...</span>
+                              </div>
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
@@ -598,7 +720,7 @@ export default function ProjectsPage() {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" side="bottom" sideOffset={5} avoidCollisions={false}>
                             <DropdownMenuItem asChild>
                               <Link href={`/projects/${project.id}`} className="cursor-pointer">
                                 <Eye className="mr-2 h-4 w-4" />
