@@ -341,22 +341,37 @@ export default function ProjectsPage() {
                           const completedTasks = projectTasks.filter(t => t.status === 'delivered').length;
                           const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
                           
+                          // Risk badge styling
+                          const getRiskColor = (risk: string) => {
+                            switch (risk) {
+                              case 'Low': return 'text-green-400';
+                              case 'Medium': return 'text-yellow-400';
+                              case 'High': return 'text-red-400';
+                              default: return 'text-gray-400';
+                            }
+                          };
+                          
+                          // Progress bar color based on completion
+                          const getProgressColor = (percent: number) => {
+                            if (percent >= 75) return 'bg-green-500';
+                            if (percent >= 50) return 'bg-yellow-500';
+                            if (percent >= 25) return 'bg-orange-500';
+                            return 'bg-red-500';
+                          };
+                          
                           return (
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">📈</span>
-                                <span className="text-sm text-muted-foreground">On track</span>
+                            <div className="flex flex-col gap-1.5">
+                              {/* Risk Level */}
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-sm font-medium ${getRiskColor(project.risk)}`}>
+                                  {project.risk} Risk
+                                </span>
                               </div>
+                              {/* Task Completion */}
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">
                                   {totalTasks} task{totalTasks !== 1 ? 's' : ''} • {completionPercent}%
                                 </span>
-                                <div className="flex-1 max-w-[80px] h-1.5 bg-muted rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-blue-500 transition-all"
-                                    style={{ width: `${completionPercent}%` }}
-                                  />
-                                </div>
                               </div>
                             </div>
                           );
