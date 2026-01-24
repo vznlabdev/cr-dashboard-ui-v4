@@ -31,7 +31,7 @@ import {
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
 import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
 import { toast } from "sonner"
@@ -933,6 +933,9 @@ export default function ProjectTasksPage() {
   const projectId = params.id as string
   const { getProjectById } = useData()
 
+  // Refs
+  const titleInputRef = useRef<HTMLInputElement>(null)
+
   // Fetch project from data context (consistent with projects list)
   const project = getProjectById(projectId)
 
@@ -1095,6 +1098,28 @@ export default function ProjectTasksPage() {
       }
     }
   }, [projectId])
+
+  // Keyboard shortcuts for task modal
+  useEffect(() => {
+    if (!isTaskModalOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        handleCreateTask()
+      }
+      
+      // Escape to close (only if no other modals are open)
+      if (e.key === 'Escape' && !showAssetBrowser && !showProjectPicker) {
+        e.preventDefault()
+        closeTaskModal()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isTaskModalOpen, taskFormData, project, showAssetBrowser, showProjectPicker, createMore])
 
   // Save collapse state to localStorage (client-side only)
   const toggleGroupCollapse = (groupId: string) => {
@@ -1283,12 +1308,19 @@ export default function ProjectTasksPage() {
 
   // Create task
   const handleCreateTask = () => {
-    // Validate required field
+    // Validate required fields
     if (!taskFormData.title.trim()) {
       setTaskFormError('Title is required')
       return
     }
 
+    if (!project) {
+      setTaskFormError('Project is required')
+      toast.error('Please select a project')
+      return
+    }
+
+    // Create new task with all form data
     const newTask: Task = {
       id: `task-${Date.now()}`,
       taskGroupId: taskFormData.taskGroupId || '', // Use selected group or ungrouped
@@ -1297,7 +1329,7 @@ export default function ProjectTasksPage() {
       title: taskFormData.title.trim(),
       status: 'submitted', // Always defaults to "Submitted"
       assignee: undefined,
-      dueDate: undefined,
+      dueDate: taskFormData.dueDate || undefined,
       createdDate: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -1307,25 +1339,28 @@ export default function ProjectTasksPage() {
     }
 
     setTasks([...tasks, newTask])
-    toast.success('✓ Task created')
+    toast.success('✓ Task created successfully')
 
-    // If "Create more" is checked, reset form and keep modal open
+    // If "Create more" is checked, reset form but keep context
     if (createMore) {
       setTaskFormData({
         title: '',
         description: '',
-        priority: 'Medium',
-        taskGroupId: '', // Keep empty for next task
+        priority: taskFormData.priority, // Keep priority
+        taskGroupId: taskFormData.taskGroupId, // Keep task group
         designType: '',
-        brand: '',
+        brand: taskFormData.brand, // Keep brand
         dueDate: '',
         targetAudience: '',
         detailedDescription: '',
-        attachments: [] as File[],
       })
-      setTaskGroupQuery('')
+      setTaskGroupQuery(taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || '')
+      setSelectedAssets([]) // Clear attachments
       setTaskFormError('')
-      // Focus back on title input (happens automatically with autoFocus)
+      // Focus title input for next task
+      setTimeout(() => {
+        titleInputRef.current?.focus()
+      }, 0)
     } else {
       closeTaskModal()
     }
@@ -1677,6 +1712,7 @@ export default function ProjectTasksPage() {
               {/* Title Input */}
               <div className="space-y-3">
                 <input
+                  ref={titleInputRef}
                   autoFocus
                   type="text"
                   placeholder="Task title"
@@ -2158,34 +2194,34 @@ export default function ProjectTasksPage() {
             </div>
 
             {/* Footer - Fixed */}
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-800 flex-shrink-0">
-              {/* Left: Create more checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer group">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+              {/* Left: Create More Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={createMore}
                   onChange={(e) => setCreateMore(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 focus:ring-1 bg-gray-800 cursor-pointer"
+                  className="sr-only peer"
                 />
-                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Create more</span>
+                <div className="relative w-9 h-5 bg-gray-300 dark:bg-gray-700 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">Create more</span>
               </label>
 
-              {/* Right: Action buttons */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
+              {/* Right: Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
                   onClick={closeTaskModal}
-                  className="text-xs h-8 px-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-150"
+                  className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleCreateTask}
-                  className="text-xs h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-all duration-150"
+                  className="px-6 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
                 >
                   Create Task
-                  <span className="ml-2 text-[10px] opacity-60">⌘↵</span>
-                </Button>
+                </button>
+                <span className="text-xs text-gray-500">⌘↵</span>
               </div>
             </div>
           </div>
