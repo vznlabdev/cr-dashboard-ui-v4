@@ -1667,7 +1667,7 @@ export default function ProjectTasksPage() {
       }}>
         <DialogContent 
           className={cn(
-            "bg-white dark:bg-[#0d0e14] overflow-hidden transition-all duration-300 border-gray-800 p-0",
+            "bg-white dark:bg-[#0d0e14] overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0",
             isFullscreen 
               ? "w-screen h-screen max-w-none rounded-none" 
               : "w-full max-w-4xl max-h-[90vh] rounded-xl"
@@ -1681,15 +1681,15 @@ export default function ProjectTasksPage() {
         >
           <div className="flex flex-col h-full">
             {/* Header - Fixed */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <FolderKanban className="h-4 w-4 text-muted-foreground" />
-                <DialogTitle className="text-sm font-medium">New Task</DialogTitle>
+                <FolderKanban className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">New Task</DialogTitle>
               </div>
               <button
                 type="button"
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-1.5 hover:bg-gray-800 rounded transition-colors"
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all duration-150"
                 title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               >
                 {isFullscreen ? (
@@ -1801,7 +1801,7 @@ export default function ProjectTasksPage() {
                           <input
                             type="text"
                             placeholder="Search or create task group..."
-                            className="w-full text-xs bg-transparent border border-gray-300 dark:border-gray-700 rounded-md px-2.5 py-1.5 focus:border-blue-500 outline-none"
+                            className="w-full text-xs bg-transparent border border-gray-300 dark:border-gray-700 rounded-md px-2.5 py-1.5 focus:border-blue-500 outline-none placeholder:text-gray-400 transition-all duration-150"
                             value={taskGroupQuery}
                             onChange={(e) => setTaskGroupQuery(e.target.value)}
                             autoFocus
@@ -1824,7 +1824,7 @@ export default function ProjectTasksPage() {
                                 {showCreate && (
                                   <button
                                     type="button"
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-500 border-b border-gray-200 dark:border-gray-700"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-500 border-b border-gray-200 dark:border-gray-700 transition-all duration-150"
                                     onClick={() => {
                                       const groupId = createTaskGroupInline(taskGroupQuery)
                                       if (groupId) {
@@ -1835,14 +1835,14 @@ export default function ProjectTasksPage() {
                                     }}
                                   >
                                     <Plus className="w-3.5 h-3.5" />
-                                    <span className="text-xs">Create "{taskGroupQuery}"</span>
+                                    <span className="text-xs font-medium">Create "{taskGroupQuery}"</span>
                                   </button>
                                 )}
                                 
                                 {/* None Option */}
                                 <button
                                   type="button"
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150"
                                   onClick={() => {
                                     setTaskFormData({ ...taskFormData, taskGroupId: '' })
                                     setShowTaskGroupPicker(false)
@@ -1859,7 +1859,7 @@ export default function ProjectTasksPage() {
                                     <button
                                       key={group.id}
                                       type="button"
-                                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150"
                                       onClick={() => {
                                         setTaskFormData({ ...taskFormData, taskGroupId: group.id })
                                         setShowTaskGroupPicker(false)
@@ -1870,11 +1870,11 @@ export default function ProjectTasksPage() {
                                         className="w-2 h-2 rounded-full flex-shrink-0" 
                                         style={{ backgroundColor: group.color }}
                                       />
-                                      <span className="text-xs text-gray-900 dark:text-white">{group.name}</span>
+                                      <span className="text-xs text-gray-900 dark:text-white font-medium">{group.name}</span>
                                     </button>
                                   ))
                                 ) : !showCreate ? (
-                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <div className="px-3 py-2 text-xs text-gray-500">
                                     No groups found
                                   </div>
                                 ) : null}
@@ -1935,13 +1935,13 @@ export default function ProjectTasksPage() {
 
               {/* Expanded Section */}
               {isExpanded && (
-                <div className="mt-4 space-y-4 border-t border-gray-800 pt-4 animate-in slide-in-from-top duration-200">
+                <div className="mt-4 space-y-4 border-t border-gray-200 dark:border-gray-800 pt-4 animate-in slide-in-from-top duration-200">
                   {/* Design Type & Brand Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Design Type</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Design Type</label>
                       <select 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
                         value={taskFormData.designType}
                         onChange={(e) => setTaskFormData({ ...taskFormData, designType: e.target.value })}
                       >
@@ -1954,9 +1954,9 @@ export default function ProjectTasksPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Brand</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Brand</label>
                       <select 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
                         value={taskFormData.brand}
                         onChange={(e) => setTaskFormData({ ...taskFormData, brand: e.target.value })}
                       >
@@ -1970,18 +1970,18 @@ export default function ProjectTasksPage() {
                   {/* Due Date & Priority Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Due Date</label>
                       <input 
                         type="date" 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
                         value={taskFormData.dueDate}
                         onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Priority</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Priority</label>
                       <select 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
                         value={taskFormData.priority}
                         onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as typeof taskFormData.priority })}
                       >
@@ -2210,14 +2210,16 @@ export default function ProjectTasksPage() {
               {/* Right: Action Buttons */}
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={closeTaskModal}
-                  className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+                  className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleCreateTask}
-                  className="px-6 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+                  className="px-6 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-150 shadow-sm hover:shadow"
                 >
                   Create Task
                 </button>
@@ -2328,8 +2330,8 @@ export default function ProjectTasksPage() {
       
       {/* Project Picker Dialog */}
       <Dialog open={showProjectPicker} onOpenChange={setShowProjectPicker}>
-        <DialogContent className="max-w-2xl">
-          <DialogTitle className="text-sm font-semibold mb-4">Select Project</DialogTitle>
+        <DialogContent className="max-w-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-6">
+          <DialogTitle className="text-sm font-semibold mb-4 text-gray-900 dark:text-white">Select Project</DialogTitle>
           
           {/* Search */}
           <div className="relative mb-4">
@@ -2338,7 +2340,7 @@ export default function ProjectTasksPage() {
               placeholder="Search projects..."
               value={projectQuery}
               onChange={(e) => setProjectQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400 transition-all duration-150"
               autoFocus
             />
           </div>
@@ -2362,7 +2364,7 @@ export default function ProjectTasksPage() {
                     setProjectQuery('')
                     toast.success(`Project "${proj.name}" selected`)
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 text-left"
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-xs font-semibold">{proj.name.charAt(0)}</span>
