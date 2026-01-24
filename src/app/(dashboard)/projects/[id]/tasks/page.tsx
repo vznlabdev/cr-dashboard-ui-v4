@@ -892,6 +892,7 @@ export default function ProjectTasksPage() {
   // Task Group combobox state
   const [taskGroupQuery, setTaskGroupQuery] = useState('')
   const [showTaskGroupDropdown, setShowTaskGroupDropdown] = useState(false)
+  const [showTaskGroupPicker, setShowTaskGroupPicker] = useState(false)
   
   // Modal display state
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -1589,7 +1590,7 @@ export default function ProjectTasksPage() {
                   value={project?.name || "Current Project"}
                 />
                 
-                {/* Task Group */}
+                {/* Task Group - Combobox with Inline Create */}
                 <div className="relative">
                   <PropertyPill
                     icon={
@@ -1603,8 +1604,106 @@ export default function ProjectTasksPage() {
                         ? taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || "None"
                         : "None"
                     }
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setShowTaskGroupPicker(!showTaskGroupPicker)}
                   />
+                  
+                  {/* Task Group Dropdown */}
+                  {showTaskGroupPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowTaskGroupPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        {/* Search/Create Input */}
+                        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                          <input
+                            type="text"
+                            placeholder="Search or create task group..."
+                            className="w-full text-xs bg-transparent border border-gray-300 dark:border-gray-700 rounded-md px-2.5 py-1.5 focus:border-blue-500 outline-none"
+                            value={taskGroupQuery}
+                            onChange={(e) => setTaskGroupQuery(e.target.value)}
+                            autoFocus
+                          />
+                        </div>
+                        
+                        {/* Options List */}
+                        <div className="max-h-60 overflow-auto">
+                          {(() => {
+                            const searchLower = taskGroupQuery.toLowerCase().trim()
+                            const filteredGroups = searchLower === ''
+                              ? taskGroups
+                              : taskGroups.filter(g => g.name.toLowerCase().includes(searchLower))
+                            const exactMatch = taskGroups.find(g => g.name.toLowerCase() === searchLower)
+                            const showCreate = searchLower && !exactMatch
+                            
+                            return (
+                              <>
+                                {/* Create New Option */}
+                                {showCreate && (
+                                  <button
+                                    type="button"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-500 border-b border-gray-200 dark:border-gray-700"
+                                    onClick={() => {
+                                      const groupId = createTaskGroupInline(taskGroupQuery)
+                                      if (groupId) {
+                                        setTaskFormData({ ...taskFormData, taskGroupId: groupId })
+                                      }
+                                      setShowTaskGroupPicker(false)
+                                      setTaskGroupQuery('')
+                                    }}
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span className="text-xs">Create "{taskGroupQuery}"</span>
+                                  </button>
+                                )}
+                                
+                                {/* None Option */}
+                                <button
+                                  type="button"
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  onClick={() => {
+                                    setTaskFormData({ ...taskFormData, taskGroupId: '' })
+                                    setShowTaskGroupPicker(false)
+                                    setTaskGroupQuery('')
+                                  }}
+                                >
+                                  <X className="w-3.5 h-3.5 text-gray-400" />
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                                </button>
+                                
+                                {/* Existing Groups */}
+                                {filteredGroups.length > 0 ? (
+                                  filteredGroups.map(group => (
+                                    <button
+                                      key={group.id}
+                                      type="button"
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+                                      onClick={() => {
+                                        setTaskFormData({ ...taskFormData, taskGroupId: group.id })
+                                        setShowTaskGroupPicker(false)
+                                        setTaskGroupQuery('')
+                                      }}
+                                    >
+                                      <span 
+                                        className="w-2 h-2 rounded-full flex-shrink-0" 
+                                        style={{ backgroundColor: group.color }}
+                                      />
+                                      <span className="text-xs text-gray-900 dark:text-white">{group.name}</span>
+                                    </button>
+                                  ))
+                                ) : !showCreate ? (
+                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                    No groups found
+                                  </div>
+                                ) : null}
+                              </>
+                            )
+                          })()}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 {/* Priority */}
