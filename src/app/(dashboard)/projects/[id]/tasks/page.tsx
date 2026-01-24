@@ -987,15 +987,70 @@ export default function ProjectTasksPage() {
   const [linkAssetsExpanded, setLinkAssetsExpanded] = useState(false)
   
   // DAM Asset Browser state
-  const [isDamModalOpen, setIsDamModalOpen] = useState(false)
-  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
+  const [showAssetBrowser, setShowAssetBrowser] = useState(false)
+  const [assetQuery, setAssetQuery] = useState('')
+  const [selectedAssets, setSelectedAssets] = useState<Array<{
+    id: string
+    name: string
+    thumbnail: string
+    type: string
+    projectName: string
+    role?: 'OUTPUT' | 'INSPIRATION' | 'SOURCE_MATERIAL' | 'ORIGINAL'
+  }>>([])
   
   // Mock assets for DAM browser (in production, this would come from API)
   const mockDamAssets = [
-    { id: 'asset-1', name: 'Hero Banner.png', type: 'image', projectName: 'Brand Refresh', thumbnail: '/placeholder.svg' },
-    { id: 'asset-2', name: 'Logo Variations.ai', type: 'vector', projectName: 'Brand Identity', thumbnail: '/placeholder.svg' },
-    { id: 'asset-3', name: 'Product Photo.jpg', type: 'image', projectName: 'Product Launch', thumbnail: '/placeholder.svg' },
+    { id: 'asset-1', name: 'Hero Banner.png', type: 'image', projectName: 'Brand Refresh', thumbnail: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop' },
+    { id: 'asset-2', name: 'Logo Variations.ai', type: 'vector', projectName: 'Brand Identity', thumbnail: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=400&fit=crop' },
+    { id: 'asset-3', name: 'Product Photo.jpg', type: 'image', projectName: 'Product Launch', thumbnail: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop' },
+    { id: 'asset-4', name: 'Social Post.png', type: 'image', projectName: 'Social Campaign', thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=400&fit=crop' },
+    { id: 'asset-5', name: 'Brand Guidelines.pdf', type: 'document', projectName: 'Brand Refresh', thumbnail: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=400&fit=crop' },
+    { id: 'asset-6', name: 'Product Sheet.pdf', type: 'document', projectName: 'Product Launch', thumbnail: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=400&h=400&fit=crop' },
+    { id: 'asset-7', name: 'Email Header.png', type: 'image', projectName: 'Email Campaign', thumbnail: 'https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=400&h=400&fit=crop' },
+    { id: 'asset-8', name: 'Package Design.ai', type: 'vector', projectName: 'Packaging', thumbnail: 'https://images.unsplash.com/photo-1580870069867-74c57ee1bb07?w=400&h=400&fit=crop' },
+    { id: 'asset-9', name: 'Trade Show Banner.psd', type: 'image', projectName: 'Trade Show', thumbnail: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=400&fit=crop' },
+    { id: 'asset-10', name: 'App Icon.png', type: 'image', projectName: 'App Launch', thumbnail: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=400&fit=crop' },
+    { id: 'asset-11', name: 'Website Mockup.fig', type: 'design', projectName: 'Website Redesign', thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=400&fit=crop' },
+    { id: 'asset-12', name: 'Video Thumbnail.jpg', type: 'image', projectName: 'Video Campaign', thumbnail: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=400&h=400&fit=crop' },
   ]
+  
+  // Asset management functions
+  const toggleAssetSelection = (asset: typeof mockDamAssets[0]) => {
+    setSelectedAssets(prev => {
+      const exists = prev.find(a => a.id === asset.id)
+      if (exists) {
+        return prev.filter(a => a.id !== asset.id)
+      } else {
+        return [...prev, { ...asset, role: 'OUTPUT' as const }] // Default role
+      }
+    })
+  }
+  
+  const updateAssetRole = (assetId: string, role: string) => {
+    setSelectedAssets(prev => 
+      prev.map(asset => 
+        asset.id === assetId 
+          ? { ...asset, role: role as typeof asset.role }
+          : asset
+      )
+    )
+  }
+  
+  const removeAsset = (assetId: string) => {
+    setSelectedAssets(prev => prev.filter(asset => asset.id !== assetId))
+  }
+  
+  // Filter assets based on search query
+  const filteredDamAssets = useMemo(() => {
+    const query = assetQuery.toLowerCase().trim()
+    if (!query) return mockDamAssets
+    
+    return mockDamAssets.filter(asset => 
+      asset.name.toLowerCase().includes(query) ||
+      asset.projectName.toLowerCase().includes(query) ||
+      asset.type.toLowerCase().includes(query)
+    )
+  }, [assetQuery])
 
   // Load view preference from URL or localStorage
   useEffect(() => {
@@ -1155,6 +1210,9 @@ export default function ProjectTasksPage() {
     setTaskFormError('')
     setTaskGroupQuery('')
     setIsExpanded(false)
+    setSelectedAssets([])
+    setShowAssetBrowser(false)
+    setAssetQuery('')
     setIsTaskModalOpen(true)
   }
 
@@ -1178,6 +1236,9 @@ export default function ProjectTasksPage() {
     setRequestDetailsExpanded(true)
     setAttachmentsExpanded(true)
     setLinkAssetsExpanded(false)
+    setSelectedAssets([])
+    setShowAssetBrowser(false)
+    setAssetQuery('')
   }
 
   // Create task group inline (for combobox)
@@ -1983,84 +2044,111 @@ export default function ProjectTasksPage() {
                   </div>
 
                   {/* Request Details Collapsible */}
-                  <div className="border border-gray-800 rounded-md">
+                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
                     <button 
                       type="button" 
                       onClick={() => setRequestDetailsExpanded(!requestDetailsExpanded)} 
-                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
                     >
-                      <span className="text-xs font-medium text-white">Request Details</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Request Details</span>
                       {requestDetailsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </button>
                     {requestDetailsExpanded && (
-                      <div className="p-3 pt-0 space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1.5">Target Audience</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g., B2B decision makers, Gen Z consumers" 
-                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
-                            value={taskFormData.targetAudience}
-                            onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1.5">Detailed Description</label>
-                          <textarea 
-                            rows={3} 
-                            placeholder="Describe your creative request in detail..." 
-                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none resize-none transition-all duration-150"
-                            value={taskFormData.detailedDescription}
-                            onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
-                          />
-                        </div>
+                      <div className="px-4 pb-4 space-y-3">
+                        <input 
+                          type="text" 
+                          placeholder="Target Audience (e.g., B2B decision makers)" 
+                          className="w-full text-sm bg-transparent border-b border-gray-300 dark:border-gray-700 focus:border-blue-500 outline-none py-2 placeholder:text-gray-400"
+                          value={taskFormData.targetAudience}
+                          onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
+                        />
+                        <textarea 
+                          rows={3} 
+                          placeholder="Detailed description, requirements, specs..." 
+                          className="w-full text-sm bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg focus:border-blue-500 outline-none p-3 resize-none placeholder:text-gray-400"
+                          value={taskFormData.detailedDescription}
+                          onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
+                        />
                       </div>
                     )}
                   </div>
 
                   {/* Attachments Collapsible */}
-                  <div className="border border-gray-800 rounded-md">
+                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
                     <button 
                       type="button" 
                       onClick={() => setAttachmentsExpanded(!attachmentsExpanded)} 
-                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
                     >
-                      <span className="text-xs font-medium text-white">Attachments</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Attachments</span>
                       {attachmentsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </button>
                     {attachmentsExpanded && (
-                      <div className="p-3 pt-0">
-                        <div className="border-2 border-dashed border-gray-700 rounded-md p-6 text-center hover:border-blue-500 transition-all duration-150 cursor-pointer">
-                          <div className="flex flex-col items-center gap-1.5">
-                            <Upload className="w-6 h-6 text-gray-400" />
-                            <p className="text-xs text-gray-400">Click to upload or drag and drop</p>
-                            <p className="text-[10px] text-gray-500">PNG, JPG, PDF, AI, PSD up to 50MB</p>
-                          </div>
+                      <div className="px-4 pb-4">
+                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer">
+                          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, PDF, AI, PSD up to 50MB</p>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Link Assets from DAM Collapsible */}
-                  <div className="border border-gray-800 rounded-md">
+                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
                     <button 
                       type="button" 
                       onClick={() => setLinkAssetsExpanded(!linkAssetsExpanded)} 
-                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
                     >
-                      <span className="text-xs font-medium text-white">Link Assets from DAM</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">Link Assets</span>
+                        {selectedAssets.length > 0 && (
+                          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">{selectedAssets.length}</span>
+                        )}
+                      </div>
                       {linkAssetsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </button>
                     {linkAssetsExpanded && (
-                      <div className="p-3 pt-0">
+                      <div className="px-4 pb-4 space-y-3">
                         <button 
-                          type="button" 
-                          className="w-full border border-gray-700 rounded-md p-3 hover:bg-gray-800 transition-all duration-150 text-xs text-gray-300 flex items-center justify-center gap-1.5"
+                          type="button"
+                          onClick={() => setShowAssetBrowser(true)}
+                          className="w-full border border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2"
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          Browse Assets
+                          <Folder className="w-4 h-4" />
+                          Browse Assets from DAM
                         </button>
-                        <p className="text-[10px] text-gray-500 mt-1.5 text-center">Link existing assets as outputs, inspiration, or source material</p>
+                        
+                        {selectedAssets.length > 0 && (
+                          <div className="space-y-2">
+                            {selectedAssets.map(asset => (
+                              <div key={asset.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <img src={asset.thumbnail} alt={asset.name} className="w-10 h-10 rounded object-cover" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{asset.name}</p>
+                                  <select
+                                    value={asset.role || 'OUTPUT'}
+                                    onChange={(e) => updateAssetRole(asset.id, e.target.value)}
+                                    className="text-xs bg-transparent border-none text-gray-500 outline-none mt-0.5 cursor-pointer"
+                                  >
+                                    <option value="OUTPUT">Output</option>
+                                    <option value="INSPIRATION">Inspiration</option>
+                                    <option value="SOURCE_MATERIAL">Source Material</option>
+                                    <option value="ORIGINAL">Original</option>
+                                  </select>
+                                </div>
+                                <button 
+                                  type="button"
+                                  onClick={() => removeAsset(asset.id)} 
+                                  className="text-gray-400 hover:text-red-500 transition"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2104,7 +2192,103 @@ export default function ProjectTasksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* DAM Asset Browser Modal - REMOVED (not needed for simple tasks) */}
+      {/* DAM Asset Browser Modal */}
+      <Dialog open={showAssetBrowser} onOpenChange={setShowAssetBrowser}>
+        <DialogContent className="max-w-4xl max-h-[85vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-0 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">Select Assets from DAM</DialogTitle>
+            <button 
+              onClick={() => setShowAssetBrowser(false)} 
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Search and Filters */}
+          <div className="px-6 py-4 flex-shrink-0">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  placeholder="Search assets..."
+                  value={assetQuery}
+                  onChange={(e) => setAssetQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
+                  autoFocus
+                />
+              </div>
+              <select className="text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white">
+                <option>All Types</option>
+                <option>Images</option>
+                <option>Vectors</option>
+                <option>Documents</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Assets Grid */}
+          <div className="px-6 overflow-y-auto flex-1">
+            <div className="grid grid-cols-4 gap-3 pb-4">
+              {filteredDamAssets.map(asset => (
+                <div
+                  key={asset.id}
+                  onClick={() => toggleAssetSelection(asset)}
+                  className={cn(
+                    "relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition",
+                    selectedAssets.find(a => a.id === asset.id)
+                      ? "border-blue-500 ring-2 ring-blue-500/50"
+                      : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                  )}
+                >
+                  <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
+                  {selectedAssets.find(a => a.id === asset.id) && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                    <p className="text-xs text-white truncate font-medium">{asset.name}</p>
+                    <p className="text-[10px] text-gray-300 truncate">{asset.projectName}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {filteredDamAssets.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Search className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No assets found</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {selectedAssets.length} asset{selectedAssets.length !== 1 ? 's' : ''} selected
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowAssetBrowser(false)}
+                className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => setShowAssetBrowser(false)}
+                disabled={selectedAssets.length === 0}
+                className="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add {selectedAssets.length > 0 ? selectedAssets.length : ''} Asset{selectedAssets.length !== 1 ? 's' : ''}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Project Picker Dialog */}
       <Dialog open={showProjectPicker} onOpenChange={setShowProjectPicker}>
