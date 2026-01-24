@@ -71,6 +71,7 @@ export interface Task {
   projectId: string;    // denormalized for quick queries
   workstream: 'creator' | 'legal' | 'insurance' | 'general';
   title: string;
+  description?: string;
   status: TaskStatus;
   assignee?: string;
   dueDate?: string;

@@ -270,8 +270,8 @@ export default function TaskDetailPage() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                {task.title}
+              <p className="text-sm text-muted-foreground">
+                {task.description || 'No description provided'}
               </p>
               
               {taskGroup?.description && (

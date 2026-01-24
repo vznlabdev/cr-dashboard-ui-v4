@@ -599,7 +599,11 @@ export default function ProjectsPage() {
                         </DropdownMenu>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
+                        <DropdownMenu onOpenChange={(open) => {
+                          if (!open) {
+                            setMemberSearchQuery('');
+                          }
+                        }}>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"

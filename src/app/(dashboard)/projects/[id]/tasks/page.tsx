@@ -21,6 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { notFound, useParams, useRouter } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
@@ -30,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -139,6 +146,7 @@ interface FlatKanbanBoardProps {
   searchQuery: string
   projectId: string
   project: Project | undefined
+  onDeleteTask: (taskId: string) => void
 }
 
 function FlatKanbanBoard({
@@ -148,6 +156,7 @@ function FlatKanbanBoard({
   searchQuery,
   projectId,
   project,
+  onDeleteTask,
 }: FlatKanbanBoardProps) {
   const router = useRouter()
   
@@ -260,7 +269,7 @@ function FlatKanbanBoard({
         )}
       >
         <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
-          {/* Header: Brand/Company + Priority */}
+          {/* Header: Brand/Company + Priority + Menu */}
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {/* Company Avatar */}
@@ -285,10 +294,50 @@ function FlatKanbanBoard({
             )}>
               {priority.label}
             </span>
+            
+            {/* Three-dot menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger 
+                asChild
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700 rounded transition-all"
+                  title="More options"
+                >
+                  <MoreVertical className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    router.push(`/projects/${projectId}/tasks/${task.id}`)
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  <span>Edit task</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1" />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteTask(task.id)
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete task</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Task Title */}
-          <h3 className="mb-2.5 text-sm font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors">
+          <h3 
+            className="mb-2.5 text-sm font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors"
+          >
             {task.title}
           </h3>
 
@@ -601,6 +650,7 @@ interface StreamViewProps {
   selectedStatus: string
   onStatusSelect: (status: string) => void
   projectId: string
+  onDeleteTask: (taskId: string) => void
 }
 
 function StreamView({ 
@@ -611,7 +661,9 @@ function StreamView({
   selectedStatus,
   onStatusSelect,
   projectId,
+  onDeleteTask,
 }: StreamViewProps) {
+  const router = useRouter()
   // Apply filters
   const filteredTasks = useMemo(() => {
     let filtered = [...tasks]
@@ -768,7 +820,7 @@ function StreamView({
           {sortedTasks.map((task) => {
             const taskGroup = getTaskGroup(task.taskGroupId)
             return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
+              <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     {/* Workstream indicator */}
@@ -783,9 +835,49 @@ function StreamView({
                             {taskGroup?.name && <>{taskGroup.name} • </>}{task.workstream}
                           </p>
                         </div>
-                        <Badge variant={getStatusVariant(task.status)} className="shrink-0">
-                          {task.status.replace('_', ' ')}
-                        </Badge>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={getStatusVariant(task.status)}>
+                            {task.status.replace('_', ' ')}
+                          </Badge>
+                          
+                          {/* Three-dot menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger 
+                              asChild
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all"
+                                title="More options"
+                              >
+                                <MoreVertical className="h-4 w-4 text-gray-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/projects/${projectId}/tasks/${task.id}`)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span>Edit task</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="my-1" />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onDeleteTask(task.id)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Delete task</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
 
                       {/* Task metadata */}
@@ -894,6 +986,59 @@ const ProjectPreviewCard = ({ project }: ProjectPreviewCardProps) => {
   )
 }
 
+// Team Members Data
+const TEAM_MEMBERS = [
+  { id: 'jgordon', name: 'jgordon', fullName: 'Jeff Gordon', avatarColor: '#ef4444' },
+  { id: 'abdul.qadeer', name: 'abdul.qadeer', fullName: 'Abdul Qadeer', avatarColor: '#a855f7' },
+  { id: 'asad', name: 'asad', fullName: 'Asad', avatarColor: '#06b6d4' },
+  { id: 'dev.vznlab', name: 'dev.vznlab', fullName: 'Dev Vznlab', avatarColor: '#8b5cf6' },
+  { id: 'husnain.raza', name: 'husnain.raza', fullName: 'Husnain Raza', avatarColor: '#ec4899' },
+  { id: 'jg', name: 'jg', fullName: 'JG', avatarColor: '#78350f' },
+  { id: 'ryan', name: 'ryan', fullName: 'Ryan', avatarColor: '#b45309' },
+  { id: 'zlane', name: 'zlane', fullName: 'Zlane', avatarColor: '#10b981' },
+]
+
+// Priority Icon Component
+const PriorityIcon = ({ priority, className = "w-3.5 h-3.5" }: { priority: string, className?: string }) => {
+  if (priority === 'Urgent') {
+    return (
+      <svg className={className} viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="8" className="fill-red-500" />
+        <rect x="7" y="3" width="2" height="6" rx="1" className="fill-white" />
+        <rect x="7" y="10.5" width="2" height="2" rx="1" className="fill-white" />
+      </svg>
+    )
+  }
+  if (priority === 'High') {
+    return (
+      <svg className={className} viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="4" height="12" rx="1" className="fill-orange-500" />
+        <rect x="6" y="2" width="4" height="14" rx="1" className="fill-orange-500" />
+        <rect x="11" y="0" width="4" height="16" rx="1" className="fill-orange-500" />
+      </svg>
+    )
+  }
+  if (priority === 'Medium') {
+    return (
+      <svg className={className} viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="7" width="4" height="9" rx="1" className="fill-yellow-600" />
+        <rect x="6" y="4" width="4" height="12" rx="1" className="fill-yellow-600" />
+        <rect x="11" y="7" width="4" height="9" rx="1" className="fill-gray-300 dark:fill-gray-700" />
+      </svg>
+    )
+  }
+  if (priority === 'Low') {
+    return (
+      <svg className={className} viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="10" width="4" height="6" rx="1" className="fill-gray-400" />
+        <rect x="6" y="10" width="4" height="6" rx="1" className="fill-gray-300 dark:fill-gray-700" />
+        <rect x="11" y="10" width="4" height="6" rx="1" className="fill-gray-300 dark:fill-gray-700" />
+      </svg>
+    )
+  }
+  return null
+}
+
 // Property Pill Component for metadata bar
 interface PropertyPillProps {
   icon?: React.ReactNode
@@ -964,6 +1109,7 @@ export default function ProjectTasksPage() {
     designType: '',
     brand: '',
     dueDate: '',
+    assignee: '' as string,
     targetAudience: '',
     detailedDescription: '',
   })
@@ -979,8 +1125,22 @@ export default function ProjectTasksPage() {
   const [showProjectPicker, setShowProjectPicker] = useState(false)
   const [projectQuery, setProjectQuery] = useState('')
   
+  // Design Type picker state
+  const [showDesignTypePicker, setShowDesignTypePicker] = useState(false)
+  
+  // Priority picker state
+  const [showPriorityPicker, setShowPriorityPicker] = useState(false)
+  
+  // Due Date picker state
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false)
+  
+  // Brand picker state
+  const [showBrandPicker, setShowBrandPicker] = useState(false)
+  
+  // Assignee picker state
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false)
+  
   // Modal display state
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [createMore, setCreateMore] = useState(false)
   
   // Expandable sections state
@@ -1229,6 +1389,7 @@ export default function ProjectTasksPage() {
       designType: '',
       brand: '',
       dueDate: '',
+      assignee: '',
       targetAudience: '',
       detailedDescription: '',
     })
@@ -1251,6 +1412,7 @@ export default function ProjectTasksPage() {
       designType: '',
       brand: '',
       dueDate: '',
+      assignee: '',
       targetAudience: '',
       detailedDescription: '',
     })
@@ -1327,8 +1489,9 @@ export default function ProjectTasksPage() {
       projectId: projectId,
       workstream: 'general',
       title: taskFormData.title.trim(),
+      description: taskFormData.description || undefined,
       status: 'submitted', // Always defaults to "Submitted"
-      assignee: undefined,
+      assignee: taskFormData.assignee || undefined,
       dueDate: taskFormData.dueDate || undefined,
       createdDate: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
@@ -1351,6 +1514,7 @@ export default function ProjectTasksPage() {
         designType: '',
         brand: taskFormData.brand, // Keep brand
         dueDate: '',
+        assignee: taskFormData.assignee, // Keep assignee
         targetAudience: '',
         detailedDescription: '',
       })
@@ -1363,6 +1527,18 @@ export default function ProjectTasksPage() {
       }, 0)
     } else {
       closeTaskModal()
+    }
+  }
+
+  // Delete task handler
+  const handleDeleteTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+      setTasks(tasks.filter(t => t.id !== taskId))
+      toast.success('Task deleted successfully')
     }
   }
 
@@ -1555,6 +1731,7 @@ export default function ProjectTasksPage() {
             selectedStatus={selectedStatus}
             onStatusSelect={setSelectedStatus}
             projectId={projectId}
+            onDeleteTask={handleDeleteTask}
           />
         )}
       </PageContainer>
@@ -1569,6 +1746,7 @@ export default function ProjectTasksPage() {
             searchQuery={searchQuery}
             projectId={projectId}
             project={project}
+            onDeleteTask={handleDeleteTask}
           />
         </div>
       )}
@@ -1666,12 +1844,7 @@ export default function ProjectTasksPage() {
         if (!open) closeTaskModal()
       }}>
         <DialogContent 
-          className={cn(
-            "bg-white dark:bg-[#0d0e14] overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0",
-            isFullscreen 
-              ? "w-screen h-screen max-w-none rounded-none" 
-              : "w-full max-w-4xl max-h-[90vh] rounded-xl"
-          )}
+          className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-4xl max-h-[90vh] rounded-xl"
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -1683,32 +1856,104 @@ export default function ProjectTasksPage() {
             {/* Header - Fixed */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <FolderKanban className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">New Task</DialogTitle>
+                {/* Pill-style Breadcrumb */}
+                <div className="flex items-center gap-2">
+                  {/* New Task Pill */}
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                    <FolderKanban className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <DialogTitle className="text-xs font-semibold text-blue-600 dark:text-blue-400">New Task</DialogTitle>
+                  </div>
+                  
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  
+                  {/* Brand Pill - With Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowBrandPicker(!showBrandPicker)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-150 cursor-pointer group"
+                    >
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        {taskFormData.brand || "Select Brand"}
+                      </span>
+                    </button>
+                    
+                    {/* Brand Picker Dropdown */}
+                    {showBrandPicker && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setShowBrandPicker(false)}
+                        />
+                        <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                          <div className="p-1">
+                            {/* Clear Option */}
+                            <button
+                              type="button"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, brand: '' })
+                                setShowBrandPicker(false)
+                              }}
+                            >
+                              <X className="w-3.5 h-3.5 text-gray-400" />
+                              <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                            </button>
+                            
+                            {/* Brand Options */}
+                            {['Acme Corporation', 'TechStart Inc'].map(brand => (
+                              <button
+                                key={brand}
+                                type="button"
+                                className={cn(
+                                  "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                  taskFormData.brand === brand 
+                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                    : "text-gray-900 dark:text-white"
+                                )}
+                                onClick={() => {
+                                  setTaskFormData({ ...taskFormData, brand })
+                                  setShowBrandPicker(false)
+                                }}
+                              >
+                                <span className="text-xs font-medium">{brand}</span>
+                                {taskFormData.brand === brand && <Check className="w-3 h-3" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  
+                  {/* Project Pill */}
+                  <button
+                    type="button"
+                    onClick={() => setShowProjectPicker(true)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-150 cursor-pointer group",
+                      !project 
+                        ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30" 
+                        : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500"
+                    )}
+                  >
+                    <span className={cn(
+                      "text-xs font-medium",
+                      !project 
+                        ? "text-red-600 dark:text-red-400" 
+                        : "text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                    )}>
+                      {project?.name || "Select Project"}
+                    </span>
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all duration-150"
-                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-              >
-                {isFullscreen ? (
-                  <X className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                )}
-              </button>
             </div>
 
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-6 py-4"
-
-
-
->
-
+            {/* Title and Description - Fixed */}
+            <div className="px-6 py-4 flex-shrink-0">
               {/* Title Input */}
               <div className="space-y-3">
                 <input
@@ -1751,25 +1996,304 @@ export default function ProjectTasksPage() {
                   <p className="text-xs text-red-500">{taskFormError}</p>
                 )}
               </div>
+            </div>
 
+            {/* Properties Bar - Fixed */}
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
               {/* Properties Bar - Metadata Pills */}
-              <div className="flex flex-wrap items-center gap-2 mt-4">
-                {/* Assignee */}
-                <PropertyPill
-                  icon={<User className="w-3.5 h-3.5" />}
-                  label="Assignee"
-                  value="None"
-                  onClick={() => {/* TODO: Open assignee picker */}}
-                />
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Design Type - FIRST - HIGH PRIORITY */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<Pencil className="w-3.5 h-3.5" />}
+                    label="Type"
+                    value={taskFormData.designType || "None"}
+                    onClick={() => setShowDesignTypePicker(!showDesignTypePicker)}
+                  />
+                  
+                  {/* Design Type Picker Dropdown */}
+                  {showDesignTypePicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowDesignTypePicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-60 overflow-auto">
+                          {/* None Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, designType: '' })
+                              setShowDesignTypePicker(false)
+                            }}
+                          >
+                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                          </button>
+                          
+                          {/* Design Type Options */}
+                          {[
+                            'Social Media',
+                            'Email',
+                            'Web',
+                            'Print',
+                            'Video',
+                            'Packaging',
+                            'Presentation',
+                            'Infographic',
+                            'Banner',
+                            'Logo'
+                          ].map(type => (
+                            <button
+                              key={type}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.designType === type 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, designType: type })
+                                setShowDesignTypePicker(false)
+                              }}
+                            >
+                              <span className="text-xs font-medium">{type}</span>
+                              {taskFormData.designType === type && <Check className="w-3 h-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
                 
-                {/* Project - Click to Select */}
-                <PropertyPill
-                  icon={<Folder className="w-3.5 h-3.5" />}
-                  label="Project"
-                  value={project?.name || "Select project"}
-                  onClick={() => setShowProjectPicker(true)}
-                  required={!project}
-                />
+                {/* Assignee - With Dropdown Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={
+                      taskFormData.assignee && TEAM_MEMBERS.find(m => m.fullName === taskFormData.assignee) 
+                        ? <div 
+                            className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-semibold"
+                            style={{ backgroundColor: TEAM_MEMBERS.find(m => m.fullName === taskFormData.assignee)?.avatarColor }}
+                          >
+                            {taskFormData.assignee.charAt(0)}
+                          </div>
+                        : <User className="w-3.5 h-3.5" />
+                    }
+                    label="Assignee"
+                    value={taskFormData.assignee || "None"}
+                    onClick={() => setShowAssigneePicker(!showAssigneePicker)}
+                  />
+                  
+                  {/* Assignee Picker Dropdown */}
+                  {showAssigneePicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowAssigneePicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-60 overflow-auto">
+                          {/* None Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, assignee: '' })
+                              setShowAssigneePicker(false)
+                            }}
+                          >
+                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Unassigned</span>
+                          </button>
+                          
+                          {/* Team Members */}
+                          {TEAM_MEMBERS.map(member => (
+                            <button
+                              key={member.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.assignee === member.fullName 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, assignee: member.fullName })
+                                setShowAssigneePicker(false)
+                              }}
+                            >
+                              <div 
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                                style={{ backgroundColor: member.avatarColor }}
+                              >
+                                {member.fullName.charAt(0)}
+                              </div>
+                              <span className="text-xs font-medium">{member.fullName}</span>
+                              {taskFormData.assignee === member.fullName && <Check className="w-3 h-3 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Priority - With Dropdown Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<PriorityIcon priority={taskFormData.priority} />}
+                    label="Priority"
+                    value={taskFormData.priority}
+                    onClick={() => setShowPriorityPicker(!showPriorityPicker)}
+                  />
+                  
+                  {/* Priority Picker Dropdown */}
+                  {showPriorityPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowPriorityPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1">
+                          {/* No Priority Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded text-gray-500 dark:text-gray-400"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, priority: 'Medium' })
+                              setShowPriorityPicker(false)
+                            }}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-3.5 h-3.5" />
+                              <span className="text-xs font-medium">No priority</span>
+                            </div>
+                          </button>
+                          
+                          {/* Priority Options */}
+                          {[
+                            { value: 'Urgent' },
+                            { value: 'High' },
+                            { value: 'Medium' },
+                            { value: 'Low' }
+                          ].map(priority => (
+                            <button
+                              key={priority.value}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.priority === priority.value 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, priority: priority.value as typeof taskFormData.priority })
+                                setShowPriorityPicker(false)
+                              }}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <PriorityIcon priority={priority.value} />
+                                <span className="text-xs font-medium">{priority.value}</span>
+                              </div>
+                              {taskFormData.priority === priority.value && <Check className="w-3 h-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Due Date - With Date Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<Calendar className="w-3.5 h-3.5" />}
+                    label="Due"
+                    value={taskFormData.dueDate || "None"}
+                    onClick={() => setShowDueDatePicker(!showDueDatePicker)}
+                  />
+                  
+                  {/* Due Date Picker Dropdown */}
+                  {showDueDatePicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowDueDatePicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-80 overflow-auto">
+                          {/* Clear Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, dueDate: '' })
+                              setShowDueDatePicker(false)
+                            }}
+                          >
+                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Clear date</span>
+                          </button>
+                          
+                          {/* Quick Date Options */}
+                          {[
+                            { label: 'Today', days: 0 },
+                            { label: 'Tomorrow', days: 1 },
+                            { label: 'In 3 days', days: 3 },
+                            { label: 'In 1 week', days: 7 },
+                            { label: 'In 2 weeks', days: 14 },
+                            { label: 'In 1 month', days: 30 }
+                          ].map(option => {
+                            const date = new Date()
+                            date.setDate(date.getDate() + option.days)
+                            const dateStr = date.toISOString().split('T')[0]
+                            
+                            return (
+                              <button
+                                key={option.label}
+                                type="button"
+                                className={cn(
+                                  "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                  taskFormData.dueDate === dateStr 
+                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                    : "text-gray-900 dark:text-white"
+                                )}
+                                onClick={() => {
+                                  setTaskFormData({ ...taskFormData, dueDate: dateStr })
+                                  setShowDueDatePicker(false)
+                                }}
+                              >
+                                <span className="text-xs font-medium">{option.label}</span>
+                                {taskFormData.dueDate === dateStr && <Check className="w-3 h-3" />}
+                              </button>
+                            )
+                          })}
+                          
+                          {/* Custom Date Option */}
+                          <div className="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
+                            <div className="px-3 py-2">
+                              <label className="text-xs text-gray-600 dark:text-gray-400 mb-1.5 block">Custom date</label>
+                              <input
+                                type="date"
+                                value={taskFormData.dueDate || ''}
+                                onChange={(e) => {
+                                  setTaskFormData({ ...taskFormData, dueDate: e.target.value })
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
                 
                 {/* Task Group - Combobox with Inline Create */}
                 <div className="relative">
@@ -1887,41 +2411,6 @@ export default function ProjectTasksPage() {
                   )}
                 </div>
                 
-                {/* Priority */}
-                <PropertyPill
-                  icon={
-                    taskFormData.priority === 'Urgent' ? <span className="text-red-500">🔴</span> :
-                    taskFormData.priority === 'High' ? <span className="text-orange-500">🟠</span> :
-                    taskFormData.priority === 'Medium' ? <span className="text-yellow-500">🟡</span> :
-                    <span className="text-green-500">🟢</span>
-                  }
-                  label="Priority"
-                  value={taskFormData.priority}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                />
-                
-                {/* Due Date */}
-                <PropertyPill
-                  icon={<Calendar className="w-3.5 h-3.5" />}
-                  label="Due"
-                  value={taskFormData.dueDate || "None"}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                />
-                
-                {/* Brand */}
-                <PropertyPill
-                  label="Brand"
-                  value={taskFormData.brand || "None"}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                />
-                
-                {/* Design Type */}
-                <PropertyPill
-                  label="Type"
-                  value={taskFormData.designType || "None"}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                />
-                
                 {/* More/Less Toggle */}
                 <button
                   type="button"
@@ -1932,153 +2421,12 @@ export default function ProjectTasksPage() {
                   {isExpanded ? 'Less' : 'More'}
                 </button>
               </div>
+            </div>
 
-              {/* Expanded Section */}
+            {/* Expanded Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-6">
               {isExpanded && (
-                <div className="mt-4 space-y-4 border-t border-gray-200 dark:border-gray-800 pt-4 animate-in slide-in-from-top duration-200">
-                  {/* Design Type & Brand Row */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Design Type</label>
-                      <select 
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
-                        value={taskFormData.designType}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, designType: e.target.value })}
-                      >
-                        <option value="">Select type...</option>
-                        <option value="social-media">Social Media</option>
-                        <option value="print">Print</option>
-                        <option value="web">Web</option>
-                        <option value="video">Video</option>
-                        <option value="packaging">Packaging</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Brand</label>
-                      <select 
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
-                        value={taskFormData.brand}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, brand: e.target.value })}
-                      >
-                        <option value="">Select brand...</option>
-                        <option value="acme">Acme Corporation</option>
-                        <option value="techstart">TechStart Inc</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Due Date & Priority Row */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Due Date</label>
-                      <input 
-                        type="date" 
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
-                        value={taskFormData.dueDate}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Priority</label>
-                      <select 
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2.5 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-150"
-                        value={taskFormData.priority}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as typeof taskFormData.priority })}
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Urgent">Urgent</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Task Group */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Task Group (optional)</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search or create task group..."
-                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
-                        value={taskGroupQuery}
-                        onChange={(e) => {
-                          setTaskGroupQuery(e.target.value)
-                          setShowTaskGroupDropdown(true)
-                        }}
-                        onFocus={() => setShowTaskGroupDropdown(true)}
-                        onBlur={() => {
-                          setTimeout(() => setShowTaskGroupDropdown(false), 200)
-                        }}
-                      />
-                      
-                      {showTaskGroupDropdown && (
-                        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-md shadow-xl max-h-48 overflow-auto">
-                          {(() => {
-                            const searchLower = taskGroupQuery.toLowerCase().trim()
-                            const filteredGroups = taskGroups.filter(g => 
-                              g.name.toLowerCase().includes(searchLower)
-                            )
-                            const exactMatch = taskGroups.find(g => 
-                              g.name.toLowerCase() === searchLower
-                            )
-                            const showCreate = searchLower && !exactMatch
-                            
-                            return (
-                              <>
-                                {showCreate && (
-                                  <button
-                                    type="button"
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left text-xs hover:bg-gray-800 text-blue-400 transition-colors duration-150 border-b border-gray-700"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault()
-                                      const groupId = createTaskGroupInline(taskGroupQuery)
-                                      if (groupId) {
-                                        setTaskFormData({ ...taskFormData, taskGroupId: groupId })
-                                      }
-                                      setShowTaskGroupDropdown(false)
-                                    }}
-                                  >
-                                    <Plus className="w-3.5 h-3.5" />
-                                    <span>Create "{taskGroupQuery}"</span>
-                                  </button>
-                                )}
-                                
-                                {filteredGroups.length > 0 ? (
-                                  <>
-                                    {filteredGroups.map((group) => (
-                                      <button
-                                        key={group.id}
-                                        type="button"
-                                        className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left text-xs hover:bg-gray-800 transition-colors duration-150"
-                                        onMouseDown={(e) => {
-                                          e.preventDefault()
-                                          setTaskFormData({ ...taskFormData, taskGroupId: group.id })
-                                          setTaskGroupQuery(group.name)
-                                          setShowTaskGroupDropdown(false)
-                                        }}
-                                      >
-                                        <span 
-                                          className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
-                                          style={{ backgroundColor: group.color }}
-                                        />
-                                        <span className="text-white">{group.name}</span>
-                                      </button>
-                                    ))}
-                                  </>
-                                ) : !showCreate ? (
-                                  <div className="px-2.5 py-1.5 text-gray-500 text-xs">
-                                    {searchLower ? 'No groups found' : 'Start typing to search or create...'}
-                                  </div>
-                                ) : null}
-                              </>
-                            )
-                          })()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
+                <div className="py-4 space-y-4">
                   {/* Request Details Collapsible */}
                   <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
                     <button 
@@ -2190,32 +2538,24 @@ export default function ProjectTasksPage() {
                   </div>
                 </div>
               )}
-
             </div>
 
             {/* Footer - Fixed */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
-              {/* Left: Create More Toggle */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={createMore}
-                  onChange={(e) => setCreateMore(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="relative w-9 h-5 bg-gray-300 dark:bg-gray-700 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">Create more</span>
-              </label>
-
-              {/* Right: Action Buttons */}
+            <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={closeTaskModal}
-                  className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
-                >
-                  Cancel
-                </button>
+                {/* Create More Toggle */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createMore}
+                    onChange={(e) => setCreateMore(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="relative w-9 h-5 bg-gray-300 dark:bg-gray-700 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
+                  <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">Create more</span>
+                </label>
+                
+                {/* Create Task Button */}
                 <button
                   type="button"
                   onClick={handleCreateTask}
@@ -2223,6 +2563,8 @@ export default function ProjectTasksPage() {
                 >
                   Create Task
                 </button>
+                
+                {/* Keyboard Shortcut Hint */}
                 <span className="text-xs text-gray-500">⌘↵</span>
               </div>
             </div>
