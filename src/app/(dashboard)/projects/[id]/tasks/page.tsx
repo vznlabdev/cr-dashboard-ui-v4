@@ -901,17 +901,13 @@ interface PropertyPillProps {
   value: string
   onClick?: () => void
   required?: boolean
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
 }
 
-const PropertyPill = ({ icon, label, value, onClick, required = false, onMouseEnter, onMouseLeave }: PropertyPillProps) => {
+const PropertyPill = ({ icon, label, value, onClick, required = false }: PropertyPillProps) => {
   return (
     <button
       type="button"
       onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       className={cn(
         "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-all duration-150",
         required 
@@ -978,7 +974,6 @@ export default function ProjectTasksPage() {
   
   // Project picker state
   const [showProjectPicker, setShowProjectPicker] = useState(false)
-  const [showProjectPreview, setShowProjectPreview] = useState(false)
   const [projectQuery, setProjectQuery] = useState('')
   
   // Modal display state
@@ -1670,25 +1665,14 @@ export default function ProjectTasksPage() {
                   onClick={() => {/* TODO: Open assignee picker */}}
                 />
                 
-                {/* Project - With Hover Preview */}
-                <div className="relative">
-                  <PropertyPill
-                    icon={<Folder className="w-3.5 h-3.5" />}
-                    label="Project"
-                    value={project?.name || "Select project"}
-                    onClick={() => setShowProjectPicker(true)}
-                    required={!project}
-                    onMouseEnter={() => project && setShowProjectPreview(true)}
-                    onMouseLeave={() => setShowProjectPreview(false)}
-                  />
-                  
-                  {/* Hover Preview Card - Opens Upward */}
-                  {showProjectPreview && project && (
-                    <div className="absolute left-0 bottom-full mb-2 w-[420px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 z-50 pointer-events-none">
-                      <ProjectPreviewCard project={project} />
-                    </div>
-                  )}
-                </div>
+                {/* Project - Click to Select */}
+                <PropertyPill
+                  icon={<Folder className="w-3.5 h-3.5" />}
+                  label="Project"
+                  value={project?.name || "Select project"}
+                  onClick={() => setShowProjectPicker(true)}
+                  required={!project}
+                />
                 
                 {/* Task Group - Combobox with Inline Create */}
                 <div className="relative">
