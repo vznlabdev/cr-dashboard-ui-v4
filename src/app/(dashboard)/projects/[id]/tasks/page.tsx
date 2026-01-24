@@ -861,6 +861,10 @@ export default function ProjectTasksPage() {
   const [taskGroupQuery, setTaskGroupQuery] = useState('')
   const [showTaskGroupDropdown, setShowTaskGroupDropdown] = useState(false)
   
+  // Modal display state
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [createMore, setCreateMore] = useState(false)
+  
   // Expandable sections state
   const [isExpanded, setIsExpanded] = useState(false)
   const [requestDetailsExpanded, setRequestDetailsExpanded] = useState(true)
@@ -1127,8 +1131,28 @@ export default function ProjectTasksPage() {
     }
 
     setTasks([...tasks, newTask])
-    closeTaskModal()
     toast.success('✓ Task created')
+
+    // If "Create more" is checked, reset form and keep modal open
+    if (createMore) {
+      setTaskFormData({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        taskGroupId: '', // Keep empty for next task
+        designType: '',
+        brand: '',
+        dueDate: '',
+        targetAudience: '',
+        detailedDescription: '',
+        attachments: [] as File[],
+      })
+      setTaskGroupQuery('')
+      setTaskFormError('')
+      // Focus back on title input (happens automatically with autoFocus)
+    } else {
+      closeTaskModal()
+    }
   }
 
   // Drag and drop handlers
@@ -1431,7 +1455,12 @@ export default function ProjectTasksPage() {
         if (!open) closeTaskModal()
       }}>
         <DialogContent 
-          className="sm:max-w-[600px] p-6 bg-card border-muted"
+          className={cn(
+            "bg-white dark:bg-[#0d0e14] overflow-hidden transition-all duration-300 border-gray-800 p-0",
+            isFullscreen 
+              ? "w-screen h-screen max-w-none rounded-none" 
+              : "w-full max-w-2xl max-h-[90vh] rounded-xl"
+          )}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -1439,329 +1468,366 @@ export default function ProjectTasksPage() {
             }
           }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <FolderKanban className="h-5 w-5 text-muted-foreground" />
-              <DialogTitle className="text-lg font-semibold">New Task</DialogTitle>
+          <div className="flex flex-col h-full">
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                <DialogTitle className="text-sm font-medium">New Task</DialogTitle>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="p-1.5 hover:bg-gray-800 rounded transition-colors"
+                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              >
+                {isFullscreen ? (
+                  <X className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                )}
+              </button>
             </div>
-          </div>
 
-          {/* Title Input */}
-          <div>
-            <input
-              autoFocus
-              type="text"
-              placeholder="Task title"
-              className={cn(
-                "w-full text-xl bg-transparent border-b py-3 outline-none transition-all duration-150",
-                taskFormError
-                  ? "border-red-500 focus:border-red-500"
-                  : "border-gray-700 focus:border-blue-500"
-              )}
-              value={taskFormData.title}
-              onChange={(e) => {
-                setTaskFormData({ ...taskFormData, title: e.target.value })
-                if (taskFormError) setTaskFormError('')
-              }}
-            />
-            {taskFormError && (
-              <p className="text-sm text-red-400 mt-1">{taskFormError}</p>
-            )}
-          </div>
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-6 py-4"
 
-          {/* Description Textarea */}
-          <div>
-            <textarea
-              placeholder="Add description..."
-              className="w-full text-base bg-transparent resize-none outline-none py-3 text-gray-400 min-h-[60px] max-h-[200px] transition-all duration-150"
-              value={taskFormData.description}
-              onChange={(e) => {
-                setTaskFormData({ ...taskFormData, description: e.target.value })
-                e.target.style.height = 'auto'
-                e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'
-              }}
-            />
-          </div>
 
-          {/* Bottom Row - Priority, More */}
-          <div className="flex items-center gap-3 mt-4 justify-end">
-            {/* Priority Dropdown */}
-            <Select 
-              value={taskFormData.priority} 
-              onValueChange={(value) => setTaskFormData({ ...taskFormData, priority: value as typeof taskFormData.priority })}
-            >
-              <SelectTrigger className="w-[140px] h-9 bg-transparent border-gray-700 hover:border-gray-600 transition-all duration-150">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Urgent">🔴 Urgent</SelectItem>
-                <SelectItem value="High">🟠 High</SelectItem>
-                <SelectItem value="Medium">🟡 Medium</SelectItem>
-                <SelectItem value="Low">🟢 Low</SelectItem>
-              </SelectContent>
-            </Select>
 
-            {/* More/Less Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1 text-sm text-gray-400 hover:text-blue-400 transition-colors duration-150 px-3 py-1.5"
-            >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              {isExpanded ? 'Less' : 'More'}
-            </button>
-          </div>
+>
 
-          {/* Expanded Section */}
-          {isExpanded && (
-            <div className="mt-6 space-y-6 border-t border-gray-800 pt-6 animate-in slide-in-from-top duration-200">
-              {/* Design Type & Brand Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Design Type</label>
-                  <select 
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                    value={taskFormData.designType}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, designType: e.target.value })}
-                  >
-                    <option value="">Select type...</option>
-                    <option value="social-media">Social Media</option>
-                    <option value="print">Print</option>
-                    <option value="web">Web</option>
-                    <option value="video">Video</option>
-                    <option value="packaging">Packaging</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Brand</label>
-                  <select 
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                    value={taskFormData.brand}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, brand: e.target.value })}
-                  >
-                    <option value="">Select brand...</option>
-                    <option value="acme">Acme Corporation</option>
-                    <option value="techstart">TechStart Inc</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Due Date & Priority Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Due Date</label>
-                  <input 
-                    type="date" 
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                    value={taskFormData.dueDate}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
-                  <select 
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                    value={taskFormData.priority}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as typeof taskFormData.priority })}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Task Group */}
+              {/* Title Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Task Group (optional)</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search or create task group..."
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                    value={taskGroupQuery}
-                    onChange={(e) => {
-                      setTaskGroupQuery(e.target.value)
-                      setShowTaskGroupDropdown(true)
-                    }}
-                    onFocus={() => setShowTaskGroupDropdown(true)}
-                    onBlur={() => {
-                      setTimeout(() => setShowTaskGroupDropdown(false), 200)
-                    }}
-                  />
-                  
-                  {showTaskGroupDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-auto">
-                      {(() => {
-                        const searchLower = taskGroupQuery.toLowerCase().trim()
-                        const filteredGroups = taskGroups.filter(g => 
-                          g.name.toLowerCase().includes(searchLower)
-                        )
-                        const exactMatch = taskGroups.find(g => 
-                          g.name.toLowerCase() === searchLower
-                        )
-                        const showCreate = searchLower && !exactMatch
-                        
-                        return (
-                          <>
-                            {showCreate && (
-                              <button
-                                type="button"
-                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 text-blue-400 transition-colors duration-150 border-b border-gray-700"
-                                onMouseDown={(e) => {
-                                  e.preventDefault()
-                                  const groupId = createTaskGroupInline(taskGroupQuery)
-                                  if (groupId) {
-                                    setTaskFormData({ ...taskFormData, taskGroupId: groupId })
-                                  }
-                                  setShowTaskGroupDropdown(false)
-                                }}
-                              >
-                                <Plus className="w-4 h-4" />
-                                <span>Create "{taskGroupQuery}"</span>
-                              </button>
-                            )}
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Task title"
+                  className={cn(
+                    "w-full text-base bg-transparent border-b py-2.5 outline-none transition-all duration-150",
+                    taskFormError
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-700 focus:border-blue-500"
+                  )}
+                  value={taskFormData.title}
+                  onChange={(e) => {
+                    setTaskFormData({ ...taskFormData, title: e.target.value })
+                    if (taskFormError) setTaskFormError('')
+                  }}
+                />
+                {taskFormError && (
+                  <p className="text-xs text-red-400 mt-1">{taskFormError}</p>
+                )}
+              </div>
+
+              {/* Description Textarea */}
+              <div className="mt-3">
+                <textarea
+                  placeholder="Add description..."
+                  className="w-full text-sm bg-transparent resize-none outline-none py-2 text-gray-400 min-h-[50px] max-h-[150px] transition-all duration-150"
+                  value={taskFormData.description}
+                  onChange={(e) => {
+                    setTaskFormData({ ...taskFormData, description: e.target.value })
+                    e.target.style.height = 'auto'
+                    e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px'
+                  }}
+                />
+              </div>
+
+              {/* Bottom Row - Priority, More */}
+              <div className="flex items-center gap-2 mt-3 justify-end">
+                {/* Priority Dropdown */}
+                <Select 
+                  value={taskFormData.priority} 
+                  onValueChange={(value) => setTaskFormData({ ...taskFormData, priority: value as typeof taskFormData.priority })}
+                >
+                  <SelectTrigger className="w-[130px] h-8 bg-transparent border-gray-700 hover:border-gray-600 transition-all duration-150 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Urgent" className="text-xs">🔴 Urgent</SelectItem>
+                    <SelectItem value="High" className="text-xs">🟠 High</SelectItem>
+                    <SelectItem value="Medium" className="text-xs">🟡 Medium</SelectItem>
+                    <SelectItem value="Low" className="text-xs">🟢 Low</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* More/Less Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-400 transition-colors duration-150 px-2 py-1"
+                >
+                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  {isExpanded ? 'Less' : 'More'}
+                </button>
+              </div>
+
+              {/* Expanded Section */}
+              {isExpanded && (
+                <div className="mt-4 space-y-4 border-t border-gray-800 pt-4 animate-in slide-in-from-top duration-200">
+                  {/* Design Type & Brand Row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Design Type</label>
+                      <select 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskFormData.designType}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, designType: e.target.value })}
+                      >
+                        <option value="">Select type...</option>
+                        <option value="social-media">Social Media</option>
+                        <option value="print">Print</option>
+                        <option value="web">Web</option>
+                        <option value="video">Video</option>
+                        <option value="packaging">Packaging</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Brand</label>
+                      <select 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskFormData.brand}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, brand: e.target.value })}
+                      >
+                        <option value="">Select brand...</option>
+                        <option value="acme">Acme Corporation</option>
+                        <option value="techstart">TechStart Inc</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Due Date & Priority Row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
+                      <input 
+                        type="date" 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskFormData.dueDate}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Priority</label>
+                      <select 
+                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskFormData.priority}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, priority: e.target.value as typeof taskFormData.priority })}
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Task Group */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Task Group (optional)</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search or create task group..."
+                        className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                        value={taskGroupQuery}
+                        onChange={(e) => {
+                          setTaskGroupQuery(e.target.value)
+                          setShowTaskGroupDropdown(true)
+                        }}
+                        onFocus={() => setShowTaskGroupDropdown(true)}
+                        onBlur={() => {
+                          setTimeout(() => setShowTaskGroupDropdown(false), 200)
+                        }}
+                      />
+                      
+                      {showTaskGroupDropdown && (
+                        <div className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded-md shadow-xl max-h-48 overflow-auto">
+                          {(() => {
+                            const searchLower = taskGroupQuery.toLowerCase().trim()
+                            const filteredGroups = taskGroups.filter(g => 
+                              g.name.toLowerCase().includes(searchLower)
+                            )
+                            const exactMatch = taskGroups.find(g => 
+                              g.name.toLowerCase() === searchLower
+                            )
+                            const showCreate = searchLower && !exactMatch
                             
-                            {filteredGroups.length > 0 ? (
+                            return (
                               <>
-                                {filteredGroups.map((group) => (
+                                {showCreate && (
                                   <button
-                                    key={group.id}
                                     type="button"
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-800 transition-colors duration-150"
+                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left text-xs hover:bg-gray-800 text-blue-400 transition-colors duration-150 border-b border-gray-700"
                                     onMouseDown={(e) => {
                                       e.preventDefault()
-                                      setTaskFormData({ ...taskFormData, taskGroupId: group.id })
-                                      setTaskGroupQuery(group.name)
+                                      const groupId = createTaskGroupInline(taskGroupQuery)
+                                      if (groupId) {
+                                        setTaskFormData({ ...taskFormData, taskGroupId: groupId })
+                                      }
                                       setShowTaskGroupDropdown(false)
                                     }}
                                   >
-                                    <span 
-                                      className="w-3 h-3 rounded-full flex-shrink-0" 
-                                      style={{ backgroundColor: group.color }}
-                                    />
-                                    <span className="text-white">{group.name}</span>
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>Create "{taskGroupQuery}"</span>
                                   </button>
-                                ))}
+                                )}
+                                
+                                {filteredGroups.length > 0 ? (
+                                  <>
+                                    {filteredGroups.map((group) => (
+                                      <button
+                                        key={group.id}
+                                        type="button"
+                                        className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left text-xs hover:bg-gray-800 transition-colors duration-150"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault()
+                                          setTaskFormData({ ...taskFormData, taskGroupId: group.id })
+                                          setTaskGroupQuery(group.name)
+                                          setShowTaskGroupDropdown(false)
+                                        }}
+                                      >
+                                        <span 
+                                          className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                                          style={{ backgroundColor: group.color }}
+                                        />
+                                        <span className="text-white">{group.name}</span>
+                                      </button>
+                                    ))}
+                                  </>
+                                ) : !showCreate ? (
+                                  <div className="px-2.5 py-1.5 text-gray-500 text-xs">
+                                    {searchLower ? 'No groups found' : 'Start typing to search or create...'}
+                                  </div>
+                                ) : null}
                               </>
-                            ) : !showCreate ? (
-                              <div className="px-3 py-2 text-gray-500 text-sm">
-                                {searchLower ? 'No groups found' : 'Start typing to search or create...'}
-                              </div>
-                            ) : null}
-                          </>
-                        )
-                      })()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Request Details Collapsible */}
-              <div className="border border-gray-800 rounded-lg">
-                <button 
-                  type="button" 
-                  onClick={() => setRequestDetailsExpanded(!requestDetailsExpanded)} 
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
-                >
-                  <span className="font-medium text-white">Request Details</span>
-                  {requestDetailsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                </button>
-                {requestDetailsExpanded && (
-                  <div className="p-4 pt-0 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Target Audience</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g., B2B decision makers, Gen Z consumers" 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none transition-all duration-150"
-                        value={taskFormData.targetAudience}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Detailed Description</label>
-                      <textarea 
-                        rows={4} 
-                        placeholder="Describe your creative request in detail. Include any specific requirements, dimensions, colors, text, or other specifications..." 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none resize-none transition-all duration-150"
-                        value={taskFormData.detailedDescription}
-                        onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
-                      />
+                            )
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Attachments Collapsible */}
-              <div className="border border-gray-800 rounded-lg">
-                <button 
-                  type="button" 
-                  onClick={() => setAttachmentsExpanded(!attachmentsExpanded)} 
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
-                >
-                  <span className="font-medium text-white">Attachments</span>
-                  {attachmentsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                </button>
-                {attachmentsExpanded && (
-                  <div className="p-4 pt-0">
-                    <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-blue-500 transition-all duration-150 cursor-pointer">
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="w-8 h-8 text-gray-400" />
-                        <p className="text-sm text-gray-400">Click to upload or drag and drop</p>
-                        <p className="text-xs text-gray-500">PNG, JPG, PDF, AI, PSD up to 50MB</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Link Assets from DAM Collapsible */}
-              <div className="border border-gray-800 rounded-lg">
-                <button 
-                  type="button" 
-                  onClick={() => setLinkAssetsExpanded(!linkAssetsExpanded)} 
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-all duration-150"
-                >
-                  <span className="font-medium text-white">Link Assets from DAM</span>
-                  {linkAssetsExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                </button>
-                {linkAssetsExpanded && (
-                  <div className="p-4 pt-0">
+                  {/* Request Details Collapsible */}
+                  <div className="border border-gray-800 rounded-md">
                     <button 
                       type="button" 
-                      className="w-full border border-gray-700 rounded-lg p-4 hover:bg-gray-800 transition-all duration-150 text-sm text-gray-300 flex items-center justify-center gap-2"
+                      onClick={() => setRequestDetailsExpanded(!requestDetailsExpanded)} 
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
                     >
-                      <Plus className="w-4 h-4" />
-                      Browse Assets
+                      <span className="text-xs font-medium text-white">Request Details</span>
+                      {requestDetailsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">Link existing assets as outputs, inspiration, or source material</p>
+                    {requestDetailsExpanded && (
+                      <div className="p-3 pt-0 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1.5">Target Audience</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g., B2B decision makers, Gen Z consumers" 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none transition-all duration-150"
+                            value={taskFormData.targetAudience}
+                            onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1.5">Detailed Description</label>
+                          <textarea 
+                            rows={3} 
+                            placeholder="Describe your creative request in detail..." 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none resize-none transition-all duration-150"
+                            value={taskFormData.detailedDescription}
+                            onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Attachments Collapsible */}
+                  <div className="border border-gray-800 rounded-md">
+                    <button 
+                      type="button" 
+                      onClick={() => setAttachmentsExpanded(!attachmentsExpanded)} 
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
+                    >
+                      <span className="text-xs font-medium text-white">Attachments</span>
+                      {attachmentsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {attachmentsExpanded && (
+                      <div className="p-3 pt-0">
+                        <div className="border-2 border-dashed border-gray-700 rounded-md p-6 text-center hover:border-blue-500 transition-all duration-150 cursor-pointer">
+                          <div className="flex flex-col items-center gap-1.5">
+                            <Upload className="w-6 h-6 text-gray-400" />
+                            <p className="text-xs text-gray-400">Click to upload or drag and drop</p>
+                            <p className="text-[10px] text-gray-500">PNG, JPG, PDF, AI, PSD up to 50MB</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Link Assets from DAM Collapsible */}
+                  <div className="border border-gray-800 rounded-md">
+                    <button 
+                      type="button" 
+                      onClick={() => setLinkAssetsExpanded(!linkAssetsExpanded)} 
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-800/50 transition-all duration-150"
+                    >
+                      <span className="text-xs font-medium text-white">Link Assets from DAM</span>
+                      {linkAssetsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {linkAssetsExpanded && (
+                      <div className="p-3 pt-0">
+                        <button 
+                          type="button" 
+                          className="w-full border border-gray-700 rounded-md p-3 hover:bg-gray-800 transition-all duration-150 text-xs text-gray-300 flex items-center justify-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Browse Assets
+                        </button>
+                        <p className="text-[10px] text-gray-500 mt-1.5 text-center">Link existing assets as outputs, inspiration, or source material</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Footer - Fixed */}
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-800 flex-shrink-0">
+              {/* Left: Create more checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={createMore}
+                  onChange={(e) => setCreateMore(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 focus:ring-1 bg-gray-800 cursor-pointer"
+                />
+                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Create more</span>
+              </label>
+
+              {/* Right: Action buttons */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={closeTaskModal}
+                  className="text-xs h-8 px-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-150"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateTask}
+                  className="text-xs h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-all duration-150"
+                >
+                  Create Task
+                  <span className="ml-2 text-[10px] opacity-60">⌘↵</span>
+                </Button>
               </div>
             </div>
-          )}
-
-          {/* Footer */}
-          <div className="mt-6">
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={closeTaskModal}
-                className="text-gray-400 hover:text-white transition-all duration-150"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateTask}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-150"
-              >
-                Create Task
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 text-right mt-2">⌘↵ to submit</p>
           </div>
         </DialogContent>
       </Dialog>
