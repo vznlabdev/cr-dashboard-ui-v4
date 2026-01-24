@@ -1499,16 +1499,16 @@ export default function ProjectTasksPage() {
 >
 
               {/* Title Input */}
-              <div>
+              <div className="space-y-3">
                 <input
                   autoFocus
                   type="text"
                   placeholder="Task title"
                   className={cn(
-                    "w-full text-base bg-transparent border-b py-2.5 outline-none transition-all duration-150",
+                    "w-full text-lg font-medium bg-transparent border-b py-2 outline-none transition-all duration-150 placeholder:text-gray-400",
                     taskFormError
                       ? "border-red-500 focus:border-red-500"
-                      : "border-gray-700 focus:border-blue-500"
+                      : "border-gray-300 dark:border-gray-700 focus:border-blue-500"
                   )}
                   value={taskFormData.title}
                   onChange={(e) => {
@@ -1516,23 +1516,28 @@ export default function ProjectTasksPage() {
                     if (taskFormError) setTaskFormError('')
                   }}
                 />
-                {taskFormError && (
-                  <p className="text-xs text-red-400 mt-1">{taskFormError}</p>
-                )}
-              </div>
-
-              {/* Description Textarea */}
-              <div className="mt-3">
+                
+                {/* Description Textarea - Auto-expanding */}
                 <textarea
                   placeholder="Add description..."
-                  className="w-full text-sm bg-transparent resize-none outline-none py-2 text-gray-400 min-h-[50px] max-h-[150px] transition-all duration-150"
                   value={taskFormData.description}
                   onChange={(e) => {
                     setTaskFormData({ ...taskFormData, description: e.target.value })
-                    e.target.style.height = 'auto'
-                    e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px'
                   }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement
+                    target.style.height = 'auto'
+                    target.style.height = `${Math.min(target.scrollHeight, 200)}px`
+                  }}
+                  rows={1}
+                  className="w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 min-h-[60px] max-h-[200px]"
+                  style={{ height: 'auto' }}
                 />
+                
+                {/* Error Message */}
+                {taskFormError && (
+                  <p className="text-xs text-red-500">{taskFormError}</p>
+                )}
               </div>
 
               {/* Bottom Row - Priority, More */}
