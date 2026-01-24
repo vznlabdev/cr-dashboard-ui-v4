@@ -30,7 +30,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -816,6 +816,38 @@ function StreamView({
   )
 }
 
+// Property Pill Component for metadata bar
+interface PropertyPillProps {
+  icon?: React.ReactNode
+  label: string
+  value: string
+  onClick?: () => void
+  required?: boolean
+}
+
+const PropertyPill = ({ icon, label, value, onClick, required = false }: PropertyPillProps) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-all duration-150",
+        required 
+          ? "border-red-500/50 bg-red-500/10 hover:border-red-500" 
+          : "border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800"
+      )}
+    >
+      {icon && <span className="flex-shrink-0">{icon}</span>}
+      <span className={cn("text-gray-500 dark:text-gray-400", required && "text-red-500")}>
+        {label}:
+      </span>
+      <span className={cn("text-gray-900 dark:text-white font-medium", required && !value && "text-red-400")}>
+        {value}
+      </span>
+    </button>
+  )
+}
+
 export default function ProjectTasksPage() {
   const params = useParams()
   const router = useRouter()
@@ -1540,29 +1572,81 @@ export default function ProjectTasksPage() {
                 )}
               </div>
 
-              {/* Bottom Row - Priority, More */}
-              <div className="flex items-center gap-2 mt-3 justify-end">
-                {/* Priority Dropdown */}
-                <Select 
-                  value={taskFormData.priority} 
-                  onValueChange={(value) => setTaskFormData({ ...taskFormData, priority: value as typeof taskFormData.priority })}
-                >
-                  <SelectTrigger className="w-[130px] h-8 bg-transparent border-gray-700 hover:border-gray-600 transition-all duration-150 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Urgent" className="text-xs">🔴 Urgent</SelectItem>
-                    <SelectItem value="High" className="text-xs">🟠 High</SelectItem>
-                    <SelectItem value="Medium" className="text-xs">🟡 Medium</SelectItem>
-                    <SelectItem value="Low" className="text-xs">🟢 Low</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* More/Less Toggle Button */}
+              {/* Properties Bar - Metadata Pills */}
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                {/* Assignee */}
+                <PropertyPill
+                  icon={<User className="w-3.5 h-3.5" />}
+                  label="Assignee"
+                  value="None"
+                  onClick={() => {/* TODO: Open assignee picker */}}
+                />
+                
+                {/* Project - Always shows current project */}
+                <PropertyPill
+                  icon={<Folder className="w-3.5 h-3.5" />}
+                  label="Project"
+                  value={project?.name || "Current Project"}
+                />
+                
+                {/* Task Group */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={
+                      taskFormData.taskGroupId && taskGroups.find(g => g.id === taskFormData.taskGroupId) 
+                        ? <span className="w-2 h-2 rounded-full" style={{ backgroundColor: taskGroups.find(g => g.id === taskFormData.taskGroupId)?.color }} />
+                        : undefined
+                    }
+                    label="Group"
+                    value={
+                      taskFormData.taskGroupId 
+                        ? taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || "None"
+                        : "None"
+                    }
+                    onClick={() => setIsExpanded(!isExpanded)}
+                  />
+                </div>
+                
+                {/* Priority */}
+                <PropertyPill
+                  icon={
+                    taskFormData.priority === 'Urgent' ? <span className="text-red-500">🔴</span> :
+                    taskFormData.priority === 'High' ? <span className="text-orange-500">🟠</span> :
+                    taskFormData.priority === 'Medium' ? <span className="text-yellow-500">🟡</span> :
+                    <span className="text-green-500">🟢</span>
+                  }
+                  label="Priority"
+                  value={taskFormData.priority}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                />
+                
+                {/* Due Date */}
+                <PropertyPill
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                  label="Due"
+                  value={taskFormData.dueDate || "None"}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                />
+                
+                {/* Brand */}
+                <PropertyPill
+                  label="Brand"
+                  value={taskFormData.brand || "None"}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                />
+                
+                {/* Design Type */}
+                <PropertyPill
+                  label="Type"
+                  value={taskFormData.designType || "None"}
+                  onClick={() => setIsExpanded(!isExpanded)}
+                />
+                
+                {/* More/Less Toggle */}
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-400 transition-colors duration-150 px-2 py-1"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all duration-150"
                 >
                   {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   {isExpanded ? 'Less' : 'More'}
