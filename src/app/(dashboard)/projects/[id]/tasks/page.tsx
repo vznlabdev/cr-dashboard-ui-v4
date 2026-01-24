@@ -1579,7 +1579,7 @@ export default function ProjectTasksPage() {
             "bg-white dark:bg-[#0d0e14] overflow-hidden transition-all duration-300 border-gray-800 p-0",
             isFullscreen 
               ? "w-screen h-screen max-w-none rounded-none" 
-              : "w-full max-w-2xl max-h-[90vh] rounded-xl"
+              : "w-full max-w-4xl max-h-[90vh] rounded-xl"
           )}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -1682,9 +1682,9 @@ export default function ProjectTasksPage() {
                     onMouseLeave={() => setShowProjectPreview(false)}
                   />
                   
-                  {/* Hover Preview Card */}
+                  {/* Hover Preview Card - Opens Upward */}
                   {showProjectPreview && project && (
-                    <div className="absolute left-0 top-full mt-2 w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 z-50 pointer-events-none">
+                    <div className="absolute left-0 bottom-full mb-2 w-[420px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 z-50 pointer-events-none">
                       <ProjectPreviewCard project={project} />
                     </div>
                   )}
