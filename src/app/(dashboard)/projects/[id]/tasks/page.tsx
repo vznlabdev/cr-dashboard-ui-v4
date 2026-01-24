@@ -30,7 +30,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check } from "lucide-react"
 import { useState, useEffect, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -816,6 +816,84 @@ function StreamView({
   )
 }
 
+// Project Preview Card Component
+interface ProjectPreviewCardProps {
+  project: Project
+}
+
+const ProjectPreviewCard = ({ project }: ProjectPreviewCardProps) => {
+  const formatRelativeTime = (dateString: string) => {
+    // Simple relative time formatting
+    return dateString || 'recently'
+  }
+  
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+  
+  return (
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-semibold text-sm">{project.name.charAt(0)}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{project.name}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              {project.status || 'Active'}
+            </span>
+            <span className="text-xs text-gray-500">Updated {formatRelativeTime(project.updated)}</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Description */}
+      {project.description && (
+        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{project.description}</p>
+      )}
+      
+      {/* Metadata */}
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+        {project.owner && (
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+              <span className="text-white text-[10px] font-semibold">
+                {project.owner.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+            <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{project.owner}</span>
+          </div>
+        )}
+        {project.targetDate && (
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+            <span className="text-xs text-gray-700 dark:text-gray-300">{formatDate(project.targetDate)}</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Stats */}
+      <div className="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-1.5">
+          <CheckCircle className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-xs text-gray-600 dark:text-gray-400">{project.assets || 0} assets</span>
+        </div>
+        <div className="flex-1 flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${project.compliance || 0}%` }} />
+          </div>
+          <span className="text-xs text-gray-600 dark:text-gray-400">{project.compliance || 0}%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Property Pill Component for metadata bar
 interface PropertyPillProps {
   icon?: React.ReactNode
@@ -823,13 +901,17 @@ interface PropertyPillProps {
   value: string
   onClick?: () => void
   required?: boolean
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
-const PropertyPill = ({ icon, label, value, onClick, required = false }: PropertyPillProps) => {
+const PropertyPill = ({ icon, label, value, onClick, required = false, onMouseEnter, onMouseLeave }: PropertyPillProps) => {
   return (
     <button
       type="button"
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={cn(
         "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs transition-all duration-150",
         required 
@@ -893,6 +975,11 @@ export default function ProjectTasksPage() {
   const [taskGroupQuery, setTaskGroupQuery] = useState('')
   const [showTaskGroupDropdown, setShowTaskGroupDropdown] = useState(false)
   const [showTaskGroupPicker, setShowTaskGroupPicker] = useState(false)
+  
+  // Project picker state
+  const [showProjectPicker, setShowProjectPicker] = useState(false)
+  const [showProjectPreview, setShowProjectPreview] = useState(false)
+  const [projectQuery, setProjectQuery] = useState('')
   
   // Modal display state
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -1583,12 +1670,25 @@ export default function ProjectTasksPage() {
                   onClick={() => {/* TODO: Open assignee picker */}}
                 />
                 
-                {/* Project - Always shows current project */}
-                <PropertyPill
-                  icon={<Folder className="w-3.5 h-3.5" />}
-                  label="Project"
-                  value={project?.name || "Current Project"}
-                />
+                {/* Project - With Hover Preview */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<Folder className="w-3.5 h-3.5" />}
+                    label="Project"
+                    value={project?.name || "Select project"}
+                    onClick={() => setShowProjectPicker(true)}
+                    required={!project}
+                    onMouseEnter={() => project && setShowProjectPreview(true)}
+                    onMouseLeave={() => setShowProjectPreview(false)}
+                  />
+                  
+                  {/* Hover Preview Card */}
+                  {showProjectPreview && project && (
+                    <div className="absolute left-0 top-full mt-2 w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 z-50 pointer-events-none">
+                      <ProjectPreviewCard project={project} />
+                    </div>
+                  )}
+                </div>
                 
                 {/* Task Group - Combobox with Inline Create */}
                 <div className="relative">
@@ -2021,6 +2121,59 @@ export default function ProjectTasksPage() {
       </Dialog>
 
       {/* DAM Asset Browser Modal - REMOVED (not needed for simple tasks) */}
+      
+      {/* Project Picker Dialog */}
+      <Dialog open={showProjectPicker} onOpenChange={setShowProjectPicker}>
+        <DialogContent className="max-w-2xl">
+          <DialogTitle className="text-sm font-semibold mb-4">Select Project</DialogTitle>
+          
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              placeholder="Search projects..."
+              value={projectQuery}
+              onChange={(e) => setProjectQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              autoFocus
+            />
+          </div>
+          
+          {/* Projects List */}
+          <div className="space-y-1 max-h-96 overflow-y-auto">
+            {(() => {
+              const { projects } = useData()
+              const searchLower = projectQuery.toLowerCase().trim()
+              const filteredProjects = searchLower === ''
+                ? projects
+                : projects.filter(p => p.name.toLowerCase().includes(searchLower))
+              
+              return filteredProjects.map(proj => (
+                <button
+                  key={proj.id}
+                  onClick={() => {
+                    // Project switching logic would go here
+                    // For now, just close the dialog since we're already in a project context
+                    setShowProjectPicker(false)
+                    setProjectQuery('')
+                    toast.success(`Project "${proj.name}" selected`)
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-xs font-semibold">{proj.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{proj.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{proj.status} • {proj.assets || 0} assets</p>
+                  </div>
+                  {project?.id === proj.id && <Check className="w-4 h-4 text-blue-500" />}
+                </button>
+              ))
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
