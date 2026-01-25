@@ -542,12 +542,12 @@ export function MediaManager({
   return (
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white dark:bg-[#0d0e14] border border-gray-200 dark:border-gray-800 p-0 w-full max-w-6xl max-h-[90vh] rounded-xl">
+      <DialogContent className="bg-white dark:bg-[#0d0e14] border border-gray-200 dark:border-gray-800 p-0 w-full max-w-6xl max-h-[90vh] rounded-xl" showCloseButton={false}>
         <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Media Manager - {creationMethod.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              Asset Media Manager
             </h2>
             <button
               onClick={onClose}
