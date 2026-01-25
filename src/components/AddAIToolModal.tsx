@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,14 @@ import { cn } from "@/lib/utils";
 interface AddAIToolModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: {
+    name?: string;
+    baseUrl?: string;
+    category?: string;
+    trackingLevel?: string;
+    description?: string;
+    iconUrl?: string;
+  };
 }
 
 const CATEGORIES = [
@@ -42,14 +50,14 @@ const MOCK_PROJECTS = [
   { id: "5", name: "Marketing Materials" },
 ];
 
-export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
+export function AddAIToolModal({ open, onOpenChange, initialData }: AddAIToolModalProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    baseUrl: "",
-    category: "",
-    trackingLevel: "Full",
-    description: "",
-    iconUrl: "",
+    name: initialData?.name || "",
+    baseUrl: initialData?.baseUrl || "",
+    category: initialData?.category || "",
+    trackingLevel: initialData?.trackingLevel || "Full",
+    description: initialData?.description || "",
+    iconUrl: initialData?.iconUrl || "",
     projectAvailability: "all",
     status: "Active",
     selectedProjects: [] as string[],
@@ -61,7 +69,47 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
     category: "",
   });
 
-  const [iconPreview, setIconPreview] = useState("");
+  const [iconPreview, setIconPreview] = useState(initialData?.iconUrl || "");
+
+  // Update form when initialData changes OR modal opens
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        // Populate with template data
+        setFormData({
+          name: initialData.name || "",
+          baseUrl: initialData.baseUrl || "",
+          category: initialData.category || "",
+          trackingLevel: initialData.trackingLevel || "Full",
+          description: initialData.description || "",
+          iconUrl: initialData.iconUrl || "",
+          projectAvailability: "all",
+          status: "Active",
+          selectedProjects: [],
+        });
+        setIconPreview(initialData.iconUrl || "");
+      } else {
+        // Clear form when no template data
+        setFormData({
+          name: "",
+          baseUrl: "",
+          category: "",
+          trackingLevel: "Full",
+          description: "",
+          iconUrl: "",
+          projectAvailability: "all",
+          status: "Active",
+          selectedProjects: [],
+        });
+        setIconPreview("");
+        setErrors({
+          name: "",
+          baseUrl: "",
+          category: "",
+        });
+      }
+    }
+  }, [initialData, open]);
 
   // URL validation
   const isValidUrl = (url: string): boolean => {
@@ -199,7 +247,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !bg-white dark:!bg-gray-950 !backdrop-blur-none [backdrop-filter:none!important] [-webkit-backdrop-filter:none!important]">
         <DialogHeader>
           <DialogTitle>Add AI Tool</DialogTitle>
         </DialogHeader>
@@ -275,7 +323,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
               onValueChange={(value) => handleChange("trackingLevel", value)}
               className="space-y-3"
             >
-              <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer">
                 <RadioGroupItem value="Full" id="full" className="mt-0.5" />
                 <div className="flex-1">
                   <Label htmlFor="full" className="font-medium cursor-pointer">
@@ -286,7 +334,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer">
                 <RadioGroupItem value="Good" id="good" className="mt-0.5" />
                 <div className="flex-1">
                   <Label htmlFor="good" className="font-medium cursor-pointer">
@@ -297,7 +345,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer">
                 <RadioGroupItem value="Basic" id="basic" className="mt-0.5" />
                 <div className="flex-1">
                   <Label htmlFor="basic" className="font-medium cursor-pointer">
@@ -369,7 +417,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
 
               {/* Icon preview */}
               {iconPreview && (
-                <div className="relative w-16 h-16 rounded-lg border bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                <div className="relative w-16 h-16 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center justify-center overflow-hidden">
                   <img
                     src={iconPreview}
                     alt="Icon preview"
@@ -415,7 +463,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
 
             {/* Project multi-select */}
             {formData.projectAvailability === "restricted" && (
-              <div className="ml-6 mt-3 p-3 border rounded-lg space-y-2 bg-gray-50 dark:bg-gray-900">
+              <div className="ml-6 mt-3 p-3 border border-gray-200 dark:border-gray-800 rounded-lg space-y-2">
                 <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
                   Select Projects
                 </Label>
@@ -423,7 +471,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
                   {MOCK_PROJECTS.map((project) => (
                     <label
                       key={project.id}
-                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded transition-colors"
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 p-2 rounded transition-colors"
                     >
                       <input
                         type="checkbox"
@@ -454,7 +502,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
               onValueChange={(value) => handleChange("status", value)}
               className="space-y-2"
             >
-              <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer">
                 <RadioGroupItem value="Active" id="active" className="mt-0.5" />
                 <div className="flex-1">
                   <Label htmlFor="active" className="font-medium cursor-pointer">
@@ -465,7 +513,7 @@ export function AddAIToolModal({ open, onOpenChange }: AddAIToolModalProps) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer">
                 <RadioGroupItem value="Inactive" id="inactive" className="mt-0.5" />
                 <div className="flex-1">
                   <Label htmlFor="inactive" className="font-medium cursor-pointer">
