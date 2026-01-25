@@ -37,12 +37,17 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
+import { MediaManager } from "@/components/media-manager/media-manager"
+import type { MediaManagerData } from "@/types/mediaManager"
+import { validateAllTabs, countMediaItems, hasMediaContent } from "@/utils/mediaValidation"
+import { clearMediaDataFromStorage } from "@/contexts/MediaManagerContext"
+import { getMediaCount, getMediaSummary, getMediaWarnings, hasMediaData } from "@/utils/mediaHelpers"
 
 const STATUS_COLUMNS: { key: TaskStatus; label: string }[] = [
   { key: "submitted", label: "Submitted" },
@@ -1121,6 +1126,7 @@ export default function ProjectTasksPage() {
     clientVisibility: 'internal' as 'internal' | 'visible' | 'commentable',
     estimatedHours: null as number | null,
     billable: false,
+    mediaData: null as MediaManagerData | null,
   })
   const [taskFormError, setTaskFormError] = useState('')
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
@@ -1167,6 +1173,13 @@ export default function ProjectTasksPage() {
   // DAM Asset Browser state
   const [showAssetBrowser, setShowAssetBrowser] = useState(false)
   const [assetQuery, setAssetQuery] = useState('')
+  
+  // Media Manager state
+  const [showMediaManager, setShowMediaManager] = useState(false)
+  const [mediaSummaryExpanded, setMediaSummaryExpanded] = useState(false)
+  
+  // Description expansion state
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [selectedAssets, setSelectedAssets] = useState<Array<{
     id: string
     name: string
@@ -1423,6 +1436,7 @@ export default function ProjectTasksPage() {
       clientVisibility: 'internal',
       estimatedHours: null,
       billable: false,
+      mediaData: null,
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1435,6 +1449,10 @@ export default function ProjectTasksPage() {
 
   const closeTaskModal = () => {
     setIsTaskModalOpen(false)
+    
+    // Clear media data from localStorage
+    clearMediaDataFromStorage('new')
+    
     setTaskFormData({
       title: '',
       description: '',
@@ -1454,6 +1472,7 @@ export default function ProjectTasksPage() {
       clientVisibility: 'internal',
       estimatedHours: null,
       billable: false,
+      mediaData: null,
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1465,6 +1484,8 @@ export default function ProjectTasksPage() {
     setSelectedAssets([])
     setShowAssetBrowser(false)
     setAssetQuery('')
+    setMediaSummaryExpanded(false)
+    setShowMediaManager(false)
   }
 
   // Create task group inline (for combobox)
@@ -1527,9 +1548,74 @@ export default function ProjectTasksPage() {
       return
     }
 
+    // Validate media data if present
+    if (taskFormData.mediaData) {
+      const creationMethod = 
+        taskFormData.mode === 'manual' ? 'human-made' :
+        taskFormData.mode === 'generative' ? 'ai-generated' :
+        'ai-enhanced'
+      
+      const validation = validateAllTabs(
+        taskFormData.mediaData,
+        creationMethod,
+        taskFormData.intendedUses
+      )
+
+      // Check for errors
+      if (!validation.isValid) {
+        setTaskFormError('Media validation failed')
+        toast.error('Please fix media errors before creating task')
+        // Show errors in console for debugging
+        console.error('Media validation errors:', validation.allErrors)
+        // Highlight the attachment button by showing the media summary
+        setMediaSummaryExpanded(true)
+        return
+      }
+
+      // Check for warnings
+      if (validation.allWarnings.length > 0) {
+        const proceed = confirm(
+          `Media validation warnings:\n\n${validation.allWarnings.join('\n')}\n\nDo you want to continue anyway?`
+        )
+        if (!proceed) {
+          return
+        }
+      }
+    }
+
     // Create new task with all form data
+    const taskId = `task-${Date.now()}`
+    
+    // Prepare media payload if media data exists
+    const mediaPayload = taskFormData.mediaData ? {
+      assets: taskFormData.mediaData.assets.map(a => a.id),
+      prompts: {
+        text: taskFormData.mediaData.prompts.text,
+        saveToLibrary: taskFormData.mediaData.prompts.saveToLibrary,
+        title: taskFormData.mediaData.prompts.title,
+        tags: taskFormData.mediaData.prompts.tags,
+        isPrivate: taskFormData.mediaData.prompts.isPrivate
+      },
+      training: taskFormData.mediaData.training.map(t => t.id),
+      references: taskFormData.mediaData.references.map(ref => ({
+        id: ref.id,
+        type: ref.type,
+        filename: ref.filename,
+        url: ref.url,
+        notes: ref.notes,
+        order: ref.order
+      })),
+      creatorDNA: taskFormData.mediaData.creatorDNA.map(creator => ({
+        id: creator.id,
+        name: creator.name,
+        nilpId: creator.nilpId,
+        role: creator.role,
+        nilpComponents: creator.nilpComponents
+      }))
+    } : undefined
+    
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id: taskId,
       taskGroupId: taskFormData.taskGroupId || '', // Use selected group or ungrouped
       projectId: taskFormData.selectedProjectId,
       workstream: 'general',
@@ -1547,6 +1633,18 @@ export default function ProjectTasksPage() {
     }
 
     setTasks([...tasks, newTask])
+    
+    // Clear media data from localStorage after successful submission
+    if (taskFormData.mediaData) {
+      clearMediaDataFromStorage('new') // Clear the temporary storage
+      console.log('Task created with media payload:', {
+        taskId: newTask.id,
+        media: mediaPayload
+      })
+      // In production, this would be sent to the backend:
+      // await createTask({ task: newTask, media: mediaPayload })
+    }
+    
     toast.success('✓ Task created successfully')
 
     // If "Create more" is checked, reset form but keep context
@@ -1570,6 +1668,7 @@ export default function ProjectTasksPage() {
         clientVisibility: taskFormData.clientVisibility, // Keep client visibility
         estimatedHours: null,
         billable: taskFormData.billable, // Keep billable setting
+        mediaData: null, // Reset media data for next task
       })
       setTaskGroupQuery(taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || '')
       setSelectedAssets([]) // Clear attachments
@@ -2003,6 +2102,29 @@ export default function ProjectTasksPage() {
                   </button>
                 </div>
               </div>
+              
+              {/* Header Actions */}
+              <div className="flex items-center gap-2">
+                {/* Expand Description Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                  title={isDescriptionExpanded ? "Collapse description" : "Expand description"}
+                >
+                  <Maximize2 className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                </button>
+                
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={closeTaskModal}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                  title="Close (Esc)"
+                >
+                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                </button>
+              </div>
             </div>
 
             {/* Title and Description - Fixed */}
@@ -2037,10 +2159,13 @@ export default function ProjectTasksPage() {
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement
                     target.style.height = 'auto'
-                    target.style.height = `${Math.min(target.scrollHeight, 200)}px`
+                    target.style.height = `${Math.min(target.scrollHeight, isDescriptionExpanded ? 400 : 200)}px`
                   }}
-                  rows={1}
-                  className="w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 min-h-[60px] max-h-[200px]"
+                  rows={isDescriptionExpanded ? 10 : 3}
+                  className={cn(
+                    "w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 transition-all duration-150",
+                    isDescriptionExpanded ? "min-h-[240px] max-h-[400px]" : "min-h-[60px] max-h-[200px]"
+                  )}
                   style={{ height: 'auto' }}
                 />
                 
@@ -2809,8 +2934,122 @@ export default function ProjectTasksPage() {
               )}
             </div>
 
+            {/* Media Summary Section */}
+            {taskFormData.mediaData && hasMediaData(taskFormData.mediaData) && (
+              <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMediaSummaryExpanded(!mediaSummaryExpanded)}
+                  className="w-full flex items-center justify-between px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <Paperclip className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <div className="text-left">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">Media Attached</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{getMediaSummary(taskFormData.mediaData)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      {getMediaCount(taskFormData.mediaData)} item{getMediaCount(taskFormData.mediaData) !== 1 ? 's' : ''}
+                    </span>
+                    {mediaSummaryExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                  </div>
+                </button>
+
+                {mediaSummaryExpanded && (
+                  <div className="px-6 pb-4 space-y-3">
+                    {/* Detailed Media Breakdown */}
+                    <div className="space-y-2">
+                      {taskFormData.mediaData.assets.length > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Assets:</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {taskFormData.mediaData.assets.length}
+                          </span>
+                        </div>
+                      )}
+                      {taskFormData.mediaData.prompts.text.trim().length > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Prompt:</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {taskFormData.mediaData.prompts.text.length} characters
+                          </span>
+                        </div>
+                      )}
+                      {taskFormData.mediaData.training.length > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Training Datasets:</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {taskFormData.mediaData.training.length}
+                          </span>
+                        </div>
+                      )}
+                      {taskFormData.mediaData.references.length > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">References:</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {taskFormData.mediaData.references.length}
+                          </span>
+                        </div>
+                      )}
+                      {taskFormData.mediaData.creatorDNA.length > 0 && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">Creators:</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {taskFormData.mediaData.creatorDNA.length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Warnings */}
+                    {getMediaWarnings(taskFormData.mediaData).length > 0 && (
+                      <div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        {getMediaWarnings(taskFormData.mediaData).map((warning, index) => (
+                          <div key={index} className="flex items-start gap-2 text-xs text-yellow-600 dark:text-yellow-400">
+                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                            <span>{warning}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Edit Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaManager(true)}
+                      className="w-full px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 transition"
+                    >
+                      Edit Media
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Footer - Fixed */}
-            <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+              {/* Left side - Attachment button */}
+              <button
+                type="button"
+                onClick={() => setShowMediaManager(true)}
+                className="relative p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                title="Media Manager"
+              >
+                <Paperclip className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                {taskFormData.mediaData && hasMediaContent(taskFormData.mediaData) && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-blue-600 rounded-full">
+                    {countMediaItems(taskFormData.mediaData)}
+                  </span>
+                )}
+              </button>
+              
+              {/* Right side - Create controls */}
               <div className="flex items-center gap-3">
                 {/* Create More Toggle */}
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -2989,6 +3228,73 @@ export default function ProjectTasksPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Media Manager Modal */}
+      <MediaManager
+        isOpen={showMediaManager}
+        onClose={() => setShowMediaManager(false)}
+        creationMethod={
+          taskFormData.mode === 'manual' ? 'human-made' :
+          taskFormData.mode === 'generative' ? 'ai-generated' :
+          'ai-enhanced'
+        }
+        taskId={undefined}
+        onSave={(data) => {
+          console.log('Media Manager data saved:', data)
+          
+          // Convert the save data to MediaManagerData format
+          const mediaData: MediaManagerData = {
+            assets: data.linkedAssetIds.map(id => ({
+              id,
+              filename: `asset-${id}`,
+              fileType: 'unknown',
+              fileSize: 0,
+              thumbnailUrl: '/placeholder.svg',
+              clearanceStatus: 'pending' as const,
+              source: 'library' as const,
+              uploadedAt: new Date()
+            })),
+            prompts: {
+              text: data.prompt.text,
+              saveToLibrary: data.prompt.saveToLibrary,
+              title: data.prompt.title,
+              tags: data.prompt.tags,
+              isPrivate: data.prompt.visibility === 'private'
+            },
+            training: data.trainingDataIds.map(id => ({
+              id,
+              filename: `training-${id}`,
+              fileType: 'unknown',
+              fileSize: 0,
+              thumbnailUrl: '/placeholder.svg',
+              clearanceStatus: 'cleared' as const,
+              source: 'library' as const,
+              uploadedAt: new Date()
+            })),
+            references: data.references.map((ref, index) => ({
+              id: ref.id,
+              type: (ref.type === 'asset' ? 'asset' : ref.type === 'url' ? 'url' : 'upload') as 'asset' | 'upload' | 'url',
+              filename: ref.name,
+              url: ref.url,
+              thumbnailUrl: '/placeholder.svg',
+              notes: ref.note,
+              order: ref.order || index
+            })),
+            creatorDNA: data.creatorDna.map(creator => ({
+              id: creator.personaId,
+              name: `Creator ${creator.personaId}`,
+              nilpId: creator.personaId,
+              authorizationStatus: 'authorized' as const,
+              role: creator.role,
+              nilpComponents: creator.nilpComponents
+            }))
+          }
+          
+          // Update task form data
+          setTaskFormData(prev => ({ ...prev, mediaData }))
+          toast.success('Media saved successfully')
+        }}
+      />
     </>
   )
 }
