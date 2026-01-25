@@ -3239,6 +3239,9 @@ export default function ProjectTasksPage() {
           'ai-enhanced'
         }
         taskId={undefined}
+        creativeType={taskFormData.designType}
+        toolUsed={taskFormData.selectedTools.length > 0 ? taskFormData.selectedTools[0] : undefined}
+        intendedUse={taskFormData.intendedUses.length > 0 ? taskFormData.intendedUses[0] : undefined}
         onSave={(data) => {
           console.log('Media Manager data saved:', data)
           

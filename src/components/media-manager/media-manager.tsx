@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { AssetLibraryPicker } from '@/components/AssetLibraryPicker'
 import { PersonaLibraryPicker } from '@/components/PersonaLibraryPicker'
+import { PromptSuggestions } from '@/components/PromptSuggestions'
 
 // Import mock personas from centralized mock data
 import { MOCK_PERSONA_LIBRARY } from '@/lib/mockData/personaLibrary'
@@ -103,6 +104,9 @@ interface MediaManagerProps {
   creationMethod: CreationMethod
   taskId?: string
   onSave: (data: any) => void
+  creativeType?: string
+  toolUsed?: string
+  intendedUse?: string
 }
 
 export function MediaManager({
@@ -110,7 +114,10 @@ export function MediaManager({
   onClose,
   creationMethod,
   taskId,
-  onSave
+  onSave,
+  creativeType,
+  toolUsed,
+  intendedUse
 }: MediaManagerProps) {
   const [activeTab, setActiveTab] = useState<TabId>('assets')
   
@@ -246,6 +253,9 @@ export function MediaManager({
         id: ac.persona.id,
         name: ac.persona.name,
         nilpId: ac.persona.nilpId,
+        avatarUrl: ac.persona.avatarUrl,
+        authorizationStatus: ac.persona.authorizationStatus,
+        expirationDate: ac.persona.expirationDate,
         role: ac.role,
         nilpComponents: ac.nilpComponents
       }))
@@ -691,6 +701,14 @@ export function MediaManager({
 
             {activeTab === 'prompts' && (
               <div className="space-y-6">
+                {/* Prompt Suggestions */}
+                <PromptSuggestions
+                  creativeType={creativeType}
+                  toolUsed={toolUsed}
+                  intendedUse={intendedUse}
+                  onSelectPrompt={(text) => setPromptText(text)}
+                />
+                
                 {/* Prompt Editor */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
