@@ -240,17 +240,6 @@ export function searchTrainingDatasets(query: string): TrainingDataset[] {
 }
 
 /**
- * Get datasets by category
- */
-export function getDatasetsByCategory(
-  category: TrainingDataset['category']
-): TrainingDataset[] {
-  return MOCK_TRAINING_DATASETS.filter(dataset => 
-    dataset.category === category
-  )
-}
-
-/**
  * Get datasets by minimum asset count
  */
 export function getLargeDatasets(minAssets: number = 200): TrainingDataset[] {
