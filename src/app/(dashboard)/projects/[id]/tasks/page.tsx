@@ -3247,7 +3247,7 @@ export default function ProjectTasksPage() {
           
           // Convert the save data to MediaManagerData format
           const mediaData: MediaManagerData = {
-            assets: data.linkedAssetIds.map(id => ({
+            assets: data.linkedAssetIds.map((id: string) => ({
               id,
               filename: `asset-${id}`,
               fileType: 'unknown',
@@ -3264,7 +3264,7 @@ export default function ProjectTasksPage() {
               tags: data.prompt.tags,
               isPrivate: data.prompt.visibility === 'private'
             },
-            training: data.trainingDataIds.map(id => ({
+            training: data.trainingDataIds.map((id: string) => ({
               id,
               filename: `training-${id}`,
               fileType: 'unknown',
@@ -3274,7 +3274,7 @@ export default function ProjectTasksPage() {
               source: 'library' as const,
               uploadedAt: new Date()
             })),
-            references: data.references.map((ref, index) => ({
+            references: data.references.map((ref: any, index: number) => ({
               id: ref.id,
               type: (ref.type === 'asset' ? 'asset' : ref.type === 'url' ? 'url' : 'upload') as 'asset' | 'upload' | 'url',
               filename: ref.name,
@@ -3283,7 +3283,7 @@ export default function ProjectTasksPage() {
               notes: ref.note,
               order: ref.order || index
             })),
-            creatorDNA: data.creatorDna.map(creator => ({
+            creatorDNA: data.creatorDna.map((creator: any) => ({
               id: creator.personaId,
               name: `Creator ${creator.personaId}`,
               nilpId: creator.personaId,
