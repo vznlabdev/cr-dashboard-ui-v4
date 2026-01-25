@@ -2006,7 +2006,7 @@ export default function ProjectTasksPage() {
         >
           <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
             {/* Header - Fixed - Linear Style */}
-            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white dark:bg-[#0d0e14]">
               {/* Breadcrumb Navigation - Single Line, Minimal */}
               <div className="flex items-center gap-4">
                 {/* New Task - Static Label with Status Indicator */}
@@ -2017,7 +2017,7 @@ export default function ProjectTasksPage() {
                   </DialogTitle>
                 </div>
                 
-                <span className="text-gray-400 dark:text-gray-600">›</span>
+                <span className="text-gray-300 dark:text-gray-600">›</span>
                 
                 {/* Brand - Clickable */}
                 <div className="relative">
@@ -2077,7 +2077,7 @@ export default function ProjectTasksPage() {
                   )}
                 </div>
                 
-                <span className="text-gray-400 dark:text-gray-600">›</span>
+                <span className="text-gray-300 dark:text-gray-600">›</span>
                 
                 {/* Project - Clickable - Current Step */}
                 <button
@@ -2087,7 +2087,7 @@ export default function ProjectTasksPage() {
                     "text-sm font-normal transition-colors",
                     !taskFormData.selectedProjectId 
                       ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300" 
-                      : "text-white dark:text-white hover:text-gray-300 dark:hover:text-gray-300"
+                      : "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
                   )}
                 >
                   {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
