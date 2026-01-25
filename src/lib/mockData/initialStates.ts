@@ -86,7 +86,7 @@ function getSampleAIGeneratedMedia(): MediaManagerData {
   return {
     assets: [], // Not typically used for AI-generated
     prompts: {
-      text: topPrompt.text,
+      text: topPrompt.promptText,
       saveToLibrary: true,
       title: topPrompt.title,
       tags: topPrompt.tags.slice(0, 3),
