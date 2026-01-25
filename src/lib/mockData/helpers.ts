@@ -197,7 +197,7 @@ export function getMostUsedPrompts(count: number = 10): PromptLibraryItem[] {
  */
 export function getPromptsBySuccessRate(minRate: number): PromptLibraryItem[] {
   return MOCK_PROMPT_LIBRARY.filter(prompt => 
-    prompt.successRate >= minRate
+    (prompt.successfulOutputs / prompt.usageCount) * 100 >= minRate
   )
 }
 
@@ -208,7 +208,7 @@ export function searchPrompts(query: string): PromptLibraryItem[] {
   const lowerQuery = query.toLowerCase()
   return MOCK_PROMPT_LIBRARY.filter(prompt =>
     prompt.title.toLowerCase().includes(lowerQuery) ||
-    prompt.text.toLowerCase().includes(lowerQuery) ||
+    prompt.promptText.toLowerCase().includes(lowerQuery) ||
     prompt.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
   )
 }
@@ -221,8 +221,8 @@ export function getRecentlyUsedPrompts(days: number = 7): PromptLibraryItem[] {
   cutoffDate.setDate(cutoffDate.getDate() - days)
   
   return MOCK_PROMPT_LIBRARY.filter(prompt => 
-    prompt.lastUsed >= cutoffDate
-  ).sort((a, b) => b.lastUsed.getTime() - a.lastUsed.getTime())
+    prompt.lastUsedDate >= cutoffDate
+  ).sort((a, b) => b.lastUsedDate.getTime() - a.lastUsedDate.getTime())
 }
 
 // ========== TRAINING DATASET HELPERS ==========
@@ -313,7 +313,7 @@ export function getPromptLibraryStats() {
   return {
     total: MOCK_PROMPT_LIBRARY.length,
     averageRating: MOCK_PROMPT_LIBRARY.reduce((sum, p) => sum + p.effectivenessRating, 0) / MOCK_PROMPT_LIBRARY.length,
-    averageSuccessRate: MOCK_PROMPT_LIBRARY.reduce((sum, p) => sum + p.successRate, 0) / MOCK_PROMPT_LIBRARY.length,
+    averageSuccessRate: MOCK_PROMPT_LIBRARY.reduce((sum, p) => sum + (p.successfulOutputs / p.usageCount) * 100, 0) / MOCK_PROMPT_LIBRARY.length,
     totalUsage: MOCK_PROMPT_LIBRARY.reduce((sum, p) => sum + p.usageCount, 0),
     private: MOCK_PROMPT_LIBRARY.filter(p => p.isPrivate).length,
     public: MOCK_PROMPT_LIBRARY.filter(p => !p.isPrivate).length,
