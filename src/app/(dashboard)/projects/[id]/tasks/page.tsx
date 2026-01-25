@@ -2009,10 +2009,15 @@ export default function ProjectTasksPage() {
             <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               {/* Breadcrumb Navigation - Single Line, Minimal */}
               <div className="flex items-center gap-4">
-                {/* New Task - Static Label */}
-                <DialogTitle className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                  New Task
-                </DialogTitle>
+                {/* New Task - Static Label with Icon */}
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded bg-blue-600 dark:bg-blue-500 flex items-center justify-center flex-shrink-0">
+                    <Plus className="w-3 h-3 text-white" />
+                  </div>
+                  <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">
+                    New Task
+                  </DialogTitle>
+                </div>
                 
                 <span className="text-gray-400 dark:text-gray-600">›</span>
                 
