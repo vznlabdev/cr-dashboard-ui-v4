@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { InviteMemberDialog } from "@/components/cr";
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
