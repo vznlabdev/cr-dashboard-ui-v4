@@ -131,7 +131,7 @@ export function getTaskWithMedia(creationMethod: CreationMethod = 'human-made'):
     id: taskId,
     taskGroupId: 'group-001',
     projectId: 'project-001',
-    workstream: 'creative',
+    workstream: 'creator',
     title: `Sample ${creationMethod} Task with Media`,
     description: `This is a sample task demonstrating the ${creationMethod} creation method with fully populated media manager data.`,
     status: 'submitted',
