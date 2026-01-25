@@ -2106,7 +2106,7 @@ export default function ProjectTasksPage() {
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-white dark:bg-[#0d0e14]">
               {/* Title and Description */}
               <div className="px-6 py-4">
               {/* Title Input */}
@@ -2681,7 +2681,7 @@ export default function ProjectTasksPage() {
                                   setTaskFormData({ ...taskFormData, dueDate: e.target.value })
                                 }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 text-xs text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                               />
                             </div>
                           </div>
@@ -2914,7 +2914,7 @@ export default function ProjectTasksPage() {
 
             {/* Media Summary Section */}
             {taskFormData.mediaData && hasMediaData(taskFormData.mediaData) && (
-              <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/50">
                 <button
                   type="button"
                   onClick={() => setMediaSummaryExpanded(!mediaSummaryExpanded)}
