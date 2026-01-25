@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -1178,8 +1178,7 @@ export default function ProjectTasksPage() {
   const [showMediaManager, setShowMediaManager] = useState(false)
   const [mediaSummaryExpanded, setMediaSummaryExpanded] = useState(false)
   
-  // Description expansion state
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  // Description auto-expands as user types (no manual expand button needed)
   const [selectedAssets, setSelectedAssets] = useState<Array<{
     id: string
     name: string
@@ -2049,7 +2048,7 @@ export default function ProjectTasksPage() {
                                 setShowBrandPicker(false)
                               }}
                             >
-                              <X className="w-3.5 h-3.5 text-gray-400" />
+                              <Minus className="w-3.5 h-3.5 text-gray-400" />
                               <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
                             </button>
                             
@@ -2110,17 +2109,7 @@ export default function ProjectTasksPage() {
               
               {/* Header Actions */}
               <div className="flex items-center gap-2">
-                {/* Expand Description Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                  title={isDescriptionExpanded ? "Collapse description" : "Expand description"}
-                >
-                  <Maximize2 className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                </button>
-                
-                {/* Close Button */}
+                {/* Close Button - Only one X in the entire modal */}
                 <button
                   type="button"
                   onClick={closeTaskModal}
@@ -2166,13 +2155,10 @@ export default function ProjectTasksPage() {
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement
                     target.style.height = 'auto'
-                    target.style.height = `${Math.min(target.scrollHeight, isDescriptionExpanded ? 400 : 200)}px`
+                    target.style.height = `${Math.min(target.scrollHeight, 300)}px`
                   }}
-                  rows={isDescriptionExpanded ? 10 : 3}
-                  className={cn(
-                    "w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 transition-all duration-150",
-                    isDescriptionExpanded ? "min-h-[240px] max-h-[400px]" : "min-h-[60px] max-h-[200px]"
-                  )}
+                  rows={3}
+                  className="w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 transition-all duration-150 min-h-[60px] max-h-[300px]"
                   style={{ height: 'auto' }}
                 />
                 
@@ -2404,7 +2390,7 @@ export default function ProjectTasksPage() {
                               setShowDesignTypePicker(false)
                             }}
                           >
-                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
                             <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
                           </button>
                           
@@ -2532,7 +2518,7 @@ export default function ProjectTasksPage() {
                               setShowAssigneePicker(false)
                             }}
                           >
-                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
                             <span className="text-xs text-gray-600 dark:text-gray-400">Unassigned</span>
                           </button>
                           
@@ -2662,7 +2648,7 @@ export default function ProjectTasksPage() {
                               setShowDueDatePicker(false)
                             }}
                           >
-                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
                             <span className="text-xs text-gray-600 dark:text-gray-400">Clear date</span>
                           </button>
                           
@@ -2816,7 +2802,7 @@ export default function ProjectTasksPage() {
                                     setTaskGroupQuery('')
                                   }}
                                 >
-                                  <X className="w-3.5 h-3.5 text-gray-400" />
+                                  <Minus className="w-3.5 h-3.5 text-gray-400" />
                                   <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
                                 </button>
                                 
@@ -2854,14 +2840,15 @@ export default function ProjectTasksPage() {
                   )}
                 </div>
                 
-                {/* More/Less Toggle */}
+                {/* Additional Options Toggle - Linear style */}
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all duration-150"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-all duration-150"
+                  title={isExpanded ? 'Hide additional options' : 'Show additional options'}
                 >
-                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  {isExpanded ? 'Less' : 'More'}
+                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <MoreVertical className="w-3.5 h-3.5" />}
+                  <span className="hidden sm:inline">{isExpanded ? 'Hide' : 'More'}</span>
                 </button>
               </div>
             </div>
@@ -2869,12 +2856,12 @@ export default function ProjectTasksPage() {
             {/* Expanded Content */}
             <div className="px-6">
               {isExpanded && (
-                <div className="py-4 space-y-6">
+                <div className="py-4 space-y-6 border-t border-gray-200 dark:border-gray-800">
                   {/* Client Visibility */}
                   <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-900 dark:text-white">Client Visibility</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Client Visibility</label>
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1.5 transition-colors">
                         <input
                           type="radio"
                           name="clientVisibility"
@@ -2882,10 +2869,10 @@ export default function ProjectTasksPage() {
                           onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'internal' })}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span className="text-xs text-gray-900 dark:text-white">Internal only</span>
+                        <span className="text-sm text-gray-900 dark:text-white">Internal only</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 cursor-pointer">
+                      <label className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1.5 transition-colors">
                         <input
                           type="radio"
                           name="clientVisibility"
@@ -2893,10 +2880,10 @@ export default function ProjectTasksPage() {
                           onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'visible' })}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span className="text-xs text-gray-900 dark:text-white">Visible to client</span>
+                        <span className="text-sm text-gray-900 dark:text-white">Visible to client</span>
                       </label>
                       
-                      <label className="flex items-center gap-3 cursor-pointer">
+                      <label className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 py-1.5 transition-colors">
                         <input
                           type="radio"
                           name="clientVisibility"
@@ -2904,14 +2891,14 @@ export default function ProjectTasksPage() {
                           onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'commentable' })}
                           className="w-4 h-4 text-blue-600"
                         />
-                        <span className="text-xs text-gray-900 dark:text-white">Client can comment</span>
+                        <span className="text-sm text-gray-900 dark:text-white">Client can comment</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Budget Tracking */}
                   <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-900 dark:text-white">Budget Tracking</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Budget Tracking</label>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <label className="text-xs text-gray-600 dark:text-gray-400">Estimated hours:</label>
