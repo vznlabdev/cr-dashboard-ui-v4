@@ -90,6 +90,14 @@ export interface Task {
   aiTool?: string;  // Selected AI tool name
   aiTrackingLevel?: 'full' | 'partial' | 'none';  // Tracking level
   completedSteps?: number[];  // Array of completed step numbers
+  // Clearance rejection fields
+  clearanceRejection?: {
+    rejectedBy: 'admin' | 'legal' | 'qa';  // Which clearance lane rejected
+    rejectedAsset: string;  // Name of rejected asset
+    rejectedAssetId?: string;  // ID of rejected asset
+    feedback: string;  // Feedback from reviewer
+    rejectedAt: string;  // ISO timestamp
+  };
 }
 
 export interface Notification {

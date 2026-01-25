@@ -206,10 +206,8 @@ export const mockTasks: Task[] = [
     clientVisibility: 'visible',
     estimatedHours: 8,
     isBillable: true,
-    aiWorkflowStep: 4,
-    aiTool: 'Midjourney',
-    aiTrackingLevel: 'full',
-    completedSteps: [1, 2, 3],
+    aiWorkflowStep: 2, // On "Select AI Tool" step
+    completedSteps: [1], // Step 1 complete
   },
   {
     id: 'task-2',
@@ -241,10 +239,10 @@ export const mockTasks: Task[] = [
     clientVisibility: 'comment',
     estimatedHours: 4,
     isBillable: false,
-    aiWorkflowStep: 2,
+    aiWorkflowStep: 3, // On "Create Prompt" step
     aiTool: 'ChatGPT',
-    aiTrackingLevel: 'partial',
-    completedSteps: [1],
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2], // Steps 1 & 2 complete
   },
   {
     id: 'task-10',
@@ -286,6 +284,13 @@ export const mockTasks: Task[] = [
     mode: 'generative',
     intendedUses: ['Print', 'Advertising/Campaigns', 'Internal'],
     deliverableType: 'Print',
+    aiWorkflowStep: 5, // On "Upload Output" step
+    aiTool: 'Midjourney',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4], // Steps 1-4 complete
+    targetAudience: 'Business professionals attending tech conferences',
+    estimatedHours: 6,
+    isBillable: true,
   },
   {
     id: 'task-13',
@@ -293,11 +298,28 @@ export const mockTasks: Task[] = [
     projectId: '1',
     workstream: 'creator',
     title: 'Create outdoor billboard',
-    status: 'assigned',
+    status: 'production',
     assignee: 'Design Team',
     dueDate: 'Dec 28, 2024',
     createdDate: 'Dec 9, 2024',
     updatedAt: '2024-12-15T20:30:00Z',  // 30 minutes ago
+    mode: 'generative',
+    intendedUses: ['Advertising/Campaigns', 'Print'],
+    deliverableType: 'Print',
+    aiWorkflowStep: 6, // On "Review & Iterate" step
+    aiTool: 'DALL-E 3',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4, 5], // Steps 1-5 complete
+    targetAudience: 'Commuters and general public in urban areas',
+    estimatedHours: 10,
+    isBillable: true,
+    clearanceRejection: {
+      rejectedBy: 'legal',
+      rejectedAsset: 'hero_image_v1.png',
+      rejectedAssetId: 'asset-billboard-001',
+      feedback: 'Font licensing unclear. Need proof of commercial license for typography used.',
+      rejectedAt: '2024-01-25T14:45:00Z',
+    },
   },
   
   // Tasks for Task Group 3: Legal & Compliance (Project 1)
@@ -319,11 +341,21 @@ export const mockTasks: Task[] = [
     projectId: '1',
     workstream: 'insurance',
     title: 'Verify AI content provenance',
-    status: 'submitted',
+    status: 'delivered',
     assignee: 'Insurance Analyst',
     dueDate: 'Dec 25, 2024',
     createdDate: 'Dec 4, 2024',
     updatedAt: '2024-12-13T21:00:00Z',  // 2 days ago
+    mode: 'generative',
+    intendedUses: ['Editorial', 'Internal'],
+    deliverableType: 'Document',
+    aiWorkflowStep: 7, // On "Submit for Clearance" step (awaiting review)
+    aiTool: 'Claude',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4, 5, 6], // All steps before 7 complete
+    targetAudience: 'Internal compliance and legal teams',
+    estimatedHours: 3,
+    isBillable: false,
   },
   
   // Tasks for Task Group 4: Video Production (Project 2)

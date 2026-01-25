@@ -351,12 +351,14 @@ function FlatKanbanBoard({
                 asChild
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700 rounded transition-all"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 h-6 w-6 shrink-0 transition-opacity"
                   title="More options"
                 >
-                  <MoreVertical className="h-3.5 w-3.5 text-gray-400" />
-                </button>
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1">
                 <DropdownMenuItem
