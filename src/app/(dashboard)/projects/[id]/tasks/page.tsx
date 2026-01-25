@@ -1996,6 +1996,7 @@ export default function ProjectTasksPage() {
       }}>
         <DialogContent 
           className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-5xl max-h-[70vh] rounded-xl"
+          showCloseButton={false}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -3078,7 +3079,7 @@ export default function ProjectTasksPage() {
 
       {/* DAM Asset Browser Modal */}
       <Dialog open={showAssetBrowser} onOpenChange={setShowAssetBrowser}>
-        <DialogContent className="max-w-4xl max-h-[85vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-0 flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[85vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-0 flex flex-col" showCloseButton={false}>
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
             <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">Select Assets from DAM</DialogTitle>
