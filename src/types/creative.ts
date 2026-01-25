@@ -60,6 +60,12 @@ export interface Comment {
   authorAvatar?: string
   createdAt: Date
   updatedAt?: Date
+  // Clearance system comment fields
+  isSystemComment?: boolean
+  clearanceType?: 'admin' | 'legal' | 'qa'
+  clearanceReason?: string
+  linkedAsset?: string
+  linkedAssetId?: string
 }
 
 export interface Ticket {
@@ -75,6 +81,9 @@ export interface Ticket {
   description: string
   status: TicketStatus
   priority: "low" | "medium" | "high" | "urgent"
+  mode?: "manual" | "generative" | "assisted"
+  intendedUses?: string[]
+  deliverableType?: string
   attachments: Attachment[]
   versions: Version[]
   comments: Comment[]

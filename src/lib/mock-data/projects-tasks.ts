@@ -199,6 +199,17 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 20, 2024',
     createdDate: 'Dec 1, 2024',
     updatedAt: '2024-12-15T18:00:00Z',  // 3 hours ago
+    mode: 'generative',
+    intendedUses: ['Social Media', 'Advertising/Campaigns', 'Web'],
+    deliverableType: 'Social Media',
+    targetAudience: 'B2B decision makers, C-suite executives in mid-size tech companies',
+    clientVisibility: 'visible',
+    estimatedHours: 8,
+    isBillable: true,
+    aiWorkflowStep: 4,
+    aiTool: 'Midjourney',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3],
   },
   {
     id: 'task-2',
@@ -223,6 +234,17 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 21, 2024',
     createdDate: 'Dec 7, 2024',
     updatedAt: '2024-12-15T19:00:00Z',  // 2 hours ago
+    mode: 'assisted',
+    intendedUses: ['Social Media', 'Internal'],
+    deliverableType: 'Social Media',
+    targetAudience: 'Young professionals aged 25-40, tech enthusiasts and early adopters',
+    clientVisibility: 'comment',
+    estimatedHours: 4,
+    isBillable: false,
+    aiWorkflowStep: 2,
+    aiTool: 'ChatGPT',
+    aiTrackingLevel: 'partial',
+    completedSteps: [1],
   },
   {
     id: 'task-10',
@@ -261,6 +283,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 23, 2024',
     createdDate: 'Dec 8, 2024',
     updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
+    mode: 'generative',
+    intendedUses: ['Print', 'Advertising/Campaigns', 'Internal'],
+    deliverableType: 'Print',
   },
   {
     id: 'task-13',
@@ -313,6 +338,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 15, 2024',
     createdDate: 'Dec 5, 2024',
     updatedAt: '2024-12-15T17:00:00Z',  // 4 hours ago
+    mode: 'assisted',
+    intendedUses: ['Video', 'Advertising/Campaigns'],
+    deliverableType: 'Video',
   },
   {
     id: 'task-6',
@@ -389,6 +417,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 12, 2024',
     createdDate: 'Nov 30, 2024',
     updatedAt: '2024-12-14T21:00:00Z',  // 1 day ago
+    mode: 'manual',
+    intendedUses: ['Internal'],
+    deliverableType: 'Legal Review',
   },
   {
     id: 'task-17',
@@ -441,6 +472,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 22, 2024',
     createdDate: 'Dec 11, 2024',
     updatedAt: '2024-12-15T21:00:00Z',
+    mode: 'assisted',
+    intendedUses: ['Print', 'Web', 'Internal'],
+    deliverableType: 'Print',
   },
   {
     id: 'task-21',
@@ -453,6 +487,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 20, 2024',
     createdDate: 'Dec 12, 2024',
     updatedAt: '2024-12-15T20:30:00Z',
+    mode: 'generative',
+    intendedUses: ['Print', 'Internal'],
+    deliverableType: 'Print',
   },
   {
     id: 'task-22',
@@ -465,6 +502,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 21, 2024',
     createdDate: 'Dec 10, 2024',
     updatedAt: '2024-12-15T19:30:00Z',
+    mode: 'generative',
+    intendedUses: ['Print', 'Internal'],
+    deliverableType: 'Print',
   },
   {
     id: 'task-23',
@@ -527,6 +567,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 26, 2024',
     createdDate: 'Dec 13, 2024',
     updatedAt: '2024-12-15T22:00:00Z',
+    mode: 'assisted',
+    intendedUses: ['Web', 'Internal'],
+    deliverableType: 'Web',
   },
   {
     id: 'task-28',
@@ -661,6 +704,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 29, 2024',
     createdDate: 'Dec 13, 2024',
     updatedAt: '2024-12-15T22:15:00Z',
+    mode: 'generative',
+    intendedUses: ['Advertising/Campaigns', 'Print', 'Internal'],
+    deliverableType: 'Print',
   },
   {
     id: 'task-39',
@@ -783,6 +829,9 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 27, 2024',
     createdDate: 'Dec 11, 2024',
     updatedAt: '2024-12-15T20:00:00Z',
+    mode: 'generative',
+    intendedUses: ['Social Media', 'Advertising/Campaigns'],
+    deliverableType: 'Social Media',
   },
   {
     id: 'task-49',

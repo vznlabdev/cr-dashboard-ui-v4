@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -236,18 +236,21 @@ function FlatKanbanBoard({
     const getPriority = () => {
       switch (task.workstream) {
         case 'legal':
-          return { label: 'HIGH', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' }
+          return { label: 'HIGH', className: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800' }
         case 'insurance':
-          return { label: 'MED', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' }
+          return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
         case 'creator':
-          return { label: 'MED', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' }
+          return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
         default:
-          return { label: 'LOW', className: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' }
+          return { label: 'LOW', className: 'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800' }
       }
     }
 
-    // Get category label
+    // Get category label - show deliverable type if available
     const getCategoryLabel = () => {
+      if (task.deliverableType) {
+        return task.deliverableType
+      }
       switch (task.workstream) {
         case 'creator':
           return 'Creative Design'
@@ -262,6 +265,48 @@ function FlatKanbanBoard({
       }
     }
 
+    // Get intended use color
+    const getIntendedUseStyle = (use: string) => {
+      const colors: Record<string, { bg: string; text: string; border: string }> = {
+        "Advertising/Campaigns": { 
+          bg: "bg-red-50 dark:bg-red-900/20", 
+          text: "text-red-700 dark:text-red-400",
+          border: "border-red-200 dark:border-red-800"
+        },
+        "Editorial": { 
+          bg: "bg-blue-50 dark:bg-blue-900/20", 
+          text: "text-blue-700 dark:text-blue-400",
+          border: "border-blue-200 dark:border-blue-800"
+        },
+        "Internal": { 
+          bg: "bg-gray-50 dark:bg-gray-900/20", 
+          text: "text-gray-700 dark:text-gray-400",
+          border: "border-gray-200 dark:border-gray-800"
+        },
+        "Social Media": { 
+          bg: "bg-purple-50 dark:bg-purple-900/20", 
+          text: "text-purple-700 dark:text-purple-400",
+          border: "border-purple-200 dark:border-purple-800"
+        },
+        "Print": { 
+          bg: "bg-emerald-50 dark:bg-emerald-900/20", 
+          text: "text-emerald-700 dark:text-emerald-400",
+          border: "border-emerald-200 dark:border-emerald-800"
+        },
+        "Web": { 
+          bg: "bg-cyan-50 dark:bg-cyan-900/20", 
+          text: "text-cyan-700 dark:text-cyan-400",
+          border: "border-cyan-200 dark:border-cyan-800"
+        },
+        "Video": { 
+          bg: "bg-pink-50 dark:bg-pink-900/20", 
+          text: "text-pink-700 dark:text-pink-400",
+          border: "border-pink-200 dark:border-pink-800"
+        },
+      }
+      return colors[use] || colors["Internal"]
+    }
+
     const priority = getPriority()
     
     return (
@@ -269,8 +314,8 @@ function FlatKanbanBoard({
         onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
         className={cn(
           "relative py-0 transition-all duration-200 cursor-pointer group",
-          "bg-slate-800/50 hover:border-blue-500/50",
-          "border border-slate-700/50 shadow-lg rounded-xl"
+          "bg-white dark:bg-slate-800/50 hover:border-blue-500/50",
+          "border border-gray-200 dark:border-slate-700/50 shadow-lg rounded-xl"
         )}
       >
         <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
@@ -339,21 +384,72 @@ function FlatKanbanBoard({
             </DropdownMenu>
           </div>
 
+          {/* Mode Indicator */}
+          {task.mode && task.mode !== "manual" && (
+            <div className="mb-2.5">
+              <Badge 
+                variant="outline"
+                className={cn(
+                  "text-[10px] font-semibold px-2 py-0.5 gap-1",
+                  task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                  task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
+                )}
+              >
+                <Zap className="h-2.5 w-2.5" />
+                {task.mode === "generative" ? "AI Gen" : "AI Assist"}
+              </Badge>
+            </div>
+          )}
+
           {/* Task Title */}
           <h3 
-            className="mb-2.5 text-sm font-semibold text-white line-clamp-2 leading-snug hover:text-blue-400 transition-colors"
+            className="mb-2.5 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
           >
             {task.title}
           </h3>
 
-          {/* Category Line */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 font-medium">
+          {/* Category Line / Type */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 font-medium">
             {task.workstream === 'creator' && <span className="shrink-0">✏️</span>}
             {task.workstream === 'legal' && <span className="shrink-0">⚖️</span>}
             {task.workstream === 'insurance' && <span className="shrink-0">🛡️</span>}
             {task.workstream === 'general' && <span className="shrink-0">📋</span>}
             <span>{getCategoryLabel()}</span>
           </div>
+
+          {/* Intended Uses */}
+          {task.intendedUses && task.intendedUses.length > 0 && (
+            <div className="mb-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Target className="h-3 w-3 text-muted-foreground shrink-0" />
+                {task.intendedUses.slice(0, 2).map((use) => {
+                  const style = getIntendedUseStyle(use)
+                  return (
+                    <Badge
+                      key={use}
+                      variant="outline"
+                      className={cn(
+                        "text-[10px] font-medium px-1.5 py-0",
+                        style.bg,
+                        style.text,
+                        style.border
+                      )}
+                    >
+                      {use}
+                    </Badge>
+                  )
+                })}
+                {task.intendedUses.length > 2 && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-medium px-1.5 py-0 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+                  >
+                    +{task.intendedUses.length - 2} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Task Group Badge (if exists) - Small chip */}
           {group && (

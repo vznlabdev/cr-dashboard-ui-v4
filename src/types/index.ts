@@ -77,6 +77,19 @@ export interface Task {
   dueDate?: string;
   createdDate: string;
   updatedAt: string;  // ISO 8601 timestamp
+  mode?: 'manual' | 'generative' | 'assisted';
+  intendedUses?: string[];
+  deliverableType?: string;
+  targetAudience?: string;  // Target audience description
+  clientVisibility?: 'internal' | 'visible' | 'comment';  // Client visibility level
+  // Budget fields
+  estimatedHours?: number;  // Estimated hours for the task
+  isBillable?: boolean;  // Whether the task is billable
+  // AI Workflow fields
+  aiWorkflowStep?: number;  // Current step (1-7)
+  aiTool?: string;  // Selected AI tool name
+  aiTrackingLevel?: 'full' | 'partial' | 'none';  // Tracking level
+  completedSteps?: number[];  // Array of completed step numbers
 }
 
 export interface Notification {

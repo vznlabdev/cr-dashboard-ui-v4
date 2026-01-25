@@ -1102,9 +1102,9 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredTools.map((tool, index) => (
+                  {filteredTools.map((tool) => (
                   <div 
-                    key={index} 
+                    key={tool.id} 
                     className={cn(
                       "relative p-4 rounded-lg border transition-all duration-200",
                       "hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700",

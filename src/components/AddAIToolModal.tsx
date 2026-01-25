@@ -88,6 +88,12 @@ export function AddAIToolModal({ open, onOpenChange, initialData }: AddAIToolMod
           selectedProjects: [],
         });
         setIconPreview(initialData.iconUrl || "");
+        // Clear previous validation errors when loading template
+        setErrors({
+          name: "",
+          baseUrl: "",
+          category: "",
+        });
       } else {
         // Clear form when no template data
         setFormData({
