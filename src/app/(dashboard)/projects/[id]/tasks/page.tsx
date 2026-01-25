@@ -1996,7 +1996,7 @@ export default function ProjectTasksPage() {
         if (!open) closeTaskModal()
       }}>
         <DialogContent 
-          className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-4xl max-h-[90vh] rounded-xl"
+          className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-5xl max-h-[70vh] rounded-xl"
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -2004,7 +2004,7 @@ export default function ProjectTasksPage() {
             }
           }}
         >
-          <div className="flex flex-col h-full overflow-visible">
+          <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
             {/* Header - Fixed */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -2132,8 +2132,10 @@ export default function ProjectTasksPage() {
               </div>
             </div>
 
-            {/* Title and Description - Fixed */}
-            <div className="px-6 py-4 flex-shrink-0">
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Title and Description */}
+              <div className="px-6 py-4">
               {/* Title Input */}
               <div className="space-y-3">
                 <input
@@ -2181,8 +2183,8 @@ export default function ProjectTasksPage() {
               </div>
             </div>
 
-            {/* Target Audience - Fixed */}
-            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+            {/* Target Audience */}
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800">
               <input 
                 type="text" 
                 placeholder="Target Audience (e.g., B2B decision makers)" 
@@ -2192,8 +2194,8 @@ export default function ProjectTasksPage() {
               />
             </div>
 
-            {/* Intended Uses - Required Field - Fixed */}
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+            {/* Intended Uses - Required Field */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Rocket className="w-3.5 h-3.5 text-gray-900 dark:text-white" />
@@ -2295,7 +2297,7 @@ export default function ProjectTasksPage() {
 
             {/* AI Tools Section - Conditional - Fixed */}
             {(taskFormData.mode === 'generative' || taskFormData.mode === 'assisted') && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Bot className="w-3.5 h-3.5 text-gray-900 dark:text-white" />
@@ -2371,8 +2373,8 @@ export default function ProjectTasksPage() {
               </div>
             )}
 
-            {/* Properties Bar - Fixed */}
-            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 overflow-visible">
+            {/* Properties Bar */}
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 overflow-visible">
               {/* Properties Bar - Metadata Pills */}
               <div className="flex flex-wrap items-center gap-2 overflow-visible">
                 {/* Design Type - FIRST - HIGH PRIORITY */}
@@ -2864,8 +2866,8 @@ export default function ProjectTasksPage() {
               </div>
             </div>
 
-            {/* Expanded Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-6">
+            {/* Expanded Content */}
+            <div className="px-6">
               {isExpanded && (
                 <div className="py-4 space-y-6">
                   {/* Client Visibility */}
@@ -2941,7 +2943,7 @@ export default function ProjectTasksPage() {
 
             {/* Media Summary Section */}
             {taskFormData.mediaData && hasMediaData(taskFormData.mediaData) && (
-              <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+              <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
                 <button
                   type="button"
                   onClick={() => setMediaSummaryExpanded(!mediaSummaryExpanded)}
@@ -3036,6 +3038,8 @@ export default function ProjectTasksPage() {
                 )}
               </div>
             )}
+            </div>
+            {/* End Scrollable Content Area */}
 
             {/* Footer - Fixed */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
