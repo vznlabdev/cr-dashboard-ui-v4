@@ -111,64 +111,103 @@ const aiToolsWhitelist: Array<{
   name: string;
   icon: string;
   category: string;
-  status: string;
+  baseUrl: string;
+  status: "Approved" | "Under Review" | "Pending Approval" | "Archived";
   statusVariant: "default" | "secondary" | "outline" | "destructive";
-  riskLevel: string;
+  trackingLevel: "Full Tracking" | "Good Tracking" | "Basic Tracking";
+  trackingVariant: "default" | "secondary" | "outline";
   approved: boolean;
+  active: boolean;
+  projectCount?: number;
+  taskCount?: number;
+  lastUsed?: string;
 }> = [
   {
     name: "Midjourney",
     icon: "🎨",
     category: "Image Generation",
+    baseUrl: "https://midjourney.com",
     status: "Approved",
     statusVariant: "default",
-    riskLevel: "Low",
+    trackingLevel: "Full Tracking",
+    trackingVariant: "default",
     approved: true,
+    active: true,
+    projectCount: 24,
+    taskCount: 187,
+    lastUsed: "2h ago",
   },
   {
     name: "ChatGPT",
     icon: "💬",
     category: "Text Generation",
+    baseUrl: "https://chat.openai.com",
     status: "Approved",
     statusVariant: "default",
-    riskLevel: "Low",
+    trackingLevel: "Full Tracking",
+    trackingVariant: "default",
     approved: true,
+    active: true,
+    projectCount: 18,
+    taskCount: 243,
+    lastUsed: "1h ago",
   },
   {
     name: "ElevenLabs",
     icon: "🎙️",
     category: "Voice Synthesis",
+    baseUrl: "https://elevenlabs.io",
     status: "Approved",
     statusVariant: "default",
-    riskLevel: "Medium",
+    trackingLevel: "Good Tracking",
+    trackingVariant: "secondary",
     approved: true,
+    active: true,
+    projectCount: 8,
+    taskCount: 45,
+    lastUsed: "5h ago",
   },
   {
     name: "Runway",
     icon: "🎬",
     category: "Video Generation",
+    baseUrl: "https://runwayml.com",
     status: "Approved",
     statusVariant: "default",
-    riskLevel: "Medium",
+    trackingLevel: "Good Tracking",
+    trackingVariant: "secondary",
     approved: true,
+    active: true,
+    projectCount: 12,
+    taskCount: 156,
+    lastUsed: "3h ago",
   },
   {
     name: "DALL-E",
     icon: "🖼️",
     category: "Image Generation",
+    baseUrl: "https://openai.com/dall-e",
     status: "Under Review",
     statusVariant: "secondary",
-    riskLevel: "Low",
+    trackingLevel: "Basic Tracking",
+    trackingVariant: "outline",
     approved: false,
+    active: true,
+    projectCount: 3,
+    taskCount: 12,
+    lastUsed: "1d ago",
   },
   {
     name: "Stable Diffusion",
     icon: "🎭",
     category: "Image Generation",
+    baseUrl: "https://stability.ai",
     status: "Pending Approval",
     statusVariant: "outline",
-    riskLevel: "Medium",
+    trackingLevel: "Basic Tracking",
+    trackingVariant: "outline",
     approved: false,
+    active: false,
   },
 ];
 
@@ -645,26 +684,162 @@ export default function SettingsPage() {
         <TabsContent value="ai-tools" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>AI Tool Whitelist</CardTitle>
-              <CardDescription>
-                Manage which AI tools are approved for content creation
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>AI Tool Whitelist</CardTitle>
+                  <CardDescription>
+                    Manage which AI tools are approved for content creation
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => toast.info("Add new tool modal would open here")}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New Tool
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {aiToolsWhitelist.map((tool, index) => (
-                  <div key={index} className="flex items-center justify-between pb-4 border-b last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">{tool.icon}</div>
-                      <div>
-                        <p className="text-sm font-medium">{tool.name}</p>
-                        <p className="text-xs text-muted-foreground">{tool.category}</p>
-                      </div>
+                  <div 
+                    key={index} 
+                    className={cn(
+                      "relative p-4 rounded-lg border transition-all",
+                      tool.active 
+                        ? "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900" 
+                        : "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 opacity-60"
+                    )}
+                  >
+                    {/* Active/Inactive Badge - Top Right */}
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        tool.active ? "bg-green-500" : "bg-gray-400"
+                      )} />
+                      <Badge variant={tool.active ? "default" : "outline"} className="text-xs">
+                        {tool.active ? "Active" : "Inactive"}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={tool.statusVariant}>{tool.status}</Badge>
-                      <Badge variant="outline">{tool.riskLevel}</Badge>
-                      <Switch defaultChecked={tool.approved} />
+
+                    <div className="flex items-start justify-between">
+                      {/* Left Side - Tool Info */}
+                      <div className="flex items-start gap-3 flex-1 pr-24">
+                        <div className="text-2xl flex-shrink-0">{tool.icon}</div>
+                        <div className="space-y-2 flex-1 min-w-0">
+                          {/* Tool Name */}
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{tool.name}</p>
+                            {/* Base URL */}
+                            <a 
+                              href={tool.baseUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-mono transition-colors"
+                            >
+                              {tool.baseUrl}
+                            </a>
+                          </div>
+
+                          {/* Category and Tracking Level */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{tool.category}</span>
+                            <span className="text-gray-300 dark:text-gray-700">•</span>
+                            <Badge 
+                              variant={tool.trackingVariant}
+                              className={cn(
+                                "text-xs",
+                                tool.trackingLevel === "Full Tracking" && "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800",
+                                tool.trackingLevel === "Good Tracking" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                                tool.trackingLevel === "Basic Tracking" && "bg-gray-50 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                              )}
+                            >
+                              {tool.trackingLevel}
+                            </Badge>
+                            <Badge 
+                              variant={
+                                tool.status === "Approved" ? "default" : 
+                                tool.status === "Under Review" ? "secondary" : 
+                                tool.status === "Pending Approval" ? "outline" : 
+                                "destructive"
+                              }
+                              className={cn(
+                                "text-xs",
+                                tool.status === "Approved" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                                tool.status === "Under Review" && "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+                                tool.status === "Pending Approval" && "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+                                tool.status === "Archived" && "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                              )}
+                            >
+                              {tool.status}
+                            </Badge>
+                          </div>
+
+                          {/* Usage Stats */}
+                          {(tool.projectCount || tool.taskCount) && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {tool.projectCount && `${tool.projectCount} projects`}
+                              {tool.projectCount && tool.taskCount && " · "}
+                              {tool.taskCount && `${tool.taskCount} tasks`}
+                              {tool.lastUsed && ` · Last used: ${tool.lastUsed}`}
+                            </p>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 pt-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => toast.info(`Edit ${tool.name}`)}
+                              className="text-xs h-7 px-2"
+                            >
+                              Edit
+                            </Button>
+                            {tool.active ? (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => toast.info(`View usage for ${tool.name}`)}
+                                  className="text-xs h-7 px-2"
+                                >
+                                  View Usage
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => toast.success(`${tool.name} deactivated`)}
+                                  className="text-xs h-7 px-2 text-orange-600 hover:text-orange-700 dark:text-orange-400"
+                                >
+                                  Deactivate
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => toast.success(`${tool.name} reactivated`)}
+                                  className="text-xs h-7 px-2 text-green-600 hover:text-green-700 dark:text-green-400"
+                                >
+                                  Reactivate
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => toast.info(`Archive ${tool.name}`)}
+                                  className="text-xs h-7 px-2 text-red-600 hover:text-red-700 dark:text-red-400"
+                                >
+                                  Archive
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
