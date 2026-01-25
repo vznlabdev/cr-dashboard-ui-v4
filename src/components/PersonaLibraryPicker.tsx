@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { 
   X, 
@@ -216,17 +216,17 @@ export function PersonaLibraryPicker({
   }
 
   // Handle confirm
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     const selected = MOCK_PERSONA_LIBRARY.filter(p => selectedIds.has(p.id))
     onSelect(selected)
     onClose()
-  }
+  }, [selectedIds, onSelect, onClose])
 
   // Handle cancel
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setSelectedIds(new Set(selectedPersonaIds))
     onClose()
-  }
+  }, [selectedPersonaIds, onClose])
 
   // Handle create new persona
   const handleCreatePersona = () => {

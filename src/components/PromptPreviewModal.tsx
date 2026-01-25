@@ -27,7 +27,9 @@ export function PromptPreviewModal({
   }
 
   const stars = formatStarRating(prompt.effectivenessRating)
-  const successRate = Math.round((prompt.successfulOutputs / prompt.usageCount) * 100)
+  const successRate = prompt.usageCount > 0 
+    ? Math.round((prompt.successfulOutputs / prompt.usageCount) * 100)
+    : 0
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
