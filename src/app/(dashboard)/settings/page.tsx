@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InviteMemberDialog } from "@/components/cr";
+import { AddAIToolModal } from "@/components/AddAIToolModal";
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -214,6 +215,7 @@ const aiToolsWhitelist: Array<{
 
 export default function SettingsPage() {
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
+  const [addToolOpen, setAddToolOpen] = useState(false);
   const [approvalStages, setApprovalStages] = useState("3");
   
   return (
@@ -695,7 +697,7 @@ export default function SettingsPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => toast.info("Add new tool modal would open here")}
+                  onClick={() => setAddToolOpen(true)}
                   className="flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
@@ -1028,6 +1030,12 @@ export default function SettingsPage() {
       <InviteMemberDialog
         open={inviteMemberOpen}
         onOpenChange={setInviteMemberOpen}
+      />
+
+      {/* Add AI Tool Modal */}
+      <AddAIToolModal
+        open={addToolOpen}
+        onOpenChange={setAddToolOpen}
       />
     </PageContainer>
   );
