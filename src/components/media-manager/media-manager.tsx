@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { X, Link2, Upload, Check, AlertCircle, XCircle, Trash2, Search, Filter, Image as ImageIcon, Video, FileText, Star, Copy, ChevronDown, Bold, Italic, Code, List as ListIcon, Lock, Users, Folder, GripVertical, ExternalLink, Plus, User, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -546,9 +546,9 @@ export function MediaManager({
         <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
               Asset Media Manager
-            </h2>
+            </DialogTitle>
             <button
               onClick={onClose}
               className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
