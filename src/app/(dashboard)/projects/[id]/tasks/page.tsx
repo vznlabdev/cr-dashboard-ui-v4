@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -1076,7 +1076,7 @@ export default function ProjectTasksPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = params.id as string
-  const { getProjectById } = useData()
+  const { getProjectById, projects: allProjects } = useData()
 
   // Refs
   const titleInputRef = useRef<HTMLInputElement>(null)
@@ -1101,17 +1101,26 @@ export default function ProjectTasksPage() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<TaskGroup | null>(null)
   const [formData, setFormData] = useState({ name: '', description: '', color: '#3b82f6' })
+  const [autoSelectNewGroup, setAutoSelectNewGroup] = useState(false)
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     description: '',
     priority: 'Medium' as 'Urgent' | 'High' | 'Medium' | 'Low',
     taskGroupId: '' as string,
     designType: '',
+    mode: 'manual' as 'manual' | 'generative' | 'assisted',
     brand: '',
     dueDate: '',
     assignee: '' as string,
+    intendedUses: [] as string[],
+    aiToolsRestriction: 'all' as 'all' | 'specific',
+    selectedTools: [] as string[],
+    selectedProjectId: '' as string,
     targetAudience: '',
     detailedDescription: '',
+    clientVisibility: 'internal' as 'internal' | 'visible' | 'commentable',
+    estimatedHours: null as number | null,
+    billable: false,
   })
   const [taskFormError, setTaskFormError] = useState('')
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
@@ -1136,6 +1145,12 @@ export default function ProjectTasksPage() {
   
   // Brand picker state
   const [showBrandPicker, setShowBrandPicker] = useState(false)
+  
+  // Mode picker state
+  const [showModePicker, setShowModePicker] = useState(false)
+  
+  // Intended Uses picker state
+  const [showIntendedUsesPicker, setShowIntendedUsesPicker] = useState(false)
   
   // Assignee picker state
   const [showAssigneePicker, setShowAssigneePicker] = useState(false)
@@ -1279,7 +1294,7 @@ export default function ProjectTasksPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isTaskModalOpen, taskFormData, project, showAssetBrowser, showProjectPicker, createMore])
+  }, [isTaskModalOpen, taskFormData, project, showAssetBrowser, showProjectPicker, createMore, tasks, taskGroups])
 
   // Save collapse state to localStorage (client-side only)
   const toggleGroupCollapse = (groupId: string) => {
@@ -1316,6 +1331,7 @@ export default function ProjectTasksPage() {
     setIsModalOpen(false)
     setEditingGroup(null)
     setFormData({ name: '', description: '', color: '#3b82f6' })
+    setAutoSelectNewGroup(false)
   }
 
   // Create task group
@@ -1340,6 +1356,13 @@ export default function ProjectTasksPage() {
     }
 
     setTaskGroups([...taskGroups, newGroup])
+    
+    // If opened from task modal, auto-select the new group
+    if (autoSelectNewGroup) {
+      setTaskFormData({ ...taskFormData, taskGroupId: newGroup.id })
+      setAutoSelectNewGroup(false)
+    }
+    
     toast.success(`Task group "${newGroup.name}" created successfully`)
     closeModal()
   }
@@ -1387,11 +1410,19 @@ export default function ProjectTasksPage() {
       priority: 'Medium',
       taskGroupId: '',
       designType: '',
+      mode: 'manual',
       brand: '',
       dueDate: '',
       assignee: '',
+      intendedUses: [],
+      aiToolsRestriction: 'all',
+      selectedTools: [],
+      selectedProjectId: projectId, // Default to current project
       targetAudience: '',
       detailedDescription: '',
+      clientVisibility: 'internal',
+      estimatedHours: null,
+      billable: false,
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1410,11 +1441,19 @@ export default function ProjectTasksPage() {
       priority: 'Medium',
       taskGroupId: '',
       designType: '',
+      mode: 'manual',
       brand: '',
       dueDate: '',
       assignee: '',
+      intendedUses: [],
+      aiToolsRestriction: 'all',
+      selectedTools: [],
+      selectedProjectId: '',
       targetAudience: '',
       detailedDescription: '',
+      clientVisibility: 'internal',
+      estimatedHours: null,
+      billable: false,
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1476,9 +1515,15 @@ export default function ProjectTasksPage() {
       return
     }
 
-    if (!project) {
+    if (!taskFormData.selectedProjectId) {
       setTaskFormError('Project is required')
       toast.error('Please select a project')
+      return
+    }
+
+    if (taskFormData.intendedUses.length === 0) {
+      setTaskFormError('At least one intended use is required')
+      toast.error('Please select at least one intended use')
       return
     }
 
@@ -1486,7 +1531,7 @@ export default function ProjectTasksPage() {
     const newTask: Task = {
       id: `task-${Date.now()}`,
       taskGroupId: taskFormData.taskGroupId || '', // Use selected group or ungrouped
-      projectId: projectId,
+      projectId: taskFormData.selectedProjectId,
       workstream: 'general',
       title: taskFormData.title.trim(),
       description: taskFormData.description || undefined,
@@ -1512,11 +1557,19 @@ export default function ProjectTasksPage() {
         priority: taskFormData.priority, // Keep priority
         taskGroupId: taskFormData.taskGroupId, // Keep task group
         designType: '',
+        mode: taskFormData.mode, // Keep mode
         brand: taskFormData.brand, // Keep brand
         dueDate: '',
         assignee: taskFormData.assignee, // Keep assignee
+        intendedUses: taskFormData.intendedUses, // Keep intended uses
+        aiToolsRestriction: taskFormData.aiToolsRestriction, // Keep AI tools setting
+        selectedTools: taskFormData.selectedTools, // Keep selected tools
+        selectedProjectId: taskFormData.selectedProjectId, // Keep selected project
         targetAudience: '',
         detailedDescription: '',
+        clientVisibility: taskFormData.clientVisibility, // Keep client visibility
+        estimatedHours: null,
+        billable: taskFormData.billable, // Keep billable setting
       })
       setTaskGroupQuery(taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || '')
       setSelectedAssets([]) // Clear attachments
@@ -1852,7 +1905,7 @@ export default function ProjectTasksPage() {
             }
           }}
         >
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full overflow-visible">
             {/* Header - Fixed */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -1934,18 +1987,18 @@ export default function ProjectTasksPage() {
                     onClick={() => setShowProjectPicker(true)}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-150 cursor-pointer group",
-                      !project 
+                      !taskFormData.selectedProjectId 
                         ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30" 
                         : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500"
                     )}
                   >
                     <span className={cn(
                       "text-xs font-medium",
-                      !project 
+                      !taskFormData.selectedProjectId 
                         ? "text-red-600 dark:text-red-400" 
                         : "text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                     )}>
-                      {project?.name || "Select Project"}
+                      {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
                     </span>
                   </button>
                 </div>
@@ -1998,10 +2051,200 @@ export default function ProjectTasksPage() {
               </div>
             </div>
 
-            {/* Properties Bar - Fixed */}
+            {/* Target Audience - Fixed */}
             <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+              <input 
+                type="text" 
+                placeholder="Target Audience (e.g., B2B decision makers)" 
+                className="w-full text-sm bg-transparent border-b border-gray-300 dark:border-gray-700 focus:border-blue-500 outline-none py-2 placeholder:text-gray-400"
+                value={taskFormData.targetAudience}
+                onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
+              />
+            </div>
+
+            {/* Intended Uses - Required Field - Fixed */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Rocket className="w-3.5 h-3.5 text-gray-900 dark:text-white" />
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    Intended Uses
+                  </span>
+                  <span className="text-xs text-red-500">*</span>
+                </div>
+                
+                {/* Selected Uses as Chips */}
+                {taskFormData.intendedUses.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {taskFormData.intendedUses.map(use => (
+                      <span
+                        key={use}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-md text-xs font-medium"
+                      >
+                        {use}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTaskFormData({
+                              ...taskFormData,
+                              intendedUses: taskFormData.intendedUses.filter(u => u !== use)
+                            })
+                          }}
+                          className="hover:text-blue-700 dark:hover:text-blue-300"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Add Button / Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowIntendedUsesPicker(!showIntendedUsesPicker)}
+                    className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700 rounded-md hover:border-blue-500 hover:text-blue-500 transition-all duration-150"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Select intended uses...
+                  </button>
+                  
+                  {/* Intended Uses Picker Dropdown */}
+                  {showIntendedUsesPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowIntendedUsesPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-60 overflow-auto">
+                          {[
+                            'Advertising/Campaigns',
+                            'Editorial',
+                            'Internal',
+                            'Social Media',
+                            'Print',
+                            'Web',
+                            'Video'
+                          ].map(use => (
+                            <button
+                              key={use}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.intendedUses.includes(use)
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                if (taskFormData.intendedUses.includes(use)) {
+                                  setTaskFormData({
+                                    ...taskFormData,
+                                    intendedUses: taskFormData.intendedUses.filter(u => u !== use)
+                                  })
+                                } else {
+                                  setTaskFormData({
+                                    ...taskFormData,
+                                    intendedUses: [...taskFormData.intendedUses, use]
+                                  })
+                                }
+                              }}
+                            >
+                              <span className="text-xs font-medium">{use}</span>
+                              {taskFormData.intendedUses.includes(use) && <Check className="w-3 h-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Tools Section - Conditional - Fixed */}
+            {(taskFormData.mode === 'generative' || taskFormData.mode === 'assisted') && (
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bot className="w-3.5 h-3.5 text-gray-900 dark:text-white" />
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">
+                      AI Tools
+                    </span>
+                  </div>
+                  
+                  {/* Radio Button Group */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="aiToolsRestriction"
+                        checked={taskFormData.aiToolsRestriction === 'all'}
+                        onChange={() => setTaskFormData({ ...taskFormData, aiToolsRestriction: 'all' })}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-xs text-gray-900 dark:text-white">Use all approved tools</span>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="aiToolsRestriction"
+                        checked={taskFormData.aiToolsRestriction === 'specific'}
+                        onChange={() => setTaskFormData({ ...taskFormData, aiToolsRestriction: 'specific' })}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-xs text-gray-900 dark:text-white">Restrict to specific tools...</span>
+                    </label>
+                    
+                    {/* Tool Picker - Shows when 'specific' is selected */}
+                    {taskFormData.aiToolsRestriction === 'specific' && (
+                      <div className="ml-7 mt-2 space-y-2">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Select specific tools:</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            'ChatGPT',
+                            'Midjourney',
+                            'DALL-E',
+                            'Claude',
+                            'Stable Diffusion',
+                            'Runway'
+                          ].map(tool => (
+                            <label key={tool} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={taskFormData.selectedTools.includes(tool)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setTaskFormData({
+                                      ...taskFormData,
+                                      selectedTools: [...taskFormData.selectedTools, tool]
+                                    })
+                                  } else {
+                                    setTaskFormData({
+                                      ...taskFormData,
+                                      selectedTools: taskFormData.selectedTools.filter(t => t !== tool)
+                                    })
+                                  }
+                                }}
+                                className="w-3.5 h-3.5 text-blue-600 rounded"
+                              />
+                              <span className="text-xs text-gray-700 dark:text-gray-300">{tool}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Properties Bar - Fixed */}
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 overflow-visible">
               {/* Properties Bar - Metadata Pills */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 overflow-visible">
                 {/* Design Type - FIRST - HIGH PRIORITY */}
                 <div className="relative">
                   <PropertyPill
@@ -2062,6 +2305,57 @@ export default function ProjectTasksPage() {
                             >
                               <span className="text-xs font-medium">{type}</span>
                               {taskFormData.designType === type && <Check className="w-3 h-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Mode - With Dropdown Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<Zap className="w-3.5 h-3.5" />}
+                    label="Mode"
+                    value={
+                      taskFormData.mode === 'manual' ? 'Manual' :
+                      taskFormData.mode === 'generative' ? 'AI Generative' :
+                      'AI Assisted'
+                    }
+                    onClick={() => setShowModePicker(!showModePicker)}
+                  />
+                  
+                  {/* Mode Picker Dropdown */}
+                  {showModePicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowModePicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1">
+                          {[
+                            { value: 'manual', label: 'Manual' },
+                            { value: 'generative', label: 'AI Generative' },
+                            { value: 'assisted', label: 'AI Assisted' }
+                          ].map(mode => (
+                            <button
+                              key={mode.value}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.mode === mode.value 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, mode: mode.value as typeof taskFormData.mode })
+                                setShowModePicker(false)
+                              }}
+                            >
+                              <span className="text-xs font-medium">{mode.label}</span>
+                              {taskFormData.mode === mode.value && <Check className="w-3 h-3" />}
                             </button>
                           ))}
                         </div>
@@ -2225,8 +2519,8 @@ export default function ProjectTasksPage() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowDueDatePicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
-                        <div className="p-1 max-h-80 overflow-auto">
+                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-[160px] overflow-y-auto">
+                        <div className="p-1">
                           {/* Clear Option */}
                           <button
                             type="button"
@@ -2344,7 +2638,24 @@ export default function ProjectTasksPage() {
                             
                             return (
                               <>
-                                {/* Create New Option */}
+                                {/* New Group Button */}
+                                <button
+                                  type="button"
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-500 border-b border-gray-200 dark:border-gray-700 transition-all duration-150"
+                                  onClick={() => {
+                                    setShowTaskGroupPicker(false)
+                                    setTaskGroupQuery('')
+                                    setEditingGroup(null)
+                                    setFormData({ name: '', description: '', color: '#3b82f6' })
+                                    setAutoSelectNewGroup(true)
+                                    setIsModalOpen(true)
+                                  }}
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-medium">New group</span>
+                                </button>
+                                
+                                {/* Create New Option (inline quick create) */}
                                 {showCreate && (
                                   <button
                                     type="button"
@@ -2426,115 +2737,73 @@ export default function ProjectTasksPage() {
             {/* Expanded Content - Scrollable */}
             <div className="flex-1 overflow-y-auto px-6">
               {isExpanded && (
-                <div className="py-4 space-y-4">
-                  {/* Request Details Collapsible */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-                    <button 
-                      type="button" 
-                      onClick={() => setRequestDetailsExpanded(!requestDetailsExpanded)} 
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                    >
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Request Details</span>
-                      {requestDetailsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                    </button>
-                    {requestDetailsExpanded && (
-                      <div className="px-4 pb-4 space-y-3">
-                        <input 
-                          type="text" 
-                          placeholder="Target Audience (e.g., B2B decision makers)" 
-                          className="w-full text-sm bg-transparent border-b border-gray-300 dark:border-gray-700 focus:border-blue-500 outline-none py-2 placeholder:text-gray-400"
-                          value={taskFormData.targetAudience}
-                          onChange={(e) => setTaskFormData({ ...taskFormData, targetAudience: e.target.value })}
+                <div className="py-4 space-y-6">
+                  {/* Client Visibility */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Client Visibility</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="clientVisibility"
+                          checked={taskFormData.clientVisibility === 'internal'}
+                          onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'internal' })}
+                          className="w-4 h-4 text-blue-600"
                         />
-                        <textarea 
-                          rows={3} 
-                          placeholder="Detailed description, requirements, specs..." 
-                          className="w-full text-sm bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg focus:border-blue-500 outline-none p-3 resize-none placeholder:text-gray-400"
-                          value={taskFormData.detailedDescription}
-                          onChange={(e) => setTaskFormData({ ...taskFormData, detailedDescription: e.target.value })}
+                        <span className="text-xs text-gray-900 dark:text-white">Internal only</span>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="clientVisibility"
+                          checked={taskFormData.clientVisibility === 'visible'}
+                          onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'visible' })}
+                          className="w-4 h-4 text-blue-600"
                         />
-                      </div>
-                    )}
+                        <span className="text-xs text-gray-900 dark:text-white">Visible to client</span>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="clientVisibility"
+                          checked={taskFormData.clientVisibility === 'commentable'}
+                          onChange={() => setTaskFormData({ ...taskFormData, clientVisibility: 'commentable' })}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className="text-xs text-gray-900 dark:text-white">Client can comment</span>
+                      </label>
+                    </div>
                   </div>
 
-                  {/* Attachments Collapsible */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-                    <button 
-                      type="button" 
-                      onClick={() => setAttachmentsExpanded(!attachmentsExpanded)} 
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                    >
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">Attachments</span>
-                      {attachmentsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                    </button>
-                    {attachmentsExpanded && (
-                      <div className="px-4 pb-4">
-                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer">
-                          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
-                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, PDF, AI, PSD up to 50MB</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Link Assets from DAM Collapsible */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-                    <button 
-                      type="button" 
-                      onClick={() => setLinkAssetsExpanded(!linkAssetsExpanded)} 
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                    >
+                  {/* Budget Tracking */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Budget Tracking</label>
+                    <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">Link Assets</span>
-                        {selectedAssets.length > 0 && (
-                          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">{selectedAssets.length}</span>
-                        )}
+                        <label className="text-xs text-gray-600 dark:text-gray-400">Estimated hours:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          placeholder="0"
+                          value={taskFormData.estimatedHours || ''}
+                          onChange={(e) => setTaskFormData({ ...taskFormData, estimatedHours: e.target.value ? parseFloat(e.target.value) : null })}
+                          className="w-20 text-xs bg-transparent border border-gray-300 dark:border-gray-700 rounded px-2 py-1 focus:border-blue-500 outline-none text-gray-900 dark:text-white"
+                        />
                       </div>
-                      {linkAssetsExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                    </button>
-                    {linkAssetsExpanded && (
-                      <div className="px-4 pb-4 space-y-3">
-                        <button 
-                          type="button"
-                          onClick={() => setShowAssetBrowser(true)}
-                          className="w-full border border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2"
-                        >
-                          <Folder className="w-4 h-4" />
-                          Browse Assets from DAM
-                        </button>
-                        
-                        {selectedAssets.length > 0 && (
-                          <div className="space-y-2">
-                            {selectedAssets.map(asset => (
-                              <div key={asset.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <img src={asset.thumbnail} alt={asset.name} className="w-10 h-10 rounded object-cover" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{asset.name}</p>
-                                  <select
-                                    value={asset.role || 'OUTPUT'}
-                                    onChange={(e) => updateAssetRole(asset.id, e.target.value)}
-                                    className="text-xs bg-transparent border-none text-gray-500 outline-none mt-0.5 cursor-pointer"
-                                  >
-                                    <option value="OUTPUT">Output</option>
-                                    <option value="INSPIRATION">Inspiration</option>
-                                    <option value="SOURCE_MATERIAL">Source Material</option>
-                                    <option value="ORIGINAL">Original</option>
-                                  </select>
-                                </div>
-                                <button 
-                                  type="button"
-                                  onClick={() => removeAsset(asset.id)} 
-                                  className="text-gray-400 hover:text-red-500 transition"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={taskFormData.billable}
+                          onChange={(e) => setTaskFormData({ ...taskFormData, billable: e.target.checked })}
+                          className="w-3.5 h-3.5 text-blue-600 rounded"
+                        />
+                        <span className="text-xs text-gray-900 dark:text-white">Billable: Yes</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2690,18 +2959,16 @@ export default function ProjectTasksPage() {
           {/* Projects List */}
           <div className="space-y-1 max-h-96 overflow-y-auto">
             {(() => {
-              const { projects } = useData()
               const searchLower = projectQuery.toLowerCase().trim()
               const filteredProjects = searchLower === ''
-                ? projects
-                : projects.filter(p => p.name.toLowerCase().includes(searchLower))
+                ? allProjects
+                : allProjects.filter(p => p.name.toLowerCase().includes(searchLower))
               
               return filteredProjects.map(proj => (
                 <button
                   key={proj.id}
                   onClick={() => {
-                    // Project switching logic would go here
-                    // For now, just close the dialog since we're already in a project context
+                    setTaskFormData({ ...taskFormData, selectedProjectId: proj.id })
                     setShowProjectPicker(false)
                     setProjectQuery('')
                     toast.success(`Project "${proj.name}" selected`)
@@ -2715,7 +2982,7 @@ export default function ProjectTasksPage() {
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{proj.name}</p>
                     <p className="text-xs text-gray-500 truncate">{proj.status} • {proj.assets || 0} assets</p>
                   </div>
-                  {project?.id === proj.id && <Check className="w-4 h-4 text-blue-500" />}
+                  {taskFormData.selectedProjectId === proj.id && <Check className="w-4 h-4 text-blue-500" />}
                 </button>
               ))
             })()}
