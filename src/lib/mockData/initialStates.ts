@@ -296,12 +296,14 @@ export function generateSampleTasks(count: number = 5): Array<Task & { media?: M
     const method = creationMethods[i % creationMethods.length]
     const hasMedia = i % 2 === 0 // 50% have media
     
-    const task = getTaskWithMedia(method)
+    const taskWithMedia = getTaskWithMedia(method)
     if (!hasMedia) {
-      delete task.media
+      // Extract task without media property
+      const { media, ...taskWithoutMedia } = taskWithMedia
+      tasks.push(taskWithoutMedia as Task)
+    } else {
+      tasks.push(taskWithMedia)
     }
-    
-    tasks.push(task)
   }
   
   return tasks
