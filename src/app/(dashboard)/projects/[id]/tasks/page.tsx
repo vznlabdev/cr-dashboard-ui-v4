@@ -2005,121 +2005,101 @@ export default function ProjectTasksPage() {
           }}
         >
           <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
-            {/* Header - Fixed */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                {/* Breadcrumb Navigation */}
-                <div className="flex items-center gap-3">
-                  {/* New Task - Static Label */}
-                  <div className="flex items-center gap-2 group">
-                    <FolderKanban className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">New Task</DialogTitle>
-                  </div>
+            {/* Header - Fixed - Linear Style */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+              {/* Breadcrumb Navigation - Single Line, Minimal */}
+              <div className="flex items-center gap-4">
+                {/* New Task - Static Label */}
+                <DialogTitle className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                  New Task
+                </DialogTitle>
+                
+                <span className="text-gray-400 dark:text-gray-600">›</span>
+                
+                {/* Brand - Clickable */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowBrandPicker(!showBrandPicker)}
+                    className="text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    {taskFormData.brand || "Select Brand"}
+                  </button>
                   
-                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                  
-                  {/* Brand - Clickable */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowBrandPicker(!showBrandPicker)}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 cursor-pointer group relative"
-                    >
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                        {taskFormData.brand || "Select Brand"}
-                      </span>
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
-                    </button>
-                    
-                    {/* Brand Picker Dropdown */}
-                    {showBrandPicker && (
-                      <>
-                        <div 
-                          className="fixed inset-0 z-40" 
-                          onClick={() => setShowBrandPicker(false)}
-                        />
-                        <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
-                          <div className="p-1">
-                            {/* Clear Option */}
+                  {/* Brand Picker Dropdown */}
+                  {showBrandPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowBrandPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1">
+                          {/* Clear Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, brand: '' })
+                              setShowBrandPicker(false)
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                          </button>
+                          
+                          {/* Brand Options */}
+                          {['Acme Corporation', 'TechStart Inc'].map(brand => (
                             <button
+                              key={brand}
                               type="button"
-                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.brand === brand 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
                               onClick={() => {
-                                setTaskFormData({ ...taskFormData, brand: '' })
+                                setTaskFormData({ ...taskFormData, brand })
                                 setShowBrandPicker(false)
                               }}
                             >
-                              <Minus className="w-3.5 h-3.5 text-gray-400" />
-                              <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                              <span className="text-xs font-medium">{brand}</span>
+                              {taskFormData.brand === brand && <Check className="w-3 h-3" />}
                             </button>
-                            
-                            {/* Brand Options */}
-                            {['Acme Corporation', 'TechStart Inc'].map(brand => (
-                              <button
-                                key={brand}
-                                type="button"
-                                className={cn(
-                                  "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
-                                  taskFormData.brand === brand 
-                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
-                                    : "text-gray-900 dark:text-white"
-                                )}
-                                onClick={() => {
-                                  setTaskFormData({ ...taskFormData, brand })
-                                  setShowBrandPicker(false)
-                                }}
-                              >
-                                <span className="text-xs font-medium">{brand}</span>
-                                {taskFormData.brand === brand && <Check className="w-3 h-3" />}
-                              </button>
-                            ))}
-                          </div>
+                          ))}
                         </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                  
-                  {/* Project - Clickable */}
-                  <button
-                    type="button"
-                    onClick={() => setShowProjectPicker(true)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1 rounded-md transition-all duration-150 cursor-pointer group relative",
-                      !taskFormData.selectedProjectId 
-                        ? "hover:bg-red-50 dark:hover:bg-red-900/20" 
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    <span className={cn(
-                      "text-sm font-medium transition-colors",
-                      !taskFormData.selectedProjectId 
-                        ? "text-red-600 dark:text-red-400" 
-                        : "text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                    )}>
-                      {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
-                    </span>
-                    <div className={cn(
-                      "absolute bottom-0 left-0 right-0 h-0.5 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left",
-                      !taskFormData.selectedProjectId ? "bg-red-500" : "bg-blue-500"
-                    )} />
-                  </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-              
-              {/* Header Actions */}
-              <div className="flex items-center gap-2">
-                {/* Close Button - Only one X in the entire modal */}
+                
+                <span className="text-gray-400 dark:text-gray-600">›</span>
+                
+                {/* Project - Clickable - Current Step */}
                 <button
                   type="button"
-                  onClick={closeTaskModal}
-                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                  title="Close (Esc)"
+                  onClick={() => setShowProjectPicker(true)}
+                  className={cn(
+                    "text-sm font-normal transition-colors",
+                    !taskFormData.selectedProjectId 
+                      ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300" 
+                      : "text-white dark:text-white hover:text-gray-300 dark:hover:text-gray-300"
+                  )}
                 >
-                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
                 </button>
               </div>
+              
+              {/* Close Button - Minimal */}
+              <button
+                type="button"
+                onClick={closeTaskModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Scrollable Content Area */}
