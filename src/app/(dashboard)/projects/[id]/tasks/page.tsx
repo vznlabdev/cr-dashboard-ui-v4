@@ -2008,26 +2008,27 @@ export default function ProjectTasksPage() {
             {/* Header - Fixed */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
-                {/* Pill-style Breadcrumb */}
-                <div className="flex items-center gap-2">
-                  {/* New Task Pill */}
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                    <FolderKanban className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <DialogTitle className="text-xs font-semibold text-blue-600 dark:text-blue-400">New Task</DialogTitle>
+                {/* Breadcrumb Navigation */}
+                <div className="flex items-center gap-3">
+                  {/* New Task - Static Label */}
+                  <div className="flex items-center gap-2 group">
+                    <FolderKanban className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <DialogTitle className="text-sm font-semibold text-gray-900 dark:text-white">New Task</DialogTitle>
                   </div>
                   
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                   
-                  {/* Brand Pill - With Dropdown */}
+                  {/* Brand - Clickable */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setShowBrandPicker(!showBrandPicker)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-150 cursor-pointer group"
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 cursor-pointer group relative"
                     >
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                         {taskFormData.brand || "Select Brand"}
                       </span>
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
                     </button>
                     
                     {/* Brand Picker Dropdown */}
@@ -2078,27 +2079,31 @@ export default function ProjectTasksPage() {
                     )}
                   </div>
                   
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                   
-                  {/* Project Pill */}
+                  {/* Project - Clickable */}
                   <button
                     type="button"
                     onClick={() => setShowProjectPicker(true)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-150 cursor-pointer group",
+                      "flex items-center gap-1.5 px-3 py-1 rounded-md transition-all duration-150 cursor-pointer group relative",
                       !taskFormData.selectedProjectId 
-                        ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30" 
-                        : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500"
+                        ? "hover:bg-red-50 dark:hover:bg-red-900/20" 
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     )}
                   >
                     <span className={cn(
-                      "text-xs font-medium",
+                      "text-sm font-medium transition-colors",
                       !taskFormData.selectedProjectId 
                         ? "text-red-600 dark:text-red-400" 
-                        : "text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                        : "text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
                     )}>
                       {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
                     </span>
+                    <div className={cn(
+                      "absolute bottom-0 left-0 right-0 h-0.5 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left",
+                      !taskFormData.selectedProjectId ? "bg-red-500" : "bg-blue-500"
+                    )} />
                   </button>
                 </div>
               </div>
