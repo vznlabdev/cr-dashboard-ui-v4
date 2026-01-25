@@ -6,7 +6,7 @@
 import { MOCK_ASSET_LIBRARY } from './assetLibrary'
 import { MOCK_PERSONA_LIBRARY } from './personaLibrary'
 import { MOCK_PROMPT_LIBRARY, type PromptLibraryItem } from './promptLibrary'
-import { MOCK_TRAINING_DATASETS, type TrainingDataset } from './trainingDatasets'
+import { MOCK_TRAINING_DATASETS, type TrainingDataset, getDatasetsByCategory } from './trainingDatasets'
 import type { LinkedAsset, AssignedCreator } from '@/types/mediaManager'
 
 // ========== ASSET HELPERS ==========
