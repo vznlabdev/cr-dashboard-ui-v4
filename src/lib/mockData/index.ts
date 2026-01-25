@@ -34,10 +34,9 @@ export {
   getMostUsedPrompts,
   searchPrompts,
   searchTrainingDatasets,
-  getEmptyMediaData,
-  getSampleMediaData,
-  getTaskWithMedia,
-  getMinimalValidMedia,
   getAllMockDataStats,
   validateMockData
 } from './helpers'
+
+// Note: getEmptyMediaData, getSampleMediaData, getTaskWithMedia, getMinimalValidMedia
+// are already exported via 'export * from ./initialStates' above
