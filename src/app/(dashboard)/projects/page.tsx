@@ -303,7 +303,7 @@ export default function ProjectsPage() {
                     <TableRow 
                       key={project.id}
                       onClick={() => router.push(`/projects/${project.id}/tasks`)}
-                      className="cursor-pointer hover:bg-gray-800"
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
