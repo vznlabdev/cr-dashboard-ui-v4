@@ -162,9 +162,6 @@ export default function TaskDetailPage() {
   const [addressFeedbackOpen, setAddressFeedbackOpen] = useState(false)
   const [selectedResponse, setSelectedResponse] = useState<"generate" | "upload" | "document" | "respond" | null>(null)
   
-  // Workflow sidebar state
-  const [workflowSidebarOpen, setWorkflowSidebarOpen] = useState(true)
-  
   // Step navigation state
   const [skipStepDialogOpen, setSkipStepDialogOpen] = useState(false)
   const [skipStepNumber, setSkipStepNumber] = useState<number | null>(null)
@@ -1428,6 +1425,7 @@ export default function TaskDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* AI Workflow Section - Moved to top */}
+          {(task.mode === 'generative' || task.mode === 'assisted') && (
           <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
@@ -1460,6 +1458,7 @@ export default function TaskDetailPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Description */}
           <Card>
