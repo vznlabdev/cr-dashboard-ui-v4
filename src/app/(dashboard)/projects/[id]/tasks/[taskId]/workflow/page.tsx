@@ -286,6 +286,50 @@ export default function TaskWorkflowPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* AI Evidence Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  AI Evidence
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Prompts:</span>
+                    <span className="font-medium">3</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Generations:</span>
+                    <span className="font-medium">4</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Downloads:</span>
+                    <span className="font-medium">2</span>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-green-500" />
+                    <span className="text-muted-foreground">Provenance verified</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Session: 45 min</span>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="w-full" onClick={() => {
+                  const evidenceCard = document.getElementById('evidence-section')
+                  evidenceCard?.scrollIntoView({ behavior: 'smooth' })
+                }}>
+                  <Eye className="mr-2 h-3.5 w-3.5" />
+                  View Details
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Main Workflow Area */}
@@ -639,6 +683,182 @@ export default function TaskWorkflowPage() {
                     </Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Full Evidence Viewer */}
+            <Card id="evidence-section">
+              <CardHeader>
+                <CardTitle>AI Evidence Trail</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Summary */}
+                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h3 className="font-semibold text-sm mb-3">Evidence Summary</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Tool:</span>
+                      <span className="ml-2 font-medium">{task.aiTool || 'Not selected'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Session ID:</span>
+                      <span className="ml-2 font-mono text-xs">abc123xyz</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Tracking:</span>
+                      <Badge className="ml-2 text-xs bg-green-100 dark:bg-green-900/20 text-green-700 border-green-200">
+                        <Check className="h-3 w-3 mr-1" />
+                        Full
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Duration:</span>
+                      <span className="ml-2 font-medium">45 minutes</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Prompts */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Prompts (3)
+                  </h3>
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Jan 24, 2:47 PM</span>
+                        <Badge variant="outline" className="text-xs">
+                          <Image className="h-3 w-3 mr-1" />
+                          Screenshot
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-mono bg-muted p-3 rounded">
+                        futuristic city skyline at sunset, cinematic style, warm golden hour lighting, dramatic clouds...
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div><span className="text-muted-foreground">Model:</span> <span className="font-medium">Midjourney v6</span></div>
+                        <div><span className="text-muted-foreground">Settings:</span> <span className="font-mono">--ar 16:9 --q 2</span></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <span className="text-sm font-medium">Jan 24, 3:02 PM</span>
+                      <p className="text-sm font-mono bg-muted p-3 rounded">
+                        same as above but with more detail in architecture, add people walking on streets...
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <span className="text-sm font-medium">Jan 24, 3:18 PM</span>
+                      <p className="text-sm font-mono bg-muted p-3 rounded">
+                        variation with blue hour lighting instead of golden hour, more dramatic mood...
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Separator />
+
+                {/* Generations */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Generations (4)
+                  </h3>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Job #1</span>
+                        <Badge variant="outline" className="text-xs">4 outputs</Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div><span className="text-muted-foreground">Started:</span> 2:47 PM</div>
+                        <div><span className="text-muted-foreground">Completed:</span> 2:48 PM</div>
+                        <div><span className="text-muted-foreground">Duration:</span> 68s</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Job #2</span>
+                        <Badge variant="outline" className="text-xs">4 outputs</Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div><span className="text-muted-foreground">Started:</span> 3:02 PM</div>
+                        <div><span className="text-muted-foreground">Completed:</span> 3:03 PM</div>
+                        <div><span className="text-muted-foreground">Duration:</span> 73s</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Separator />
+
+                {/* Downloads */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Downloads (2)
+                  </h3>
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">hero_image_v1.png</span>
+                        <Badge className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 border-green-200">
+                          <FileCheck className="h-3 w-3 mr-1" />
+                          Matched
+                        </Badge>
+                      </div>
+                      <div className="text-xs">
+                        <span className="text-muted-foreground">Downloaded:</span>
+                        <span className="ml-2">3:15 PM</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">File Hash:</p>
+                        <p className="text-xs font-mono bg-muted p-2 rounded break-all">
+                          sha256:a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+                        <Check className="h-4 w-4" />
+                        <span>Matched to uploaded asset</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">hero_image_v2.png</span>
+                        <Badge className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 border-green-200">
+                          <FileCheck className="h-3 w-3 mr-1" />
+                          Matched
+                        </Badge>
+                      </div>
+                      <div className="text-xs">
+                        <span className="text-muted-foreground">Downloaded:</span>
+                        <span className="ml-2">3:16 PM</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Export Report */}
+                <div className="pt-4 border-t">
+                  <Button variant="outline" className="w-full" onClick={() => toast.info("PDF export coming soon")}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Full Evidence Report
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
