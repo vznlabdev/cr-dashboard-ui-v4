@@ -1328,11 +1328,11 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      {/* AI Workflow Sidebar - Desktop */}
+      {/* AI Workflow Sidebar - Desktop - HIDDEN, functionality moved to /workflow page */}
       {task.mode === 'generative' || task.mode === 'assisted' ? (
-        <div className="flex gap-6">
-          {/* Sidebar - Hidden on mobile */}
-          <aside className={cn(
+        <div className="space-y-6">
+          {/* Sidebar - Hidden completely */}
+          <aside style={{ display: 'none' }} className={cn(
             "hidden lg:block shrink-0 transition-all duration-300",
             workflowSidebarOpen ? "w-80" : "w-12"
           )}>
@@ -1509,9 +1509,9 @@ export default function TaskDetailPage() {
           </aside>
 
           {/* Main Content Wrapper */}
-          <div className="flex-1 min-w-0 space-y-6">
-            {/* Mobile Workflow Toggle */}
-            <div className="lg:hidden">
+          <div className="space-y-6">
+            {/* Mobile Workflow Toggle - HIDDEN, functionality moved to /workflow page */}
+            <div style={{ display: 'none' }} className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="w-full">
