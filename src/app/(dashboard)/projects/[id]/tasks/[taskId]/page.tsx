@@ -1768,6 +1768,40 @@ export default function TaskDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* AI Workflow Section - Moved to top */}
+          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-1">AI Workflow</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage your AI-assisted creation process with guided steps, tool tracking, and evidence collection.
+                  </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <Badge variant="outline">
+                      Step {task.aiWorkflowStep || 1} / 7
+                    </Badge>
+                    {task.aiTool && (
+                      <span className="text-sm text-muted-foreground">
+                        Using {task.aiTool}
+                      </span>
+                    )}
+                  </div>
+                  <Button asChild size="lg" className="w-full sm:w-auto">
+                    <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
+                      <Rocket className="mr-2 h-4 w-4" />
+                      {task.aiWorkflowStep && task.aiWorkflowStep > 1 ? 'Continue Workflow' : 'Start AI Workflow'}
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Description */}
           <Card>
             <CardHeader>
@@ -1813,40 +1847,6 @@ export default function TaskDetailPage() {
                   No target audience specified
                 </p>
               )}
-            </CardContent>
-          </Card>
-
-          {/* AI Workflow Section */}
-          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">AI Workflow</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Manage your AI-assisted creation process with guided steps, tool tracking, and evidence collection.
-                  </p>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Badge variant="outline">
-                      Step {task.aiWorkflowStep || 1} / 7
-                    </Badge>
-                    {task.aiTool && (
-                      <span className="text-sm text-muted-foreground">
-                        Using {task.aiTool}
-                      </span>
-                    )}
-                  </div>
-                  <Button asChild size="lg" className="w-full sm:w-auto">
-                    <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
-                      <Rocket className="mr-2 h-4 w-4" />
-                      {task.aiWorkflowStep && task.aiWorkflowStep > 1 ? 'Continue Workflow' : 'Start AI Workflow'}
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
