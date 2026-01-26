@@ -32,6 +32,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getTaskById } from "@/lib/mock-data/projects-tasks"
+import { useData } from "@/contexts/data-context"
 import type { Task } from "@/types"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -47,6 +48,9 @@ export default function TaskWorkflowPage() {
   const router = useRouter()
   const taskId = params.taskId as string
   const projectId = params.id as string
+  
+  const { getProjectById } = useData()
+  const project = getProjectById(projectId)
   
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
@@ -197,6 +201,27 @@ export default function TaskWorkflowPage() {
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
+          {/* Breadcrumb */}
+          <div className="flex items-center text-xs text-muted-foreground mb-3">
+            <Link href="/projects" className="hover:text-foreground transition-colors">
+              Projects
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/projects/${projectId}`} className="hover:text-foreground transition-colors">
+              {project?.name || 'Project'}
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/projects/${projectId}/tasks`} className="hover:text-foreground transition-colors">
+              Tasks
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/projects/${projectId}/tasks/${taskId}`} className="hover:text-foreground transition-colors">
+              {task.title}
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-foreground font-medium">AI Workflow</span>
+          </div>
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
