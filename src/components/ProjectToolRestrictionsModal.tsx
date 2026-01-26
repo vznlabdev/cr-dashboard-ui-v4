@@ -53,7 +53,10 @@ export function ProjectToolRestrictionsModal({
 
     const toolNames = restriction === "all" 
       ? "all tools"
-      : selectedTools.map(id => availableTools.find(t => t.id === id)?.name).join(", ");
+      : selectedTools
+          .map(id => availableTools.find(t => t.id === id)?.name)
+          .filter((name): name is string => name !== undefined)
+          .join(", ");
 
     toast.success(`Tool restrictions updated for ${project.name}`);
     console.log({

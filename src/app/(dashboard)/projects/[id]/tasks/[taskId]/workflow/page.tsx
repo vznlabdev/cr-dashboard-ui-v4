@@ -388,7 +388,7 @@ export default function TaskWorkflowPage() {
                         )}
                       </div>
                     </div>
-                    <Button onClick={() => setTask({ ...task, aiWorkflowStep: 2, completedSteps: [1] })}>
+                    <Button onClick={() => setTask({ ...task, aiWorkflowStep: 2, completedSteps: [...(task.completedSteps || []), 1] })}>
                       Continue to Tool Selection
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
