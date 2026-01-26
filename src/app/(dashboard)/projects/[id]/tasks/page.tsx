@@ -386,9 +386,9 @@ function FlatKanbanBoard({
             </DropdownMenu>
           </div>
 
-          {/* Mode Indicator */}
+          {/* Mode Indicator & Workflow Step */}
           {task.mode && task.mode !== "manual" && (
-            <div className="mb-2.5">
+            <div className="mb-2.5 flex items-center gap-2 flex-wrap">
               <Badge 
                 variant="outline"
                 className={cn(
@@ -400,6 +400,16 @@ function FlatKanbanBoard({
                 <Zap className="h-2.5 w-2.5" />
                 {task.mode === "generative" ? "AI Gen" : "AI Assist"}
               </Badge>
+              
+              {/* Workflow Step Indicator */}
+              {task.aiWorkflowStep && (
+                <Badge 
+                  variant="outline"
+                  className="text-[10px] font-medium px-2 py-0.5 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700"
+                >
+                  Step {task.aiWorkflowStep}/7
+                </Badge>
+              )}
             </div>
           )}
 
