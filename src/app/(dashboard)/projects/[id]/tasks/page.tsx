@@ -337,11 +337,24 @@ function FlatKanbanBoard({
         )}
       >
         <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
-          {/* Header: Priority + Menu */}
+          {/* Header: Company + Priority + Menu */}
           <div className="flex items-center justify-between gap-2 mb-2.5">
-            {/* Spacer */}
-            <div className="flex-1"></div>
-            
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              {/* Company Avatar */}
+              <div 
+                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ring-1 ring-border/40"
+                style={{ backgroundColor: getCompanyColor() }}
+                title={company?.name || 'Company'}
+              >
+                <span className="text-white font-semibold text-[9px]">
+                  {company?.name?.charAt(0) || 'C'}
+                </span>
+              </div>
+              {/* Company Name */}
+              <span className="text-xs text-muted-foreground truncate font-medium">
+                {company?.name || 'Company'}
+              </span>
+            </div>
             {/* Priority Badge */}
             <span className={cn(
               "text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0",
@@ -453,22 +466,6 @@ function FlatKanbanBoard({
           >
             {task.title}
           </h3>
-
-          {/* Task Group Badge (if exists) - Small chip */}
-          {group && (
-            <div className="mb-3">
-              <span 
-                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-                style={{ 
-                  backgroundColor: `${group.color}20`,
-                  color: group.color,
-                  border: `1px solid ${group.color}40`
-                }}
-              >
-                {group.name}
-              </span>
-            </div>
-          )}
 
           {/* Bottom Metadata Row */}
           <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
