@@ -196,7 +196,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 20, 2024',
-    createdDate: 'Dec 1, 2024',
+    createdDate: '2024-12-01T00:00:00Z',
     updatedAt: '2024-12-15T18:00:00Z',  // 3 hours ago
     mode: 'generative',
     intendedUses: ['Social Media', 'Advertising/Campaigns', 'Web'],
@@ -216,7 +216,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Mike Johnson',
     dueDate: 'Dec 18, 2024',
-    createdDate: 'Dec 2, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
     updatedAt: '2024-12-14T21:00:00Z',  // 1 day ago
   },
   {
@@ -227,7 +227,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 21, 2024',
-    createdDate: 'Dec 7, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
     updatedAt: '2024-12-15T19:00:00Z',  // 2 hours ago
     mode: 'assisted',
     intendedUses: ['Social Media', 'Internal'],
@@ -249,7 +249,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'QA Team',
     dueDate: 'Dec 19, 2024',
-    createdDate: 'Dec 3, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
     updatedAt: '2024-12-15T17:00:00Z',  // 4 hours ago
   },
   {
@@ -260,7 +260,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 15, 2024',
-    createdDate: 'Nov 30, 2024',
+    createdDate: '2024-11-30T00:00:00Z',
     updatedAt: '2024-12-12T21:00:00Z',  // 3 days ago
   },
   
@@ -273,7 +273,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Print Team',
     dueDate: 'Dec 23, 2024',
-    createdDate: 'Dec 8, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
     updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
     mode: 'generative',
     intendedUses: ['Print', 'Advertising/Campaigns', 'Internal'],
@@ -294,7 +294,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Design Team',
     dueDate: 'Dec 28, 2024',
-    createdDate: 'Dec 9, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
     updatedAt: '2024-12-15T20:30:00Z',  // 30 minutes ago
     mode: 'generative',
     intendedUses: ['Advertising/Campaigns', 'Print'],
@@ -324,7 +324,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Legal Team',
     dueDate: 'Dec 22, 2024',
-    createdDate: 'Dec 3, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
     updatedAt: '2024-12-15T16:00:00Z',  // 5 hours ago
   },
   {
@@ -335,7 +335,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Insurance Analyst',
     dueDate: 'Dec 25, 2024',
-    createdDate: 'Dec 4, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
     updatedAt: '2024-12-13T21:00:00Z',  // 2 days ago
     mode: 'generative',
     intendedUses: ['Editorial', 'Internal'],
@@ -358,7 +358,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Emily Davis',
     dueDate: 'Dec 15, 2024',
-    createdDate: 'Dec 5, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
     updatedAt: '2024-12-15T17:00:00Z',  // 4 hours ago
     mode: 'assisted',
     intendedUses: ['Video', 'Advertising/Campaigns'],
@@ -372,7 +372,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Audio Team',
     dueDate: 'Dec 16, 2024',
-    createdDate: 'Dec 6, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
     updatedAt: '2024-12-15T15:00:00Z',  // 6 hours ago
   },
   {
@@ -383,7 +383,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'QA Team',
     dueDate: 'Dec 17, 2024',
-    createdDate: 'Dec 4, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
     updatedAt: '2024-12-15T13:00:00Z',  // 8 hours ago
   },
   
@@ -396,7 +396,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Marketing Team',
     dueDate: 'Dec 18, 2024',
-    createdDate: 'Dec 8, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
     updatedAt: '2024-12-15T19:00:00Z',  // 2 hours ago
   },
   {
@@ -407,7 +407,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Design Team',
     dueDate: 'Dec 14, 2024',
-    createdDate: 'Dec 2, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
     updatedAt: '2024-12-11T21:00:00Z',  // 4 days ago
   },
   
@@ -420,7 +420,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'Design Team',
     dueDate: 'Dec 10, 2024',
-    createdDate: 'Nov 28, 2024',
+    createdDate: '2024-11-28T00:00:00Z',
     updatedAt: '2026-01-27T17:15:00Z',  // 4h ago
     commentsCount: 15,
     attachmentsCount: 8,
@@ -433,7 +433,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Legal Team',
     dueDate: '2026-01-20T00:00:00Z',  // Overdue (7 days ago)
-    createdDate: 'Nov 30, 2024',
+    createdDate: '2024-11-30T00:00:00Z',
     updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
     mode: 'manual',
     intendedUses: ['Internal'],
@@ -449,7 +449,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Design Team',
     dueDate: 'Dec 5, 2024',
-    createdDate: 'Nov 25, 2024',
+    createdDate: '2024-11-25T00:00:00Z',
     updatedAt: '2024-12-10T21:00:00Z',  // 5 days ago
   },
   
@@ -462,7 +462,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Events Team',
     dueDate: 'Dec 30, 2024',
-    createdDate: 'Dec 10, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
     updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
   },
   {
@@ -473,7 +473,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Print Team',
     dueDate: 'Dec 28, 2024',
-    createdDate: 'Dec 9, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
     updatedAt: '2024-12-15T18:00:00Z',  // 3 hours ago
   },
   
@@ -486,7 +486,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Design Team',
     dueDate: 'Dec 22, 2024',
-    createdDate: 'Dec 11, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
     updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
     mode: 'assisted',
     intendedUses: ['Print', 'Web', 'Internal'],
@@ -504,7 +504,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 20, 2024',
-    createdDate: 'Dec 12, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
     updatedAt: '2026-01-27T19:05:00Z',  // 2h ago
     mode: 'generative',
     intendedUses: ['Print', 'Internal'],
@@ -520,7 +520,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Mike Johnson',
     dueDate: 'Dec 21, 2024',
-    createdDate: 'Dec 10, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
     updatedAt: '2026-01-27T18:30:00Z',  // 35 minutes ago
     mode: 'generative',
     intendedUses: ['Print', 'Internal'],
@@ -546,7 +546,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Design Team',
     dueDate: 'Dec 23, 2024',
-    createdDate: 'Dec 9, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
     updatedAt: '2024-12-15T18:45:00Z',
   },
   {
@@ -557,7 +557,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Legal Team',
     dueDate: 'Dec 19, 2024',
-    createdDate: 'Dec 8, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
     updatedAt: '2024-12-15T17:30:00Z',
   },
   {
@@ -568,7 +568,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Emily Davis',
     dueDate: 'Dec 24, 2024',
-    createdDate: 'Dec 5, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
     updatedAt: '2024-12-15T16:00:00Z',
   },
   {
@@ -579,7 +579,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 25, 2024',
-    createdDate: 'Dec 6, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
     updatedAt: '2024-12-15T15:30:00Z',
   },
   
@@ -592,7 +592,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Web Design Team',
     dueDate: 'Dec 26, 2024',
-    createdDate: 'Dec 13, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
     updatedAt: '2024-12-15T22:00:00Z',
     mode: 'assisted',
     intendedUses: ['Web', 'Internal'],
@@ -606,7 +606,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Design Team',
     dueDate: 'Dec 27, 2024',
-    createdDate: 'Dec 13, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
     updatedAt: '2024-12-15T21:45:00Z',
   },
   {
@@ -617,7 +617,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'UX Team',
     dueDate: 'Dec 24, 2024',
-    createdDate: 'Dec 12, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
     updatedAt: '2024-12-15T21:30:00Z',
   },
   {
@@ -628,7 +628,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Web Design Team',
     dueDate: 'Dec 22, 2024',
-    createdDate: 'Dec 11, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
     updatedAt: '2024-12-15T20:15:00Z',
   },
   {
@@ -639,7 +639,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Design Team',
     dueDate: 'Dec 23, 2024',
-    createdDate: 'Dec 10, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
     updatedAt: '2024-12-15T19:45:00Z',
   },
   {
@@ -650,7 +650,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Sarah Chen',
     dueDate: 'Dec 21, 2024',
-    createdDate: 'Dec 9, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
     updatedAt: '2024-12-15T19:00:00Z',
   },
   {
@@ -661,7 +661,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Mike Johnson',
     dueDate: 'Dec 26, 2024',
-    createdDate: 'Dec 7, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
     updatedAt: '2024-12-15T18:30:00Z',
   },
   {
@@ -672,7 +672,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Design Team',
     dueDate: 'Dec 25, 2024',
-    createdDate: 'Dec 6, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
     updatedAt: '2024-12-15T17:45:00Z',
   },
   {
@@ -683,7 +683,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'QA Team',
     dueDate: 'Dec 20, 2024',
-    createdDate: 'Dec 4, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
     updatedAt: '2024-12-15T16:30:00Z',
   },
   {
@@ -694,7 +694,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'Animation Team',
     dueDate: 'Dec 21, 2024',
-    createdDate: 'Dec 5, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
     updatedAt: '2024-12-15T15:45:00Z',
   },
   {
@@ -705,7 +705,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Design Team',
     dueDate: 'Dec 18, 2024',
-    createdDate: 'Dec 2, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
     updatedAt: '2024-12-14T21:00:00Z',
   },
   
@@ -718,7 +718,7 @@ export const mockTasks: Task[] = [
     status: 'submitted',
     assignee: 'Events Team',
     dueDate: 'Dec 29, 2024',
-    createdDate: 'Dec 13, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
     updatedAt: '2024-12-15T22:15:00Z',
     mode: 'generative',
     intendedUses: ['Advertising/Campaigns', 'Print', 'Internal'],
@@ -732,7 +732,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Print Team',
     dueDate: 'Dec 27, 2024',
-    createdDate: 'Dec 12, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
     updatedAt: '2024-12-15T21:15:00Z',
   },
   {
@@ -743,7 +743,7 @@ export const mockTasks: Task[] = [
     status: 'assessment',
     assignee: 'Design Team',
     dueDate: 'Dec 26, 2024',
-    createdDate: 'Dec 11, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
     updatedAt: '2024-12-15T20:45:00Z',
   },
   {
@@ -754,7 +754,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Events Team',
     dueDate: 'Dec 28, 2024',
-    createdDate: 'Dec 10, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
     updatedAt: '2024-12-15T19:15:00Z',
   },
   {
@@ -765,7 +765,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Presentation Team',
     dueDate: 'Dec 30, 2024',
-    createdDate: 'Dec 8, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
     updatedAt: '2024-12-15T18:00:00Z',
   },
   {
@@ -776,7 +776,7 @@ export const mockTasks: Task[] = [
     status: 'production',
     assignee: 'Video Team',
     dueDate: 'Dec 31, 2024',
-    createdDate: 'Dec 7, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
     updatedAt: '2024-12-15T17:00:00Z',
   },
   {
@@ -787,7 +787,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'QA Team',
     dueDate: 'Dec 25, 2024',
-    createdDate: 'Dec 5, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
     updatedAt: '2024-12-15T16:15:00Z',
   },
   {
@@ -798,7 +798,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'Legal Team',
     dueDate: 'Dec 24, 2024',
-    createdDate: 'Dec 4, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
     updatedAt: '2024-12-15T15:00:00Z',
   },
   {
@@ -809,7 +809,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Print Team',
     dueDate: 'Dec 19, 2024',
-    createdDate: 'Dec 3, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
     updatedAt: '2024-12-14T20:00:00Z',
   },
   {
@@ -820,7 +820,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Design Team',
     dueDate: 'Dec 18, 2024',
-    createdDate: 'Dec 2, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
     updatedAt: '2024-12-13T21:00:00Z',
   },
   
@@ -833,7 +833,7 @@ export const mockTasks: Task[] = [
     status: 'assigned',
     assignee: 'Social Media Team',
     dueDate: 'Dec 27, 2024',
-    createdDate: 'Dec 11, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
     updatedAt: '2024-12-15T20:00:00Z',
     mode: 'generative',
     intendedUses: ['Social Media', 'Advertising/Campaigns'],
@@ -847,7 +847,7 @@ export const mockTasks: Task[] = [
     status: 'qa_review',
     assignee: 'Design Team',
     dueDate: 'Dec 22, 2024',
-    createdDate: 'Dec 7, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
     updatedAt: '2024-12-15T18:15:00Z',
   },
   {
@@ -858,7 +858,7 @@ export const mockTasks: Task[] = [
     status: 'delivered',
     assignee: 'Packaging Team',
     dueDate: 'Dec 17, 2024',
-    createdDate: 'Dec 1, 2024',
+    createdDate: '2024-12-01T00:00:00Z',
     updatedAt: '2024-12-12T20:00:00Z',
   },
 ]

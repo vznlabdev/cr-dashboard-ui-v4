@@ -16,7 +16,7 @@ import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
 import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -60,7 +60,6 @@ export default function UnifiedTasksPage() {
   const [selectedMode, setSelectedMode] = useState<string>('all')
   const [selectedAssignee, setSelectedAssignee] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(false)
-  const [focusedRow, setFocusedRow] = useState<number>(-1)
   
   // Group & Sort state
   const [groupBy, setGroupBy] = useState<'none' | 'project' | 'status' | 'assignee' | 'priority'>('none')
@@ -160,7 +159,7 @@ export default function UnifiedTasksPage() {
           break
       }
 
-      return sortDirection === 'asc' ? -comparison : comparison
+      return sortDirection === 'asc' ? comparison : -comparison
     })
 
     return filtered
@@ -202,41 +201,8 @@ export default function UnifiedTasksPage() {
       .map(([group, tasks]) => ({ group, tasks }))
   }, [filteredAndSortedTasks, groupBy, getProjectById])
 
-  // Flat list for keyboard navigation
+  // Flat list for filtering
   const filteredTasks = filteredAndSortedTasks
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Focus search with "/"
-      if (e.key === '/' && !(e.target instanceof HTMLInputElement)) {
-        e.preventDefault()
-        document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus()
-        return
-      }
-
-      if (e.target instanceof HTMLInputElement) return
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setFocusedRow(prev => Math.min(prev + 1, filteredTasks.length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setFocusedRow(prev => Math.max(prev - 1, 0))
-      } else if (e.key === 'Enter' && focusedRow >= 0) {
-        const task = filteredTasks[focusedRow]
-        router.push(`/projects/${task.projectId}/tasks/${task.id}`)
-      } else if (e.key === 'Escape') {
-        setFocusedRow(-1)
-      } else if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setShowFilters(prev => !prev)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [focusedRow, filteredTasks, router])
 
   // Get status badge variant
   const getStatusVariant = (status: Task["status"]) => {
@@ -403,16 +369,10 @@ export default function UnifiedTasksPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search tasks... (press / to focus)"
+              placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9"
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  setSearchQuery('')
-                  e.currentTarget.blur()
-                }
-              }}
             />
           </div>
         </div>
@@ -560,16 +520,11 @@ export default function UnifiedTasksPage() {
       )}
 
       {/* Results Count - Compact */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-        <span>
-          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-          {activeView === 'my-tasks' && ' assigned to you'}
-          {activeView === 'unassigned' && ' without assignee'}
-          {activeView === 'overdue' && ' past due'}
-        </span>
-        <span className="text-[10px]">
-          Use ↑↓ to navigate • Enter to open • Esc to clear • Cmd+F to filter
-        </span>
+      <div className="text-xs text-muted-foreground px-1">
+        {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
+        {activeView === 'my-tasks' && ' assigned to you'}
+        {activeView === 'unassigned' && ' without assignee'}
+        {activeView === 'overdue' && ' past due'}
       </div>
 
       {/* Linear-style Compact Table */}
@@ -634,22 +589,13 @@ export default function UnifiedTasksPage() {
                   {tasks.map((task) => {
                     const project = getProjectById(task.projectId)
                     const company = project ? getCompanyById(project.companyId) : null
-                    const idx = filteredTasks.findIndex(t => t.id === task.id)
-                    const isFocused = idx === focusedRow
                     const priority = getPriorityIndicator(task.priority)
                     
                     return (
                       <TableRow
                         key={task.id}
                         onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
-                        className={cn(
-                          "cursor-pointer border-b border-border/40 transition-colors h-11",
-                          isFocused 
-                            ? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800" 
-                            : "hover:bg-muted/50"
-                        )}
-                        onMouseEnter={() => setFocusedRow(idx)}
-                        onMouseLeave={() => setFocusedRow(-1)}
+                        className="cursor-pointer border-b border-border/40 transition-colors h-11 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
                       >
                         {/* Task Title */}
                         <TableCell className="py-2">

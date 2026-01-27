@@ -1179,6 +1179,7 @@ export default function ProjectTasksPage() {
 
   // Refs
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
   // Fetch project from data context (consistent with projects list)
   const project = getProjectById(projectId)
@@ -1379,6 +1380,15 @@ export default function ProjectTasksPage() {
       }
     }
   }, [projectId])
+
+  // Auto-resize description textarea when content changes
+  useEffect(() => {
+    if (descriptionRef.current) {
+      const textarea = descriptionRef.current
+      textarea.style.height = 'auto'
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 300)}px`
+    }
+  }, [taskFormData.description, isTaskModalOpen])
 
   // Keyboard shortcuts for task modal
   useEffect(() => {
@@ -2260,19 +2270,14 @@ export default function ProjectTasksPage() {
                 
                 {/* Description Textarea - Auto-expanding */}
                 <textarea
+                  ref={descriptionRef}
                   placeholder="Add description..."
                   value={taskFormData.description}
                   onChange={(e) => {
                     setTaskFormData({ ...taskFormData, description: e.target.value })
                   }}
-                  onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement
-                    target.style.height = 'auto'
-                    target.style.height = `${Math.min(target.scrollHeight, 300)}px`
-                  }}
                   rows={3}
                   className="w-full text-sm bg-transparent resize-none outline-none py-2 placeholder:text-gray-400 transition-all duration-150 min-h-[60px] max-h-[300px]"
-                  style={{ height: 'auto' }}
                 />
                 
                 {/* Error Message */}
