@@ -93,39 +93,16 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
     }
   }
 
-  const getWorkstreamColor = (workstream: Task["workstream"]) => {
-    switch (workstream) {
-      case "creator":
-        return "border-l-blue-500"
-      case "legal":
-        return "border-l-amber-500"
-      case "insurance":
-        return "border-l-green-500"
-      case "general":
-        return "border-l-gray-500"
-      default:
-        return "border-l-gray-500"
-    }
-  }
-
   return (
     <Card 
       onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
-      className={cn(
-        "border-l-4 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer",
-        getWorkstreamColor(task.workstream)
-      )}
+      className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer"
     >
       <CardContent className="pt-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
           <Badge variant={getStatusVariant(task.status)} className="text-xs shrink-0">
             {task.status}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-1">
-          <Badge variant="outline" className="text-xs">
-            {task.workstream}
           </Badge>
         </div>
         {task.assignee && (
@@ -190,8 +167,8 @@ function FlatKanbanBoard({
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(t => 
         t.title.toLowerCase().includes(query) ||
-        t.workstream.toLowerCase().includes(query) ||
-        (t.assignee?.toLowerCase().includes(query) ?? false)
+        (t.assignee?.toLowerCase().includes(query) ?? false) ||
+        (t.deliverableType?.toLowerCase().includes(query) ?? false)
       )
     }
 
@@ -273,18 +250,9 @@ function FlatKanbanBoard({
       return company.branding_colors.split(',')[0] || '#3b82f6'
     }
 
-    // Determine priority based on workstream (for demo purposes)
+    // Determine priority display - default to medium priority
     const getPriority = () => {
-      switch (task.workstream) {
-        case 'legal':
-          return { label: 'HIGH', className: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800' }
-        case 'insurance':
-          return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
-        case 'creator':
-          return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
-        default:
-          return { label: 'LOW', className: 'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800' }
-      }
+      return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
     }
 
     // Get category label - show deliverable type if available
@@ -292,18 +260,7 @@ function FlatKanbanBoard({
       if (task.deliverableType) {
         return task.deliverableType
       }
-      switch (task.workstream) {
-        case 'creator':
-          return 'Creative Design'
-        case 'legal':
-          return 'Legal Review'
-        case 'insurance':
-          return 'Insurance Check'
-        case 'general':
-          return 'General Task'
-        default:
-          return 'Task'
-      }
+      return 'Task'
     }
 
     // Get intended use color
@@ -869,21 +826,6 @@ function StreamView({
     }
   }
 
-  const getWorkstreamColor = (workstream: Task["workstream"]) => {
-    switch (workstream) {
-      case "creator":
-        return "bg-blue-500"
-      case "legal":
-        return "bg-amber-500"
-      case "insurance":
-        return "bg-green-500"
-      case "general":
-        return "bg-gray-500"
-      default:
-        return "bg-gray-500"
-    }
-  }
-
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -981,17 +923,16 @@ function StreamView({
               <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    {/* Workstream indicator */}
-                    <div className={cn("w-1 h-full rounded-full", getWorkstreamColor(task.workstream))} />
-                    
                     <div className="flex-1 space-y-2">
                       {/* Task header */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <h3 className="font-medium text-base">{task.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {taskGroup?.name && <>{taskGroup.name} • </>}{task.workstream}
-                          </p>
+                          {taskGroup?.name && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {taskGroup.name}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <Badge variant={getStatusVariant(task.status)}>
@@ -1770,7 +1711,6 @@ export default function ProjectTasksPage() {
       id: taskId,
       taskGroupId: taskFormData.taskGroupId || '', // Use selected group or ungrouped
       projectId: taskFormData.selectedProjectId,
-      workstream: 'general',
       title: taskFormData.title.trim(),
       description: taskFormData.description || undefined,
       status: 'submitted', // Always defaults to "Submitted"

@@ -69,7 +69,6 @@ export interface Task {
   id: string;
   taskGroupId: string;  // belongs to Task Group
   projectId: string;    // denormalized for quick queries
-  workstream: 'creator' | 'legal' | 'insurance' | 'general';
   title: string;
   description?: string;
   status: TaskStatus;

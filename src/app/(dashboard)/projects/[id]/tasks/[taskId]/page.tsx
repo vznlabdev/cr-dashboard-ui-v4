@@ -1157,21 +1157,11 @@ export default function TaskDetailPage() {
               )}
               
               {/* Priority Badge */}
-              <Badge
+              <Badge 
                 variant="outline"
-                className={cn(
-                  "font-medium",
-                  task.status === "delivered" && "bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800",
-                  task.workstream === "legal" && "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
-                  task.workstream === "insurance" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                  task.workstream === "creator" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                  task.workstream === "general" && "bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800"
-                )}
+                className="font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
               >
-                {task.workstream === "legal" && "High"}
-                {task.workstream === "insurance" && "Med"}
-                {task.workstream === "creator" && "Med"}
-                {task.workstream === "general" && "Low"}
+                Med
               </Badge>
 
               {/* Client Visibility Badge */}
@@ -1190,9 +1180,6 @@ export default function TaskDetailPage() {
               )}
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5 capitalize">
-                {task.workstream}
-              </span>
               {taskGroup && (
                 <>
                   <span>•</span>
@@ -2842,14 +2829,6 @@ export default function TaskDetailPage() {
                 </div>
               )}
 
-              {/* Workstream */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Workstream</span>
-                <Badge variant="secondary" className="capitalize">
-                  {task.workstream}
-                </Badge>
-              </div>
-
               {/* Assignee */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Assignee</span>
@@ -2870,20 +2849,11 @@ export default function TaskDetailPage() {
               {/* Priority */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Priority</span>
-                <Badge
+                <Badge 
                   variant="outline"
-                  className={cn(
-                    "font-medium capitalize",
-                    task.workstream === "legal" && "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
-                    task.workstream === "insurance" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                    task.workstream === "creator" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                    task.workstream === "general" && "bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800"
-                  )}
+                  className="font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                 >
-                  {task.workstream === "legal" && "High"}
-                  {task.workstream === "insurance" && "Medium"}
-                  {task.workstream === "creator" && "Medium"}
-                  {task.workstream === "general" && "Low"}
+                  Medium
                 </Badge>
               </div>
 
