@@ -34,7 +34,7 @@ export default function CreativeDashboardPage() {
             Manage creative requests, brands, and deliverables
           </p>
         </div>
-        <Link href="/creative/tickets/new">
+        <Link href="/tasks">
           <Button className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Request
@@ -44,7 +44,7 @@ export default function CreativeDashboardPage() {
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Link href="/creative/tickets" className="block">
+        <Link href="/tasks" className="block">
           <Card className="border-primary/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -63,7 +63,7 @@ export default function CreativeDashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/creative/tickets?status=in-progress" className="block">
+        <Link href="/tasks" className="block">
           <Card className="border-amber-500/20 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer py-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -125,7 +125,7 @@ export default function CreativeDashboardPage() {
                 Current status of creative requests
               </CardDescription>
             </div>
-            <Link href="/creative/tickets">
+            <Link href="/tasks">
               <Button variant="ghost" size="sm">
                 View All
                 <ArrowUpRight className="ml-1 h-3 w-3" />
@@ -197,14 +197,14 @@ export default function CreativeDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-2">
-            <Link href="/creative/tickets/new">
+            <Link href="/tasks">
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 Submit New Request
               </Button>
             </Link>
             <Separator />
-            <Link href="/creative/tickets?status=pending-review">
+            <Link href="/tasks">
               <Button className="w-full justify-start" variant="outline">
                 <Clock className="mr-2 h-4 w-4" />
                 Review Pending Tickets

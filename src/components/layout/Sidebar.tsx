@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "Tasks",
-    href: "/creative/tickets",
+    href: "/tasks",
     icon: Ticket,
   },
   {
