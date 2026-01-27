@@ -509,6 +509,7 @@ export const mockTasks: Task[] = [
     mode: 'assisted',
     intendedUses: ['Print', 'Web', 'Internal'],
     deliverableType: 'Print',
+    targetAudience: 'Marketing team and external partners',
     clientVisibility: 'comment',  // Client can comment - shows green badge
     commentsCount: 8,
     attachmentsCount: 2,
@@ -542,6 +543,8 @@ export const mockTasks: Task[] = [
     mode: 'generative',
     intendedUses: ['Print', 'Internal'],
     deliverableType: 'Print',
+    targetAudience: 'Corporate communications and legal dept',
+    aiWorkflowStep: 5,
     clientVisibility: 'visible',  // Client can see - shows blue badge
     commentsCount: 12,
     attachmentsCount: 5,

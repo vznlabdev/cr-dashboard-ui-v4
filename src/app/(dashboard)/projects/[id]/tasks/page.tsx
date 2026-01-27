@@ -412,47 +412,11 @@ function FlatKanbanBoard({
             </DropdownMenu>
           </div>
 
-          {/* Status Indicators Row */}
-          {((task.mode && task.mode !== "manual") || task.clearanceRejection || task.clientVisibility || isTaskOverdue(task.dueDate)) && (
-            <div className="mb-2.5 flex items-center gap-2 flex-wrap">
-              {/* AI Mode Badge */}
-              {task.mode && task.mode !== "manual" && (
-                <Badge 
-                  variant="outline"
-                  className={cn(
-                    "text-[10px] font-semibold px-2 py-0.5 gap-1",
-                    task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                    task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
-                  )}
-                >
-                  <Zap className="h-2.5 w-2.5" />
-                  {task.mode === "generative" ? "AI Gen" : "AI Assist"}
-                </Badge>
-              )}
-              
-              {/* Workflow Step Indicator */}
-              {task.aiWorkflowStep && (
-                <Badge 
-                  variant="outline"
-                  className="text-[10px] font-medium px-2 py-0.5 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700"
-                >
-                  Step {task.aiWorkflowStep}/7
-                </Badge>
-              )}
-
-              {/* Overdue Warning */}
-              {isTaskOverdue(task.dueDate) && (
-                <Badge 
-                  variant="outline"
-                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
-                >
-                  <AlertCircle className="h-2.5 w-2.5" />
-                  Overdue
-                </Badge>
-              )}
-
-              {/* Clearance Rejection Badge */}
-              {task.clearanceRejection && (
+          {/* Critical Alerts Only - Max 1 badge */}
+          {(task.clearanceRejection || isTaskOverdue(task.dueDate)) && (
+            <div className="mb-2.5">
+              {/* Clearance Rejection - Highest Priority */}
+              {task.clearanceRejection ? (
                 <Badge 
                   variant="outline"
                   className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
@@ -460,31 +424,77 @@ function FlatKanbanBoard({
                   <AlertCircle className="h-2.5 w-2.5" />
                   Needs Changes
                 </Badge>
-              )}
-
-              {/* Client Visibility Indicator */}
-              {task.clientVisibility && task.clientVisibility !== 'internal' && (
+              ) : isTaskOverdue(task.dueDate) ? (
                 <Badge 
                   variant="outline"
-                  className={cn(
-                    "text-[10px] font-medium px-2 py-0.5 gap-1",
-                    task.clientVisibility === 'visible' && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                    task.clientVisibility === 'comment' && "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                  )}
+                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
                 >
-                  <Eye className="h-2.5 w-2.5" />
-                  {task.clientVisibility === 'visible' ? 'Client Visible' : 'Client Can Comment'}
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Overdue
                 </Badge>
-              )}
+              ) : null}
             </div>
           )}
 
           {/* Task Title */}
           <h3 
-            className="mb-2.5 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+            className="mb-2 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
           >
             {task.title}
           </h3>
+
+          {/* Metadata Line - Plain Text, No Badges */}
+          <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+            {/* Deliverable Type */}
+            {task.deliverableType && (
+              <span className="font-medium">{task.deliverableType}</span>
+            )}
+
+            {/* Separator */}
+            {task.deliverableType && (task.mode || task.aiWorkflowStep || task.clientVisibility) && (
+              <span className="text-muted-foreground/40">•</span>
+            )}
+
+            {/* AI Mode with Icon */}
+            {task.mode && task.mode !== "manual" && (
+              <span className="flex items-center gap-1">
+                <Zap className={cn(
+                  "h-3 w-3",
+                  task.mode === "generative" && "text-blue-600 dark:text-blue-400",
+                  task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
+                )} />
+                <span>{task.mode === "generative" ? "AI Generative" : "AI Assisted"}</span>
+                {task.aiWorkflowStep && (
+                  <span className="text-muted-foreground/60">• Step {task.aiWorkflowStep}/7</span>
+                )}
+              </span>
+            )}
+
+            {/* Client Visibility */}
+            {task.clientVisibility && task.clientVisibility !== 'internal' && (
+              <>
+                {(task.deliverableType || task.mode) && (
+                  <span className="text-muted-foreground/40">•</span>
+                )}
+                <span className={cn(
+                  "flex items-center gap-1",
+                  task.clientVisibility === 'visible' && "text-blue-600 dark:text-blue-400",
+                  task.clientVisibility === 'comment' && "text-green-600 dark:text-green-400"
+                )}>
+                  <Eye className="h-3 w-3" />
+                  <span>{task.clientVisibility === 'visible' ? 'Client visible' : 'Client can comment'}</span>
+                </span>
+              </>
+            )}
+
+            {/* Target Audience (if available and space permits) */}
+            {task.targetAudience && (
+              <>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="truncate">{task.targetAudience}</span>
+              </>
+            )}
+          </div>
 
           {/* Bottom Metadata Row */}
           <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
