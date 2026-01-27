@@ -1852,23 +1852,65 @@ export default function ProjectTasksPage() {
     <>
       {/* Header, Breadcrumbs, Filters - Inside Container */}
       <PageContainer className="space-y-6 animate-fade-in">
-        {/* Breadcrumb Navigation - Subtle */}
-        <div className="flex items-center text-xs text-gray-500">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/projects')}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronDown className="h-4 w-4 rotate-90" />
+          <span className="font-medium">Back to Projects</span>
+        </button>
+
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center text-sm text-muted-foreground">
           <a 
             href="/projects"
-            className="hover:text-gray-300 transition-colors"
+            className="hover:text-foreground transition-colors"
           >
             Projects
           </a>
-          <span className="mx-2">/</span>
-          <a 
-            href={`/projects/${projectId}`}
-            className="hover:text-gray-300 transition-colors"
-          >
-            {project.name}
-          </a>
-          <span className="mx-2">/</span>
-          <span className="text-gray-400">Tasks</span>
+          <ChevronRight className="h-4 w-4 mx-1" />
+          <span className="text-foreground font-medium">{project.name}</span>
+        </div>
+
+        {/* Project Info - Clean Layout */}
+        <div className="space-y-4">
+          {/* Project Name */}
+          <h1 className="text-4xl font-bold tracking-tight">{project.name}</h1>
+          
+          {/* Description */}
+          <p className="text-lg text-muted-foreground">
+            {project.description}
+          </p>
+
+          {/* Status, Compliance, Risk - Inline */}
+          <div className="flex flex-wrap items-center gap-6 text-base">
+            {/* Status */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Status:</span>
+              <Badge 
+                variant="default"
+                className={cn(
+                  "font-semibold text-sm",
+                  project.status === "Active" && "bg-blue-600 hover:bg-blue-700"
+                )}
+              >
+                {project.status}
+              </Badge>
+            </div>
+
+            {/* Compliance */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Compliance:</span>
+              <span className="font-bold">{project.compliance}%</span>
+            </div>
+
+            {/* Risk */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Risk:</span>
+              <span className="font-bold">{project.risk}</span>
+            </div>
+          </div>
         </div>
 
         {/* Page Header */}

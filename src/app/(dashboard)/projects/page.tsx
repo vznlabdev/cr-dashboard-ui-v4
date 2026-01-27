@@ -920,9 +920,9 @@ export default function ProjectsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" side="bottom" sideOffset={5} avoidCollisions={false}>
                             <DropdownMenuItem asChild>
-                              <Link href={`/projects/${project.id}`} className="cursor-pointer">
+                              <Link href={`/projects/${project.id}/tasks`} className="cursor-pointer">
                                 <Eye className="mr-2 h-4 w-4" />
-                                View Details
+                                View Tasks
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setEditProject(project)}>
