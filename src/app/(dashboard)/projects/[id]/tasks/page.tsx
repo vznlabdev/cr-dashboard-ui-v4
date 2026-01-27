@@ -443,55 +443,43 @@ function FlatKanbanBoard({
             {task.title}
           </h3>
 
-          {/* Metadata Line - Plain Text, No Badges */}
-          <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+          {/* Metadata Line - Plain Text, No Badges - Show max 2-3 items */}
+          <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground line-clamp-1">
             {/* Deliverable Type */}
             {task.deliverableType && (
-              <span className="font-medium">{task.deliverableType}</span>
+              <span className="font-medium shrink-0">{task.deliverableType}</span>
             )}
 
-            {/* Separator */}
-            {task.deliverableType && (task.mode || task.aiWorkflowStep || task.clientVisibility) && (
-              <span className="text-muted-foreground/40">•</span>
-            )}
-
-            {/* AI Mode with Icon */}
+            {/* AI Mode with Icon - Priority #2 */}
             {task.mode && task.mode !== "manual" && (
-              <span className="flex items-center gap-1">
-                <Zap className={cn(
-                  "h-3 w-3",
-                  task.mode === "generative" && "text-blue-600 dark:text-blue-400",
-                  task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
-                )} />
-                <span>{task.mode === "generative" ? "AI Generative" : "AI Assisted"}</span>
-                {task.aiWorkflowStep && (
-                  <span className="text-muted-foreground/60">• Step {task.aiWorkflowStep}/7</span>
-                )}
-              </span>
-            )}
-
-            {/* Client Visibility */}
-            {task.clientVisibility && task.clientVisibility !== 'internal' && (
               <>
-                {(task.deliverableType || task.mode) && (
-                  <span className="text-muted-foreground/40">•</span>
-                )}
-                <span className={cn(
-                  "flex items-center gap-1",
-                  task.clientVisibility === 'visible' && "text-blue-600 dark:text-blue-400",
-                  task.clientVisibility === 'comment' && "text-green-600 dark:text-green-400"
-                )}>
-                  <Eye className="h-3 w-3" />
-                  <span>{task.clientVisibility === 'visible' ? 'Client visible' : 'Client can comment'}</span>
+                {task.deliverableType && <span className="text-muted-foreground/40 shrink-0">•</span>}
+                <span className="flex items-center gap-1 shrink-0">
+                  <Zap className={cn(
+                    "h-3 w-3",
+                    task.mode === "generative" && "text-blue-600 dark:text-blue-400",
+                    task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
+                  )} />
+                  <span>{task.mode === "generative" ? "AI Gen" : "AI Assist"}</span>
+                  {task.aiWorkflowStep && (
+                    <span className="text-muted-foreground/60">• Step {task.aiWorkflowStep}/7</span>
+                  )}
                 </span>
               </>
             )}
 
-            {/* Target Audience (if available and space permits) */}
-            {task.targetAudience && (
+            {/* Client Visibility - Priority #3 (only if room) */}
+            {task.clientVisibility && task.clientVisibility !== 'internal' && (
               <>
-                <span className="text-muted-foreground/40">•</span>
-                <span className="truncate">{task.targetAudience}</span>
+                <span className="text-muted-foreground/40 shrink-0">•</span>
+                <span className={cn(
+                  "flex items-center gap-1 shrink-0",
+                  task.clientVisibility === 'visible' && "text-blue-600 dark:text-blue-400",
+                  task.clientVisibility === 'comment' && "text-green-600 dark:text-green-400"
+                )}>
+                  <Eye className="h-3 w-3" />
+                  <span className="hidden sm:inline">{task.clientVisibility === 'visible' ? 'Visible' : 'Can comment'}</span>
+                </span>
               </>
             )}
           </div>

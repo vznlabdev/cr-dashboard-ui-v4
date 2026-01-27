@@ -436,7 +436,9 @@ export const mockTasks: Task[] = [
     assignee: 'Design Team',
     dueDate: 'Dec 10, 2024',
     createdDate: 'Nov 28, 2024',
-    updatedAt: '2024-12-13T21:00:00Z',  // 2 days ago
+    updatedAt: '2026-01-27T17:15:00Z',  // 4h ago
+    commentsCount: 15,
+    attachmentsCount: 8,
   },
   {
     id: 'task-8',
@@ -524,10 +526,12 @@ export const mockTasks: Task[] = [
     assignee: 'Sarah Chen',
     dueDate: 'Dec 20, 2024',
     createdDate: 'Dec 12, 2024',
-    updatedAt: '2024-12-15T20:30:00Z',
+    updatedAt: '2026-01-27T19:05:00Z',  // 2h ago
     mode: 'generative',
     intendedUses: ['Print', 'Internal'],
     deliverableType: 'Print',
+    aiWorkflowStep: 3,
+    commentsCount: 5,
   },
   {
     id: 'task-22',
