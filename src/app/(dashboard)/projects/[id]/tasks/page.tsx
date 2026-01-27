@@ -337,24 +337,11 @@ function FlatKanbanBoard({
         )}
       >
         <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
-          {/* Header: Brand/Company + Priority + Menu */}
+          {/* Header: Priority + Menu */}
           <div className="flex items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              {/* Company Avatar */}
-              <div 
-                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ring-1 ring-border/40"
-                style={{ backgroundColor: getCompanyColor() }}
-                title={company?.name || 'Company'}
-              >
-                <span className="text-white font-semibold text-[9px]">
-                  {company?.name?.charAt(0) || 'C'}
-                </span>
-              </div>
-              {/* Company Name */}
-              <span className="text-xs text-muted-foreground truncate font-medium">
-                {company?.name || 'Company'}
-              </span>
-            </div>
+            {/* Spacer */}
+            <div className="flex-1"></div>
+            
             {/* Priority Badge */}
             <span className={cn(
               "text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0",
@@ -466,49 +453,6 @@ function FlatKanbanBoard({
           >
             {task.title}
           </h3>
-
-          {/* Category Line / Type */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 font-medium">
-            {task.workstream === 'creator' && <span className="shrink-0">✏️</span>}
-            {task.workstream === 'legal' && <span className="shrink-0">⚖️</span>}
-            {task.workstream === 'insurance' && <span className="shrink-0">🛡️</span>}
-            {task.workstream === 'general' && <span className="shrink-0">📋</span>}
-            <span>{getCategoryLabel()}</span>
-          </div>
-
-          {/* Intended Uses */}
-          {task.intendedUses && task.intendedUses.length > 0 && (
-            <div className="mb-3">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Target className="h-3 w-3 text-muted-foreground shrink-0" />
-                {task.intendedUses.slice(0, 2).map((use) => {
-                  const style = getIntendedUseStyle(use)
-                  return (
-                    <Badge
-                      key={use}
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] font-medium px-1.5 py-0",
-                        style.bg,
-                        style.text,
-                        style.border
-                      )}
-                    >
-                      {use}
-                    </Badge>
-                  )
-                })}
-                {task.intendedUses.length > 2 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] font-medium px-1.5 py-0 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800"
-                  >
-                    +{task.intendedUses.length - 2} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Task Group Badge (if exists) - Small chip */}
           {group && (

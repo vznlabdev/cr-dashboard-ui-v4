@@ -448,7 +448,7 @@ export const mockTasks: Task[] = [
     assignee: 'Legal Team',
     dueDate: 'Dec 12, 2024',
     createdDate: 'Nov 30, 2024',
-    updatedAt: '2024-12-14T21:00:00Z',  // 1 day ago
+    updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
     mode: 'manual',
     intendedUses: ['Internal'],
     deliverableType: 'Legal Review',
@@ -503,10 +503,11 @@ export const mockTasks: Task[] = [
     assignee: 'Design Team',
     dueDate: 'Dec 22, 2024',
     createdDate: 'Dec 11, 2024',
-    updatedAt: '2024-12-15T21:00:00Z',
+    updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
     mode: 'assisted',
     intendedUses: ['Print', 'Web', 'Internal'],
     deliverableType: 'Print',
+    clientVisibility: 'comment',  // Client can comment - shows green badge
   },
   {
     id: 'task-21',
@@ -533,10 +534,18 @@ export const mockTasks: Task[] = [
     assignee: 'Mike Johnson',
     dueDate: 'Dec 21, 2024',
     createdDate: 'Dec 10, 2024',
-    updatedAt: '2024-12-15T19:30:00Z',
+    updatedAt: '2026-01-27T18:30:00Z',  // 35 minutes ago
     mode: 'generative',
     intendedUses: ['Print', 'Internal'],
     deliverableType: 'Print',
+    clientVisibility: 'visible',  // Client can see - shows blue badge
+    clearanceRejection: {
+      rejectedBy: 'legal',
+      rejectedAsset: 'letterhead_v1.pdf',
+      rejectedAssetId: 'asset-letterhead-001',
+      feedback: 'Font licensing needs verification',
+      rejectedAt: '2026-01-27T18:15:00Z',
+    },
   },
   {
     id: 'task-23',
