@@ -1874,12 +1874,12 @@ export default function ProjectTasksPage() {
         </div>
 
         {/* Project Info - Clean Layout */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Project Name */}
-          <h1 className="text-4xl font-bold tracking-tight">{project.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
           
           {/* Description */}
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             {project.description}
           </p>
 
@@ -1913,14 +1913,8 @@ export default function ProjectTasksPage() {
           </div>
         </div>
 
-        {/* Page Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tasks</h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Manage creative tasks and track progress
-            </p>
-          </div>
+        {/* Action Bar - View Toggle & New Task Button */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             {/* View Toggle */}
             <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
