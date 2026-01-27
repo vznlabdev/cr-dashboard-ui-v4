@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 import {
   Plus,
   Search,
@@ -19,6 +20,7 @@ import {
   Edit,
   Trash2,
   Eye,
+  User,
   BarChart3,
   BarChart2,
   BarChart,
@@ -131,16 +133,11 @@ export default function ProjectsPage() {
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Organize creative projects and workflows
-          </p>
-        </div>
+      {/* Page Header - Linear Style */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Projects</h1>
         <Button 
-          className="w-full sm:w-auto"
+          size="sm"
           onClick={() => setNewProjectDialogOpen(true)}
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -148,21 +145,21 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Search & Filters - Prominent placement above stats */}
-      <div className="flex flex-col gap-3 pb-2">
+      {/* Search & Filters - Linear Style */}
+      <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search projects..."
-              className="pl-9 h-11"
+              className="pl-9 h-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-11">
+            <SelectTrigger className="w-full sm:w-[180px] h-9">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +174,8 @@ export default function ProjectsPage() {
           {(searchQuery || statusFilter !== "all") && (
             <Button
               variant="ghost"
-              className="h-11"
+              size="sm"
+              className="h-9"
               onClick={() => {
                 setSearchQuery("")
                 setStatusFilter("all")
@@ -187,99 +185,44 @@ export default function ProjectsPage() {
             </Button>
           )}
         </div>
+        
+        {/* Inline Stats - Linear Style */}
+        <div className="text-sm text-muted-foreground">
+          {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
+          {statusFilter === "all" && (
+            <>
+              {' • '}
+              {activeProjects} active
+              {' • '}
+              {pendingProjects} in review
+              {completedProjects > 0 && (
+                <>
+                  {' • '}
+                  {completedProjects} completed
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Projects
-            </CardTitle>
-            <FolderKanban className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProjects}</div>
-            <p className="text-xs text-muted-foreground">
-              All projects
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeProjects}</div>
-            <p className="text-xs text-muted-foreground">
-              In progress
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completed
-            </CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedProjects}</div>
-            <p className="text-xs text-muted-foreground">
-              Approved projects
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Review
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingProjects}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting approval
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Projects Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Projects</CardTitle>
-          <CardDescription>
-            View and manage your content creation projects
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+      {/* Projects Table - Linear Style */}
+      <div className="border rounded-lg overflow-hidden bg-card">
+        <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Project Name</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Health</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Lead</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead>Target Date</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-11 w-[35%] text-xs font-medium">Project</TableHead>
+                  <TableHead className="h-11 w-[15%] text-xs font-medium">Brand</TableHead>
+                  <TableHead className="h-11 w-[12%] text-xs font-medium">Status</TableHead>
+                  <TableHead className="h-11 w-[15%] text-xs font-medium">Tasks</TableHead>
+                  <TableHead className="h-11 w-[13%] text-xs font-medium">Updated</TableHead>
+                  <TableHead className="h-11 w-[10%] text-xs font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -303,615 +246,81 @@ export default function ProjectsPage() {
                     <TableRow 
                       key={project.id}
                       onClick={() => router.push(`/projects/${project.id}/tasks`)}
-                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="h-12 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
                     >
-                      <TableCell className="font-medium">{project.name}</TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 gap-2 hover:bg-accent"
+                      {/* Project Name with Lead Avatar */}
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-2">
+                          {/* Lead Avatar */}
+                          {project.owner ? (
+                            <div 
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                              style={{ 
+                                backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
+                              }}
                             >
-                              <Building2 className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {mockCompanies.find(c => c.id === project.companyId)?.name || 'Select brand'}
-                              </span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} avoidCollisions={false} className="w-56">
-                            {mockCompanies.map((company) => (
-                              <DropdownMenuItem
-                                key={company.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateProject(project.id, { ...project, companyId: company.id });
-                                }}
-                                className="gap-2"
-                              >
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
-                                <span className="flex-1">{company.name}</span>
-                                {project.companyId === company.id && <Check className="h-4 w-4" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              {project.owner.charAt(0)}
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                              <User className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span className="text-sm font-medium truncate">{project.name}</span>
+                        </div>
                       </TableCell>
-                      <TableCell>
+
+                      {/* Brand - Simple Display */}
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-1.5">
+                          <div 
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ 
+                              backgroundColor: project.companyId === '1' ? '#3b82f6' : 
+                                             project.companyId === '2' ? '#8b5cf6' : '#10b981' 
+                            }}
+                          />
+                          <span className="text-xs truncate">
+                            {mockCompanies.find(c => c.id === project.companyId)?.name || 'No brand'}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Status Badge */}
+                      <TableCell className="py-2">
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "text-[10px] font-medium px-1.5 py-0.5",
+                            project.status === "Active" && "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                            project.status === "Review" && "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+                            project.status === "Draft" && "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+                            project.status === "Approved" && "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          )}
+                        >
+                          {project.status}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Tasks - Simple Display */}
+                      <TableCell className="py-2">
                         {(() => {
                           const projectTasks = getTasksByProject(project.id);
                           const totalTasks = projectTasks.length;
                           const completedTasks = projectTasks.filter(t => t.status === 'delivered').length;
-                          const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                          
-                          // Risk badge styling
-                          const getRiskColor = (risk: string) => {
-                            switch (risk) {
-                              case 'Low': return 'text-green-400';
-                              case 'Medium': return 'text-yellow-400';
-                              case 'High': return 'text-red-400';
-                              default: return 'text-gray-400';
-                            }
-                          };
-                          
-                          // Progress bar color based on completion
-                          const getProgressColor = (percent: number) => {
-                            if (percent >= 75) return 'bg-green-500';
-                            if (percent >= 50) return 'bg-yellow-500';
-                            if (percent >= 25) return 'bg-orange-500';
-                            return 'bg-red-500';
-                          };
                           
                           return (
-                            <div className="flex flex-col gap-1.5">
-                              {/* Risk Level */}
-                              <div className="flex items-center gap-1.5">
-                                <span className={`text-sm font-medium ${getRiskColor(project.risk)}`}>
-                                  {project.risk} Risk
-                                </span>
-                              </div>
-                              {/* Task Completion */}
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {totalTasks} task{totalTasks !== 1 ? 's' : ''} • {completionPercent}%
-                                </span>
-                              </div>
-                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {totalTasks} {totalTasks === 1 ? 'task' : 'tasks'} • {completedTasks} done
+                            </span>
                           );
                         })()}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 gap-2 hover:bg-accent"
-                            >
-                              {project.priority === 'urgent' && (
-                                <>
-                                  <AlertCircle className="h-4 w-4 text-red-500" />
-                                  <span className="text-sm">Urgent</span>
-                                </>
-                              )}
-                              {project.priority === 'high' && (
-                                <>
-                                  <BarChart3 className="h-4 w-4 text-orange-500" />
-                                  <span className="text-sm">High</span>
-                                </>
-                              )}
-                              {project.priority === 'medium' && (
-                                <>
-                                  <BarChart2 className="h-4 w-4 text-blue-500" />
-                                  <span className="text-sm">Medium</span>
-                                </>
-                              )}
-                              {project.priority === 'low' && (
-                                <>
-                                  <BarChart className="h-4 w-4 text-gray-500" />
-                                  <span className="text-sm">Low</span>
-                                </>
-                              )}
-                              {(!project.priority || project.priority === null) && (
-                                <>
-                                  <Minus className="h-4 w-4 text-gray-500" />
-                                  <span className="text-sm text-muted-foreground">No priority</span>
-                                </>
-                              )}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" side="bottom" sideOffset={5} avoidCollisions={false} className="w-48">
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, priority: null });
-                              }}
-                              className="gap-2"
-                            >
-                              <Minus className="h-4 w-4 text-gray-500" />
-                              <span className="flex-1">No priority</span>
-                              <span className="text-xs text-muted-foreground">0</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, priority: 'urgent' });
-                              }}
-                              className="gap-2"
-                            >
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                              <span className="flex-1">Urgent</span>
-                              <span className="text-xs text-muted-foreground">1</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, priority: 'high' });
-                              }}
-                              className="gap-2"
-                            >
-                              <BarChart3 className="h-4 w-4 text-orange-500" />
-                              <span className="flex-1">High</span>
-                              <span className="text-xs text-muted-foreground">2</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, priority: 'medium' });
-                              }}
-                              className="gap-2"
-                            >
-                              <BarChart2 className="h-4 w-4 text-blue-500" />
-                              <span className="flex-1">Medium</span>
-                              <span className="text-xs text-muted-foreground">3</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, priority: 'low' });
-                              }}
-                              className="gap-2"
-                            >
-                              <BarChart className="h-4 w-4 text-gray-500" />
-                              <span className="flex-1">Low</span>
-                              <span className="text-xs text-muted-foreground">4</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 gap-2 hover:bg-accent w-full justify-start"
-                            >
-                              {project.owner ? (
-                                <>
-                                  <div 
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                                    style={{ 
-                                      backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
-                                    }}
-                                  >
-                                    {project.owner.charAt(0)}
-                                  </div>
-                                  <span className="text-sm">{project.owner.split(' ')[0].toLowerCase()}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-                                    <Minus className="h-3 w-3 text-gray-400" />
-                                  </div>
-                                  <span className="text-sm text-muted-foreground">No lead</span>
-                                </>
-                              )}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="start" 
-                            side="bottom" 
-                            sideOffset={5}
-                            avoidCollisions={false}
-                            className="w-56"
-                          >
-                            {/* No Lead Option */}
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateProject(project.id, { ...project, owner: '' });
-                              }}
-                              className="gap-2"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-                                <Minus className="h-3 w-3 text-gray-400" />
-                              </div>
-                              <span className="flex-1">No lead</span>
-                              <span className="text-xs text-muted-foreground">0</span>
-                            </DropdownMenuItem>
-                            
-                            {/* Current Selection (if exists) */}
-                            {project.owner && (
-                              <DropdownMenuItem
-                                onClick={(e) => e.stopPropagation()}
-                                className="gap-2 bg-accent"
-                              >
-                                <div 
-                                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                                  style={{ 
-                                    backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
-                                  }}
-                                >
-                                  {project.owner.charAt(0)}
-                                </div>
-                                <span className="flex-1">{project.owner.split(' ')[0].toLowerCase()}</span>
-                                <Check className="h-4 w-4" />
-                              </DropdownMenuItem>
-                            )}
-
-                            {/* Section Header */}
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                              Users from the project team
-                            </div>
-
-                            {/* Team Members */}
-                            {TEAM_MEMBERS.filter(member => 
-                              member.fullName !== project.owner
-                            ).map((member) => (
-                              <DropdownMenuItem
-                                key={member.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateProject(project.id, { ...project, owner: member.fullName });
-                                }}
-                                className="gap-2"
-                              >
-                                <div 
-                                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                                  style={{ backgroundColor: member.avatarColor }}
-                                >
-                                  {member.fullName.charAt(0)}
-                                </div>
-                                <span className="flex-1">{member.name}</span>
-                              </DropdownMenuItem>
-                            ))}
-
-                            {/* Section Header */}
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-1">
-                              New user
-                            </div>
-
-                            {/* Invite Option */}
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // TODO: Open invite modal
-                                console.log('Invite new user');
-                              }}
-                              className="gap-2"
-                            >
-                              <UserPlus className="h-4 w-4 text-muted-foreground" />
-                              <span className="flex-1">Invite and add...</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu onOpenChange={(open) => {
-                          if (!open) {
-                            setMemberSearchQuery('');
-                          }
-                        }}>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 gap-1 hover:bg-accent"
-                            >
-                              <div className="flex items-center -space-x-2">
-                                {/* Show up to 3 member avatars */}
-                                {(project.members || []).slice(0, 3).map((memberName, i) => {
-                                  const member = TEAM_MEMBERS.find(m => m.fullName === memberName);
-                                  return (
-                                    <div
-                                      key={i}
-                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-background"
-                                      style={{ backgroundColor: member?.avatarColor || '#64748b' }}
-                                    >
-                                      {memberName.charAt(0)}
-                                    </div>
-                                  );
-                                })}
-                                {(project.members || []).length > 3 && (
-                                  <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-700 text-white text-xs font-semibold border-2 border-background">
-                                    +{(project.members || []).length - 3}
-                                  </div>
-                                )}
-                                {(!project.members || project.members.length === 0) && (
-                                  <span className="text-sm text-muted-foreground px-2">No members</span>
-                                )}
-                              </div>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="start" 
-                            side="bottom" 
-                            sideOffset={5} 
-                            className="w-80 p-0"
-                            avoidCollisions={false}
-                          >
-                            {/* Search Input */}
-                            <div className="p-3 border-b border-border">
-                              <Input
-                                placeholder="Change members..."
-                                value={memberSearchQuery}
-                                onChange={(e) => setMemberSearchQuery(e.target.value)}
-                                className="h-9 text-sm"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-
-                            <div className="max-h-[400px] overflow-y-auto p-2">
-                              {/* Current Members */}
-                              {(project.members || []).map((memberName) => {
-                                const member = TEAM_MEMBERS.find(m => m.fullName === memberName);
-                                if (!member) return null;
-                                
-                                const isProjectLead = project.owner === memberName;
-                                const matchesSearch = memberSearchQuery === '' || 
-                                  member.fullName.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
-                                  member.name.toLowerCase().includes(memberSearchQuery.toLowerCase());
-                                
-                                if (!matchesSearch) return null;
-
-                                return (
-                                  <div
-                                    key={member.id}
-                                    className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const newMembers = (project.members || []).filter(m => m !== memberName);
-                                      updateProject(project.id, { ...project, members: newMembers });
-                                    }}
-                                  >
-                                    <Checkbox checked={true} className="pointer-events-none" />
-                                    <div 
-                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                                      style={{ backgroundColor: member.avatarColor }}
-                                    >
-                                      {member.fullName.charAt(0)}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="text-sm">{member.name}</div>
-                                      {isProjectLead && (
-                                        <div className="text-xs text-muted-foreground">Project lead</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-
-                              {/* Section Header */}
-                              <div className="px-2 py-2 text-xs font-semibold text-muted-foreground mt-2">
-                                Users from the project team
-                              </div>
-
-                              {/* Available Team Members (not already added) */}
-                              {TEAM_MEMBERS.filter(member => 
-                                !(project.members || []).includes(member.fullName) &&
-                                (memberSearchQuery === '' || 
-                                  member.fullName.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
-                                  member.name.toLowerCase().includes(memberSearchQuery.toLowerCase()))
-                              ).map((member) => (
-                                <div
-                                  key={member.id}
-                                  className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newMembers = [...(project.members || []), member.fullName];
-                                    updateProject(project.id, { ...project, members: newMembers });
-                                  }}
-                                >
-                                  <Checkbox checked={false} className="pointer-events-none" />
-                                  <div 
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                                    style={{ backgroundColor: member.avatarColor }}
-                                  >
-                                    {member.fullName.charAt(0)}
-                                  </div>
-                                  <span className="text-sm">{member.name}</span>
-                                </div>
-                              ))}
-
-                              {/* New User Section */}
-                              <div className="px-2 py-2 text-xs font-semibold text-muted-foreground mt-2">
-                                New user
-                              </div>
-                              <div
-                                className="flex items-center gap-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer text-blue-400"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // TODO: Implement invite user functionality
-                                  console.log('Invite user clicked');
-                                }}
-                              >
-                                <Send className="h-4 w-4" />
-                                <span className="text-sm">Invite and add...</span>
-                              </div>
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        {(() => {
-                          const calendarOpen = calendarState[project.id]?.open || false;
-                          
-                          const setCalendarOpen = (open: boolean) => {
-                            setCalendarState(prev => {
-                              // Initialize currentMonth when opening calendar
-                              const initialMonth = project.targetDate 
-                                ? parseISO(project.targetDate) 
-                                : new Date();
-                              
-                              return {
-                                ...prev,
-                                [project.id]: {
-                                  open,
-                                  currentMonth: prev[project.id]?.currentMonth || initialMonth
-                                }
-                              };
-                            });
-                          };
-                          
-                          const setCurrentMonth = (month: Date) => {
-                            setCalendarState(prev => ({
-                              ...prev,
-                              [project.id]: {
-                                open: prev[project.id]?.open || false,
-                                currentMonth: month
-                              }
-                            }));
-                          };
-                          
-                          // Only compute calendar data if it's open
-                          let monthStart: Date | null = null;
-                          let monthEnd: Date | null = null;
-                          let daysInMonth: Date[] = [];
-                          let paddedDays: (Date | null)[] = [];
-                          
-                          if (calendarOpen && calendarState[project.id]?.currentMonth) {
-                            const currentMonth = calendarState[project.id].currentMonth;
-                            monthStart = startOfMonth(currentMonth);
-                            monthEnd = endOfMonth(currentMonth);
-                            daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-                            
-                            // Pad with days from previous/next month to fill grid
-                            const startDayOfWeek = monthStart.getDay();
-                            paddedDays = [
-                              ...Array(startDayOfWeek).fill(null),
-                              ...daysInMonth
-                            ];
-                          }
-                          
-                          const selectedDate = project.targetDate ? parseISO(project.targetDate) : null;
-                          
-                          return (
-                            <DropdownMenu open={calendarOpen} onOpenChange={setCalendarOpen}>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 gap-2 hover:bg-accent text-muted-foreground"
-                                >
-                                  <Calendar className="h-4 w-4" />
-                                  <span className="text-sm">
-                                    {project.targetDate ? format(parseISO(project.targetDate), 'MMM dd, yyyy') : 'Set date'}
-                                  </span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent 
-                                align="start" 
-                                side="bottom" 
-                                sideOffset={5} 
-                                avoidCollisions={false}
-                                className="w-[280px] p-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="p-3">
-                                  {/* Month Navigation */}
-                                  <div className="flex items-center justify-between mb-3">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (calendarState[project.id]?.currentMonth) {
-                                          setCurrentMonth(subMonths(calendarState[project.id].currentMonth, 1));
-                                        }
-                                      }}
-                                    >
-                                      <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <span className="text-sm font-medium">
-                                      {calendarState[project.id]?.currentMonth 
-                                        ? format(calendarState[project.id].currentMonth, 'MMMM yyyy')
-                                        : ''}
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 w-7 p-0"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (calendarState[project.id]?.currentMonth) {
-                                          setCurrentMonth(addMonths(calendarState[project.id].currentMonth, 1));
-                                        }
-                                      }}
-                                    >
-                                      <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                  
-                                  {/* Weekday Headers */}
-                                  <div className="grid grid-cols-7 gap-1 mb-2">
-                                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-                                      <div key={day} className="text-center text-xs font-medium text-muted-foreground h-8 flex items-center justify-center">
-                                        {day}
-                                      </div>
-                                    ))}
-                                  </div>
-                                  
-                                  {/* Calendar Grid */}
-                                  <div className="grid grid-cols-7 gap-1">
-                                    {paddedDays.map((day, index) => {
-                                      if (!day) {
-                                        return <div key={`empty-${index}`} className="h-8" />;
-                                      }
-                                      
-                                      const isSelected = selectedDate && isSameDay(day, selectedDate);
-                                      const isCurrentMonth = calendarState[project.id]?.currentMonth 
-                                        ? isSameMonth(day, calendarState[project.id].currentMonth)
-                                        : true;
-                                      
-                                      return (
-                                        <Button
-                                          key={day.toISOString()}
-                                          variant="ghost"
-                                          size="sm"
-                                          className={`h-8 w-full p-0 text-sm ${
-                                            isSelected 
-                                              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                                              : isCurrentMonth 
-                                              ? 'hover:bg-accent' 
-                                              : 'text-muted-foreground/40 hover:bg-accent'
-                                          }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            updateProject(project.id, {
-                                              ...project,
-                                              targetDate: format(day, 'yyyy-MM-dd')
-                                            });
-                                            setCalendarOpen(false);
-                                          }}
-                                        >
-                                          {format(day, 'd')}
-                                        </Button>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      {/* Updated */}
+                      <TableCell className="py-2 text-xs text-muted-foreground">
                         {project.updated}
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="py-2 text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -945,9 +354,7 @@ export default function ProjectsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Dialogs */}
       <NewProjectDialog
