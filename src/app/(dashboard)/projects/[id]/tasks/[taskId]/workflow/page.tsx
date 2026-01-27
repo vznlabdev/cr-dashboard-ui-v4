@@ -202,23 +202,19 @@ export default function TaskWorkflowPage() {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           {/* Breadcrumb */}
-          <div className="flex items-center text-xs text-muted-foreground mb-3">
+          <div className="flex items-center text-sm text-muted-foreground mb-3">
             <Link href="/projects" className="hover:text-foreground transition-colors">
               Projects
             </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/projects/${projectId}`} className="hover:text-foreground transition-colors">
+            <ChevronRight className="h-4 w-4 mx-1" />
+            <Link href={`/projects/${projectId}/tasks`} className="hover:text-foreground transition-colors">
               {project?.name || 'Project'}
             </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/projects/${projectId}/tasks`} className="hover:text-foreground transition-colors">
-              Tasks
-            </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/projects/${projectId}/tasks/${taskId}`} className="hover:text-foreground transition-colors">
+            <ChevronRight className="h-4 w-4 mx-1" />
+            <Link href={`/projects/${projectId}/tasks/${taskId}`} className="hover:text-foreground transition-colors truncate max-w-[200px]">
               {task.title}
             </Link>
-            <span className="mx-2">/</span>
+            <ChevronRight className="h-4 w-4 mx-1" />
             <span className="text-foreground font-medium">AI Workflow</span>
           </div>
 

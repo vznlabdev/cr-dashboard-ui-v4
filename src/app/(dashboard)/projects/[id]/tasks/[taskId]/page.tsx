@@ -1105,20 +1105,16 @@ export default function TaskDetailPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center text-xs text-gray-500">
-        <Link href="/projects" className="hover:text-gray-300 transition-colors">
+      <div className="flex items-center text-sm text-muted-foreground">
+        <Link href="/projects" className="hover:text-foreground transition-colors">
           Projects
         </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/projects/${projectId}`} className="hover:text-gray-300 transition-colors">
+        <ChevronRight className="h-4 w-4 mx-1" />
+        <Link href={`/projects/${projectId}/tasks`} className="hover:text-foreground transition-colors">
           {project.name}
         </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/projects/${projectId}/tasks`} className="hover:text-gray-300 transition-colors">
-          Tasks
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-gray-300 font-medium">{task.title}</span>
+        <ChevronRight className="h-4 w-4 mx-1" />
+        <span className="text-foreground font-medium truncate max-w-[300px]">{task.title}</span>
       </div>
 
       {/* Header */}
