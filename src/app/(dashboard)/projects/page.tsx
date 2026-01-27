@@ -32,6 +32,8 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Archive,
+  Copy,
 } from "lucide-react"
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO } from "date-fns"
 import {
@@ -85,6 +87,9 @@ export default function ProjectsPage() {
   const { projects, updateProject, deleteProject } = useData()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [brandFilter, setBrandFilter] = useState<string>("all")
+  const [leadFilter, setLeadFilter] = useState<string>("all")
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set())
   const [memberSearchQuery, setMemberSearchQuery] = useState("")
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
@@ -116,14 +121,16 @@ export default function ProjectsPage() {
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description?.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === "all" || project.status === statusFilter
-      return matchesSearch && matchesStatus
+      const matchesBrand = brandFilter === "all" || project.companyId === brandFilter
+      const matchesLead = leadFilter === "all" || project.owner === leadFilter
+      return matchesSearch && matchesStatus && matchesBrand && matchesLead
     })
 
     // Sort by name
     filtered.sort((a, b) => a.name.localeCompare(b.name))
 
     return filtered
-  }, [projectsWithTIV, searchQuery, statusFilter])
+  }, [projectsWithTIV, searchQuery, statusFilter, brandFilter, leadFilter])
 
   // Stats calculations
   const totalProjects = projects.length
@@ -159,7 +166,7 @@ export default function ProjectsPage() {
           </div>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-9">
+            <SelectTrigger className="w-full sm:w-[150px] h-9">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -171,7 +178,35 @@ export default function ProjectsPage() {
             </SelectContent>
           </Select>
 
-          {(searchQuery || statusFilter !== "all") && (
+          <Select value={brandFilter} onValueChange={setBrandFilter}>
+            <SelectTrigger className="w-full sm:w-[150px] h-9">
+              <SelectValue placeholder="Brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {mockCompanies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={leadFilter} onValueChange={setLeadFilter}>
+            <SelectTrigger className="w-full sm:w-[150px] h-9">
+              <SelectValue placeholder="Lead" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Leads</SelectItem>
+              {TEAM_MEMBERS.map((member) => (
+                <SelectItem key={member.id} value={member.fullName}>
+                  {member.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {(searchQuery || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
@@ -179,6 +214,8 @@ export default function ProjectsPage() {
               onClick={() => {
                 setSearchQuery("")
                 setStatusFilter("all")
+                setBrandFilter("all")
+                setLeadFilter("all")
               }}
             >
               Clear Filters
@@ -189,7 +226,7 @@ export default function ProjectsPage() {
         {/* Inline Stats - Linear Style */}
         <div className="text-sm text-muted-foreground">
           {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
-          {statusFilter === "all" && (
+          {statusFilter === "all" && brandFilter === "all" && leadFilter === "all" && (
             <>
               {' • '}
               {activeProjects} active
@@ -206,33 +243,101 @@ export default function ProjectsPage() {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedProjects.size > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <Checkbox 
+              checked={selectedProjects.size === filteredProjects.length}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setSelectedProjects(new Set(filteredProjects.map(p => p.id)))
+                } else {
+                  setSelectedProjects(new Set())
+                }
+              }}
+            />
+            <span className="text-sm font-medium">
+              {selectedProjects.size} {selectedProjects.size === 1 ? 'project' : 'projects'} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Archive functionality
+                console.log('Archive projects:', Array.from(selectedProjects))
+                setSelectedProjects(new Set())
+              }}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              Archive
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Duplicate functionality
+                console.log('Duplicate projects:', Array.from(selectedProjects))
+                setSelectedProjects(new Set())
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Duplicate
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedProjects(new Set())}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Projects Table - Linear Style */}
       <div className="border rounded-lg overflow-hidden bg-card">
         <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-11 w-[35%] text-xs font-medium">Project</TableHead>
-                  <TableHead className="h-11 w-[15%] text-xs font-medium">Brand</TableHead>
-                  <TableHead className="h-11 w-[12%] text-xs font-medium">Status</TableHead>
-                  <TableHead className="h-11 w-[15%] text-xs font-medium">Tasks</TableHead>
-                  <TableHead className="h-11 w-[13%] text-xs font-medium">Updated</TableHead>
+                  <TableHead className="h-11 w-[40px]">
+                    <Checkbox 
+                      checked={selectedProjects.size === filteredProjects.length && filteredProjects.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedProjects(new Set(filteredProjects.map(p => p.id)))
+                        } else {
+                          setSelectedProjects(new Set())
+                        }
+                      }}
+                    />
+                  </TableHead>
+                  <TableHead className="h-11 w-[33%] text-xs font-medium">Project</TableHead>
+                  <TableHead className="h-11 w-[14%] text-xs font-medium">Brand</TableHead>
+                  <TableHead className="h-11 w-[11%] text-xs font-medium">Status</TableHead>
+                  <TableHead className="h-11 w-[14%] text-xs font-medium">Tasks</TableHead>
+                  <TableHead className="h-11 w-[12%] text-xs font-medium">Updated</TableHead>
                   <TableHead className="h-11 w-[10%] text-xs font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
-                        {(searchQuery || statusFilter !== "all") && (
+                        {(searchQuery || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
                           <Button
                             variant="link"
                             size="sm"
                             onClick={() => {
                               setSearchQuery("")
                               setStatusFilter("all")
+                              setBrandFilter("all")
+                              setLeadFilter("all")
                             }}
                           >
                             Clear filters
@@ -245,11 +350,29 @@ export default function ProjectsPage() {
                   filteredProjects.map((project) => (
                     <TableRow 
                       key={project.id}
-                      onClick={() => router.push(`/projects/${project.id}/tasks`)}
-                      className="h-12 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
+                      className="h-12 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
                     >
+                      {/* Checkbox */}
+                      <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox 
+                          checked={selectedProjects.has(project.id)}
+                          onCheckedChange={(checked) => {
+                            const newSelected = new Set(selectedProjects)
+                            if (checked) {
+                              newSelected.add(project.id)
+                            } else {
+                              newSelected.delete(project.id)
+                            }
+                            setSelectedProjects(newSelected)
+                          }}
+                        />
+                      </TableCell>
+
                       {/* Project Name with Lead Avatar */}
-                      <TableCell className="py-2">
+                      <TableCell 
+                        className="py-2 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                      >
                         <div className="flex items-center gap-2">
                           {/* Lead Avatar */}
                           {project.owner ? (
@@ -271,7 +394,10 @@ export default function ProjectsPage() {
                       </TableCell>
 
                       {/* Brand - Simple Display */}
-                      <TableCell className="py-2">
+                      <TableCell 
+                        className="py-2 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                      >
                         <div className="flex items-center gap-1.5">
                           <div 
                             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -287,7 +413,10 @@ export default function ProjectsPage() {
                       </TableCell>
 
                       {/* Status Badge */}
-                      <TableCell className="py-2">
+                      <TableCell 
+                        className="py-2 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                      >
                         <Badge 
                           variant="outline" 
                           className={cn(
@@ -303,7 +432,10 @@ export default function ProjectsPage() {
                       </TableCell>
 
                       {/* Tasks - Simple Display */}
-                      <TableCell className="py-2">
+                      <TableCell 
+                        className="py-2 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                      >
                         {(() => {
                           const projectTasks = getTasksByProject(project.id);
                           const totalTasks = projectTasks.length;
@@ -317,7 +449,10 @@ export default function ProjectsPage() {
                         })()}
                       </TableCell>
                       {/* Updated */}
-                      <TableCell className="py-2 text-xs text-muted-foreground">
+                      <TableCell 
+                        className="py-2 text-xs text-muted-foreground cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                      >
                         {project.updated}
                       </TableCell>
                       <TableCell className="py-2 text-right" onClick={(e) => e.stopPropagation()}>
@@ -337,6 +472,22 @@ export default function ProjectsPage() {
                             <DropdownMenuItem onClick={() => setEditProject(project)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              // Duplicate project logic
+                              console.log('Duplicate project:', project.id)
+                              // TODO: Implement duplicate functionality
+                            }}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Duplicate Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              // Archive project logic
+                              console.log('Archive project:', project.id)
+                              // TODO: Implement archive functionality
+                            }}>
+                              <Archive className="mr-2 h-4 w-4" />
+                              Archive Project
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
