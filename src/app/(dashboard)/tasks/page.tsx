@@ -15,10 +15,17 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },
@@ -54,6 +61,11 @@ export default function UnifiedTasksPage() {
   const [selectedAssignee, setSelectedAssignee] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(false)
   const [focusedRow, setFocusedRow] = useState<number>(-1)
+  
+  // Group & Sort state
+  const [groupBy, setGroupBy] = useState<'none' | 'project' | 'status' | 'assignee' | 'priority'>('none')
+  const [sortBy, setSortBy] = useState<'priority' | 'dueDate' | 'updated' | 'created' | 'title'>('updated')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   // Get all unique assignees
   const allAssignees = useMemo(() => {
@@ -64,9 +76,28 @@ export default function UnifiedTasksPage() {
     return Array.from(assignees).sort()
   }, [])
 
-  // Filter tasks
-  const filteredTasks = useMemo(() => {
-    return mockTasks.filter(task => {
+  // Helper: Get priority value for sorting
+  const getPriorityValue = (priority?: 'urgent' | 'high' | 'medium' | 'low') => {
+    const priorityMap = { urgent: 4, high: 3, medium: 2, low: 1 }
+    return priority ? priorityMap[priority] : 0
+  }
+
+  // Helper: Get priority indicator
+  const getPriorityIndicator = (priority?: 'urgent' | 'high' | 'medium' | 'low') => {
+    if (!priority) return { icon: '○', color: 'text-gray-400', label: 'None' }
+    const indicators = {
+      urgent: { icon: '●', color: 'text-red-600 dark:text-red-400', label: 'Urgent' },
+      high: { icon: '●', color: 'text-orange-600 dark:text-orange-400', label: 'High' },
+      medium: { icon: '●', color: 'text-yellow-600 dark:text-yellow-400', label: 'Medium' },
+      low: { icon: '○', color: 'text-gray-400', label: 'Low' },
+    }
+    return indicators[priority]
+  }
+
+  // Filter and Sort tasks
+  const filteredAndSortedTasks = useMemo(() => {
+    // Filter
+    let filtered = mockTasks.filter(task => {
       // View-based filter (primary filter)
       if (activeView === 'my-tasks') {
         if (task.assignee !== currentUser) return false
@@ -104,7 +135,75 @@ export default function UnifiedTasksPage() {
       
       return true
     })
-  }, [activeView, currentUser, searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee])
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0
+
+      switch (sortBy) {
+        case 'priority':
+          comparison = getPriorityValue(b.priority) - getPriorityValue(a.priority)
+          break
+        case 'dueDate':
+          const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
+          const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
+          comparison = dateA - dateB
+          break
+        case 'updated':
+          comparison = new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          break
+        case 'created':
+          comparison = new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+          break
+        case 'title':
+          comparison = a.title.localeCompare(b.title)
+          break
+      }
+
+      return sortDirection === 'asc' ? -comparison : comparison
+    })
+
+    return filtered
+  }, [activeView, currentUser, searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee, sortBy, sortDirection])
+
+  // Group tasks
+  const groupedTasks = useMemo(() => {
+    if (groupBy === 'none') {
+      return [{ group: null, tasks: filteredAndSortedTasks }]
+    }
+
+    const groups: { [key: string]: Task[] } = {}
+    
+    filteredAndSortedTasks.forEach(task => {
+      let key = 'Unknown'
+      
+      switch (groupBy) {
+        case 'project':
+          const project = getProjectById(task.projectId)
+          key = project?.name || 'Unknown Project'
+          break
+        case 'status':
+          key = task.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+          break
+        case 'assignee':
+          key = task.assignee || 'Unassigned'
+          break
+        case 'priority':
+          key = task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'No Priority'
+          break
+      }
+      
+      if (!groups[key]) groups[key] = []
+      groups[key].push(task)
+    })
+
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([group, tasks]) => ({ group, tasks }))
+  }, [filteredAndSortedTasks, groupBy, getProjectById])
+
+  // Flat list for keyboard navigation
+  const filteredTasks = filteredAndSortedTasks
 
   // Keyboard navigation
   useEffect(() => {
@@ -299,7 +398,7 @@ export default function UnifiedTasksPage() {
       </div>
 
       {/* Compact Header with Search */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -318,11 +417,79 @@ export default function UnifiedTasksPage() {
           </div>
         </div>
 
+        {/* Group By */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+              <span className="text-xs">Group:</span>
+              <span className="font-medium text-xs">
+                {groupBy === 'none' ? 'None' : groupBy === 'project' ? 'Project' : groupBy === 'status' ? 'Status' : groupBy === 'assignee' ? 'Assignee' : 'Priority'}
+              </span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setGroupBy('none')}>
+              {groupBy === 'none' && '✓ '}None
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setGroupBy('project')}>
+              {groupBy === 'project' && '✓ '}Project
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setGroupBy('status')}>
+              {groupBy === 'status' && '✓ '}Status
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setGroupBy('assignee')}>
+              {groupBy === 'assignee' && '✓ '}Assignee
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setGroupBy('priority')}>
+              {groupBy === 'priority' && '✓ '}Priority
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Sort By */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+              {sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+              <span className="text-xs">Sort:</span>
+              <span className="font-medium text-xs">
+                {sortBy === 'priority' ? 'Priority' : sortBy === 'dueDate' ? 'Due Date' : sortBy === 'updated' ? 'Updated' : sortBy === 'created' ? 'Created' : 'Title'}
+              </span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setSortBy('priority')}>
+              {sortBy === 'priority' && '✓ '}Priority
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('dueDate')}>
+              {sortBy === 'dueDate' && '✓ '}Due Date
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('updated')}>
+              {sortBy === 'updated' && '✓ '}Updated
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('created')}>
+              {sortBy === 'created' && '✓ '}Created
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('title')}>
+              {sortBy === 'title' && '✓ '}Title
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="border-t mt-1"
+            >
+              <ArrowUpDown className="h-3 w-3 mr-2" />
+              {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-colors",
+            "flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-colors h-9",
             showFilters || activeFiltersCount > 0
               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
               : "hover:bg-muted"
@@ -410,17 +577,19 @@ export default function UnifiedTasksPage() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="w-[45%] h-9 text-xs font-medium">Task</TableHead>
+              <TableHead className="w-[35%] h-9 text-xs font-medium">Task</TableHead>
               <TableHead className="h-9 text-xs font-medium">Project</TableHead>
               <TableHead className="h-9 text-xs font-medium">Status</TableHead>
+              <TableHead className="h-9 text-xs font-medium w-[60px]">Priority</TableHead>
               <TableHead className="h-9 text-xs font-medium">Assignee</TableHead>
+              <TableHead className="h-9 text-xs font-medium">Activity</TableHead>
               <TableHead className="h-9 text-xs font-medium">Due</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-16 text-muted-foreground text-sm">
+                <TableCell colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
                   <div className="flex flex-col items-center gap-2">
                     <Search className="h-8 w-8 opacity-20" />
                     <div className="font-medium">
@@ -447,104 +616,150 @@ export default function UnifiedTasksPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTasks.map((task, idx) => {
-                const project = getProjectById(task.projectId)
-                const company = project ? getCompanyById(project.companyId) : null
-                const isFocused = idx === focusedRow
-                
-                return (
-                  <TableRow
-                    key={task.id}
-                    onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
-                    className={cn(
-                      "cursor-pointer border-b border-border/40 transition-colors h-11",
-                      isFocused 
-                        ? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800" 
-                        : "hover:bg-muted/50"
-                    )}
-                    onMouseEnter={() => setFocusedRow(idx)}
-                    onMouseLeave={() => setFocusedRow(-1)}
-                  >
-                    {/* Task Title - Compact */}
-                    <TableCell className="py-2">
-                      <div className="flex items-center gap-2">
-                        {/* AI Mode Indicator */}
-                        {task.mode && task.mode !== 'manual' && (
-                          <Zap className={cn(
-                            "h-3 w-3 flex-shrink-0",
-                            task.mode === "generative" && "text-blue-600 dark:text-blue-400",
-                            task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
-                          )} />
+              groupedTasks.map(({ group, tasks }) => (
+                <>
+                  {/* Group Header (if grouping enabled) */}
+                  {group && (
+                    <TableRow key={`group-${group}`} className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={7} className="py-2 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-foreground">{group}</span>
+                          <span className="text-xs text-muted-foreground">({tasks.length})</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  
+                  {/* Task Rows */}
+                  {tasks.map((task) => {
+                    const project = getProjectById(task.projectId)
+                    const company = project ? getCompanyById(project.companyId) : null
+                    const idx = filteredTasks.findIndex(t => t.id === task.id)
+                    const isFocused = idx === focusedRow
+                    const priority = getPriorityIndicator(task.priority)
+                    
+                    return (
+                      <TableRow
+                        key={task.id}
+                        onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
+                        className={cn(
+                          "cursor-pointer border-b border-border/40 transition-colors h-11",
+                          isFocused 
+                            ? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800" 
+                            : "hover:bg-muted/50"
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{task.title}</div>
-                          {company && (
-                            <div className="text-xs text-muted-foreground truncate">
-                              {company.name}
+                        onMouseEnter={() => setFocusedRow(idx)}
+                        onMouseLeave={() => setFocusedRow(-1)}
+                      >
+                        {/* Task Title */}
+                        <TableCell className="py-2">
+                          <div className="flex items-center gap-2">
+                            {task.mode && task.mode !== 'manual' && (
+                              <Zap className={cn(
+                                "h-3 w-3 flex-shrink-0",
+                                task.mode === "generative" && "text-blue-600 dark:text-blue-400",
+                                task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
+                              )} />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">{task.title}</div>
+                              {company && (
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {company.name}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        {/* Project */}
+                        <TableCell className="py-2">
+                          {project && (
+                            <div className="flex items-center gap-1.5">
+                              <div 
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
+                              />
+                              <span className="text-xs truncate">{project.name}</span>
                             </div>
                           )}
-                        </div>
-                      </div>
-                    </TableCell>
+                        </TableCell>
 
-                    {/* Project - Compact with Color Dot */}
-                    <TableCell className="py-2">
-                      {project && (
-                        <div className="flex items-center gap-1.5">
-                          <div 
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
-                          />
-                          <span className="text-xs truncate">{project.name}</span>
-                        </div>
-                      )}
-                    </TableCell>
-
-                    {/* Status - More Compact Badge */}
-                    <TableCell className="py-2">
-                      <div className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize",
-                        task.status === "delivered" && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-                        task.status === "qa_review" && "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-                        task.status === "production" && "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
-                        task.status === "assigned" && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-                        (task.status === "assessment" || task.status === "submitted") && "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
-                      )}>
-                        {task.status.replace('_', ' ')}
-                      </div>
-                    </TableCell>
-
-                    {/* Assignee - Avatar Circle */}
-                    <TableCell className="py-2">
-                      {task.assignee ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                            {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        {/* Status */}
+                        <TableCell className="py-2">
+                          <div className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize",
+                            task.status === "delivered" && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+                            task.status === "qa_review" && "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+                            task.status === "production" && "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+                            task.status === "assigned" && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
+                            (task.status === "assessment" || task.status === "submitted") && "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
+                          )}>
+                            {task.status.replace('_', ' ')}
                           </div>
-                          <span className="text-xs truncate">{task.assignee}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Unassigned</span>
-                      )}
-                    </TableCell>
+                        </TableCell>
 
-                    {/* Due Date - Compact */}
-                    <TableCell className="py-2">
-                      {task.dueDate ? (
-                        <div className={cn(
-                          "flex items-center gap-1.5 text-xs",
-                          isOverdue(task.dueDate) && "text-red-600 dark:text-red-400 font-medium"
-                        )}>
-                          {isOverdue(task.dueDate) && <Clock className="h-3 w-3" />}
-                          {formatDate(task.dueDate)}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )
-              })
+                        {/* Priority */}
+                        <TableCell className="py-2">
+                          <div className="flex items-center gap-1" title={priority.label}>
+                            <span className={cn("text-sm", priority.color)}>{priority.icon}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* Assignee */}
+                        <TableCell className="py-2">
+                          {task.assignee ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                                {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              </div>
+                              <span className="text-xs truncate">{task.assignee}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Unassigned</span>
+                          )}
+                        </TableCell>
+
+                        {/* Activity (Comments + Attachments) */}
+                        <TableCell className="py-2">
+                          <div className="flex items-center gap-3">
+                            {(task.commentsCount || 0) > 0 && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <MessageSquare className="h-3 w-3" />
+                                <span className="text-xs">{task.commentsCount}</span>
+                              </div>
+                            )}
+                            {(task.attachmentsCount || 0) > 0 && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Paperclip className="h-3 w-3" />
+                                <span className="text-xs">{task.attachmentsCount}</span>
+                              </div>
+                            )}
+                            {!task.commentsCount && !task.attachmentsCount && (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Due Date */}
+                        <TableCell className="py-2">
+                          {task.dueDate ? (
+                            <div className={cn(
+                              "flex items-center gap-1.5 text-xs",
+                              isOverdue(task.dueDate) && "text-red-600 dark:text-red-400 font-medium"
+                            )}>
+                              {isOverdue(task.dueDate) && <Clock className="h-3 w-3" />}
+                              {formatDate(task.dueDate)}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </>
+              ))
             )}
           </TableBody>
         </Table>

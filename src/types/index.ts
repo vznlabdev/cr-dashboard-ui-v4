@@ -72,6 +72,7 @@ export interface Task {
   title: string;
   description?: string;
   status: TaskStatus;
+  priority?: 'urgent' | 'high' | 'medium' | 'low';  // Task priority level
   assignee?: string;
   dueDate?: string;
   createdDate: string;
