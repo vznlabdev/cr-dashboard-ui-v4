@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target, Eye } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -221,6 +221,24 @@ function FlatKanbanBoard({
     return taskGroups.find(g => g.id === taskGroupId)
   }
 
+  // Format relative time (e.g., "2h ago", "3 days ago")
+  const getRelativeTime = (isoTimestamp: string) => {
+    const now = new Date()
+    const then = new Date(isoTimestamp)
+    const diffMs = now.getTime() - then.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
+    const diffMin = Math.floor(diffSec / 60)
+    const diffHour = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHour / 24)
+    
+    if (diffSec < 60) return 'Just now'
+    if (diffMin < 60) return `${diffMin}m ago`
+    if (diffHour < 24) return `${diffHour}h ago`
+    if (diffDay < 7) return `${diffDay}d ago`
+    if (diffDay < 30) return `${Math.floor(diffDay / 7)}w ago`
+    return `${Math.floor(diffDay / 30)}mo ago`
+  }
+
   // Task card - styled to match creative tickets exactly
   const TaskCardWithGroup = ({ task }: { task: Task }) => {
     const group = getTaskGroup(task.taskGroupId)
@@ -386,20 +404,23 @@ function FlatKanbanBoard({
             </DropdownMenu>
           </div>
 
-          {/* Mode Indicator & Workflow Step */}
-          {task.mode && task.mode !== "manual" && (
+          {/* Status Indicators Row */}
+          {((task.mode && task.mode !== "manual") || task.clearanceRejection || task.clientVisibility) && (
             <div className="mb-2.5 flex items-center gap-2 flex-wrap">
-              <Badge 
-                variant="outline"
-                className={cn(
-                  "text-[10px] font-semibold px-2 py-0.5 gap-1",
-                  task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                  task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
-                )}
-              >
-                <Zap className="h-2.5 w-2.5" />
-                {task.mode === "generative" ? "AI Gen" : "AI Assist"}
-              </Badge>
+              {/* AI Mode Badge */}
+              {task.mode && task.mode !== "manual" && (
+                <Badge 
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] font-semibold px-2 py-0.5 gap-1",
+                    task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                    task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
+                  )}
+                >
+                  <Zap className="h-2.5 w-2.5" />
+                  {task.mode === "generative" ? "AI Gen" : "AI Assist"}
+                </Badge>
+              )}
               
               {/* Workflow Step Indicator */}
               {task.aiWorkflowStep && (
@@ -408,6 +429,32 @@ function FlatKanbanBoard({
                   className="text-[10px] font-medium px-2 py-0.5 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700"
                 >
                   Step {task.aiWorkflowStep}/7
+                </Badge>
+              )}
+
+              {/* Clearance Rejection Badge */}
+              {task.clearanceRejection && (
+                <Badge 
+                  variant="outline"
+                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                >
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Needs Changes
+                </Badge>
+              )}
+
+              {/* Client Visibility Indicator */}
+              {task.clientVisibility && task.clientVisibility !== 'internal' && (
+                <Badge 
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] font-medium px-2 py-0.5 gap-1",
+                    task.clientVisibility === 'visible' && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                    task.clientVisibility === 'comment' && "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                  )}
+                >
+                  <Eye className="h-2.5 w-2.5" />
+                  {task.clientVisibility === 'visible' ? 'Client Visible' : 'Client Can Comment'}
                 </Badge>
               )}
             </div>
@@ -481,17 +528,26 @@ function FlatKanbanBoard({
 
           {/* Bottom Metadata Row */}
           <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
-            {/* Left: Assignee Avatar */}
-            {task.assignee ? (
-              <div 
-                className="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center text-[10px] font-medium text-white"
-                title={task.assignee}
-              >
-                {task.assignee.split(' ').map(n => n[0]).join('')}
-              </div>
-            ) : (
-              <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-600" />
-            )}
+            {/* Left: Assignee Avatar + Updated Timestamp */}
+            <div className="flex items-center gap-2">
+              {task.assignee ? (
+                <div 
+                  className="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center text-[10px] font-medium text-white"
+                  title={task.assignee}
+                >
+                  {task.assignee.split(' ').map(n => n[0]).join('')}
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-600" />
+              )}
+              
+              {/* Updated Timestamp */}
+              {task.updatedAt && (
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {getRelativeTime(task.updatedAt)}
+                </span>
+              )}
+            </div>
 
             {/* Right: Due Date */}
             {task.dueDate && (
