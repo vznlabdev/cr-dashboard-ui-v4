@@ -247,6 +247,21 @@ function FlatKanbanBoard({
     return due < now
   }
 
+  // Format due date consistently
+  const formatDueDate = (dueDate?: string) => {
+    if (!dueDate) return ''
+    // If it's already in "Dec 22, 2024" format, return as-is
+    if (dueDate.match(/^[A-Za-z]{3}\s\d{1,2},\s\d{4}$/)) {
+      return dueDate
+    }
+    // Otherwise parse and format as "Dec 22, 2024"
+    const date = new Date(dueDate)
+    const month = date.toLocaleDateString('en-US', { month: 'short' })
+    const day = date.getDate()
+    const year = date.getFullYear()
+    return `${month} ${day}, ${year}`
+  }
+
   // Task card - styled to match creative tickets exactly
   const TaskCardWithGroup = ({ task }: { task: Task }) => {
     const group = getTaskGroup(task.taskGroupId)
@@ -478,7 +493,7 @@ function FlatKanbanBoard({
                   task.clientVisibility === 'comment' && "text-green-600 dark:text-green-400"
                 )}>
                   <Eye className="h-3 w-3" />
-                  <span className="hidden sm:inline">{task.clientVisibility === 'visible' ? 'Visible' : 'Can comment'}</span>
+                  <span>{task.clientVisibility === 'visible' ? 'Client visible' : 'Client can comment'}</span>
                 </span>
               </>
             )}
@@ -527,7 +542,7 @@ function FlatKanbanBoard({
             {task.dueDate && (
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Clock className="h-3.5 w-3.5" />
-                <span className="font-medium">{task.dueDate}</span>
+                <span className="font-medium">{formatDueDate(task.dueDate)}</span>
               </div>
             )}
           </div>
