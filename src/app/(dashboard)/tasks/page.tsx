@@ -2,15 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -23,8 +15,8 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, User } from "lucide-react"
-import { useState, useMemo } from "react"
+import { Search, Zap, Clock, X, Filter, ChevronDown } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -54,6 +46,8 @@ export default function UnifiedTasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [selectedMode, setSelectedMode] = useState<string>('all')
   const [selectedAssignee, setSelectedAssignee] = useState<string>('all')
+  const [showFilters, setShowFilters] = useState(false)
+  const [focusedRow, setFocusedRow] = useState<number>(-1)
 
   // Get all unique assignees
   const allAssignees = useMemo(() => {
@@ -96,6 +90,39 @@ export default function UnifiedTasksPage() {
     })
   }, [searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee])
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus search with "/"
+      if (e.key === '/' && !(e.target instanceof HTMLInputElement)) {
+        e.preventDefault()
+        document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus()
+        return
+      }
+
+      if (e.target instanceof HTMLInputElement) return
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setFocusedRow(prev => Math.min(prev + 1, filteredTasks.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedRow(prev => Math.max(prev - 1, 0))
+      } else if (e.key === 'Enter' && focusedRow >= 0) {
+        const task = filteredTasks[focusedRow]
+        router.push(`/projects/${task.projectId}/tasks/${task.id}`)
+      } else if (e.key === 'Escape') {
+        setFocusedRow(-1)
+      } else if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setShowFilters(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [focusedRow, filteredTasks, router])
+
   // Get status badge variant
   const getStatusVariant = (status: Task["status"]) => {
     switch (status) {
@@ -123,205 +150,262 @@ export default function UnifiedTasksPage() {
     return new Date(dueDate) < new Date()
   }
 
-  return (
-    <PageContainer className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">All Tasks</h1>
-        <p className="text-base text-muted-foreground">
-          View and manage tasks across all projects
-        </p>
-      </div>
+  // Count active filters
+  const activeFiltersCount = [
+    selectedProject !== 'all',
+    selectedStatus !== 'all',
+    selectedMode !== 'all',
+    selectedAssignee !== 'all'
+  ].filter(Boolean).length
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          {/* Search */}
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedProject('all')
+    setSelectedStatus('all')
+    setSelectedMode('all')
+    setSelectedAssignee('all')
+  }
+
+  return (
+    <PageContainer className="space-y-4 animate-fade-in">
+      {/* Compact Header with Search */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search tasks..."
+              placeholder="Search tasks... (press / to focus)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-9"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setSearchQuery('')
+                  e.currentTarget.blur()
+                }
+              }}
             />
           </div>
+        </div>
 
-          {/* Filter Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Project Filter */}
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Filter Toggle */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-colors",
+            showFilters || activeFiltersCount > 0
+              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+              : "hover:bg-muted"
+          )}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          <span>Filter</span>
+          {activeFiltersCount > 0 && (
+            <span className="bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-            {/* Status Filter */}
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Mode Filter */}
-            <Select value={selectedMode} onValueChange={setSelectedMode}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Modes" />
-              </SelectTrigger>
-              <SelectContent>
-                {MODE_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Assignee Filter */}
-            <Select value={selectedAssignee} onValueChange={setSelectedAssignee}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Assignees" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Assignees</SelectItem>
-                {allAssignees.map(assignee => (
-                  <SelectItem key={assignee} value={assignee}>
-                    {assignee}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Linear-style Filter Pills */}
+      {showFilters && (
+        <div className="flex flex-wrap items-center gap-2 py-2 border-b">
+          {/* Status Pills */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground mr-1">Status:</span>
+            {STATUS_OPTIONS.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedStatus(option.value)}
+                className={cn(
+                  "px-2 py-1 text-xs rounded-md transition-colors",
+                  selectedStatus === option.value
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                    : "hover:bg-muted"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
 
-          {/* Results Count */}
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredTasks.length} of {mockTasks.length} tasks
+          {/* Mode Pills */}
+          <div className="flex items-center gap-1 border-l pl-2">
+            <span className="text-xs text-muted-foreground mr-1">Mode:</span>
+            {MODE_OPTIONS.map(option => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedMode(option.value)}
+                className={cn(
+                  "px-2 py-1 text-xs rounded-md transition-colors",
+                  selectedMode === option.value
+                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
+                    : "hover:bg-muted"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tasks Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+          {/* Clear Filters */}
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={clearFilters}
+              className="ml-auto flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted"
+            >
+              <X className="h-3 w-3" />
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Results Count - Compact */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+        <span>
+          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
+          {filteredTasks.length !== mockTasks.length && ` of ${mockTasks.length} total`}
+        </span>
+        <span className="text-[10px]">
+          Use ↑↓ to navigate • Enter to open • Esc to clear • Cmd+F to filter
+        </span>
+      </div>
+
+      {/* Linear-style Compact Table */}
+      <div className="border rounded-lg overflow-hidden bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b">
+              <TableHead className="w-[45%] h-9 text-xs font-medium">Task</TableHead>
+              <TableHead className="h-9 text-xs font-medium">Project</TableHead>
+              <TableHead className="h-9 text-xs font-medium">Status</TableHead>
+              <TableHead className="h-9 text-xs font-medium">Assignee</TableHead>
+              <TableHead className="h-9 text-xs font-medium">Due</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredTasks.length === 0 ? (
               <TableRow>
-                <TableHead className="w-[40%]">Task</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Assignee</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Mode</TableHead>
+                <TableCell colSpan={5} className="text-center py-16 text-muted-foreground text-sm">
+                  <div className="flex flex-col items-center gap-2">
+                    <Search className="h-8 w-8 opacity-20" />
+                    <div>No tasks found</div>
+                    {activeFiltersCount > 0 && (
+                      <button
+                        onClick={clearFilters}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTasks.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                    No tasks found matching your filters
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredTasks.map(task => {
-                  const project = getProjectById(task.projectId)
-                  const company = project ? getCompanyById(project.companyId) : null
-                  
-                  return (
-                    <TableRow
-                      key={task.id}
-                      onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      {/* Task Title */}
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">{task.title}</div>
+            ) : (
+              filteredTasks.map((task, idx) => {
+                const project = getProjectById(task.projectId)
+                const company = project ? getCompanyById(project.companyId) : null
+                const isFocused = idx === focusedRow
+                
+                return (
+                  <TableRow
+                    key={task.id}
+                    onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
+                    className={cn(
+                      "cursor-pointer border-b border-border/40 transition-colors h-11",
+                      isFocused 
+                        ? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800" 
+                        : "hover:bg-muted/50"
+                    )}
+                    onMouseEnter={() => setFocusedRow(idx)}
+                    onMouseLeave={() => setFocusedRow(-1)}
+                  >
+                    {/* Task Title - Compact */}
+                    <TableCell className="py-2">
+                      <div className="flex items-center gap-2">
+                        {/* AI Mode Indicator */}
+                        {task.mode && task.mode !== 'manual' && (
+                          <Zap className={cn(
+                            "h-3 w-3 flex-shrink-0",
+                            task.mode === "generative" && "text-blue-600 dark:text-blue-400",
+                            task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
+                          )} />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{task.title}</div>
                           {company && (
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-muted-foreground truncate">
                               {company.name}
                             </div>
                           )}
                         </div>
-                      </TableCell>
+                      </div>
+                    </TableCell>
 
-                      {/* Project */}
-                      <TableCell>
-                        <div className="text-sm">
-                          {project?.name || '-'}
+                    {/* Project - Compact with Color Dot */}
+                    <TableCell className="py-2">
+                      {project && (
+                        <div className="flex items-center gap-1.5">
+                          <div 
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
+                          />
+                          <span className="text-xs truncate">{project.name}</span>
                         </div>
-                      </TableCell>
+                      )}
+                    </TableCell>
 
-                      {/* Status */}
-                      <TableCell>
-                        <Badge variant={getStatusVariant(task.status)} className="capitalize">
-                          {task.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
+                    {/* Status - More Compact Badge */}
+                    <TableCell className="py-2">
+                      <div className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize",
+                        task.status === "delivered" && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+                        task.status === "qa_review" && "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+                        task.status === "production" && "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+                        task.status === "assigned" && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
+                        (task.status === "assessment" || task.status === "submitted") && "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
+                      )}>
+                        {task.status.replace('_', ' ')}
+                      </div>
+                    </TableCell>
 
-                      {/* Assignee */}
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          {task.assignee || 'Unassigned'}
+                    {/* Assignee - Avatar Circle */}
+                    <TableCell className="py-2">
+                      {task.assignee ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                            {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <span className="text-xs truncate">{task.assignee}</span>
                         </div>
-                      </TableCell>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Unassigned</span>
+                      )}
+                    </TableCell>
 
-                      {/* Due Date */}
-                      <TableCell>
-                        {task.dueDate ? (
-                          <div className={cn(
-                            "flex items-center gap-2 text-sm",
-                            isOverdue(task.dueDate) && "text-red-600 dark:text-red-400"
-                          )}>
-                            <Clock className="h-3.5 w-3.5" />
-                            {formatDate(task.dueDate)}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-
-                      {/* Mode */}
-                      <TableCell>
-                        {task.mode && task.mode !== 'manual' ? (
-                          <div className="flex items-center gap-1">
-                            <Zap className={cn(
-                              "h-3.5 w-3.5",
-                              task.mode === "generative" && "text-blue-600 dark:text-blue-400",
-                              task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
-                            )} />
-                            <span className="text-xs">
-                              {task.mode === "generative" ? "AI Gen" : "AI Assist"}
-                              {task.aiWorkflowStep && ` (${task.aiWorkflowStep}/7)`}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Manual</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    {/* Due Date - Compact */}
+                    <TableCell className="py-2">
+                      {task.dueDate ? (
+                        <div className={cn(
+                          "flex items-center gap-1.5 text-xs",
+                          isOverdue(task.dueDate) && "text-red-600 dark:text-red-400 font-medium"
+                        )}>
+                          {isOverdue(task.dueDate) && <Clock className="h-3 w-3" />}
+                          {formatDate(task.dueDate)}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </PageContainer>
   )
 }
