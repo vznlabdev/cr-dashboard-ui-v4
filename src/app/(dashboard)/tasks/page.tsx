@@ -37,10 +37,16 @@ const MODE_OPTIONS = [
   { value: "assisted", label: "AI Assisted" },
 ]
 
+type ViewTab = 'my-tasks' | 'all' | 'unassigned' | 'overdue'
+
 export default function UnifiedTasksPage() {
   const router = useRouter()
   const { projects, getProjectById } = useData()
   
+  // Mock current user - in real app, get from auth context
+  const currentUser = "Sarah Chen" // TODO: Replace with actual auth context
+  
+  const [activeView, setActiveView] = useState<ViewTab>('my-tasks')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProject, setSelectedProject] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
@@ -61,6 +67,16 @@ export default function UnifiedTasksPage() {
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return mockTasks.filter(task => {
+      // View-based filter (primary filter)
+      if (activeView === 'my-tasks') {
+        if (task.assignee !== currentUser) return false
+      } else if (activeView === 'unassigned') {
+        if (task.assignee) return false
+      } else if (activeView === 'overdue') {
+        if (!task.dueDate || new Date(task.dueDate) >= new Date()) return false
+      }
+      // 'all' view shows everything
+      
       // Search filter
       if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
@@ -81,14 +97,14 @@ export default function UnifiedTasksPage() {
         return false
       }
       
-      // Assignee filter
-      if (selectedAssignee !== 'all' && task.assignee !== selectedAssignee) {
+      // Assignee filter (only applies to 'all' view)
+      if (activeView === 'all' && selectedAssignee !== 'all' && task.assignee !== selectedAssignee) {
         return false
       }
       
       return true
     })
-  }, [searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee])
+  }, [activeView, currentUser, searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee])
 
   // Keyboard navigation
   useEffect(() => {
@@ -166,8 +182,122 @@ export default function UnifiedTasksPage() {
     setSelectedAssignee('all')
   }
 
+  // Get count for each view
+  const viewCounts = useMemo(() => {
+    return {
+      myTasks: mockTasks.filter(t => t.assignee === currentUser).length,
+      all: mockTasks.length,
+      unassigned: mockTasks.filter(t => !t.assignee).length,
+      overdue: mockTasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length,
+    }
+  }, [currentUser])
+
   return (
     <PageContainer className="space-y-4 animate-fade-in">
+      {/* View Tabs - Linear Style */}
+      <div className="flex items-center gap-1 border-b pb-0">
+        <button
+          onClick={() => {
+            setActiveView('my-tasks')
+            setSelectedAssignee('all') // Reset assignee filter
+          }}
+          className={cn(
+            "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+            activeView === 'my-tasks'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          My Tasks
+          <span className={cn(
+            "ml-1.5 px-1.5 py-0.5 text-xs rounded",
+            activeView === 'my-tasks'
+              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+              : "bg-muted text-muted-foreground"
+          )}>
+            {viewCounts.myTasks}
+          </span>
+          {activeView === 'my-tasks' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+        
+        <button
+          onClick={() => setActiveView('all')}
+          className={cn(
+            "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+            activeView === 'all'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          All Tasks
+          <span className={cn(
+            "ml-1.5 px-1.5 py-0.5 text-xs rounded",
+            activeView === 'all'
+              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+              : "bg-muted text-muted-foreground"
+          )}>
+            {viewCounts.all}
+          </span>
+          {activeView === 'all' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveView('unassigned')
+            setSelectedAssignee('all')
+          }}
+          className={cn(
+            "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+            activeView === 'unassigned'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          Unassigned
+          <span className={cn(
+            "ml-1.5 px-1.5 py-0.5 text-xs rounded",
+            activeView === 'unassigned'
+              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+              : "bg-muted text-muted-foreground"
+          )}>
+            {viewCounts.unassigned}
+          </span>
+          {activeView === 'unassigned' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveView('overdue')
+            setSelectedAssignee('all')
+          }}
+          className={cn(
+            "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+            activeView === 'overdue'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          Overdue
+          <span className={cn(
+            "ml-1.5 px-1.5 py-0.5 text-xs rounded",
+            activeView === 'overdue'
+              ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+              : "bg-muted text-muted-foreground"
+          )}>
+            {viewCounts.overdue}
+          </span>
+          {activeView === 'overdue' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
+          )}
+        </button>
+      </div>
+
       {/* Compact Header with Search */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 max-w-md">
@@ -266,7 +396,9 @@ export default function UnifiedTasksPage() {
       <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
         <span>
           {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-          {filteredTasks.length !== mockTasks.length && ` of ${mockTasks.length} total`}
+          {activeView === 'my-tasks' && ' assigned to you'}
+          {activeView === 'unassigned' && ' without assignee'}
+          {activeView === 'overdue' && ' past due'}
         </span>
         <span className="text-[10px]">
           Use ↑↓ to navigate • Enter to open • Esc to clear • Cmd+F to filter
@@ -291,11 +423,22 @@ export default function UnifiedTasksPage() {
                 <TableCell colSpan={5} className="text-center py-16 text-muted-foreground text-sm">
                   <div className="flex flex-col items-center gap-2">
                     <Search className="h-8 w-8 opacity-20" />
-                    <div>No tasks found</div>
+                    <div className="font-medium">
+                      {activeView === 'my-tasks' && 'No tasks assigned to you'}
+                      {activeView === 'unassigned' && 'No unassigned tasks'}
+                      {activeView === 'overdue' && 'No overdue tasks'}
+                      {activeView === 'all' && 'No tasks found'}
+                    </div>
+                    <p className="text-xs">
+                      {activeView === 'my-tasks' && 'All caught up! 🎉'}
+                      {activeView === 'unassigned' && 'All tasks have been assigned'}
+                      {activeView === 'overdue' && 'Great job staying on schedule!'}
+                      {activeView === 'all' && activeFiltersCount > 0 && 'Try adjusting your filters'}
+                    </p>
                     {activeFiltersCount > 0 && (
                       <button
                         onClick={clearFilters}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-blue-600 hover:underline mt-2"
                       >
                         Clear filters
                       </button>
