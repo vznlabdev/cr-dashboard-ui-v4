@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target, Eye } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target, Eye, MessageSquare } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -239,6 +239,14 @@ function FlatKanbanBoard({
     return `${Math.floor(diffDay / 30)}mo ago`
   }
 
+  // Check if task is overdue
+  const isTaskOverdue = (dueDate?: string) => {
+    if (!dueDate) return false
+    const now = new Date()
+    const due = new Date(dueDate)
+    return due < now
+  }
+
   // Task card - styled to match creative tickets exactly
   const TaskCardWithGroup = ({ task }: { task: Task }) => {
     const group = getTaskGroup(task.taskGroupId)
@@ -405,7 +413,7 @@ function FlatKanbanBoard({
           </div>
 
           {/* Status Indicators Row */}
-          {((task.mode && task.mode !== "manual") || task.clearanceRejection || task.clientVisibility) && (
+          {((task.mode && task.mode !== "manual") || task.clearanceRejection || task.clientVisibility || isTaskOverdue(task.dueDate)) && (
             <div className="mb-2.5 flex items-center gap-2 flex-wrap">
               {/* AI Mode Badge */}
               {task.mode && task.mode !== "manual" && (
@@ -429,6 +437,17 @@ function FlatKanbanBoard({
                   className="text-[10px] font-medium px-2 py-0.5 bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700"
                 >
                   Step {task.aiWorkflowStep}/7
+                </Badge>
+              )}
+
+              {/* Overdue Warning */}
+              {isTaskOverdue(task.dueDate) && (
+                <Badge 
+                  variant="outline"
+                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
+                >
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Overdue
                 </Badge>
               )}
 
@@ -469,7 +488,7 @@ function FlatKanbanBoard({
 
           {/* Bottom Metadata Row */}
           <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
-            {/* Left: Assignee Avatar + Updated Timestamp */}
+            {/* Left: Assignee Avatar + Updated Timestamp + Engagement Counts */}
             <div className="flex items-center gap-2">
               {task.assignee ? (
                 <div 
@@ -487,6 +506,22 @@ function FlatKanbanBoard({
                 <span className="text-[10px] text-muted-foreground font-medium">
                   {getRelativeTime(task.updatedAt)}
                 </span>
+              )}
+
+              {/* Comments Count */}
+              {task.commentsCount !== undefined && task.commentsCount > 0 && (
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                  <MessageSquare className="h-3 w-3" />
+                  <span>{task.commentsCount}</span>
+                </div>
+              )}
+
+              {/* Attachments Count */}
+              {task.attachmentsCount !== undefined && task.attachmentsCount > 0 && (
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                  <Paperclip className="h-3 w-3" />
+                  <span>{task.attachmentsCount}</span>
+                </div>
               )}
             </div>
 

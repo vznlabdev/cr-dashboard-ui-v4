@@ -446,12 +446,14 @@ export const mockTasks: Task[] = [
     title: 'Trademark search for new logo',
     status: 'assessment',
     assignee: 'Legal Team',
-    dueDate: 'Dec 12, 2024',
+    dueDate: '2026-01-20T00:00:00Z',  // Overdue (7 days ago)
     createdDate: 'Nov 30, 2024',
     updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
     mode: 'manual',
     intendedUses: ['Internal'],
     deliverableType: 'Legal Review',
+    commentsCount: 3,
+    attachmentsCount: 1,
   },
   {
     id: 'task-17',
@@ -508,6 +510,8 @@ export const mockTasks: Task[] = [
     intendedUses: ['Print', 'Web', 'Internal'],
     deliverableType: 'Print',
     clientVisibility: 'comment',  // Client can comment - shows green badge
+    commentsCount: 8,
+    attachmentsCount: 2,
   },
   {
     id: 'task-21',
@@ -539,6 +543,8 @@ export const mockTasks: Task[] = [
     intendedUses: ['Print', 'Internal'],
     deliverableType: 'Print',
     clientVisibility: 'visible',  // Client can see - shows blue badge
+    commentsCount: 12,
+    attachmentsCount: 5,
     clearanceRejection: {
       rejectedBy: 'legal',
       rejectedAsset: 'letterhead_v1.pdf',

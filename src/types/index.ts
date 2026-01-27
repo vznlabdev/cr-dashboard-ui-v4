@@ -82,6 +82,9 @@ export interface Task {
   deliverableType?: string;
   targetAudience?: string;  // Target audience description
   clientVisibility?: 'internal' | 'visible' | 'comment';  // Client visibility level
+  // Engagement metrics
+  commentsCount?: number;  // Number of comments on the task
+  attachmentsCount?: number;  // Number of attachments on the task
   // Budget fields
   estimatedHours?: number;  // Estimated hours for the task
   isBillable?: boolean;  // Whether the task is billable
