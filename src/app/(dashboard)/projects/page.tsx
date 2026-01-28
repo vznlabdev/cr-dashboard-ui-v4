@@ -350,28 +350,35 @@ export default function ProjectsPage() {
                       </TableCell>
 
                       {/* Project Name with Lead Avatar */}
-                      <TableCell 
-                        className="py-2 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
-                      >
+                      <TableCell className="py-2">
                         <div className="flex items-center gap-2">
                           {/* Lead Avatar */}
                           {project.owner ? (
                             <div 
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0 cursor-help"
                               style={{ 
                                 backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
                               }}
                               title={project.owner}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {project.owner.charAt(0)}
                             </div>
                           ) : (
-                            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0" title="Unassigned">
+                            <div 
+                              className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-help" 
+                              title="Unassigned"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <User className="h-3 w-3 text-muted-foreground" />
                             </div>
                           )}
-                          <span className="text-sm font-medium truncate">{project.name}</span>
+                          <span 
+                            className="text-sm font-medium truncate cursor-pointer"
+                            onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                          >
+                            {project.name}
+                          </span>
                         </div>
                       </TableCell>
 
