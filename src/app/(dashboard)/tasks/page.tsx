@@ -1921,11 +1921,7 @@ export default function UnifiedTasksPage() {
               description: ref.description || '',
               type: ref.type || 'link'
             })),
-            creatorDNA: {
-              tone: data.creatorDNA?.tone || [],
-              style: data.creatorDNA?.style || [],
-              preferences: data.creatorDNA?.preferences || {}
-            }
+            creatorDNA: data.creatorDNA || []
           }
           
           setTaskFormData({ ...taskFormData, mediaData })
