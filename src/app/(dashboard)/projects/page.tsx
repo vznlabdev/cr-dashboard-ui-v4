@@ -355,7 +355,7 @@ export default function ProjectsPage() {
                           {/* Lead Avatar */}
                           {project.owner ? (
                             <div 
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0 cursor-help"
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
                               style={{ 
                                 backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
                               }}
@@ -366,7 +366,7 @@ export default function ProjectsPage() {
                             </div>
                           ) : (
                             <div 
-                              className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 cursor-help" 
+                              className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0" 
                               title="Unassigned"
                               onClick={(e) => e.stopPropagation()}
                             >
