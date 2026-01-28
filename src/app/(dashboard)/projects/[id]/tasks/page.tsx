@@ -37,7 +37,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, Minus, Target, Eye, MessageSquare } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -125,7 +125,6 @@ interface FlatKanbanBoardProps {
   tasks: Task[]
   taskGroups: TaskGroup[]
   selectedTaskGroup: string | null
-  searchQuery: string
   projectId: string
   project: Project | undefined
   onDeleteTask: (taskId: string) => void
@@ -135,7 +134,6 @@ function FlatKanbanBoard({
   tasks,
   taskGroups,
   selectedTaskGroup,
-  searchQuery,
   projectId,
   project,
   onDeleteTask,
@@ -148,7 +146,7 @@ function FlatKanbanBoard({
   // Status filter state
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | 'all'>('all')
 
-  // Filter tasks by selected group, status, and search query
+  // Filter tasks by selected group and status
   const filteredTasks = useMemo(() => {
     let filtered = tasks
 
@@ -162,18 +160,8 @@ function FlatKanbanBoard({
       filtered = filtered.filter(t => t.status === selectedStatus)
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(t => 
-        t.title.toLowerCase().includes(query) ||
-        (t.assignee?.toLowerCase().includes(query) ?? false) ||
-        (t.deliverableType?.toLowerCase().includes(query) ?? false)
-      )
-    }
-
     return filtered
-  }, [tasks, selectedTaskGroup, selectedStatus, searchQuery])
+  }, [tasks, selectedTaskGroup, selectedStatus])
 
   // Group filtered tasks by status column
   const tasksByColumn = useMemo(() => {
@@ -239,269 +227,142 @@ function FlatKanbanBoard({
     return `${month} ${day}, ${year}`
   }
 
-  // Task card - styled to match creative tickets exactly
+  // Task card - Linear-style with essential info
   const TaskCardWithGroup = ({ task }: { task: Task }) => {
     const group = getTaskGroup(task.taskGroupId)
     
-    // Get company brand color - parse from branding_colors or use default
-    const getCompanyColor = () => {
-      if (!company?.branding_colors) return '#3b82f6'
-      // branding_colors format: "#primary,#secondary,#accent"
-      return company.branding_colors.split(',')[0] || '#3b82f6'
-    }
-
-    // Determine priority display - default to medium priority
-    const getPriority = () => {
-      return { label: 'MED', className: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800' }
-    }
-
-    // Get category label - show deliverable type if available
-    const getCategoryLabel = () => {
-      if (task.deliverableType) {
-        return task.deliverableType
+    // Get priority dot - clear visual indicator
+    const getPriorityDot = () => {
+      const priority = task.priority?.toLowerCase() || 'medium'
+      
+      if (priority === 'urgent' || priority === 'high') {
+        return <div className="w-2 h-2 rounded-full bg-red-500" title="High priority" />
       }
-      return 'Task'
-    }
-
-    // Get intended use color
-    const getIntendedUseStyle = (use: string) => {
-      const colors: Record<string, { bg: string; text: string; border: string }> = {
-        "Advertising/Campaigns": { 
-          bg: "bg-red-50 dark:bg-red-900/20", 
-          text: "text-red-700 dark:text-red-400",
-          border: "border-red-200 dark:border-red-800"
-        },
-        "Editorial": { 
-          bg: "bg-blue-50 dark:bg-blue-900/20", 
-          text: "text-blue-700 dark:text-blue-400",
-          border: "border-blue-200 dark:border-blue-800"
-        },
-        "Internal": { 
-          bg: "bg-gray-50 dark:bg-gray-900/20", 
-          text: "text-gray-700 dark:text-gray-400",
-          border: "border-gray-200 dark:border-gray-800"
-        },
-        "Social Media": { 
-          bg: "bg-purple-50 dark:bg-purple-900/20", 
-          text: "text-purple-700 dark:text-purple-400",
-          border: "border-purple-200 dark:border-purple-800"
-        },
-        "Print": { 
-          bg: "bg-emerald-50 dark:bg-emerald-900/20", 
-          text: "text-emerald-700 dark:text-emerald-400",
-          border: "border-emerald-200 dark:border-emerald-800"
-        },
-        "Web": { 
-          bg: "bg-cyan-50 dark:bg-cyan-900/20", 
-          text: "text-cyan-700 dark:text-cyan-400",
-          border: "border-cyan-200 dark:border-cyan-800"
-        },
-        "Video": { 
-          bg: "bg-pink-50 dark:bg-pink-900/20", 
-          text: "text-pink-700 dark:text-pink-400",
-          border: "border-pink-200 dark:border-pink-800"
-        },
+      if (priority === 'low') {
+        return <div className="w-2 h-2 rounded-full bg-gray-400" title="Low priority" />
       }
-      return colors[use] || colors["Internal"]
+      // Default to medium
+      return <div className="w-2 h-2 rounded-full bg-orange-500" title="Medium priority" />
     }
-
-    const priority = getPriority()
     
     return (
       <Card
         onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
         className={cn(
-          "relative py-0 transition-all duration-200 cursor-pointer group",
-          "bg-white dark:bg-slate-800/50 hover:border-blue-500/50",
-          "border border-gray-200 dark:border-slate-700/50 shadow-lg rounded-xl"
+          "relative py-0 cursor-pointer group",
+          "bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800/50",
+          "border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600",
+          "rounded-md transition-colors"
         )}
       >
-        <CardContent className="p-4 flex flex-col" style={{ minHeight: '160px' }}>
-          {/* Header: Company + Priority + Menu */}
-          <div className="flex items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              {/* Company Avatar */}
-              <div 
-                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ring-1 ring-border/40"
-                style={{ backgroundColor: getCompanyColor() }}
-                title={company?.name || 'Company'}
-              >
-                <span className="text-white font-semibold text-[9px]">
-                  {company?.name?.charAt(0) || 'C'}
-                </span>
-              </div>
-              {/* Company Name */}
-              <span className="text-xs text-muted-foreground truncate font-medium">
+        <CardContent className="p-3.5 flex flex-col gap-3">
+          {/* Task Title + Priority Dot */}
+          <div className="flex items-start gap-2.5">
+            <h3 
+              className="flex-1 text-sm font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug"
+            >
+              {task.title}
+            </h3>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {getPriorityDot()}
+              
+              {/* Three-dot menu - shown on hover */}
+              <DropdownMenu>
+                <DropdownMenuTrigger 
+                  asChild
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-slate-700 transition-opacity"
+                    title="More options"
+                  >
+                    <MoreVertical className="h-3.5 w-3.5 text-gray-500" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push(`/projects/${projectId}/tasks/${task.id}`)
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteTask(task.id)
+                    }}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Metadata Row */}
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Assignee + Company */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {/* Assignee Avatar */}
+              {task.assignee ? (
+                <div 
+                  className="w-6 h-6 rounded-full bg-gray-600 dark:bg-gray-500 flex items-center justify-center text-[10px] font-medium text-white shrink-0"
+                  title={task.assignee}
+                >
+                  {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-full border border-dashed border-gray-400 shrink-0" />
+              )}
+              
+              {/* Company name */}
+              <span className="text-xs text-muted-foreground truncate">
                 {company?.name || 'Company'}
               </span>
             </div>
-            {/* Priority Badge */}
-            <span className={cn(
-              "text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0",
-              priority.className
-            )}>
-              {priority.label}
-            </span>
             
-            {/* Three-dot menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger 
-                asChild
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 h-6 w-6 shrink-0 transition-opacity"
-                  title="More options"
-                >
-                  <MoreVertical className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    router.push(`/projects/${projectId}/tasks/${task.id}`)
-                  }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  <span>Edit task</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1" />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteTask(task.id)
-                  }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete task</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Critical Alerts Only - Max 1 badge */}
-          {(task.clearanceRejection || isTaskOverdue(task.dueDate)) && (
-            <div className="mb-2.5">
-              {/* Clearance Rejection - Highest Priority */}
-              {task.clearanceRejection ? (
-                <Badge 
-                  variant="outline"
-                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                >
-                  <AlertCircle className="h-2.5 w-2.5" />
-                  Needs Changes
-                </Badge>
-              ) : isTaskOverdue(task.dueDate) ? (
-                <Badge 
-                  variant="outline"
-                  className="text-[10px] font-semibold px-2 py-0.5 gap-1 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
-                >
-                  <AlertCircle className="h-2.5 w-2.5" />
-                  Overdue
-                </Badge>
-              ) : null}
-            </div>
-          )}
-
-          {/* Task Title */}
-          <h3 
-            className="mb-2 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-          >
-            {task.title}
-          </h3>
-
-          {/* Metadata Line - Plain Text, No Badges - Show max 2-3 items */}
-          <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground line-clamp-1">
-            {/* Deliverable Type */}
-            {task.deliverableType && (
-              <span className="font-medium shrink-0">{task.deliverableType}</span>
-            )}
-
-            {/* AI Mode with Icon - Priority #2 */}
-            {task.mode && task.mode !== "manual" && (
-              <>
-                {task.deliverableType && <span className="text-muted-foreground/40 shrink-0">•</span>}
-                <span className="flex items-center gap-1 shrink-0">
-                  <Zap className={cn(
-                    "h-3 w-3",
-                    task.mode === "generative" && "text-blue-600 dark:text-blue-400",
-                    task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
-                  )} />
-                  <span>{task.mode === "generative" ? "AI Gen" : "AI Assist"}</span>
-                  {task.aiWorkflowStep && (
-                    <span className="text-muted-foreground/60">• Step {task.aiWorkflowStep}/7</span>
-                  )}
-                </span>
-              </>
-            )}
-
-            {/* Client Visibility - Priority #3 (only if room) */}
-            {task.clientVisibility && task.clientVisibility !== 'internal' && (
-              <>
-                <span className="text-muted-foreground/40 shrink-0">•</span>
-                <span className={cn(
-                  "flex items-center gap-1 shrink-0",
-                  task.clientVisibility === 'visible' && "text-blue-600 dark:text-blue-400",
-                  task.clientVisibility === 'comment' && "text-green-600 dark:text-green-400"
-                )}>
-                  <Eye className="h-3 w-3" />
-                  <span>{task.clientVisibility === 'visible' ? 'Client visible' : 'Client can comment'}</span>
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Bottom Metadata Row */}
-          <div className="flex justify-between items-center mt-auto pt-3 border-t border-border/50">
-            {/* Left: Assignee Avatar + Updated Timestamp + Engagement Counts */}
-            <div className="flex items-center gap-2">
-              {task.assignee ? (
-                <div 
-                  className="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center text-[10px] font-medium text-white"
-                  title={task.assignee}
-                >
-                  {task.assignee.split(' ').map(n => n[0]).join('')}
-                </div>
-              ) : (
-                <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-600" />
-              )}
-              
-              {/* Updated Timestamp */}
-              {task.updatedAt && (
-                <span className="text-[10px] text-muted-foreground font-medium">
-                  {getRelativeTime(task.updatedAt)}
-                </span>
-              )}
-
-              {/* Comments Count */}
+            {/* Right: Metadata badges */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Comments */}
               {task.commentsCount !== undefined && task.commentsCount > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                  <MessageSquare className="h-3 w-3" />
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3.5 w-3.5" />
                   <span>{task.commentsCount}</span>
                 </div>
               )}
-
-              {/* Attachments Count */}
+              
+              {/* Attachments */}
               {task.attachmentsCount !== undefined && task.attachmentsCount > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                  <Paperclip className="h-3 w-3" />
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Paperclip className="h-3.5 w-3.5" />
                   <span>{task.attachmentsCount}</span>
                 </div>
               )}
+              
+              {/* Due date */}
+              {task.dueDate && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className={cn(
+                    "h-3.5 w-3.5",
+                    isTaskOverdue(task.dueDate) && "text-orange-500"
+                  )} />
+                  <span>{getRelativeTime(task.dueDate)}</span>
+                </div>
+              )}
+              
+              {/* Updated timestamp (if no other metadata) */}
+              {!task.commentsCount && !task.attachmentsCount && !task.dueDate && task.updatedAt && (
+                <span className="text-xs text-muted-foreground">
+                  {getRelativeTime(task.updatedAt)}
+                </span>
+              )}
             </div>
-
-            {/* Right: Due Date */}
-            {task.dueDate && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Clock className="h-3.5 w-3.5" />
-                <span className="font-medium">{formatDueDate(task.dueDate)}</span>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -518,7 +379,7 @@ function FlatKanbanBoard({
 
   return (
     <div className="mt-6 -mx-4 md:-mx-6">
-      {/* Kanban Columns - Horizontal Scroll */}
+      {/* Kanban Columns - Horizontal Scroll - Linear Style */}
       <div
         className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin"
         style={{
@@ -526,29 +387,26 @@ function FlatKanbanBoard({
           touchAction: "pan-x",
         }}
       >
-        <div className="flex gap-6 h-[calc(100vh-320px)] px-4 md:px-6">
+        <div className="flex gap-4 h-[calc(100vh-320px)] px-4 md:px-6">
           {STATUS_COLUMNS.map((column) => (
             <div
               key={column.key}
-              className={cn(
-                "flex flex-col min-w-[320px] max-w-[320px] h-full rounded-lg bg-muted/30 border border-border/30",
-                "scroll-snap-align-start"
-              )}
+              className="flex flex-col min-w-[280px] max-w-[280px] h-full"
               style={{ scrollSnapAlign: "start" }}
             >
-              {/* Column Header - Sticky */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-muted/30 rounded-t-lg border-b border-border/30 transition-shadow duration-200">
-                <h3 className="font-semibold text-sm text-foreground">{column.label}</h3>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+              {/* Column Header - Minimal Linear Style */}
+              <div className="flex items-center gap-2 px-2 py-2 mb-2">
+                <h3 className="text-sm font-medium text-foreground">{column.label}</h3>
+                <span className="text-xs text-muted-foreground">
                   {tasksByColumn[column.key].length}
                 </span>
               </div>
 
               {/* Column Content */}
-              <div className="flex flex-col gap-3 flex-1 p-3 overflow-y-auto scrollbar-thin">
+              <div className="flex flex-col gap-3 flex-1 overflow-y-auto scrollbar-thin">
                 {tasksByColumn[column.key].length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-32 text-sm text-muted-foreground/60 border-2 border-dashed border-border/40 rounded-lg bg-card/50">
-                    <span className="text-xs">No tasks</span>
+                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                    No tasks
                   </div>
                 ) : (
                   tasksByColumn[column.key].map((task) => (
@@ -1191,7 +1049,6 @@ export default function ProjectTasksPage() {
   // Filter state management
   const [selectedTaskGroup, setSelectedTaskGroup] = useState<string | null>(null) // null = "All Groups"
   const [selectedStatus, setSelectedStatus] = useState<string>('all') // for Stream view
-  const [searchQuery, setSearchQuery] = useState('')
 
   // State management
   const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([])
@@ -1272,6 +1129,10 @@ export default function ProjectTasksPage() {
   // Media Manager state
   const [showMediaManager, setShowMediaManager] = useState(false)
   const [mediaSummaryExpanded, setMediaSummaryExpanded] = useState(false)
+  
+  // Filter dropdown state
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false)
+  const [filterSearchQuery, setFilterSearchQuery] = useState('')
   
   // Description auto-expands as user types (no manual expand button needed)
   const [selectedAssets, setSelectedAssets] = useState<Array<{
@@ -1860,155 +1721,199 @@ export default function ProjectTasksPage() {
 
   return (
     <>
-      {/* Header, Breadcrumbs, Filters - Inside Container */}
-      <PageContainer className="space-y-6 animate-fade-in">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push('/projects')}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronDown className="h-4 w-4 rotate-90" />
-          <span className="font-medium">Back to Projects</span>
-        </button>
-
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center text-sm text-muted-foreground">
-          <a 
-            href="/projects"
+      {/* Header - Linear Style, Streamlined */}
+      <PageContainer className="space-y-0 animate-fade-in">
+        {/* Compact Breadcrumbs */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+          <button
+            onClick={() => router.push('/projects')}
             className="hover:text-foreground transition-colors"
           >
-            Projects
-          </a>
-          <ChevronRight className="h-4 w-4 mx-1" />
+            ← Back
+          </button>
+          <span>•</span>
+          <span>Projects</span>
+          <ChevronRight className="h-3 w-3" />
           <span className="text-foreground font-medium">{project.name}</span>
         </div>
-
-        {/* Project Info - Clean Layout */}
-        <div className="space-y-3">
-          {/* Project Name */}
-          <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-          
-          {/* Description */}
-          <p className="text-base text-muted-foreground">
-            {project.description}
-          </p>
-
-          {/* Status, Compliance, Risk - Inline */}
-          <div className="flex flex-wrap items-center gap-6 text-base">
-            {/* Status */}
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Status:</span>
-              <Badge 
-                variant="default"
-                className={cn(
-                  "font-semibold text-sm",
-                  project.status === "Active" && "bg-blue-600 hover:bg-blue-700"
-                )}
-              >
-                {project.status}
-              </Badge>
-            </div>
-
-            {/* Compliance */}
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Compliance:</span>
-              <span className="font-bold">{project.compliance}%</span>
-            </div>
-
-            {/* Risk */}
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Risk:</span>
-              <span className="font-bold">{project.risk}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Bar - View Toggle & New Task Button */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        
+        {/* Title Row + Metadata + Actions */}
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* View Toggle */}
-            <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-              <Button
-                variant={currentView === 'board' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => switchView('board')}
+            <h1 className="text-xl font-semibold">{project.name}</h1>
+            
+            {/* Minimal Metadata Indicators */}
+            <div className="flex items-center gap-2">
+              {/* Status dot */}
+              <div 
                 className={cn(
-                  currentView === 'board' && "bg-blue-600 hover:bg-blue-700"
-                )}
-              >
-                <LayoutGrid className="h-4 w-4 mr-1.5" />
-                Board
-              </Button>
-              <Button
-                variant={currentView === 'stream' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => switchView('stream')}
-                className={cn(
-                  currentView === 'stream' && "bg-blue-600 hover:bg-blue-700"
-                )}
-              >
-                <List className="h-4 w-4 mr-1.5" />
-                Stream
-              </Button>
+                  "h-2 w-2 rounded-full",
+                  project.status === "Active" && "bg-green-500",
+                  project.status !== "Active" && "bg-gray-400"
+                )} 
+                title={`Status: ${project.status}`}
+              />
+              
+              {/* Compliance percentage */}
+              <span className="text-sm text-muted-foreground" title="Compliance">
+                {project.compliance}%
+              </span>
+              
+              {/* Risk icon - only show if not low */}
+              {project.risk && project.risk !== 'Low' && (
+                <AlertCircle 
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    project.risk === 'High' && "text-red-500",
+                    project.risk === 'Medium' && "text-yellow-500"
+                  )}
+                  title={`Risk: ${project.risk}`}
+                />
+              )}
             </div>
-
-            {/* Action Button */}
-            <Button 
-              onClick={() => openTaskModal()}
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Task
-            </Button>
           </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tasks..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Filter Pills - Task Groups */}
-        <div className="flex gap-2 flex-wrap">
-          {/* All Groups pill */}
-          <Badge
-            variant={selectedTaskGroup === null ? "default" : "outline"}
-            className={cn(
-              "cursor-pointer transition-colors",
-              selectedTaskGroup === null
-                ? ""
-                : "hover:bg-accent hover:text-accent-foreground"
-            )}
-            onClick={() => setSelectedTaskGroup(null)}
+          
+          <Button 
+            onClick={() => openTaskModal()}
+            size="sm"
+            className="h-8"
           >
-            All Groups ({tasks.length})
-          </Badge>
-
-          {/* Task Group filter pills */}
-          {taskGroups.map((group) => {
-            const count = tasks.filter(t => t.taskGroupId === group.id).length
-            return (
-              <Badge
-                key={group.id}
-                variant={selectedTaskGroup === group.id ? "default" : "outline"}
-                className={cn(
-                  "cursor-pointer transition-colors",
-                  selectedTaskGroup === group.id
-                    ? ""
-                    : "hover:bg-accent hover:text-accent-foreground"
-                )}
-                onClick={() => setSelectedTaskGroup(group.id)}
-              >
-                {group.name} ({count})
-              </Badge>
-            )
-          })}
+            <Plus className="h-4 w-4 mr-1" />
+            New Task
+          </Button>
+        </div>
+        
+        {/* View Toggles + Filter Dropdown */}
+        <div className="flex items-center justify-between border-b border-border pb-0">
+          <div className="flex items-center gap-6 text-sm">
+            <button
+              onClick={() => switchView('board')}
+              className={cn(
+                "pb-2 border-b-2 transition-colors",
+                currentView === 'board' 
+                  ? "border-foreground font-medium text-foreground" 
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Board
+            </button>
+            <button
+              onClick={() => switchView('stream')}
+              className={cn(
+                "pb-2 border-b-2 transition-colors",
+                currentView === 'stream' 
+                  ? "border-foreground font-medium text-foreground" 
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Stream
+            </button>
+          </div>
+          
+          <div className="relative pb-2">
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1 text-xs rounded-md transition-colors border",
+                selectedTaskGroup !== null 
+                  ? "border-foreground/20 bg-muted text-foreground" 
+                  : "border-border text-muted-foreground hover:bg-muted/50"
+              )}
+            >
+              <Filter className="h-3 w-3" />
+              <span>
+                {selectedTaskGroup === null 
+                  ? `All (${tasks.length})`
+                  : `${taskGroups.find(g => g.id === selectedTaskGroup)?.name} (${tasks.filter(t => t.taskGroupId === selectedTaskGroup).length})`
+                }
+              </span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            
+            {/* Filter Dropdown */}
+            {showFilterDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowFilterDropdown(false)}
+                />
+                <div className="absolute right-0 z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                  {/* Search Input */}
+                  <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Search groups..."
+                        className="pl-8 h-8 text-xs"
+                        value={filterSearchQuery}
+                        onChange={(e) => setFilterSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Filter Options */}
+                  <div className="max-h-64 overflow-y-auto p-1">
+                    {/* All option */}
+                    <button
+                      onClick={() => {
+                        setSelectedTaskGroup(null)
+                        setShowFilterDropdown(false)
+                        setFilterSearchQuery('')
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                        selectedTaskGroup === null 
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                          : "text-gray-900 dark:text-white"
+                      )}
+                    >
+                      <span className="text-xs font-medium">All</span>
+                      <span className="text-xs text-muted-foreground">{tasks.length}</span>
+                    </button>
+                    
+                    {/* Task Group Options */}
+                    {taskGroups
+                      .filter(group => 
+                        filterSearchQuery === '' || 
+                        group.name.toLowerCase().includes(filterSearchQuery.toLowerCase())
+                      )
+                      .map((group) => {
+                        const count = tasks.filter(t => t.taskGroupId === group.id).length
+                        return (
+                          <button
+                            key={group.id}
+                            onClick={() => {
+                              setSelectedTaskGroup(group.id)
+                              setShowFilterDropdown(false)
+                              setFilterSearchQuery('')
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                              selectedTaskGroup === group.id 
+                                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                : "text-gray-900 dark:text-white"
+                            )}
+                          >
+                            <span className="text-xs font-medium truncate">{group.name}</span>
+                            <span className="text-xs text-muted-foreground ml-2">{count}</span>
+                          </button>
+                        )
+                      })}
+                    
+                    {/* No results */}
+                    {taskGroups.filter(group => 
+                      group.name.toLowerCase().includes(filterSearchQuery.toLowerCase())
+                    ).length === 0 && filterSearchQuery !== '' && (
+                      <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                        No groups found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Stream View - Stays in Container */}
@@ -2033,7 +1938,6 @@ export default function ProjectTasksPage() {
             tasks={tasks}
             taskGroups={taskGroups}
             selectedTaskGroup={selectedTaskGroup}
-            searchQuery={searchQuery}
             projectId={projectId}
             project={project}
             onDeleteTask={handleDeleteTask}

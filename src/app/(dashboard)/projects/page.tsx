@@ -3,14 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   Plus,
-  Search,
   FolderKanban,
   Clock,
   CheckCircle2,
@@ -85,7 +83,6 @@ const TEAM_MEMBERS = [
 export default function ProjectsPage() {
   const router = useRouter()
   const { projects, updateProject, deleteProject } = useData()
-  const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [brandFilter, setBrandFilter] = useState<string>("all")
   const [leadFilter, setLeadFilter] = useState<string>("all")
@@ -117,32 +114,49 @@ export default function ProjectsPage() {
   // Filter projects
   const filteredProjects = useMemo(() => {
     let filtered = projectsWithTIV.filter((project) => {
-      const matchesSearch = 
-        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description?.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === "all" || project.status === statusFilter
       const matchesBrand = brandFilter === "all" || project.companyId === brandFilter
       const matchesLead = leadFilter === "all" || project.owner === leadFilter
-      return matchesSearch && matchesStatus && matchesBrand && matchesLead
+      return matchesStatus && matchesBrand && matchesLead
     })
 
     // Sort by name
     filtered.sort((a, b) => a.name.localeCompare(b.name))
 
     return filtered
-  }, [projectsWithTIV, searchQuery, statusFilter, brandFilter, leadFilter])
+  }, [projectsWithTIV, statusFilter, brandFilter, leadFilter])
 
-  // Stats calculations
-  const totalProjects = projects.length
-  const activeProjects = projects.filter(p => p.status === "Active").length
-  const completedProjects = projects.filter(p => p.status === "Approved").length
-  const pendingProjects = projects.filter(p => p.status === "Review").length
+  // Stats calculations - based on filtered results
+  const hasActiveFilters = statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all"
+  const displayProjects = filteredProjects
+  const displayActiveProjects = displayProjects.filter(p => p.status === "Active").length
+  const displayCompletedProjects = displayProjects.filter(p => p.status === "Approved").length
+  const displayPendingProjects = displayProjects.filter(p => p.status === "Review").length
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Page Header - Linear Style */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Projects</h1>
+        <div>
+          <h1 className="text-xl font-semibold">Projects</h1>
+          <div className="text-sm text-muted-foreground mt-1">
+            {displayProjects.length} {displayProjects.length === 1 ? 'project' : 'projects'}
+            {!hasActiveFilters && (
+              <>
+                {' • '}
+                {displayActiveProjects} active
+                {' • '}
+                {displayPendingProjects} in review
+                {displayCompletedProjects > 0 && (
+                  <>
+                    {' • '}
+                    {displayCompletedProjects} completed
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
         <Button 
           size="sm"
           onClick={() => setNewProjectDialogOpen(true)}
@@ -152,95 +166,63 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Search & Filters - Linear Style */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search projects..."
-              className="pl-9 h-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] h-9">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Review">Review</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Approved">Approved</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Filters - Linear Style */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[150px] h-9">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Review">Review</SelectItem>
+            <SelectItem value="Draft">Draft</SelectItem>
+            <SelectItem value="Approved">Approved</SelectItem>
+          </SelectContent>
+        </Select>
 
-          <Select value={brandFilter} onValueChange={setBrandFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] h-9">
-              <SelectValue placeholder="Brand" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {mockCompanies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select value={brandFilter} onValueChange={setBrandFilter}>
+          <SelectTrigger className="w-full sm:w-[150px] h-9">
+            <SelectValue placeholder="Brand" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Brands</SelectItem>
+            {mockCompanies.map((company) => (
+              <SelectItem key={company.id} value={company.id}>
+                {company.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select value={leadFilter} onValueChange={setLeadFilter}>
-            <SelectTrigger className="w-full sm:w-[150px] h-9">
-              <SelectValue placeholder="Lead" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Leads</SelectItem>
-              {TEAM_MEMBERS.map((member) => (
-                <SelectItem key={member.id} value={member.fullName}>
-                  {member.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select value={leadFilter} onValueChange={setLeadFilter}>
+          <SelectTrigger className="w-full sm:w-[150px] h-9">
+            <SelectValue placeholder="Lead" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Leads</SelectItem>
+            {TEAM_MEMBERS.map((member) => (
+              <SelectItem key={member.id} value={member.fullName}>
+                {member.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          {(searchQuery || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9"
-              onClick={() => {
-                setSearchQuery("")
-                setStatusFilter("all")
-                setBrandFilter("all")
-                setLeadFilter("all")
-              }}
-            >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-        
-        {/* Inline Stats - Linear Style */}
-        <div className="text-sm text-muted-foreground">
-          {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
-          {statusFilter === "all" && brandFilter === "all" && leadFilter === "all" && (
-            <>
-              {' • '}
-              {activeProjects} active
-              {' • '}
-              {pendingProjects} in review
-              {completedProjects > 0 && (
-                <>
-                  {' • '}
-                  {completedProjects} completed
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {(statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9"
+            onClick={() => {
+              setStatusFilter("all")
+              setBrandFilter("all")
+              setLeadFilter("all")
+            }}
+          >
+            Clear Filters
+          </Button>
+        )}
       </div>
 
       {/* Bulk Actions Bar */}
@@ -329,12 +311,11 @@ export default function ProjectsPage() {
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
-                        {(searchQuery || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
+                        {(statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
                           <Button
                             variant="link"
                             size="sm"
                             onClick={() => {
-                              setSearchQuery("")
                               setStatusFilter("all")
                               setBrandFilter("all")
                               setLeadFilter("all")
