@@ -1921,11 +1921,11 @@ export default function UnifiedTasksPage() {
               description: ref.description || '',
               type: ref.type || 'link'
             })),
-            creatorDNA: data.creatorDNA ? {
-              tone: data.creatorDNA.tone || [],
-              style: data.creatorDNA.style || [],
-              preferences: data.creatorDNA.preferences || {}
-            } : undefined
+            creatorDNA: {
+              tone: data.creatorDNA?.tone || [],
+              style: data.creatorDNA?.style || [],
+              preferences: data.creatorDNA?.preferences || {}
+            }
           }
           
           setTaskFormData({ ...taskFormData, mediaData })
