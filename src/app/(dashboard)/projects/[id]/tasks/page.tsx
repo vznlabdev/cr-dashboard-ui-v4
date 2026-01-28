@@ -1761,14 +1761,15 @@ export default function ProjectTasksPage() {
               
               {/* Risk icon - only show if not low */}
               {project.risk && project.risk !== 'Low' && (
-                <AlertCircle 
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    project.risk === 'High' && "text-red-500",
-                    project.risk === 'Medium' && "text-yellow-500"
-                  )}
-                  title={`Risk: ${project.risk}`}
-                />
+                <div title={`Risk: ${project.risk}`}>
+                  <AlertCircle 
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      project.risk === 'High' && "text-red-500",
+                      project.risk === 'Medium' && "text-yellow-500"
+                    )}
+                  />
+                </div>
               )}
             </div>
           </div>
