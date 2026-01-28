@@ -296,7 +296,7 @@ export default function ProjectsPage() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="h-11 w-[33%] text-xs font-medium">Lead • Project</TableHead>
+                  <TableHead className="h-11 w-[33%] text-xs font-medium">Project</TableHead>
                   <TableHead className="h-11 w-[14%] text-xs font-medium">Brand</TableHead>
                   <TableHead className="h-11 w-[11%] text-xs font-medium">Status</TableHead>
                   <TableHead className="h-11 w-[14%] text-xs font-medium">Tasks</TableHead>
@@ -354,33 +354,23 @@ export default function ProjectsPage() {
                         className="py-2 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}/tasks`)}
                       >
-                        <div className="flex items-center gap-3">
-                          {/* Lead Avatar + Name */}
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            {project.owner ? (
-                              <>
-                                <div 
-                                  className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
-                                  style={{ 
-                                    backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
-                                  }}
-                                  title={project.owner}
-                                >
-                                  {project.owner.charAt(0)}
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {TEAM_MEMBERS.find(m => m.fullName === project.owner)?.name || project.owner}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                                  <User className="h-3 w-3 text-muted-foreground" />
-                                </div>
-                                <span className="text-xs text-muted-foreground">Unassigned</span>
-                              </>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          {/* Lead Avatar */}
+                          {project.owner ? (
+                            <div 
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
+                              style={{ 
+                                backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
+                              }}
+                              title={project.owner}
+                            >
+                              {project.owner.charAt(0)}
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0" title="Unassigned">
+                              <User className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                          )}
                           <span className="text-sm font-medium truncate">{project.name}</span>
                         </div>
                       </TableCell>
