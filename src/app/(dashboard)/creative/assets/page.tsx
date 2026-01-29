@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -43,20 +44,20 @@ import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { AssetPreviewModal, UploadAssetDialog } from "@/components/creative"
-import { Asset, AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { UploadAssetDialog } from "@/components/creative"
+import { AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import NextImage from "next/image"
 import Link from "next/link"
 
 export default function AssetsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [brandFilter, setBrandFilter] = useState<string>("all")
   const [fileTypeFilter, setFileTypeFilter] = useState<AssetFileType | "all">("all")
   const [designTypeFilter, setDesignTypeFilter] = useState<DesignType | "all">("all")
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set())
-  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 
   // Filter assets
@@ -313,7 +314,7 @@ export default function AssetsPage() {
                   <TableRow
                     key={asset.id}
                     className="h-12 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors cursor-pointer"
-                    onClick={() => setPreviewAsset(asset)}
+                    onClick={() => router.push(`/creative/assets/${asset.id}`)}
                   >
                     {/* Checkbox */}
                     <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
@@ -394,9 +395,11 @@ export default function AssetsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setPreviewAsset(asset)}>
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Preview
+                          <DropdownMenuItem asChild>
+                            <Link href={`/creative/assets/${asset.id}`}>
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              View Details
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <a href={asset.fileUrl} download>
@@ -422,13 +425,6 @@ export default function AssetsPage() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Preview Modal */}
-      <AssetPreviewModal
-        asset={previewAsset}
-        open={!!previewAsset}
-        onOpenChange={(open) => !open && setPreviewAsset(null)}
-      />
 
       {/* Upload Dialog */}
       <UploadAssetDialog
