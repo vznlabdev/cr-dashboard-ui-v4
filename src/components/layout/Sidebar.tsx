@@ -246,7 +246,7 @@ export function Sidebar() {
                         </>
                       )}
                       {collapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-blue-600 text-white">
+                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-md bg-blue-600 text-white">
                           {item.badge}
                         </span>
                       )}
