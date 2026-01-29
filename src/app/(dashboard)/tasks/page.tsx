@@ -5,14 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,7 +16,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, Signal, SignalHigh, SignalMedium, SignalLow, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, Signal, SignalHigh, SignalMedium, SignalLow, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2 } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -33,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { MediaManager } from "@/components/media-manager/media-manager"
 import type { MediaManagerData } from "@/types/mediaManager"
@@ -654,64 +647,66 @@ export default function UnifiedTasksPage() {
         </div>
       )}
 
-      {/* Linear-style Compact Table */}
-      <div className="border rounded-lg overflow-hidden bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="w-[35%] h-9 text-xs font-medium">Task</TableHead>
-              <TableHead className="h-9 text-xs font-medium">Project</TableHead>
-              <TableHead className="h-9 text-xs font-medium">Status</TableHead>
-              <TableHead className="h-9 text-xs font-medium w-[60px]">Priority</TableHead>
-              <TableHead className="h-9 text-xs font-medium">Assignee</TableHead>
-              <TableHead className="h-9 text-xs font-medium">Activity</TableHead>
-              <TableHead className="h-9 text-xs font-medium">Due</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTasks.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-16 text-muted-foreground text-sm">
-                  <div className="flex flex-col items-center gap-2">
-                    <Search className="h-8 w-8 opacity-20" />
-                    <div className="font-medium">
-                      {activeView === 'my-tasks' && 'No tasks assigned to you'}
-                      {activeView === 'unassigned' && 'No unassigned tasks'}
-                      {activeView === 'overdue' && 'No overdue tasks'}
-                      {activeView === 'all' && 'No tasks found'}
-                    </div>
-                    <p className="text-xs">
-                      {activeView === 'my-tasks' && 'All caught up! 🎉'}
-                      {activeView === 'unassigned' && 'All tasks have been assigned'}
-                      {activeView === 'overdue' && 'Great job staying on schedule!'}
-                      {activeView === 'all' && activeFiltersCount > 0 && 'Try adjusting your filters'}
-                    </p>
-                    {activeFiltersCount > 0 && (
-                      <button
-                        onClick={clearFilters}
-                        className="text-xs text-blue-600 hover:underline mt-2"
-                      >
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredTasks.map((task) => {
-                    const project = getProjectById(task.projectId)
-                    const company = project ? getCompanyById(project.companyId) : null
-                    const priority = getPriorityIndicator(task.priority)
-                    
-                    return (
-                      <TableRow
-                        key={task.id}
-                        onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
-                        className="cursor-pointer border-b border-border/40 transition-colors h-11 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
-                      >
-                        {/* Task Title */}
-                        <TableCell className="py-2">
-                          <div className="flex items-center gap-2">
+      {/* Linear-style Card Stream View */}
+      <div className="space-y-2">
+        {filteredTasks.length === 0 ? (
+          <Card className="p-12">
+            <div className="text-center">
+              <Search className="h-8 w-8 opacity-20 mx-auto mb-3" />
+              <h3 className="text-lg font-medium mb-2">
+                {activeView === 'my-tasks' && 'No tasks assigned to you'}
+                {activeView === 'unassigned' && 'No unassigned tasks'}
+                {activeView === 'overdue' && 'No overdue tasks'}
+                {activeView === 'all' && 'No tasks found'}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {activeView === 'my-tasks' && 'All caught up! 🎉'}
+                {activeView === 'unassigned' && 'All tasks have been assigned'}
+                {activeView === 'overdue' && 'Great job staying on schedule!'}
+                {activeView === 'all' && activeFiltersCount > 0 && 'Try adjusting your filters'}
+              </p>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-blue-600 hover:underline mt-3"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          </Card>
+        ) : (
+          filteredTasks.map((task) => {
+            const project = getProjectById(task.projectId)
+            const company = project ? getCompanyById(project.companyId) : null
+            const priority = getPriorityIndicator(task.priority)
+            
+            const getStatusVariant = (status: Task["status"]) => {
+              switch (status) {
+                case "delivered":
+                  return "default"
+                case "qa_review":
+                  return "secondary"
+                case "production":
+                  return "secondary"
+                default:
+                  return "outline"
+              }
+            }
+            
+            return (
+              <Card 
+                key={task.id} 
+                className="border border-border hover:border-foreground/20 hover:shadow-sm transition-all duration-200 cursor-pointer group" 
+                onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 space-y-2">
+                      {/* Task header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                          <div className="flex items-center gap-1.5">
                             {task.mode && task.mode !== 'manual' && (
                               <Zap className={cn(
                                 "h-3 w-3 flex-shrink-0",
@@ -719,167 +714,129 @@ export default function UnifiedTasksPage() {
                                 task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
                               )} />
                             )}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate">{task.title}</div>
-                              {company && (
-                                <div className="text-xs text-muted-foreground truncate">
-                                  {company.name}
-                                </div>
-                              )}
-                            </div>
+                            <h3 className="font-medium text-sm truncate">{task.title}</h3>
                           </div>
-                        </TableCell>
-
-                        {/* Project */}
-                        <TableCell className="py-2">
-                          {project && (
-                            <div className="flex items-center gap-1.5">
-                              <div 
-                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
-                              />
-                              <span className="text-xs truncate">{project.name}</span>
-                            </div>
+                          {company && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {company.name}
+                            </p>
                           )}
-                        </TableCell>
-
-                        {/* Status */}
-                        <TableCell className="py-2">
-                          <div className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize",
-                            task.status === "delivered" && "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-                            task.status === "qa_review" && "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-                            task.status === "production" && "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
-                            task.status === "assigned" && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-                            (task.status === "assessment" || task.status === "submitted") && "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
-                          )}>
-                            {task.status.replace('_', ' ')}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Priority indicator */}
+                          <div className="flex items-center">
+                            <priority.Icon className={cn("h-3 w-3", priority.color)} />
                           </div>
-                        </TableCell>
-
-                        {/* Priority */}
-                        <TableCell className="py-2">
+                          
+                          {/* Status badge */}
+                          <Badge 
+                            variant={getStatusVariant(task.status)}
+                            className="text-xs font-normal"
+                          >
+                            {task.status.replace('_', ' ')}
+                          </Badge>
+                          
+                          {/* Three-dot menu */}
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <button className={cn(
-                                "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
-                                priority.bgColor
-                              )}>
-                                <priority.Icon className={cn("h-3.5 w-3.5", priority.color)} />
-                                <ChevronDown className="h-3 w-3 opacity-50" />
+                            <DropdownMenuTrigger 
+                              asChild
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-all duration-200"
+                                title="More options"
+                              >
+                                <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenuItem 
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handlePriorityChange(task.id, 'urgent')
+                                  router.push(`/projects/${task.projectId}/tasks/${task.id}`)
                                 }}
-                                className="gap-2"
+                                className="flex items-center gap-2 text-xs cursor-pointer"
                               >
-                                <AlertCircle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                                <span className="text-xs">Urgent</span>
+                                <Pencil className="h-3 w-3" />
+                                <span>Edit task</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handlePriorityChange(task.id, 'high')
+                                  // Handle delete
                                 }}
-                                className="gap-2"
+                                className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                               >
-                                <SignalHigh className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
-                                <span className="text-xs">High</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handlePriorityChange(task.id, 'medium')
-                                }}
-                                className="gap-2"
-                              >
-                                <SignalMedium className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400" />
-                                <span className="text-xs">Medium</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handlePriorityChange(task.id, 'low')
-                                }}
-                                className="gap-2"
-                              >
-                                <SignalLow className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
-                                <span className="text-xs">Low</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handlePriorityChange(task.id, undefined)
-                                }}
-                                className="gap-2 border-t"
-                              >
-                                <Signal className="h-3.5 w-3.5 text-gray-400" />
-                                <span className="text-xs">No priority</span>
+                                <Trash2 className="h-3 w-3" />
+                                <span>Delete task</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
+                        </div>
+                      </div>
 
+                      {/* Task metadata - Linear style with icons */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        {/* Project */}
+                        {project && (
+                          <span className="flex items-center gap-1">
+                            <div 
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
+                            />
+                            <span className="truncate">{project.name}</span>
+                          </span>
+                        )}
+                        
                         {/* Assignee */}
-                        <TableCell className="py-2">
-                          {task.assignee ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                                {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                              </div>
-                              <span className="text-xs truncate">{task.assignee}</span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Unassigned</span>
-                          )}
-                        </TableCell>
-
-                        {/* Activity (Comments + Attachments + Time) */}
-                        <TableCell className="py-2">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {(task.commentsCount || 0) > 0 && (
-                              <div className="flex items-center gap-1">
-                                <MessageSquare className="h-3 w-3" />
-                                <span>{task.commentsCount}</span>
-                              </div>
-                            )}
-                            {(task.attachmentsCount || 0) > 0 && (
-                              <div className="flex items-center gap-1">
-                                <Paperclip className="h-3 w-3" />
-                                <span>{task.attachmentsCount}</span>
-                              </div>
-                            )}
-                            {((task.commentsCount || 0) > 0 || (task.attachmentsCount || 0) > 0) && (
-                              <span className="opacity-50">•</span>
-                            )}
-                            <span className="opacity-70">{formatRelativeTime(task.updatedAt)}</span>
-                          </div>
-                        </TableCell>
-
+                        {task.assignee && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            <span>{task.assignee}</span>
+                          </span>
+                        )}
+                        
                         {/* Due Date */}
-                        <TableCell className="py-2">
-                          {task.dueDate ? (
-                            <div className={cn(
-                              "flex items-center gap-1.5 text-xs",
-                              isOverdue(task.dueDate) && "text-red-600 dark:text-red-400 font-medium"
-                            )}>
-                              {isOverdue(task.dueDate) && <Clock className="h-3 w-3" />}
-                              {formatDate(task.dueDate)}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
+                        {task.dueDate && (
+                          <span className={cn(
+                            "flex items-center gap-1",
+                            isOverdue(task.dueDate) && "text-orange-500"
+                          )}>
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(task.dueDate)}</span>
+                          </span>
+                        )}
+                        
+                        {/* Activity */}
+                        <span className="flex items-center gap-1.5">
+                          {(task.commentsCount || 0) > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <MessageSquare className="h-3 w-3" />
+                              <span>{task.commentsCount}</span>
+                            </span>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-            )}
-          </TableBody>
-        </Table>
+                          {(task.attachmentsCount || 0) > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Paperclip className="h-3 w-3" />
+                              <span>{task.attachmentsCount}</span>
+                            </span>
+                          )}
+                          {((task.commentsCount || 0) > 0 || (task.attachmentsCount || 0) > 0) && (
+                            <span className="opacity-50">•</span>
+                          )}
+                          <Clock className="h-3 w-3" />
+                          <span>{formatRelativeTime(task.updatedAt)}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })
+        )}
       </div>
 
       {/* Task Creation Modal - Linear Style */}
