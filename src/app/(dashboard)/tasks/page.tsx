@@ -16,7 +16,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, Signal, SignalHigh, SignalMedium, SignalLow, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2 } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, Signal, SignalHigh, SignalMedium, SignalLow, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -439,13 +439,14 @@ export default function UnifiedTasksPage() {
           <button
             onClick={() => setActiveView('my-tasks')}
             className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'my-tasks'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            My Tasks
+            <User className="h-3.5 w-3.5" />
+            <span>My Tasks</span>
             <span className={cn(
               "ml-1.5 px-1.5 py-0.5 text-xs rounded",
               activeView === 'my-tasks'
@@ -462,13 +463,14 @@ export default function UnifiedTasksPage() {
           <button
             onClick={() => setActiveView('all')}
             className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'all'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            All Tasks
+            <List className="h-3.5 w-3.5" />
+            <span>All Tasks</span>
             <span className={cn(
               "ml-1.5 px-1.5 py-0.5 text-xs rounded",
               activeView === 'all'
@@ -485,13 +487,14 @@ export default function UnifiedTasksPage() {
           <button
             onClick={() => setActiveView('unassigned')}
             className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'unassigned'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            Unassigned
+            <UserX className="h-3.5 w-3.5" />
+            <span>Unassigned</span>
             <span className={cn(
               "ml-1.5 px-1.5 py-0.5 text-xs rounded",
               activeView === 'unassigned'
@@ -508,13 +511,14 @@ export default function UnifiedTasksPage() {
           <button
             onClick={() => setActiveView('overdue')}
             className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'overdue'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            Overdue
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>Overdue</span>
             <span className={cn(
               "ml-1.5 px-1.5 py-0.5 text-xs rounded",
               activeView === 'overdue'
