@@ -781,7 +781,7 @@ function StreamView({
                           <span className="flex items-center gap-1">
                             <div 
                               className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: '#3b82f6' }}
+                              style={{ backgroundColor: taskGroup.color }}
                             />
                             <span className="truncate">{taskGroup.name}</span>
                           </span>
