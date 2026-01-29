@@ -423,12 +423,12 @@ export default function UnifiedTasksPage() {
   return (
     <PageContainer className="space-y-4 animate-fade-in">
       {/* View Tabs - Linear Style */}
-      <div className="flex items-center justify-between gap-4 border-b pb-2">
+      <div className="flex items-center justify-between gap-4 border-b pb-3">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveView('my-tasks')}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
               activeView === 'my-tasks'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -444,15 +444,12 @@ export default function UnifiedTasksPage() {
             )}>
               {viewCounts.myTasks}
             </span>
-            {activeView === 'my-tasks' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
-            )}
           </button>
           
           <button
             onClick={() => setActiveView('all')}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
               activeView === 'all'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -468,15 +465,12 @@ export default function UnifiedTasksPage() {
             )}>
               {viewCounts.all}
             </span>
-            {activeView === 'all' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
-            )}
           </button>
 
           <button
             onClick={() => setActiveView('unassigned')}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
               activeView === 'unassigned'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -492,15 +486,12 @@ export default function UnifiedTasksPage() {
             )}>
               {viewCounts.unassigned}
             </span>
-            {activeView === 'unassigned' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
-            )}
           </button>
 
           <button
             onClick={() => setActiveView('overdue')}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors",
               activeView === 'overdue'
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -516,9 +507,6 @@ export default function UnifiedTasksPage() {
             )}>
               {viewCounts.overdue}
             </span>
-            {activeView === 'overdue' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-            )}
           </button>
         </div>
 
