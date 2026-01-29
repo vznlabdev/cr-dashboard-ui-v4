@@ -19,8 +19,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ComplianceScoreGauge, RiskIndexBadge, NewProjectDialog } from "@/components/cr";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useCreators } from "@/contexts/creators-context";
+import { useSetup } from "@/lib/contexts/setup-context";
 import {
   calculateTIV,
   calculateEAL,
@@ -45,9 +47,36 @@ import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { isSetupComplete, isDismissed } = useSetup();
   const chartTheme = useChartTheme();
   const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(true);
   const { creators, getExpiringCreators, generateCreatorRightsAlerts } = useCreators();
+
+  // Redirect logic based on setup state
+  useEffect(() => {
+    // If setup is not complete and not dismissed, redirect to setup page
+    if (!isSetupComplete && !isDismissed) {
+      router.push('/setup');
+    }
+    // Otherwise redirect to inbox (setup complete or dismissed)
+    else {
+      router.push('/inbox');
+    }
+  }, [isSetupComplete, isDismissed, router]);
+
+  // Show loading state while redirecting
+  if (isRedirecting) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Calculate portfolio insurance metrics
   const portfolioRiskScores: RiskScores = useMemo(() => ({

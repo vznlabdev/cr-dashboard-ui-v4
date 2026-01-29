@@ -39,11 +39,11 @@ export default function SetupPage() {
 
   const handleSkip = () => {
     dismissSetup()
-    router.push("/tasks")
+    router.push("/inbox")
   }
 
   const handleContinue = () => {
-    router.push("/tasks")
+    router.push("/inbox")
   }
 
   const selectedCategory = setupState.categories.find(
