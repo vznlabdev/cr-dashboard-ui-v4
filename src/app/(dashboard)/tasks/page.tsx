@@ -423,7 +423,7 @@ export default function UnifiedTasksPage() {
   return (
     <PageContainer className="space-y-4 animate-fade-in">
       {/* View Tabs - Linear Style */}
-      <div className="flex items-center justify-between gap-4 border-b pb-0">
+      <div className="flex items-center justify-between gap-4 border-b pb-2">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveView('my-tasks')}
