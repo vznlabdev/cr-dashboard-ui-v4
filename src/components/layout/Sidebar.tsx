@@ -205,25 +205,16 @@ export function Sidebar() {
         </div>
 
         {/* Account Switcher */}
-        <div className="px-2 pt-2 pb-1">
+        <div className="px-2 py-2">
           <AccountSwitcher variant="sidebar" />
         </div>
 
-        {/* Navigation - Grouped Sections */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
+        {/* Navigation - Linear Style */}
+        <nav className="flex-1 overflow-y-auto px-2 py-2">
           {navSections.map((section, sectionIndex) => (
             <div key={sectionIndex}>
-              {/* Section Label */}
-              {!collapsed && section.label && (
-                <div className="px-2 pt-4 pb-2">
-                  <h2 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
-                    {section.label}
-                  </h2>
-                </div>
-              )}
-              
               {/* Section Items */}
-              <div className="space-y-0.5">
+              <div className="space-y-px">
                 {section.items.map((item) => {
                   const Icon = item.icon
                   const isActive = item.href === "/" 
@@ -235,27 +226,27 @@ export function Sidebar() {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors relative",
+                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 relative group",
                         isActive
-                          ? "bg-accent/50 text-foreground"
-                          : "text-muted-foreground hover:bg-accent/30 hover:text-foreground",
+                          ? "bg-accent text-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                         collapsed && "justify-center px-2"
                       )}
                       title={collapsed ? item.title : undefined}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
                       {!collapsed && (
                         <>
                           <span className="flex-1">{item.title}</span>
                           {item.badge !== undefined && item.badge > 0 && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-medium rounded-full bg-blue-600 text-white">
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-medium rounded-md bg-blue-600 text-white">
                               {item.badge}
                             </span>
                           )}
                         </>
                       )}
                       {collapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-blue-600 text-white">
+                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-blue-600 text-white">
                           {item.badge}
                         </span>
                       )}
@@ -264,29 +255,29 @@ export function Sidebar() {
                 })}
               </div>
               
-              {/* Separator between sections */}
+              {/* Minimal spacing between sections */}
               {sectionIndex < navSections.length - 1 && (
-                <div className="my-3 h-px bg-border/50" />
+                <div className="h-4" />
               )}
             </div>
           ))}
 
-          {/* Separator before Settings */}
-          <div className="my-3 h-px bg-border/50" />
+          {/* Minimal spacing before Settings */}
+          <div className="h-4" />
 
           {/* Settings */}
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
+              "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150",
               pathname === "/settings"
-                ? "bg-accent/50 text-foreground"
-                : "text-muted-foreground hover:bg-accent/30 hover:text-foreground",
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               collapsed && "justify-center px-2"
             )}
             title={collapsed ? "Settings" : undefined}
           >
-            <Settings className="h-4 w-4 shrink-0" />
+            <Settings className="h-[18px] w-[18px] shrink-0" />
             {!collapsed && <span>Settings</span>}
           </Link>
         </nav>
