@@ -16,7 +16,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -821,23 +821,8 @@ export default function UnifiedTasksPage() {
                           </span>
                         )}
                         
-                        {/* Activity */}
-                        <span className="flex items-center gap-1.5">
-                          {(task.commentsCount || 0) > 0 && (
-                            <span className="flex items-center gap-0.5">
-                              <MessageSquare className="h-3 w-3" />
-                              <span>{task.commentsCount}</span>
-                            </span>
-                          )}
-                          {(task.attachmentsCount || 0) > 0 && (
-                            <span className="flex items-center gap-0.5">
-                              <Paperclip className="h-3 w-3" />
-                              <span>{task.attachmentsCount}</span>
-                            </span>
-                          )}
-                          {((task.commentsCount || 0) > 0 || (task.attachmentsCount || 0) > 0) && (
-                            <span className="opacity-50">•</span>
-                          )}
+                        {/* Time ago */}
+                        <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>{formatRelativeTime(task.updatedAt)}</span>
                         </span>
