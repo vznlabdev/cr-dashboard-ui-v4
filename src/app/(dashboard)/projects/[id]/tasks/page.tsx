@@ -1743,25 +1743,35 @@ export default function ProjectTasksPage() {
             <h1 className="text-xl font-semibold">{project.name}</h1>
             
             {/* Minimal Metadata Indicators */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {/* Status dot */}
               <div 
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  project.status === "Active" && "bg-green-500",
-                  project.status !== "Active" && "bg-gray-400"
-                )} 
-                title={`Status: ${project.status}`}
-              />
+                className="flex items-center gap-1.5"
+                title={`Project Status: ${project.status}`}
+              >
+                <div 
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    project.status === "Active" && "bg-green-500",
+                    project.status !== "Active" && "bg-gray-400"
+                  )}
+                />
+              </div>
               
               {/* Compliance percentage */}
-              <span className="text-sm text-muted-foreground" title="Compliance">
+              <span 
+                className="text-sm text-muted-foreground" 
+                title={`Compliance Score: ${project.compliance}%`}
+              >
                 {project.compliance}%
               </span>
               
               {/* Risk icon - only show if not low */}
               {project.risk && project.risk !== 'Low' && (
-                <div title={`Risk: ${project.risk}`}>
+                <div 
+                  className="flex items-center"
+                  title={`Risk Level: ${project.risk}`}
+                >
                   <AlertCircle 
                     className={cn(
                       "h-3.5 w-3.5",
