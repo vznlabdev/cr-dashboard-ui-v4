@@ -335,7 +335,7 @@ export default function TaskWorkflowPage() {
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center gap-2">
                     <Check className="h-3.5 w-3.5 text-green-500" />
-                    <span className="text-muted-foreground">Provenance verified</span>
+                    <span className="text-muted-foreground">Hash verification passed</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -824,19 +824,22 @@ export default function TaskWorkflowPage() {
 
                 <Separator />
 
-                {/* Downloads */}
+                {/* AI Tool Downloads */}
                 <div className="space-y-3">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Download className="h-5 w-5" />
-                    Downloads (2)
+                    AI Tool Downloads (2)
                   </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Files downloaded from AI tools during this session
+                  </p>
                   <Card>
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">hero_image_v1.png</span>
                         <Badge className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 border-green-200">
                           <FileCheck className="h-3 w-3 mr-1" />
-                          Matched
+                          Verified
                         </Badge>
                       </div>
                       <div className="text-xs">
@@ -844,14 +847,23 @@ export default function TaskWorkflowPage() {
                         <span className="ml-2">3:15 PM</span>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">File Hash:</p>
+                        <p className="text-xs text-muted-foreground mb-1">File Hash (Digital Fingerprint):</p>
                         <p className="text-xs font-mono bg-muted p-2 rounded break-all">
                           sha256:a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                        <Check className="h-4 w-4" />
-                        <span>Matched to uploaded asset</span>
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-700 dark:text-green-400 mt-0.5 shrink-0" />
+                          <div className="text-sm">
+                            <p className="font-medium text-green-700 dark:text-green-400 mb-1">
+                              Hash Verified
+                            </p>
+                            <p className="text-green-600 dark:text-green-500 text-xs">
+                              This uploaded file is identical to the AI tool download (verified by digital fingerprint).
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -862,12 +874,20 @@ export default function TaskWorkflowPage() {
                         <span className="text-sm font-medium">hero_image_v2.png</span>
                         <Badge className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 border-green-200">
                           <FileCheck className="h-3 w-3 mr-1" />
-                          Matched
+                          Verified
                         </Badge>
                       </div>
                       <div className="text-xs">
                         <span className="text-muted-foreground">Downloaded:</span>
                         <span className="ml-2">3:16 PM</span>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5">
+                        <div className="flex items-start gap-2">
+                          <Check className="h-3.5 w-3.5 text-green-700 dark:text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-green-600 dark:text-green-500">
+                            Hash verified - identical to AI tool download
+                          </p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
