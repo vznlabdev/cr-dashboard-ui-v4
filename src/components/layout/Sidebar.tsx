@@ -22,17 +22,18 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
 import { useSidebar } from "./sidebar-context"
 import { AccountSwitcher } from "./AccountSwitcher"
+import { useSetup } from "@/lib/contexts/setup-context"
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
-  badge?: number
+  badge?: number | string
 }
 
 interface NavSection {
@@ -40,8 +41,8 @@ interface NavSection {
   items: NavItem[]
 }
 
-// Navigation sections
-const navSections: NavSection[] = [
+// Base navigation sections (will be modified dynamically for setup)
+const baseNavSections: NavSection[] = [
   // Personal section
   {
     items: [
@@ -138,10 +139,40 @@ export function Sidebar() {
   const { collapsed, setCollapsed } = useSidebar()
   const [mounted, setMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
+  const { isSetupComplete, isDismissed, progress } = useSetup()
   
   useEffect(() => {
     setMounted(true)
   }, [])
+  
+  // Conditionally add setup item above Inbox (only after client mount to avoid hydration issues)
+  const navSections = useMemo(() => {
+    // Don't show setup during SSR to avoid hydration mismatch
+    if (!mounted) {
+      return baseNavSections
+    }
+    
+    const showSetup = !isSetupComplete && !isDismissed
+    
+    if (!showSetup) {
+      return baseNavSections
+    }
+    
+    // Add setup item at the beginning
+    return [
+      {
+        items: [
+          {
+            title: "Setup",
+            href: "/setup",
+            icon: CheckCircle2,
+            badge: progress,
+          },
+        ],
+      },
+      ...baseNavSections,
+    ]
+  }, [mounted, isSetupComplete, isDismissed, progress])
   
   // Determine which logo to use based on theme
   const isDark = resolvedTheme === "dark" || theme === "dark"
@@ -238,14 +269,14 @@ export function Sidebar() {
                       {!collapsed && (
                         <>
                           <span className="flex-1">{item.title}</span>
-                          {item.badge !== undefined && item.badge > 0 && (
+                          {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
                             <span className="ml-auto inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-medium rounded-md bg-blue-600 text-white">
                               {item.badge}
                             </span>
                           )}
                         </>
                       )}
-                      {collapsed && item.badge !== undefined && item.badge > 0 && (
+                      {collapsed && item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
                         <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-md bg-blue-600 text-white">
                           {item.badge}
                         </span>
