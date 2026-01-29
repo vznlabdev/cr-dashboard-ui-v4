@@ -6,6 +6,7 @@ import { AccountProvider } from "@/contexts/account-context";
 import { CreatorsProvider } from "@/contexts/creators-context";
 import { CreatorAccountProvider } from "@/contexts/creator-account-context";
 import { SetupProvider } from "@/lib/contexts/setup-context";
+import { InboxProvider } from "@/lib/contexts/inbox-context";
 
 export default function DashboardLayout({
   children,
@@ -15,17 +16,19 @@ export default function DashboardLayout({
   return (
     <AccountProvider>
       <SetupProvider>
-        <SidebarProvider>
-          <NotificationProvider>
-            <DataProvider>
-              <CreatorsProvider>
-                <CreatorAccountProvider>
-                  <MainLayout>{children}</MainLayout>
-                </CreatorAccountProvider>
-              </CreatorsProvider>
-            </DataProvider>
-          </NotificationProvider>
-        </SidebarProvider>
+        <InboxProvider>
+          <SidebarProvider>
+            <NotificationProvider>
+              <DataProvider>
+                <CreatorsProvider>
+                  <CreatorAccountProvider>
+                    <MainLayout>{children}</MainLayout>
+                  </CreatorAccountProvider>
+                </CreatorsProvider>
+              </DataProvider>
+            </NotificationProvider>
+          </SidebarProvider>
+        </InboxProvider>
       </SetupProvider>
     </AccountProvider>
   );

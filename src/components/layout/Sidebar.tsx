@@ -28,6 +28,7 @@ import Image from "next/image"
 import { useSidebar } from "./sidebar-context"
 import { AccountSwitcher } from "./AccountSwitcher"
 import { useSetup } from "@/lib/contexts/setup-context"
+import { useInbox } from "@/lib/contexts/inbox-context"
 
 interface NavItem {
   title: string
@@ -43,14 +44,14 @@ interface NavSection {
 
 // Base navigation sections (will be modified dynamically for setup)
 const baseNavSections: NavSection[] = [
-  // Personal section
+  // Personal section (Inbox badge will be dynamically set)
   {
     items: [
       {
         title: "Inbox",
         href: "/inbox",
         icon: Inbox,
-        badge: 1,
+        badge: 0, // Will be replaced with actual unreadCount
       },
       {
         title: "Tasks",
@@ -140,6 +141,7 @@ export function Sidebar() {
   const [mounted, setMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
+  const { unreadCount } = useInbox()
   
   useEffect(() => {
     setMounted(true)
@@ -152,10 +154,23 @@ export function Sidebar() {
       return baseNavSections
     }
     
+    // Update Inbox badge with actual unread count
+    const sectionsWithInboxBadge = baseNavSections.map((section, idx) => {
+      if (idx === 0) { // Personal section
+        return {
+          ...section,
+          items: section.items.map((item) =>
+            item.href === '/inbox' ? { ...item, badge: unreadCount } : item
+          ),
+        }
+      }
+      return section
+    })
+    
     const showSetup = !isSetupComplete && !isDismissed
     
     if (!showSetup) {
-      return baseNavSections
+      return sectionsWithInboxBadge
     }
     
     // Add setup item at the beginning
@@ -170,9 +185,9 @@ export function Sidebar() {
           },
         ],
       },
-      ...baseNavSections,
+      ...sectionsWithInboxBadge,
     ]
-  }, [mounted, isSetupComplete, isDismissed, progress])
+  }, [mounted, isSetupComplete, isDismissed, progress, unreadCount])
   
   // Determine which logo to use based on theme
   const isDark = resolvedTheme === "dark" || theme === "dark"

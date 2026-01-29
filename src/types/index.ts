@@ -519,3 +519,86 @@ export interface InsuranceAsset extends Asset {
   outputVersions?: string[];
 }
 
+// ==============================================
+// Inbox & Activity Feed Types
+// ==============================================
+
+export interface InboxActivity {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description: string;
+  timestamp: Date;
+  read: boolean;
+  archived: boolean;
+  
+  // Actor information
+  actor: {
+    id: string;
+    name: string;
+    avatar?: string;
+    initials: string;
+  };
+  
+  // Context
+  project?: {
+    id: string;
+    name: string;
+  };
+  task?: {
+    id: string;
+    title: string;
+    status?: TaskStatus;
+  };
+  asset?: {
+    id: string;
+    name: string;
+  };
+  
+  // Activity-specific data
+  metadata: ActivityMetadata;
+  
+  // Actions
+  primaryAction?: InboxAction;
+  secondaryActions?: InboxAction[];
+}
+
+export type ActivityType =
+  | 'mention'           // @mentioned in comment/description
+  | 'task_assigned'     // Assigned to a task
+  | 'task_status'       // Task status changed
+  | 'project_update'    // Project milestone/update
+  | 'comment'           // New comment on followed item
+  | 'asset_approved'    // Asset approval
+  | 'asset_rejected'    // Asset rejection
+  | 'clearance_needed'  // Action required for clearance
+  | 'team_invite'       // Added to team/project
+  | 'deadline_approaching'; // Due date reminder
+
+export interface ActivityMetadata {
+  // For mentions
+  mentionContext?: string;  // Surrounding text
+  
+  // For status changes
+  oldStatus?: string;
+  newStatus?: string;
+  
+  // For comments
+  commentText?: string;
+  commentId?: string;
+  
+  // For approvals/rejections
+  reviewerName?: string;
+  feedback?: string;
+  
+  // Generic
+  [key: string]: any;
+}
+
+export interface InboxAction {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  variant?: 'default' | 'outline' | 'ghost';
+}
+

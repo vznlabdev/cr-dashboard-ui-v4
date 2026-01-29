@@ -55,7 +55,7 @@ export default function SetupPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-border">
         <h1 className="text-2xl font-bold tracking-tight">
-          Set up Creation Rights
+          Setup Creation Rights
         </h1>
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" className="gap-2">
