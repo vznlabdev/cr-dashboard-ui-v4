@@ -651,7 +651,7 @@ export default function UnifiedTasksPage() {
       </div>
 
       {/* Linear-style Card Stream View */}
-      <div className="space-y-2">
+      <div className="space-y-2 mt-6">
         {filteredTasks.length === 0 ? (
           <Card className="p-12">
             <div className="text-center">
