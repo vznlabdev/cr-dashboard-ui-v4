@@ -116,7 +116,7 @@ const navSections: NavSection[] = [
     items: [
       {
         title: "Analytics",
-        href: "/reporting/analytics",
+        href: "/",
         icon: BarChart3,
       },
       {
@@ -226,7 +226,9 @@ export function Sidebar() {
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const Icon = item.icon
-                  const isActive = pathname.startsWith(item.href) && item.href !== "/"
+                  const isActive = item.href === "/" 
+                    ? pathname === item.href 
+                    : pathname.startsWith(item.href)
                   
                   return (
                     <Link
