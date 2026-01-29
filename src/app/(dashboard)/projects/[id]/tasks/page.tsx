@@ -1746,7 +1746,7 @@ export default function ProjectTasksPage() {
             <div className="flex items-center gap-3">
               {/* Status dot */}
               <div 
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 px-1 py-0.5"
                 title={`Project Status: ${project.status}`}
               >
                 <div 
@@ -1760,7 +1760,7 @@ export default function ProjectTasksPage() {
               
               {/* Compliance percentage */}
               <span 
-                className="text-sm text-muted-foreground" 
+                className="text-sm text-muted-foreground px-1 py-0.5" 
                 title={`Compliance Score: ${project.compliance}%`}
               >
                 {project.compliance}%
@@ -1769,7 +1769,7 @@ export default function ProjectTasksPage() {
               {/* Risk icon - only show if not low */}
               {project.risk && project.risk !== 'Low' && (
                 <div 
-                  className="flex items-center"
+                  className="flex items-center px-1 py-0.5"
                   title={`Risk Level: ${project.risk}`}
                 >
                   <AlertCircle 
