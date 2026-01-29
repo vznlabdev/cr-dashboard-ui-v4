@@ -154,14 +154,14 @@ export function MobileNav() {
   }, [])
 
   // Conditionally add setup item and update inbox badge (same logic as Sidebar)
-  const navSections = useMemo(() => {
+  const navSections = useMemo((): NavSection[] => {
     // Don't show setup during SSR to avoid hydration mismatch
     if (!mounted) {
       return baseNavSections
     }
 
     // Update Inbox badge with actual unread count
-    const sectionsWithInboxBadge = baseNavSections.map((section, idx) => {
+    const sectionsWithInboxBadge: NavSection[] = baseNavSections.map((section, idx) => {
       if (idx === 0) { // Personal section
         return {
           ...section,
@@ -180,17 +180,19 @@ export function MobileNav() {
     }
 
     // Add setup item at the beginning
+    const setupSection: NavSection = {
+      items: [
+        {
+          title: "Setup",
+          href: "/setup",
+          icon: CheckCircle2,
+          badge: progress,
+        },
+      ],
+    }
+
     return [
-      {
-        items: [
-          {
-            title: "Setup",
-            href: "/setup",
-            icon: CheckCircle2,
-            badge: progress,
-          },
-        ],
-      },
+      setupSection,
       ...sectionsWithInboxBadge,
     ]
   }, [mounted, isSetupComplete, isDismissed, progress, unreadCount])
