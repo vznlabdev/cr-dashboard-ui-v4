@@ -200,7 +200,7 @@ export default function ProjectsPage() {
             <SelectValue placeholder="Lead" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Leads</SelectItem>
+            <SelectItem value="all">All Project Leads</SelectItem>
             {TEAM_MEMBERS.map((member) => (
               <SelectItem key={member.id} value={member.fullName}>
                 {member.name}
