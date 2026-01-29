@@ -86,7 +86,6 @@ export default function UnifiedTasksPage() {
   const [activeView, setActiveView] = useState<ViewTab>('my-tasks')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const [showFilters, setShowFilters] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [taskFormData, setTaskFormData] = useState({
     title: '',
@@ -596,60 +595,70 @@ export default function UnifiedTasksPage() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Filter Toggle */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-colors h-9",
-            showFilters || activeFiltersCount > 0
-              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-              : "hover:bg-muted"
-          )}
-        >
-          <Filter className="h-3.5 w-3.5" />
-          <span>Filter</span>
-          {activeFiltersCount > 0 && (
-            <span className="bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-              {activeFiltersCount}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Simplified Filter Section */}
-      {showFilters && (
-        <div className="flex flex-wrap items-center gap-2 py-2 border-b">
-          {/* Status Filter */}
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground mr-1">Status:</span>
-            {STATUS_OPTIONS.map(option => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedStatus(option.value)}
-                className={cn(
-                  "px-2 py-1 text-xs rounded-md transition-colors",
-                  selectedStatus === option.value
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                    : "hover:bg-muted"
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Clear Filters */}
-          {activeFiltersCount > 0 && (
+        {/* Filter Dropdown - Linear Style */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <button
-              onClick={clearFilters}
-              className="ml-auto flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md transition-all duration-200 border h-9",
+                activeFiltersCount > 0
+                  ? "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400" 
+                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
             >
-              <X className="h-3 w-3" />
-              Clear filters
+              <Filter className="h-3.5 w-3.5" />
+              <span className="font-medium">Filter</span>
+              {activeFiltersCount > 0 && (
+                <span className="bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                  {activeFiltersCount}
+                </span>
+              )}
+              <ChevronDown className="h-3 w-3" />
             </button>
-          )}
-        </div>
-      )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 p-2">
+            {/* Status Filter Section */}
+            <div className="space-y-2">
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                Status
+              </div>
+              <div className="space-y-0.5">
+                {STATUS_OPTIONS.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedStatus(option.value)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-md transition-colors text-left",
+                      selectedStatus === option.value
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    <span>{option.label}</span>
+                    {selectedStatus === option.value && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            {activeFiltersCount > 0 && (
+              <>
+                <div className="my-2 h-px bg-border" />
+                <button
+                  onClick={clearFilters}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted"
+                >
+                  <X className="h-3 w-3" />
+                  Clear filters
+                </button>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Linear-style Card Stream View */}
       <div className="space-y-2">
