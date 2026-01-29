@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  Home,
   Scale,
   Shield,
   Settings,
@@ -16,6 +15,10 @@ import {
   FileImage,
   FolderKanban,
   CheckCircle2,
+  Inbox,
+  BarChart3,
+  FileText,
+  FileSearch,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -29,59 +32,104 @@ interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
+  badge?: number
 }
 
-// Navigation items
-const navItems: NavItem[] = [
+interface NavSection {
+  label?: string
+  items: NavItem[]
+}
+
+// Navigation sections
+const navSections: NavSection[] = [
+  // Personal section
   {
-    title: "Home",
-    href: "/",
-    icon: Home,
+    items: [
+      {
+        title: "Inbox",
+        href: "/inbox",
+        icon: Inbox,
+        badge: 1,
+      },
+      {
+        title: "Tasks",
+        href: "/tasks",
+        icon: Ticket,
+      },
+    ]
   },
+  // Workspace section
   {
-    title: "Projects",
-    href: "/projects",
-    icon: FolderKanban,
+    label: "Workspace",
+    items: [
+      {
+        title: "Projects",
+        href: "/projects",
+        icon: FolderKanban,
+      },
+      {
+        title: "Brands",
+        href: "/creative/brands",
+        icon: Palette,
+      },
+      {
+        title: "Assets",
+        href: "/creative/assets",
+        icon: FileImage,
+      },
+      {
+        title: "Creators",
+        href: "/creative/creators",
+        icon: User,
+      },
+      {
+        title: "Team",
+        href: "/creative/team",
+        icon: Users,
+      },
+    ]
   },
+  // Compliance section
   {
-    title: "Tasks",
-    href: "/tasks",
-    icon: Ticket,
+    label: "Compliance",
+    items: [
+      {
+        title: "Asset Approvals",
+        href: "/creative/assets/approvals",
+        icon: CheckCircle2,
+      },
+      {
+        title: "Legal",
+        href: "/legal",
+        icon: Scale,
+      },
+      {
+        title: "Insurance",
+        href: "/insurance",
+        icon: Shield,
+      },
+    ]
   },
+  // Reporting section
   {
-    title: "Brands",
-    href: "/creative/brands",
-    icon: Palette,
-  },
-  {
-    title: "Assets",
-    href: "/creative/assets",
-    icon: FileImage,
-  },
-  {
-    title: "Creators",
-    href: "/creative/creators",
-    icon: User,
-  },
-  {
-    title: "Asset Approvals",
-    href: "/creative/assets/approvals",
-    icon: CheckCircle2,
-  },
-  {
-    title: "Team",
-    href: "/creative/team",
-    icon: Users,
-  },
-  {
-    title: "Legal",
-    href: "/legal",
-    icon: Scale,
-  },
-  {
-    title: "Insurance",
-    href: "/insurance",
-    icon: Shield,
+    label: "Reporting",
+    items: [
+      {
+        title: "Analytics",
+        href: "/reporting/analytics",
+        icon: BarChart3,
+      },
+      {
+        title: "Usage Reports",
+        href: "/reporting/usage",
+        icon: FileText,
+      },
+      {
+        title: "Audit Logs",
+        href: "/reporting/audit",
+        icon: FileSearch,
+      },
+    ]
   },
 ]
 
@@ -161,37 +209,67 @@ export function Sidebar() {
           <AccountSwitcher variant="sidebar" />
         </div>
 
-        {/* Navigation - Linear Style */}
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-          <div className="space-y-0.5">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              // Check if this is the home page
-              const isHome = item.href === "/"
-              const isActive = isHome 
-                ? pathname === item.href 
-                : pathname.startsWith(item.href)
+        {/* Navigation - Grouped Sections */}
+        <nav className="flex-1 overflow-y-auto px-2 py-3">
+          {navSections.map((section, sectionIndex) => (
+            <div key={sectionIndex}>
+              {/* Section Label */}
+              {!collapsed && section.label && (
+                <div className="px-2 pt-4 pb-2">
+                  <h2 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                    {section.label}
+                  </h2>
+                </div>
+              )}
               
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-accent/50 text-foreground"
-                      : "text-muted-foreground hover:bg-accent/30 hover:text-foreground",
-                    collapsed && "justify-center px-2"
-                  )}
-                  title={collapsed ? item.title : undefined}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{item.title}</span>}
-                </Link>
-              )
-            })}
-          </div>
+              {/* Section Items */}
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname.startsWith(item.href) && item.href !== "/"
+                  
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors relative",
+                        isActive
+                          ? "bg-accent/50 text-foreground"
+                          : "text-muted-foreground hover:bg-accent/30 hover:text-foreground",
+                        collapsed && "justify-center px-2"
+                      )}
+                      title={collapsed ? item.title : undefined}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-medium rounded-full bg-blue-600 text-white">
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {collapsed && item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-blue-600 text-white">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+              
+              {/* Separator between sections */}
+              {sectionIndex < navSections.length - 1 && (
+                <div className="my-3 h-px bg-border/50" />
+              )}
+            </div>
+          ))}
 
+          {/* Separator before Settings */}
           <div className="my-3 h-px bg-border/50" />
 
           {/* Settings */}
