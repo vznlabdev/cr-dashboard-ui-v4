@@ -697,12 +697,20 @@ export default function UnifiedTasksPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0 space-y-0.5">
                           <div className="flex items-center gap-1.5">
-                            {task.mode && task.mode !== 'manual' && (
-                              <Zap className={cn(
-                                "h-3 w-3 flex-shrink-0",
-                                task.mode === "generative" && "text-blue-600 dark:text-blue-400",
-                                task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
-                              )} />
+                            {/* AI Task Badge */}
+                            {(task.aiTool || (task.mode && task.mode !== 'manual')) && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "h-5 px-1.5 text-[10px] font-medium gap-0.5 shrink-0",
+                                  task.mode === "generative" && "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                                  task.mode === "assisted" && "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+                                  (!task.mode || task.mode === 'manual') && task.aiTool && "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                )}
+                              >
+                                <Bot className="h-3 w-3" />
+                                <span>AI</span>
+                              </Badge>
                             )}
                             <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                               {task.title}

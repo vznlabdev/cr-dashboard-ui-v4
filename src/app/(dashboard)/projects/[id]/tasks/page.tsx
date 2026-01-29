@@ -93,7 +93,26 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
     >
       <CardContent className="pt-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1">
+              {/* AI Task Badge */}
+              {(task.aiTool || (task.mode && task.mode !== 'manual')) && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "h-5 px-1.5 text-[10px] font-medium gap-0.5 shrink-0",
+                    task.mode === "generative" && "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                    task.mode === "assisted" && "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+                    (!task.mode || task.mode === 'manual') && task.aiTool && "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                  )}
+                >
+                  <Bot className="h-3 w-3" />
+                  <span>AI</span>
+                </Badge>
+              )}
+            </div>
+            <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+          </div>
           <Badge variant={getStatusVariant(task.status)} className="text-xs shrink-0">
             {task.status}
           </Badge>
@@ -249,13 +268,30 @@ function FlatKanbanBoard({
         )}
       >
         <CardContent className="p-3.5 flex flex-col gap-3">
-          {/* Task Title + Priority Dot */}
+          {/* Task Title + AI Badge + Priority Dot */}
           <div className="flex items-start gap-2.5">
-            <h3 
-              className="flex-1 text-sm font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug"
-            >
-              {task.title}
-            </h3>
+            <div className="flex-1 min-w-0 space-y-1.5">
+              {/* AI Task Badge */}
+              {(task.aiTool || (task.mode && task.mode !== 'manual')) && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "h-5 px-1.5 text-[10px] font-medium gap-0.5 w-fit",
+                    task.mode === "generative" && "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                    task.mode === "assisted" && "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+                    (!task.mode || task.mode === 'manual') && task.aiTool && "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                  )}
+                >
+                  <Bot className="h-3 w-3" />
+                  <span>AI</span>
+                </Badge>
+              )}
+              <h3 
+                className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug"
+              >
+                {task.title}
+              </h3>
+            </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {getPriorityDot()}
               
@@ -709,7 +745,24 @@ function StreamView({
                       {/* Task header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{task.title}</h3>
+                          <div className="flex items-center gap-1.5">
+                            {/* AI Task Badge */}
+                            {(task.aiTool || (task.mode && task.mode !== 'manual')) && (
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "h-5 px-1.5 text-[10px] font-medium gap-0.5 shrink-0",
+                                  task.mode === "generative" && "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                                  task.mode === "assisted" && "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+                                  (!task.mode || task.mode === 'manual') && task.aiTool && "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                )}
+                              >
+                                <Bot className="h-3 w-3" />
+                                <span>AI</span>
+                              </Badge>
+                            )}
+                            <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{task.title}</h3>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <Badge 
