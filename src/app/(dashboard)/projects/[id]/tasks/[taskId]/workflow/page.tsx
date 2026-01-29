@@ -881,12 +881,17 @@ export default function TaskWorkflowPage() {
                         <span className="text-muted-foreground">Downloaded:</span>
                         <span className="ml-2">3:16 PM</span>
                       </div>
-                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5">
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                         <div className="flex items-start gap-2">
-                          <Check className="h-3.5 w-3.5 text-green-700 dark:text-green-400 mt-0.5 shrink-0" />
-                          <p className="text-xs text-green-600 dark:text-green-500">
-                            Hash verified - identical to AI tool download
-                          </p>
+                          <Check className="h-4 w-4 text-green-700 dark:text-green-400 mt-0.5 shrink-0" />
+                          <div className="text-sm">
+                            <p className="font-medium text-green-700 dark:text-green-400 mb-1">
+                              Hash Verified
+                            </p>
+                            <p className="text-green-600 dark:text-green-500 text-xs">
+                              This uploaded file is identical to the AI tool download (verified by digital fingerprint).
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
