@@ -698,26 +698,29 @@ function StreamView({
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {sortedTasks.map((task) => {
             const taskGroup = getTaskGroup(task.taskGroupId)
             return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
+              <Card key={task.id} className="border border-border hover:border-foreground/20 hover:shadow-sm transition-all duration-200 cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
                     <div className="flex-1 space-y-2">
                       {/* Task header */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-base">{task.title}</h3>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{task.title}</h3>
                           {taskGroup?.name && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
                               {taskGroup.name}
                             </p>
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant={getStatusVariant(task.status)}>
+                          <Badge 
+                            variant={getStatusVariant(task.status)}
+                            className="text-xs font-normal"
+                          >
                             {task.status.replace('_', ' ')}
                           </Badge>
                           
@@ -728,32 +731,32 @@ function StreamView({
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
-                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-all duration-200"
                                 title="More options"
                               >
-                                <MoreVertical className="h-4 w-4 text-gray-400" />
+                                <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1">
+                            <DropdownMenuContent align="end" className="w-40">
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   router.push(`/projects/${projectId}/tasks/${task.id}`)
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                                className="flex items-center gap-2 text-xs cursor-pointer"
                               >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Pencil className="h-3 w-3" />
                                 <span>Edit task</span>
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator className="my-1" />
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   onDeleteTask(task.id)
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                                className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-3 w-3" />
                                 <span>Delete task</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -761,20 +764,23 @@ function StreamView({
                         </div>
                       </div>
 
-                      {/* Task metadata */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      {/* Task metadata - Linear style with icons */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         {task.assignee && (
                           <span className="flex items-center gap-1">
-                            👤 {task.assignee}
+                            <User className="h-3 w-3" />
+                            <span>{task.assignee}</span>
                           </span>
                         )}
                         {task.dueDate && (
                           <span className="flex items-center gap-1">
-                            📅 Due {task.dueDate}
+                            <Calendar className="h-3 w-3" />
+                            <span>{task.dueDate}</span>
                           </span>
                         )}
                         <span className="flex items-center gap-1">
-                          🕒 Updated {formatRelativeTime(task.updatedAt)}
+                          <Clock className="h-3 w-3" />
+                          <span>{formatRelativeTime(task.updatedAt)}</span>
                         </span>
                       </div>
                     </div>
@@ -1713,28 +1719,30 @@ export default function ProjectTasksPage() {
         
         {/* View Toggles + Filter Dropdown */}
         <div className="flex items-center justify-between border-b border-border pb-0">
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-4 text-sm">
             <button
               onClick={() => switchView('board')}
               className={cn(
-                "pb-2 border-b-2 transition-colors",
+                "flex items-center gap-1.5 pb-2 border-b-2 transition-all duration-200",
                 currentView === 'board' 
-                  ? "border-foreground font-medium text-foreground" 
+                  ? "border-foreground text-foreground" 
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              Board
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="font-medium">Board</span>
             </button>
             <button
               onClick={() => switchView('stream')}
               className={cn(
-                "pb-2 border-b-2 transition-colors",
+                "flex items-center gap-1.5 pb-2 border-b-2 transition-all duration-200",
                 currentView === 'stream' 
-                  ? "border-foreground font-medium text-foreground" 
+                  ? "border-foreground text-foreground" 
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              Stream
+              <List className="h-3.5 w-3.5" />
+              <span className="font-medium">Stream</span>
             </button>
           </div>
           
@@ -1742,14 +1750,14 @@ export default function ProjectTasksPage() {
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               className={cn(
-                "flex items-center gap-2 px-3 py-1 text-xs rounded-md transition-colors border",
+                "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition-all duration-200 border",
                 selectedTaskGroup !== null 
-                  ? "border-foreground/20 bg-muted text-foreground" 
-                  : "border-border text-muted-foreground hover:bg-muted/50"
+                  ? "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400" 
+                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
               <Filter className="h-3 w-3" />
-              <span>
+              <span className="font-medium">
                 {selectedTaskGroup === null 
                   ? `All (${tasks.length})`
                   : `${taskGroups.find(g => g.id === selectedTaskGroup)?.name} (${tasks.filter(t => t.taskGroupId === selectedTaskGroup).length})`
@@ -1765,14 +1773,14 @@ export default function ProjectTasksPage() {
                   className="fixed inset-0 z-40" 
                   onClick={() => setShowFilterDropdown(false)}
                 />
-                <div className="absolute right-0 z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                <div className="absolute right-0 z-50 mt-1 w-64 bg-background border border-border rounded-lg shadow-lg overflow-hidden">
                   {/* Search Input */}
-                  <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="p-2 border-b border-border">
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                       <Input
                         placeholder="Search groups..."
-                        className="pl-8 h-8 text-xs"
+                        className="pl-7 h-7 text-xs border-0 focus-visible:ring-1"
                         value={filterSearchQuery}
                         onChange={(e) => setFilterSearchQuery(e.target.value)}
                         autoFocus
@@ -1790,10 +1798,10 @@ export default function ProjectTasksPage() {
                         setFilterSearchQuery('')
                       }}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                        "w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted transition-colors rounded-md",
                         selectedTaskGroup === null 
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
-                          : "text-gray-900 dark:text-white"
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400" 
+                          : "text-foreground"
                       )}
                     >
                       <span className="text-xs font-medium">All</span>
@@ -1817,10 +1825,10 @@ export default function ProjectTasksPage() {
                               setFilterSearchQuery('')
                             }}
                             className={cn(
-                              "w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                              "w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted transition-colors rounded-md",
                               selectedTaskGroup === group.id 
-                                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
-                                : "text-gray-900 dark:text-white"
+                                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400" 
+                                : "text-foreground"
                             )}
                           >
                             <span className="text-xs font-medium truncate">{group.name}</span>
