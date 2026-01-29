@@ -1,6 +1,5 @@
 "use client"
 
-import { Fragment } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -52,13 +51,6 @@ const STATUS_OPTIONS = [
   { value: "delivered", label: "Delivered" },
 ]
 
-const MODE_OPTIONS = [
-  { value: "all", label: "All Modes" },
-  { value: "manual", label: "Manual" },
-  { value: "generative", label: "AI Generative" },
-  { value: "assisted", label: "AI Assisted" },
-]
-
 type ViewTab = 'my-tasks' | 'all' | 'unassigned' | 'overdue'
 
 // Mock team members for assignee picker
@@ -100,10 +92,7 @@ export default function UnifiedTasksPage() {
   
   const [activeView, setActiveView] = useState<ViewTab>('my-tasks')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedProject, setSelectedProject] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const [selectedMode, setSelectedMode] = useState<string>('all')
-  const [selectedAssignee, setSelectedAssignee] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(false)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [taskFormData, setTaskFormData] = useState({
@@ -269,19 +258,9 @@ export default function UnifiedTasksPage() {
     }
   }
   
-  // Group & Sort state
-  const [groupBy, setGroupBy] = useState<'none' | 'project' | 'status' | 'assignee' | 'priority'>('none')
+  // Sort state (no grouping)
   const [sortBy, setSortBy] = useState<'priority' | 'dueDate' | 'updated' | 'created' | 'title'>('updated')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-
-  // Get all unique assignees
-  const allAssignees = useMemo(() => {
-    const assignees = new Set<string>()
-    tasks.forEach(task => {
-      if (task.assignee) assignees.add(task.assignee)
-    })
-    return Array.from(assignees).sort()
-  }, [tasks])
 
   // Helper: Get priority value for sorting
   const getPriorityValue = (priority?: 'urgent' | 'high' | 'medium' | 'low') => {
@@ -339,7 +318,7 @@ export default function UnifiedTasksPage() {
   }
 
   // Filter and Sort tasks
-  const filteredAndSortedTasks = useMemo(() => {
+  const filteredTasks = useMemo(() => {
     // Filter
     let filtered = tasks.filter(task => {
       // View-based filter (primary filter)
@@ -357,23 +336,8 @@ export default function UnifiedTasksPage() {
         return false
       }
       
-      // Project filter
-      if (selectedProject !== 'all' && task.projectId !== selectedProject) {
-        return false
-      }
-      
       // Status filter
       if (selectedStatus !== 'all' && task.status !== selectedStatus) {
-        return false
-      }
-      
-      // Mode filter
-      if (selectedMode !== 'all' && task.mode !== selectedMode) {
-        return false
-      }
-      
-      // Assignee filter (only applies to 'all' view)
-      if (activeView === 'all' && selectedAssignee !== 'all' && task.assignee !== selectedAssignee) {
         return false
       }
       
@@ -408,46 +372,7 @@ export default function UnifiedTasksPage() {
     })
 
     return filtered
-  }, [tasks, activeView, currentUser, searchQuery, selectedProject, selectedStatus, selectedMode, selectedAssignee, sortBy, sortDirection])
-
-  // Group tasks
-  const groupedTasks = useMemo(() => {
-    if (groupBy === 'none') {
-      return [{ group: null, tasks: filteredAndSortedTasks }]
-    }
-
-    const groups: { [key: string]: Task[] } = {}
-    
-    filteredAndSortedTasks.forEach(task => {
-      let key = 'Unknown'
-      
-      switch (groupBy) {
-        case 'project':
-          const project = getProjectById(task.projectId)
-          key = project?.name || 'Unknown Project'
-          break
-        case 'status':
-          key = task.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-          break
-        case 'assignee':
-          key = task.assignee || 'Unassigned'
-          break
-        case 'priority':
-          key = task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'No Priority'
-          break
-      }
-      
-      if (!groups[key]) groups[key] = []
-      groups[key].push(task)
-    })
-
-    return Object.entries(groups)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([group, tasks]) => ({ group, tasks }))
-  }, [filteredAndSortedTasks, groupBy, getProjectById])
-
-  // Flat list for filtering
-  const filteredTasks = filteredAndSortedTasks
+  }, [tasks, activeView, currentUser, searchQuery, selectedStatus, sortBy, sortDirection])
 
   // Get status badge variant
   const getStatusVariant = (status: Task["status"]) => {
@@ -495,20 +420,12 @@ export default function UnifiedTasksPage() {
     return `${diffMonths}mo ago`
   }
 
-  // Count active filters
-  const activeFiltersCount = [
-    selectedProject !== 'all',
-    selectedStatus !== 'all',
-    selectedMode !== 'all',
-    selectedAssignee !== 'all'
-  ].filter(Boolean).length
+  // Count active filters (only status now)
+  const activeFiltersCount = selectedStatus !== 'all' ? 1 : 0
 
   // Clear all filters
   const clearFilters = () => {
-    setSelectedProject('all')
     setSelectedStatus('all')
-    setSelectedMode('all')
-    setSelectedAssignee('all')
   }
 
   // Get count for each view
@@ -527,10 +444,7 @@ export default function UnifiedTasksPage() {
       <div className="flex items-center justify-between gap-4 border-b pb-0">
         <div className="flex items-center gap-1">
           <button
-            onClick={() => {
-              setActiveView('my-tasks')
-              setSelectedAssignee('all') // Reset assignee filter
-            }}
+            onClick={() => setActiveView('my-tasks')}
             className={cn(
               "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'my-tasks'
@@ -576,10 +490,7 @@ export default function UnifiedTasksPage() {
           </button>
 
           <button
-            onClick={() => {
-              setActiveView('unassigned')
-              setSelectedAssignee('all')
-            }}
+            onClick={() => setActiveView('unassigned')}
             className={cn(
               "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'unassigned'
@@ -602,10 +513,7 @@ export default function UnifiedTasksPage() {
           </button>
 
           <button
-            onClick={() => {
-              setActiveView('overdue')
-              setSelectedAssignee('all')
-            }}
+            onClick={() => setActiveView('overdue')}
             className={cn(
               "px-3 py-2 text-sm font-medium rounded-t-md transition-colors relative",
               activeView === 'overdue'
@@ -639,7 +547,7 @@ export default function UnifiedTasksPage() {
         </Button>
       </div>
 
-      {/* Compact Header with Search */}
+      {/* Compact Header with Search and Sort */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1 max-w-md">
           <div className="relative">
@@ -652,36 +560,6 @@ export default function UnifiedTasksPage() {
             />
           </div>
         </div>
-
-        {/* Group By */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-1.5">
-              <span className="text-xs">Group:</span>
-              <span className="font-medium text-xs">
-                {groupBy === 'none' ? 'None' : groupBy === 'project' ? 'Project' : groupBy === 'status' ? 'Status' : groupBy === 'assignee' ? 'Assignee' : 'Priority'}
-              </span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setGroupBy('none')}>
-              {groupBy === 'none' && '✓ '}None
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setGroupBy('project')}>
-              {groupBy === 'project' && '✓ '}Project
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setGroupBy('status')}>
-              {groupBy === 'status' && '✓ '}Status
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setGroupBy('assignee')}>
-              {groupBy === 'assignee' && '✓ '}Assignee
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setGroupBy('priority')}>
-              {groupBy === 'priority' && '✓ '}Priority
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
 
         {/* Sort By */}
         <DropdownMenu>
@@ -741,45 +619,11 @@ export default function UnifiedTasksPage() {
         </button>
       </div>
 
-      {/* Linear-style Filter Pills */}
+      {/* Simplified Filter Section */}
       {showFilters && (
         <div className="flex flex-wrap items-center gap-2 py-2 border-b">
-          {/* Project Pills */}
+          {/* Status Filter */}
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground mr-1">Project:</span>
-            <button
-              onClick={() => setSelectedProject('all')}
-              className={cn(
-                "px-2 py-1 text-xs rounded-md transition-colors",
-                selectedProject === 'all'
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "hover:bg-muted"
-              )}
-            >
-              All Projects
-            </button>
-            {projects.slice(0, 5).map(project => (
-              <button
-                key={project.id}
-                onClick={() => setSelectedProject(project.id)}
-                className={cn(
-                  "px-2 py-1 text-xs rounded-md transition-colors flex items-center gap-1.5",
-                  selectedProject === project.id
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                    : "hover:bg-muted"
-                )}
-              >
-                <div 
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
-                />
-                {project.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Status Pills */}
-          <div className="flex items-center gap-1 border-l pl-2">
             <span className="text-xs text-muted-foreground mr-1">Status:</span>
             {STATUS_OPTIONS.map(option => (
               <button
@@ -789,25 +633,6 @@ export default function UnifiedTasksPage() {
                   "px-2 py-1 text-xs rounded-md transition-colors",
                   selectedStatus === option.value
                     ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                    : "hover:bg-muted"
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Mode Pills */}
-          <div className="flex items-center gap-1 border-l pl-2">
-            <span className="text-xs text-muted-foreground mr-1">Mode:</span>
-            {MODE_OPTIONS.map(option => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedMode(option.value)}
-                className={cn(
-                  "px-2 py-1 text-xs rounded-md transition-colors",
-                  selectedMode === option.value
-                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
                     : "hover:bg-muted"
                 )}
               >
@@ -873,22 +698,7 @@ export default function UnifiedTasksPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              groupedTasks.map(({ group, tasks }, groupIndex) => (
-                <Fragment key={group || `group-${groupIndex}`}>
-                  {/* Group Header (if grouping enabled) */}
-                  {group && (
-                    <TableRow key={`group-${group}`} className="bg-muted/30 hover:bg-muted/30">
-                      <TableCell colSpan={7} className="py-2 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-foreground">{group}</span>
-                          <span className="text-xs text-muted-foreground">({tasks.length})</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  
-                  {/* Task Rows */}
-                  {tasks.map((task) => {
+              filteredTasks.map((task) => {
                     const project = getProjectById(task.projectId)
                     const company = project ? getCompanyById(project.companyId) : null
                     const priority = getPriorityIndicator(task.priority)
@@ -1066,9 +876,7 @@ export default function UnifiedTasksPage() {
                         </TableCell>
                       </TableRow>
                     )
-                  })}
-                </Fragment>
-              ))
+                  })
             )}
           </TableBody>
         </Table>
