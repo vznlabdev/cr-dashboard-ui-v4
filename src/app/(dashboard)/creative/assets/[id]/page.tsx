@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { mockAssets } from "@/lib/mock-data/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -41,15 +41,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 
-interface AssetDetailPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function AssetDetailPage({ params }: AssetDetailPageProps) {
+export default function AssetDetailPage() {
   const router = useRouter()
-  const asset = mockAssets.find((a) => a.id === params.id)
+  const params = useParams()
+  const assetId = params.id as string
+  const asset = mockAssets.find((a) => a.id === assetId)
   const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators()
 
   if (!asset) {
