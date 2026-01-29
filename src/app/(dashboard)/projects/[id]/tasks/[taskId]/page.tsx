@@ -2176,19 +2176,19 @@ export default function TaskDetailPage() {
                                     {asset.provenanceStatus === "verified" && (
                                       <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
                                         <Check className="h-3.5 w-3.5" />
-                                        <span className="font-medium">Provenance verified</span>
+                                        <span className="font-medium">AI provenance verified</span>
                                       </div>
                                     )}
                                     {asset.provenanceStatus === "matching" && (
                                       <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
                                         <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
-                                        <span>Matching to generation data...</span>
+                                        <span>Verifying AI provenance...</span>
                                       </div>
                                     )}
                                     {asset.provenanceStatus === "manual-needed" && (
                                       <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
                                         <AlertCircle className="h-3.5 w-3.5" />
-                                        <span className="font-medium">Manual verification needed</span>
+                                        <span className="font-medium">Could not verify automatically</span>
                                       </div>
                                     )}
                                   </div>
@@ -3373,17 +3373,34 @@ export default function TaskDetailPage() {
       <Dialog open={evidenceModalOpen} onOpenChange={setEvidenceModalOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>AI Evidence for {task?.title}</DialogTitle>
+            <DialogTitle>AI Provenance Evidence</DialogTitle>
             <DialogDescription>
-              Complete audit trail of AI generation activity
+              Proof that your assets came from AI tools - required for legal compliance and insurance
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
+            {/* What This Means Section */}
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Eye className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-200">
+                    What is AI Provenance?
+                  </h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    This shows the complete chain of custody for AI-generated content. When you download files from AI tools, 
+                    we capture their digital fingerprints. When you later upload those files to Asset Manager, we verify they match - 
+                    proving these assets are authentic AI outputs for compliance purposes.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Summary Section */}
             <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg space-y-2">
               <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-3">
-                AI Evidence Summary
+                Session Summary
               </h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -3412,10 +3429,13 @@ export default function TaskDetailPage() {
 
             {/* Prompts Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Prompts ({mockEvidence.prompts.length})
+                User Prompts ({mockEvidence.prompts.length})
               </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                What the user typed into the AI tool
+              </p>
               <div className="space-y-3">
                 {mockEvidence.prompts.map((prompt, index) => (
                   <Card key={index} className="overflow-hidden">
@@ -3485,10 +3505,13 @@ export default function TaskDetailPage() {
 
             {/* Generations Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
                 <Zap className="h-5 w-5" />
-                Generations ({mockEvidence.generations.length})
+                AI Outputs ({mockEvidence.generations.length})
               </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Content generated by the AI tool in response to prompts
+              </p>
               <div className="space-y-3">
                 {mockEvidence.generations.map((gen, index) => (
                   <Card key={index} className="overflow-hidden">
@@ -3552,12 +3575,15 @@ export default function TaskDetailPage() {
 
             <Separator />
 
-            {/* Downloads Section */}
+            {/* AI Tool Downloads Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
                 <Download className="h-5 w-5" />
-                Downloads ({mockEvidence.downloads.length})
+                AI Tool Downloads ({mockEvidence.downloads.length})
               </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Files downloaded from AI tools during this session
+              </p>
               <div className="space-y-3">
                 {mockEvidence.downloads.map((download, index) => (
                   <Card key={index} className="overflow-hidden">
@@ -3578,7 +3604,7 @@ export default function TaskDetailPage() {
                         {download.matchedToAsset && (
                           <Badge className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                             <FileCheck className="h-3 w-3 mr-1" />
-                            Matched
+                            Verified
                           </Badge>
                         )}
                       </div>
@@ -3597,15 +3623,24 @@ export default function TaskDetailPage() {
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">File Hash:</p>
+                          <p className="text-sm text-muted-foreground mb-1">File Hash (Digital Fingerprint):</p>
                           <p className="text-xs font-mono bg-muted p-2 rounded break-all">
                             {download.fileHash}
                           </p>
                         </div>
                         {download.matchedToAsset && (
-                          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                            <Check className="h-4 w-4" />
-                            <span>Matched to uploaded asset</span>
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <Check className="h-4 w-4 text-green-700 dark:text-green-400 mt-0.5 shrink-0" />
+                              <div className="text-sm">
+                                <p className="font-medium text-green-700 dark:text-green-400 mb-1">
+                                  Provenance Verified
+                                </p>
+                                <p className="text-green-600 dark:text-green-500 text-xs">
+                                  This file was uploaded to Asset Manager and matches this AI-generated download. Chain of custody confirmed for compliance.
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </CardContent>
