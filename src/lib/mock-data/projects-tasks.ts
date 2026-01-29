@@ -47,7 +47,7 @@ export const mockProjects: Project[] = [
     risk: 'Low',
     updated: '2 hours ago',
     createdDate: 'June 15, 2024',
-    owner: 'Sarah Johnson',
+    owner: 'Jeff Gordon',
     creatorIds: ['creator-1', 'creator-2'],
   },
   {
@@ -62,7 +62,7 @@ export const mockProjects: Project[] = [
     risk: 'Medium',
     updated: '5 hours ago',
     createdDate: 'July 8, 2024',
-    owner: 'Michael Chen',
+    owner: 'Abdul Qadeer',
     creatorIds: ['creator-1'],
   },
   {
@@ -77,7 +77,7 @@ export const mockProjects: Project[] = [
     risk: 'Medium',
     updated: '1 day ago',
     createdDate: 'August 1, 2024',
-    owner: 'Emily Rodriguez',
+    owner: 'Asad',
     creatorIds: ['creator-3'],
   },
 ]
