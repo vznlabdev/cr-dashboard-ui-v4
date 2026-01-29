@@ -15,13 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -369,13 +362,6 @@ function FlatKanbanBoard({
     )
   }
 
-  // Calculate task counts for filter pills
-  const getGroupTaskCount = (groupId: string | null) => {
-    if (groupId === null) {
-      return tasks.length
-    }
-    return tasks.filter(t => t.taskGroupId === groupId).length
-  }
 
   return (
     <div className="mt-6 -mx-4 md:-mx-6">
@@ -699,70 +685,8 @@ function StreamView({
     return date.toLocaleDateString()
   }
 
-  const getGroupTaskCount = (groupId: string | null) => {
-    if (groupId === null) return tasks.length
-    return tasks.filter(t => t.taskGroupId === groupId).length
-  }
-
   return (
     <div className="space-y-4">
-      {/* Stream View Filters */}
-      <div className="flex gap-4 items-center flex-wrap">
-        {/* Task Group Dropdown */}
-        <Select 
-          value={selectedTaskGroup || 'all'} 
-          onValueChange={(value) => onTaskGroupSelect(value === 'all' ? null : value)}
-        >
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Filter by group" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              All Groups ({getGroupTaskCount(null)})
-            </SelectItem>
-            {taskGroups.map((group) => (
-              <SelectItem key={group.id} value={group.id}>
-                {group.name} ({getGroupTaskCount(group.id)})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Status Filter Pills */}
-        <div className="flex gap-2 flex-wrap">
-          <Badge
-            variant={selectedStatus === 'all' ? "default" : "outline"}
-            className={cn(
-              "cursor-pointer transition-colors",
-              selectedStatus === 'all'
-                ? ""
-                : "hover:bg-accent hover:text-accent-foreground"
-            )}
-            onClick={() => onStatusSelect('all')}
-          >
-            All ({tasks.length})
-          </Badge>
-          {STATUS_COLUMNS.map((column) => {
-            const count = tasks.filter(t => t.status === column.key).length
-            return (
-              <Badge
-                key={column.key}
-                variant={selectedStatus === column.key ? "default" : "outline"}
-                className={cn(
-                  "cursor-pointer transition-colors",
-                  selectedStatus === column.key
-                    ? ""
-                    : "hover:bg-accent hover:text-accent-foreground"
-                )}
-                onClick={() => onStatusSelect(column.key)}
-              >
-                {column.label} ({count})
-              </Badge>
-            )
-          })}
-        </div>
-      </div>
-
       {/* Task List */}
       {sortedTasks.length === 0 ? (
         <Card className="p-12">
