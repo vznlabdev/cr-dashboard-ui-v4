@@ -16,7 +16,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, Signal, SignalHigh, SignalMedium, SignalLow, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, MessageSquare, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -260,38 +260,28 @@ export default function UnifiedTasksPage() {
     return priority ? priorityMap[priority] : 0
   }
 
-  // Helper: Get priority indicator with Linear-style icons
+  // Helper: Get priority indicator with Linear-style colored dots
   const getPriorityIndicator = (priority?: 'urgent' | 'high' | 'medium' | 'low') => {
     if (!priority) return { 
-      Icon: Signal, 
-      color: 'text-gray-400', 
-      label: 'No priority',
-      bgColor: 'hover:bg-gray-50 dark:hover:bg-gray-800'
+      dotColor: 'bg-gray-300 dark:bg-gray-600', 
+      label: 'No priority'
     }
     const indicators = {
       urgent: { 
-        Icon: AlertCircle, 
-        color: 'text-red-600 dark:text-red-400', 
-        label: 'Urgent',
-        bgColor: 'hover:bg-red-50 dark:hover:bg-red-900/20'
+        dotColor: 'bg-red-500', 
+        label: 'Urgent'
       },
       high: { 
-        Icon: SignalHigh, 
-        color: 'text-orange-600 dark:text-orange-400', 
-        label: 'High',
-        bgColor: 'hover:bg-orange-50 dark:hover:bg-orange-900/20'
+        dotColor: 'bg-orange-500', 
+        label: 'High'
       },
       medium: { 
-        Icon: SignalMedium, 
-        color: 'text-yellow-600 dark:text-yellow-400', 
-        label: 'Medium',
-        bgColor: 'hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+        dotColor: 'bg-yellow-500', 
+        label: 'Medium'
       },
       low: { 
-        Icon: SignalLow, 
-        color: 'text-gray-500 dark:text-gray-400', 
-        label: 'Low',
-        bgColor: 'hover:bg-gray-50 dark:hover:bg-gray-800'
+        dotColor: 'bg-gray-400', 
+        label: 'Low'
       },
     }
     return indicators[priority]
@@ -710,12 +700,21 @@ export default function UnifiedTasksPage() {
             return (
               <Card 
                 key={task.id} 
-                className="border border-border hover:border-foreground/20 hover:shadow-sm transition-all duration-200 cursor-pointer group" 
+                className="border border-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all duration-200 cursor-pointer group relative" 
                 onClick={() => router.push(`/projects/${task.projectId}/tasks/${task.id}`)}
               >
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
-                    <div className="flex-1 space-y-2">
+                    {/* Priority Dot Indicator */}
+                    <div 
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0",
+                        priority.dotColor
+                      )}
+                      title={priority.label}
+                    />
+                    
+                    <div className="flex-1 space-y-2 min-w-0">
                       {/* Task header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0 space-y-0.5">
@@ -727,7 +726,9 @@ export default function UnifiedTasksPage() {
                                 task.mode === "assisted" && "text-purple-600 dark:text-purple-400"
                               )} />
                             )}
-                            <h3 className="font-medium text-sm truncate">{task.title}</h3>
+                            <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {task.title}
+                            </h3>
                           </div>
                           {company && (
                             <p className="text-xs text-muted-foreground truncate">
@@ -737,11 +738,6 @@ export default function UnifiedTasksPage() {
                         </div>
                         
                         <div className="flex items-center gap-2 shrink-0">
-                          {/* Priority indicator */}
-                          <div className="flex items-center">
-                            <priority.Icon className={cn("h-3 w-3", priority.color)} />
-                          </div>
-                          
                           {/* Status badge */}
                           <Badge 
                             variant={getStatusVariant(task.status)}
@@ -750,43 +746,58 @@ export default function UnifiedTasksPage() {
                             {task.status.replace('_', ' ')}
                           </Badge>
                           
-                          {/* Three-dot menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger 
-                              asChild
-                              onClick={(e) => e.stopPropagation()}
+                          {/* Quick Actions on Hover */}
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            {/* Edit button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/projects/${task.projectId}/tasks/${task.id}`)
+                              }}
+                              className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                              title="Edit task"
                             >
-                              <button
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-all duration-200"
-                                title="More options"
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-600" />
+                            </button>
+                            
+                            {/* More options menu */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger 
+                                asChild
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/projects/${task.projectId}/tasks/${task.id}`)
-                                }}
-                                className="flex items-center gap-2 text-xs cursor-pointer"
-                              >
-                                <Pencil className="h-3 w-3" />
-                                <span>Edit task</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  // Handle delete
-                                }}
-                                className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                <span>Delete task</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <button
+                                  className="p-1 hover:bg-muted rounded transition-colors"
+                                  title="More options"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/projects/${task.projectId}/tasks/${task.id}`)
+                                  }}
+                                  className="flex items-center gap-2 text-xs cursor-pointer"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  <span>Edit task</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    // Handle delete
+                                  }}
+                                  className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span>Delete task</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       </div>
 
