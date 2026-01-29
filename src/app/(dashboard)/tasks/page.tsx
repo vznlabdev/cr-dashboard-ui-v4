@@ -670,7 +670,6 @@ export default function UnifiedTasksPage() {
           filteredTasks.map((task) => {
             const project = getProjectById(task.projectId)
             const company = project ? getCompanyById(project.companyId) : null
-            const priority = getPriorityIndicator(task.priority)
             
             const getStatusVariant = (status: Task["status"]) => {
               switch (status) {
@@ -693,15 +692,6 @@ export default function UnifiedTasksPage() {
               >
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
-                    {/* Priority Dot Indicator */}
-                    <div 
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0",
-                        priority.dotColor
-                      )}
-                      title={priority.label}
-                    />
-                    
                     <div className="flex-1 space-y-2 min-w-0">
                       {/* Task header */}
                       <div className="flex items-start justify-between gap-3">
