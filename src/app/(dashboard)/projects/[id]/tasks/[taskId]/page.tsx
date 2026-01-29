@@ -73,6 +73,16 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
+import { TaskComments, type TaskComment, type TeamMember as TaskTeamMember } from "@/components/task/TaskComments"
+
+// Team members for @mentions
+const TEAM_MEMBERS: TaskTeamMember[] = [
+  { id: "user-1", name: "Sarah Chen", initials: "SC", avatarColor: "#3b82f6" },
+  { id: "user-2", name: "Mike Johnson", initials: "MJ", avatarColor: "#8b5cf6" },
+  { id: "user-3", name: "Emma Wilson", initials: "EW", avatarColor: "#10b981" },
+  { id: "user-4", name: "Alex Kim", initials: "AK", avatarColor: "#f59e0b" },
+  { id: "user-5", name: "Jordan Lee", initials: "JL", avatarColor: "#ef4444" },
+]
 
 // Simple comment interface for tasks
 interface Comment {
@@ -120,9 +130,12 @@ export default function TaskDetailPage() {
   
   const [task, setTask] = useState<Task | null>(null)
   const [taskGroup, setTaskGroup] = useState<any>(null)
-  const [comments, setComments] = useState<Comment[]>([])
-  const [newComment, setNewComment] = useState("")
+  const [comments, setComments] = useState<TaskComment[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Current user (mock - in real app, get from auth)
+  const currentUserId = "user-1"
+  const currentUserInitials = "SC"
   
   // Tool selection state
   const [toolSearchQuery, setToolSearchQuery] = useState("")
@@ -274,26 +287,33 @@ export default function TaskDetailPage() {
           }))
         }
         
-        // Mock comments
+        // Mock comments with mentions and reactions
         setComments([
           {
-            id: "c-clearance-1",
-            content: "This output must be updated.",
-            authorId: "system",
-            authorName: "Admin Review",
-            createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-            isSystemComment: true,
-            clearanceType: "legal",
-            clearanceReason: "Font licensing unclear. Need proof of commercial license for typography used.",
-            linkedAsset: "typography_guide_v1.pdf",
-            linkedAssetId: "asset-123",
+            id: "c-1",
+            content: "This looks great! Can we adjust the color palette slightly? @Mike Johnson what do you think?",
+            authorId: "user-1",
+            authorName: "Sarah Chen",
+            authorInitials: "SC",
+            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+            mentions: ["user-2"],
+            reactions: [
+              { emoji: "👍", userId: "user-2", userName: "Mike Johnson" },
+              { emoji: "👍", userId: "user-3", userName: "Emma Wilson" },
+              { emoji: "🎉", userId: "user-4", userName: "Alex Kim" },
+            ]
           },
           {
-            id: "c-1",
-            content: "This looks great! Can we adjust the color palette slightly?",
-            authorId: "user-1",
-            authorName: "Sarah Johnson",
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+            id: "c-2",
+            content: "Good point! I think we should use a warmer tone. Let me work on an updated version.",
+            authorId: "user-2",
+            authorName: "Mike Johnson",
+            authorInitials: "MJ",
+            createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+            mentions: [],
+            reactions: [
+              { emoji: "🚀", userId: "user-1", userName: "Sarah Chen" },
+            ]
           },
         ])
       }
@@ -303,20 +323,65 @@ export default function TaskDetailPage() {
     loadTask()
   }, [taskId])
 
-  const handleAddComment = () => {
-    if (!newComment.trim() || !task) return
+  // Handle add comment with mentions
+  const handleAddComment = (content: string, mentions: string[]) => {
+    if (!content.trim() || !task) return
 
-    const comment: Comment = {
+    const comment: TaskComment = {
       id: `c-${Date.now()}`,
-      content: newComment,
-      authorId: "current-user",
-      authorName: "You",
+      content,
+      authorId: currentUserId,
+      authorName: "Sarah Chen", // In real app, get from auth
+      authorInitials: currentUserInitials,
       createdAt: new Date(),
+      mentions,
+      reactions: [],
     }
 
     setComments([...comments, comment])
-    setNewComment("")
-    toast.success("Comment added")
+    
+    // Notify mentioned users
+    if (mentions.length > 0) {
+      const mentionedNames = mentions
+        .map(id => TEAM_MEMBERS.find(m => m.id === id)?.name)
+        .filter(Boolean)
+        .join(', ')
+      toast.success(`Comment added and ${mentionedNames} mentioned`)
+    }
+  }
+  
+  // Handle add reaction
+  const handleAddReaction = (commentId: string, emoji: string) => {
+    setComments(comments.map(comment => {
+      if (comment.id === commentId) {
+        const reactions = comment.reactions || []
+        return {
+          ...comment,
+          reactions: [...reactions, {
+            emoji,
+            userId: currentUserId,
+            userName: "Sarah Chen" // In real app, get from auth
+          }]
+        }
+      }
+      return comment
+    }))
+  }
+  
+  // Handle remove reaction
+  const handleRemoveReaction = (commentId: string, emoji: string) => {
+    setComments(comments.map(comment => {
+      if (comment.id === commentId) {
+        const reactions = comment.reactions || []
+        return {
+          ...comment,
+          reactions: reactions.filter(
+            r => !(r.emoji === emoji && r.userId === currentUserId)
+          )
+        }
+      }
+      return comment
+    }))
   }
 
   const getInitials = (name: string) => {
@@ -2608,138 +2673,18 @@ export default function TaskDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Comments */}
-          <Card id="comments-section">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Comments ({comments.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Comment List */}
-              {comments.length > 0 && (
-                <div className="space-y-4">
-                  {comments.map((comment) => {
-                    // System/Clearance comment
-                    if (comment.isSystemComment) {
-                      return (
-                        <div 
-                          key={comment.id} 
-                          className="border-2 border-orange-200 dark:border-orange-800 rounded-lg bg-orange-50 dark:bg-orange-900/20 p-4"
-                        >
-                          {/* Header */}
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="text-2xl">🚨</div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
-                                  NEEDS CHANGES
-                                </span>
-                                <span className="text-sm font-medium text-orange-600 dark:text-orange-500">
-                                  - {comment.clearanceType === "legal" ? "Legal Review" : comment.clearanceType === "admin" ? "Admin Review" : "QA Review"}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{comment.authorName}</span>
-                                <span>•</span>
-                                <span>{formatDateTime(comment.createdAt)}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="space-y-3 pl-11">
-                            <p className="text-sm font-medium">{comment.content}</p>
-
-                            {/* Clearance Reason */}
-                            {comment.clearanceReason && (
-                              <div className="bg-white dark:bg-slate-900 rounded-md p-3 border border-orange-200 dark:border-orange-800">
-                                <p className="text-sm font-medium text-muted-foreground mb-1">
-                                  {comment.clearanceType === "legal" ? "Legal team" : comment.clearanceType === "admin" ? "Admin" : "QA team"} rejected:
-                                </p>
-                                <p className="text-sm italic">"{comment.clearanceReason}"</p>
-                              </div>
-                            )}
-
-                            {/* Linked Asset */}
-                            {comment.linkedAsset && (
-                              <div className="space-y-2">
-                                <p className="text-xs text-muted-foreground font-medium">
-                                  Asset: {comment.linkedAsset}
-                                </p>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => toast.info("View asset coming soon")}
-                                  >
-                                    <FileText className="mr-1 h-3 w-3" />
-                                    View Asset
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => toast.info("View clearance details coming soon")}
-                                  >
-                                    <ExternalLink className="mr-1 h-3 w-3" />
-                                    View Clearance Details
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Regular comment
-                    return (
-                      <div key={comment.id} className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs bg-primary/10">
-                            {getInitials(comment.authorName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">{comment.authorName}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDateTime(comment.createdAt)}
-                            </span>
-                          </div>
-                          <p className="text-sm">{comment.content}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Add Comment */}
-              <div className="flex gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="text-xs bg-primary/10">JD</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-2">
-                  <Textarea
-                    placeholder="Add a comment..."
-                    rows={3}
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                  />
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim()}
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Comment
-                    </Button>
-                  </div>
-                </div>
-              </div>
+          {/* Comments - Linear Style with @Mentions & Reactions */}
+          <Card id="comments-section" className="border-0 shadow-none">
+            <CardContent className="p-6">
+              <TaskComments
+                comments={comments}
+                currentUserId={currentUserId}
+                currentUserInitials={currentUserInitials}
+                teamMembers={TEAM_MEMBERS}
+                onAddComment={handleAddComment}
+                onAddReaction={handleAddReaction}
+                onRemoveReaction={handleRemoveReaction}
+              />
             </CardContent>
           </Card>
         </div>
