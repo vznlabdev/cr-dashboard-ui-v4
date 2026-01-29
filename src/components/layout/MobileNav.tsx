@@ -124,7 +124,7 @@ const baseNavSections: NavSection[] = [
     items: [
       {
         title: "Analytics",
-        href: "/",
+        href: "/analytics",
         icon: BarChart3,
       },
       {
