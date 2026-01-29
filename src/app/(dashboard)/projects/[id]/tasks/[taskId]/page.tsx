@@ -539,7 +539,7 @@ export default function TaskDetailPage() {
       
       setUploadedAssets(prev => [...prev, newAsset])
       
-      // Simulate provenance matching after 2 seconds
+      // Simulate hash verification after 2 seconds
       setTimeout(() => {
         setUploadedAssets(prev => prev.map(asset => 
           asset.id === newAsset.id 
@@ -3390,7 +3390,7 @@ export default function TaskDetailPage() {
                   </h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
                     This shows the complete chain of custody for AI-generated content. When you download files from AI tools, 
-                    we capture their digital fingerprints. When you later upload those files to Asset Manager, we verify they match - 
+                    we capture their digital fingerprints (hash). When you later upload those files to Asset Manager, we use hash verification to confirm they're the same files - 
                     proving these assets are authentic AI outputs for compliance purposes.
                   </p>
                 </div>
@@ -3637,7 +3637,7 @@ export default function TaskDetailPage() {
                                   Provenance Verified
                                 </p>
                                 <p className="text-green-600 dark:text-green-500 text-xs">
-                                  This file was uploaded to Asset Manager and matches this AI-generated download. Chain of custody confirmed for compliance.
+                                  Hash verification confirms this uploaded file is identical to the AI tool download. Chain of custody proven for compliance.
                                 </p>
                               </div>
                             </div>
