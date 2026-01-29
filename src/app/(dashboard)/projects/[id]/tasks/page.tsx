@@ -702,19 +702,14 @@ function StreamView({
           {sortedTasks.map((task) => {
             const taskGroup = getTaskGroup(task.taskGroupId)
             return (
-              <Card key={task.id} className="border border-border hover:border-foreground/20 hover:shadow-sm transition-all duration-200 cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
+              <Card key={task.id} className="border border-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all duration-200 cursor-pointer group" onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}>
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     <div className="flex-1 space-y-2">
                       {/* Task header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate">{task.title}</h3>
-                          {taskGroup?.name && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                              {taskGroup.name}
-                            </p>
-                          )}
+                          <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{task.title}</h3>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <Badge 
@@ -724,48 +719,74 @@ function StreamView({
                             {task.status.replace('_', ' ')}
                           </Badge>
                           
-                          {/* Three-dot menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger 
-                              asChild
-                              onClick={(e) => e.stopPropagation()}
+                          {/* Quick Actions on Hover */}
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            {/* Edit button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/projects/${projectId}/tasks/${task.id}`)
+                              }}
+                              className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                              title="Edit task"
                             >
-                              <button
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-all duration-200"
-                                title="More options"
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-600" />
+                            </button>
+                            
+                            {/* More options menu */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger 
+                                asChild
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/projects/${projectId}/tasks/${task.id}`)
-                                }}
-                                className="flex items-center gap-2 text-xs cursor-pointer"
-                              >
-                                <Pencil className="h-3 w-3" />
-                                <span>Edit task</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  onDeleteTask(task.id)
-                                }}
-                                className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                <span>Delete task</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <button
+                                  className="p-1 hover:bg-muted rounded transition-colors"
+                                  title="More options"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/projects/${projectId}/tasks/${task.id}`)
+                                  }}
+                                  className="flex items-center gap-2 text-xs cursor-pointer"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  <span>Edit task</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    onDeleteTask(task.id)
+                                  }}
+                                  className="flex items-center gap-2 text-xs cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span>Delete task</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       </div>
 
                       {/* Task metadata - Linear style with icons */}
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        {/* Task Group with colored dot */}
+                        {taskGroup?.name && (
+                          <span className="flex items-center gap-1">
+                            <div 
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: '#3b82f6' }}
+                            />
+                            <span className="truncate">{taskGroup.name}</span>
+                          </span>
+                        )}
+                        
                         {task.assignee && (
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
