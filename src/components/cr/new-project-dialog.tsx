@@ -123,9 +123,9 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[680px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <FolderPlus className="h-5 w-5" />
             Create New Project
           </DialogTitle>
@@ -134,117 +134,154 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="project-name">
-                Project Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="project-name"
-                placeholder="e.g., Summer Campaign 2024"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="project-description">Description</Label>
-              <Textarea
-                id="project-description"
-                placeholder="Brief description of the project and its goals..."
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="company">
-                Brand <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.companyId}
-                onValueChange={(value) => setFormData({ ...formData, companyId: value })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="company">
-                  <SelectValue placeholder="Select brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="project-lead">
-                Project Lead <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.owner}
-                onValueChange={(value) => setFormData({ ...formData, owner: value })}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="project-lead">
-                  <SelectValue placeholder="Select project lead" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEAM_MEMBERS.map((member) => (
-                    <SelectItem key={member.id} value={member.fullName}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="members">Members</Label>
-              <Select
-                disabled={isSubmitting}
-              >
-                <SelectTrigger id="members">
-                  <SelectValue placeholder="Select team members" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEAM_MEMBERS.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Select team members for this project</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Start Date</Label>
+          <div className="space-y-0 py-3">
+            {/* Project Name */}
+            <div className="flex items-start gap-3 py-2.5 border-b border-border">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label htmlFor="project-name" className="text-sm font-medium">
+                  Project Name <span className="text-destructive">*</span>
+                </Label>
+              </div>
+              <div className="flex-1">
                 <Input
-                  id="start-date"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  id="project-name"
+                  placeholder="e.g., Summer Campaign 2024"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={isSubmitting}
+                  required
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="target-date">Target Date</Label>
-                <Input
-                  id="target-date"
-                  type="date"
-                  value={formData.targetDate}
-                  onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+            {/* Description */}
+            <div className="flex items-start gap-3 py-2.5 border-b border-border">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label htmlFor="project-description" className="text-sm font-medium">
+                  Description
+                </Label>
+              </div>
+              <div className="flex-1">
+                <Textarea
+                  id="project-description"
+                  placeholder="Brief description of the project and its goals..."
+                  rows={2}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   disabled={isSubmitting}
+                  className="resize-none"
                 />
+              </div>
+            </div>
+
+            {/* Brand */}
+            <div className="flex items-start gap-3 py-2.5 border-b border-border">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label htmlFor="company" className="text-sm font-medium">
+                  Brand <span className="text-destructive">*</span>
+                </Label>
+              </div>
+              <div className="flex-1">
+                <Select
+                  value={formData.companyId}
+                  onValueChange={(value) => setFormData({ ...formData, companyId: value })}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="company">
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Project Lead */}
+            <div className="flex items-start gap-3 py-2.5 border-b border-border">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label htmlFor="project-lead" className="text-sm font-medium">
+                  Project Lead <span className="text-destructive">*</span>
+                </Label>
+              </div>
+              <div className="flex-1">
+                <Select
+                  value={formData.owner}
+                  onValueChange={(value) => setFormData({ ...formData, owner: value })}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="project-lead">
+                    <SelectValue placeholder="Select project lead" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEAM_MEMBERS.map((member) => (
+                      <SelectItem key={member.id} value={member.fullName}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Members */}
+            <div className="flex items-start gap-3 py-2.5 border-b border-border">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label htmlFor="members" className="text-sm font-medium">
+                  Members
+                </Label>
+              </div>
+              <div className="flex-1">
+                <Select disabled={isSubmitting}>
+                  <SelectTrigger id="members">
+                    <SelectValue placeholder="Select team members" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEAM_MEMBERS.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Select team members for this project</p>
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="flex items-start gap-3 py-2.5">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <Label className="text-sm font-medium">Dates</Label>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="start-date" className="text-xs text-muted-foreground">
+                    Start Date
+                  </Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="target-date" className="text-xs text-muted-foreground">
+                    Target Date
+                  </Label>
+                  <Input
+                    id="target-date"
+                    type="date"
+                    value={formData.targetDate}
+                    onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
             </div>
           </div>
