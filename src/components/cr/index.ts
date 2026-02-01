@@ -33,4 +33,8 @@ export { InviteMemberDialog } from "./invite-member-dialog";
 export { WorkflowTracker } from "./workflow-tracker";
 export { RiskScoresPanel } from "./risk-scores-panel";
 export { IssuesAlertsPanel } from "./issues-alerts-panel";
+export { ProjectTabs } from "./project-tabs";
+export { ActivityItem } from "./activity-item";
+export { MilestoneItem } from "./milestone-item";
+export { EditableProperty } from "./editable-property";
 

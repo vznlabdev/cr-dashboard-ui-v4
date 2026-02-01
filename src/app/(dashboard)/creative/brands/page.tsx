@@ -3,7 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { Plus, Search, LayoutGrid, List } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { mockBrands, mockTickets } from "@/lib/mock-data/creative"
 import { BrandCard } from "@/components/creative"
@@ -24,6 +26,7 @@ type ViewType = "grid" | "list"
 export default function BrandsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [view, setView] = useState<ViewType>("grid")
+  const router = useRouter()
 
   // Filter brands by search query
   const filteredBrands = mockBrands.filter((brand) =>
@@ -39,65 +42,75 @@ export default function BrandsPage() {
   }
 
   return (
-    <PageContainer className="space-y-6 animate-fade-in">
+    <PageContainer className="space-y-4 animate-fade-in">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Brand Profiles</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Manage brand guidelines, assets, and identity
-          </p>
+          <h1 className="text-xl font-semibold">Brands</h1>
+          <div className="text-sm text-muted-foreground mt-1">
+            {filteredBrands.length} {filteredBrands.length === 1 ? 'brand' : 'brands'}
+            {searchQuery && ' • filtered'}
+          </div>
         </div>
-        <Link href="/creative/brands/new">
-          <Button className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Brand
-          </Button>
-        </Link>
+        <Button 
+          size="sm"
+          onClick={() => router.push('/creative/brands/new')}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          New Brand
+        </Button>
       </div>
 
-      {/* Search and View Toggle */}
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="relative flex-1 max-w-md w-full">
+      {/* Search and View Controls */}
+      <div className="flex items-center gap-3">
+        {/* Search */}
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search brands..."
-            className="pl-9"
+            className="pl-9 h-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={view === "grid" ? "secondary" : "outline"}
-            size="icon"
-            onClick={() => setView("grid")}
-            title="Grid view"
+        
+        {/* Compact View Toggle - Segmented Control */}
+        <div className="flex items-center gap-0.5 bg-muted/50 rounded-md p-0.5">
+          <button
+            onClick={() => setView('grid')}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all duration-200",
+              view === 'grid' 
+                ? "bg-background shadow-sm text-foreground font-medium" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={view === "list" ? "secondary" : "outline"}
-            size="icon"
-            onClick={() => setView("list")}
-            title="List view"
+            <LayoutGrid className="h-3.5 w-3.5" />
+            <span>Grid</span>
+          </button>
+          <button
+            onClick={() => setView('list')}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all duration-200",
+              view === 'list' 
+                ? "bg-background shadow-sm text-foreground font-medium" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <List className="h-4 w-4" />
-          </Button>
+            <List className="h-3.5 w-3.5" />
+            <span>List</span>
+          </button>
         </div>
-      </div>
-
-      {/* Brand Stats */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span>{filteredBrands.length} brand{filteredBrands.length !== 1 ? "s" : ""}</span>
+        
+        {/* Clear Search Button */}
         {searchQuery && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSearchQuery("")}
-            className="h-auto py-1 px-2"
+            onClick={() => setSearchQuery('')}
+            className="h-9"
           >
-            Clear search
+            Clear
           </Button>
         )}
       </div>

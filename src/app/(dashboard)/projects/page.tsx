@@ -375,7 +375,7 @@ export default function ProjectsPage() {
                           )}
                           <span 
                             className="text-sm font-medium truncate cursor-pointer"
-                            onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                            onClick={() => router.push(`/projects/${project.id}`)}
                           >
                             {project.name}
                           </span>
@@ -385,7 +385,7 @@ export default function ProjectsPage() {
                       {/* Brand - Simple Display */}
                       <TableCell 
                         className="py-2 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                        onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         <div className="flex items-center gap-1.5">
                           <div 
@@ -404,7 +404,7 @@ export default function ProjectsPage() {
                       {/* Status Badge */}
                       <TableCell 
                         className="py-2 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                        onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         <Badge 
                           variant="outline" 
@@ -423,7 +423,7 @@ export default function ProjectsPage() {
                       {/* Tasks - Simple Display */}
                       <TableCell 
                         className="py-2 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                        onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         {(() => {
                           const projectTasks = getTasksByProject(project.id);
@@ -440,7 +440,7 @@ export default function ProjectsPage() {
                       {/* Updated */}
                       <TableCell 
                         className="py-2 text-xs text-muted-foreground cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}/tasks`)}
+                        onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         {project.updated}
                       </TableCell>

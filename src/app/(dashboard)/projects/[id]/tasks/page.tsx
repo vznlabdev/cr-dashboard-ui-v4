@@ -24,6 +24,7 @@ import {
 import { notFound, useParams, useRouter } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
+import { ProjectTabs } from "@/components/cr"
 import { 
   getTaskGroupsByProject, 
   getTasksByTaskGroup,
@@ -1790,37 +1791,42 @@ export default function ProjectTasksPage() {
             New Task
           </Button>
         </div>
-        
-        {/* View Toggles + Filter Dropdown */}
-        <div className="flex items-center justify-between border-b border-border pb-0">
-          <div className="flex items-center gap-4 text-sm">
-            <button
-              onClick={() => switchView('board')}
-              className={cn(
-                "flex items-center gap-1.5 pb-2 border-b-2 transition-all duration-200",
-                currentView === 'board' 
-                  ? "border-foreground text-foreground" 
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="font-medium">Board</span>
-            </button>
-            <button
-              onClick={() => switchView('stream')}
-              className={cn(
-                "flex items-center gap-1.5 pb-2 border-b-2 transition-all duration-200",
-                currentView === 'stream' 
-                  ? "border-foreground text-foreground" 
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
-              <span className="font-medium">Stream</span>
-            </button>
-          </div>
-          
-          <div className="relative pb-2">
+
+        {/* Tabs with integrated view controls */}
+        <ProjectTabs 
+          projectId={projectId}
+          rightContent={
+            <div className="flex items-center gap-3 pb-2">
+              {/* Board/Stream compact toggle */}
+              <div className="flex items-center gap-0.5 bg-muted/50 rounded-md p-0.5">
+                <button
+                  onClick={() => switchView('board')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all duration-200",
+                    currentView === 'board' 
+                      ? "bg-background shadow-sm text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  <span>Board</span>
+                </button>
+                <button
+                  onClick={() => switchView('stream')}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all duration-200",
+                    currentView === 'stream' 
+                      ? "bg-background shadow-sm text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  <span>Stream</span>
+                </button>
+              </div>
+              
+              {/* Filter dropdown */}
+              <div className="relative">
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               className={cn(
@@ -1923,8 +1929,10 @@ export default function ProjectTasksPage() {
                 </div>
               </>
             )}
-          </div>
-        </div>
+              </div>
+            </div>
+          }
+        />
 
         {/* Stream View - Stays in Container */}
         {currentView === 'stream' && (
