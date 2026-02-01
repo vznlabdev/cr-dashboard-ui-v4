@@ -601,4 +601,3 @@ export interface InboxAction {
   onClick?: () => void;
   variant?: 'default' | 'outline' | 'ghost';
 }
-

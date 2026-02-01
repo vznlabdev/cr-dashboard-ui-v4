@@ -32,48 +32,57 @@ export default function InboxPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {showArchived ? 'Archived' : 'Inbox'}
-          </h1>
-          {!showArchived && unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center h-6 px-2 rounded-md bg-blue-600 text-white text-sm font-medium">
-              {unreadCount}
-            </span>
-          )}
-        </div>
+      {/* Compact Main Header */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+        <h1 className="text-lg font-semibold">
+          {showArchived ? 'Archived' : 'Inbox'}
+        </h1>
 
-        <div className="flex items-center gap-2">
-          <InboxFilters currentFilter={filterBy} onFilterChange={setFilterBy} />
-          {!showArchived && unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsRead}
-              className="gap-2"
-            >
-              <CheckCheck className="h-4 w-4" />
-              Mark all read
-            </Button>
-          )}
-          <Button
-            variant={showArchived ? 'default' : 'outline'}
-            size="sm"
-            onClick={toggleArchived}
-            className="gap-2"
-          >
-            <Archive className="h-4 w-4" />
-            {showArchived ? 'Back to Inbox' : 'Archive'}
-          </Button>
-        </div>
+        <Button
+          variant={showArchived ? 'default' : 'outline'}
+          size="sm"
+          onClick={toggleArchived}
+          className="gap-2"
+        >
+          <Archive className="h-4 w-4" />
+          {showArchived ? 'Back to Inbox' : 'Archive'}
+        </Button>
       </div>
 
       {/* Two-panel layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Activity List */}
-        <div className="w-96 border-r border-border bg-muted/30 overflow-y-auto">
+        <div className="w-80 border-r border-border bg-muted/30 overflow-y-auto">
+          {/* Left Panel Header */}
+          <div className="sticky top-0 z-10 bg-background border-b border-border">
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {showArchived ? 'Archived' : 'Inbox'}
+                </span>
+                {!showArchived && unreadCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-blue-600 text-white text-xs font-medium">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1">
+                <InboxFilters currentFilter={filterBy} onFilterChange={setFilterBy} />
+                {!showArchived && unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="h-8 px-2 gap-1.5"
+                  >
+                    <CheckCheck className="h-3.5 w-3.5" />
+                    <span className="text-xs">Mark read</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
           {/* Today section */}
           {groupedActivities.today.length > 0 && (
             <div>
