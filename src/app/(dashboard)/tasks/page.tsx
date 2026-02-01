@@ -535,46 +535,48 @@ export default function UnifiedTasksPage() {
           </div>
         </div>
 
-        {/* Sort By */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-1.5">
-              {sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-              <span className="text-xs">Sort:</span>
-              <span className="font-medium text-xs">
-                {sortBy === 'priority' ? 'Priority' : sortBy === 'dueDate' ? 'Due Date' : sortBy === 'updated' ? 'Updated' : sortBy === 'created' ? 'Created' : 'Title'}
-              </span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setSortBy('priority')}>
-              {sortBy === 'priority' && '✓ '}Priority
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy('dueDate')}>
-              {sortBy === 'dueDate' && '✓ '}Due Date
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy('updated')}>
-              {sortBy === 'updated' && '✓ '}Updated
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy('created')}>
-              {sortBy === 'created' && '✓ '}Created
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy('title')}>
-              {sortBy === 'title' && '✓ '}Title
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="border-t mt-1"
-            >
-              <ArrowUpDown className="h-3 w-3 mr-2" />
-              {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Sort and Filter Group */}
+        <div className="flex items-center gap-2">
+          {/* Sort By */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                {sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                <span className="text-xs">Sort:</span>
+                <span className="font-medium text-xs">
+                  {sortBy === 'priority' ? 'Priority' : sortBy === 'dueDate' ? 'Due Date' : sortBy === 'updated' ? 'Updated' : sortBy === 'created' ? 'Created' : 'Title'}
+                </span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSortBy('priority')}>
+                {sortBy === 'priority' && '✓ '}Priority
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('dueDate')}>
+                {sortBy === 'dueDate' && '✓ '}Due Date
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('updated')}>
+                {sortBy === 'updated' && '✓ '}Updated
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('created')}>
+                {sortBy === 'created' && '✓ '}Created
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('title')}>
+                {sortBy === 'title' && '✓ '}Title
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="border-t mt-1"
+              >
+                <ArrowUpDown className="h-3 w-3 mr-2" />
+                {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* Filter Dropdown - Linear Style */}
-        <DropdownMenu>
+          {/* Filter Dropdown - Linear Style */}
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
@@ -636,6 +638,7 @@ export default function UnifiedTasksPage() {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
 
       {/* Linear-style Card Stream View */}
