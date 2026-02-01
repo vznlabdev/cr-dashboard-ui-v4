@@ -61,7 +61,7 @@ export function CreatorAvatarBadge({
   if (showName) {
     return (
       <Link
-        href={`/creative/creators/${creator.id}`}
+        href={`/creative/talent-rights/${creator.id}`}
         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         title={tooltipText}
       >
@@ -75,7 +75,7 @@ export function CreatorAvatarBadge({
 
   return (
     <Link
-      href={`/creative/creators/${creator.id}`}
+      href={`/creative/talent-rights/${creator.id}`}
       className="inline-block hover:opacity-80 transition-opacity"
       title={tooltipText}
     >

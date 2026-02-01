@@ -93,7 +93,7 @@ export default function CreatorSignupPage() {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         fullName: formData.fullName.trim(),
-        creatorType: formData.creatorType,
+        talentType: formData.creatorType,
         acceptTerms: formData.acceptTerms,
       })
 

@@ -121,7 +121,7 @@ export default function CreatorDetailPage() {
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight break-all">
                 {creator.fullName}
               </h1>
-              <Badge variant="secondary">{creator.creatorType}</Badge>
+              <Badge variant="secondary">{creator.talentType || creator.creatorType}</Badge>
               <Badge
                 variant={getRightsStatusVariant(creator.rightsStatus)}
                 className="flex items-center gap-1"
@@ -130,7 +130,7 @@ export default function CreatorDetailPage() {
                 {creator.rightsStatus}
               </Badge>
               <Badge variant="outline" className="font-mono text-xs">
-                {creator.creatorRightsId}
+                {creator.talentRightsId || creator.creatorRightsId}
               </Badge>
             </div>
             <p className="text-muted-foreground flex items-center gap-1 text-sm sm:text-base">
@@ -250,7 +250,7 @@ export default function CreatorDetailPage() {
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-muted-foreground">Creator Type</h4>
-                  <Badge variant="secondary">{creator.creatorType}</Badge>
+                  <Badge variant="secondary">{creator.talentType || creator.creatorType}</Badge>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-muted-foreground">

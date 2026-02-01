@@ -156,7 +156,7 @@ export default function DashboardPage() {
         description: alert.description,
         bgColor: alert.severity === "Critical" ? "bg-destructive/10" : "bg-amber-500/10",
         iconColor: alert.severity === "Critical" ? "text-destructive" : "text-amber-500",
-        href: alert.creatorId ? `/creative/creators/${alert.creatorId}` : undefined,
+        href: alert.creatorId ? `/creative/talent-rights/${alert.creatorId}` : undefined,
       }));
     
     return [...creatorAlertItems, ...staticAlerts];
@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/creative/creators" className="block">
+        <Link href="/creative/talent-rights" className="block">
           <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent transition-all hover:shadow-colored hover:-translate-y-1 cursor-pointer relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">

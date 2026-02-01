@@ -102,7 +102,7 @@ export default function CreatorProfilePage() {
     try {
       await updateMyProfile({
         fullName: formData.fullName,
-        creatorType: formData.creatorType || undefined,
+        talentType: formData.creatorType || undefined,
         validFrom: formData.validFrom ? new Date(formData.validFrom) : undefined,
         validThrough: formData.validThrough
           ? new Date(formData.validThrough)

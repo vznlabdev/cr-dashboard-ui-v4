@@ -48,7 +48,7 @@ export function CreditCreatorDialog({
     return creators.filter(
       (c) =>
         c.fullName.toLowerCase().includes(query) ||
-        c.creatorRightsId.toLowerCase().includes(query) ||
+        (c.talentRightsId || c.creatorRightsId || '').toLowerCase().includes(query) ||
         c.email.toLowerCase().includes(query)
     )
   }, [creators, searchQuery])

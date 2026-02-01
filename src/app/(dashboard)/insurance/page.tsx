@@ -184,7 +184,7 @@ export default function InsurancePage() {
   const handleIssueClick = (issue: InsuranceIssue) => {
     // Navigate to creator detail page if it's a creator-rights issue
     if (issue.category === "creator-rights" && issue.creatorId) {
-      router.push(`/creative/creators/${issue.creatorId}`);
+      router.push(`/creative/talent-rights/${issue.creatorId}`);
       return;
     }
     

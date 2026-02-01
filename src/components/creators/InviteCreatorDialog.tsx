@@ -75,7 +75,7 @@ export function InviteCreatorDialog({ open, onOpenChange }: InviteCreatorDialogP
       const invitation = await inviteCreator({
         email: formData.email.trim(),
         name: formData.name.trim(),
-        creatorType: formData.creatorType || undefined,
+        talentType: formData.creatorType || undefined,
       })
 
       toast.success(`Invitation sent to ${formData.email}`)

@@ -30,8 +30,10 @@ export const mockCreators: Creator[] = [
     id: "creator-1",
     email: "sarah.voice@example.com",
     fullName: "Sarah Johnson",
-    creatorRightsId: "CR-2024-00123",
-    creatorType: "Real Person",
+    talentRightsId: "TR-2024-00123",
+    creatorRightsId: "TR-2024-00123", // Backward compatibility
+    talentType: "Real Person",
+    creatorType: "Real Person", // Backward compatibility
     avatarUrl: "https://i.pravatar.cc/150?u=sarah.voice",
     validFrom: threeMonthsAgo,
     validThrough: twoMonthsFromNow,
@@ -66,8 +68,10 @@ export const mockCreators: Creator[] = [
     id: "creator-2",
     email: "mascot@brandco.com",
     fullName: "Brandy the Bear",
-    creatorRightsId: "CR-2024-00245",
-    creatorType: "Brand Mascot",
+    talentRightsId: "TR-2024-00245",
+    creatorRightsId: "TR-2024-00245", // Backward compatibility
+    talentType: "Brand Mascot",
+    creatorType: "Brand Mascot", // Backward compatibility
     avatarUrl: "https://i.pravatar.cc/150?u=brandy.bear",
     validFrom: new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000), // 6 months ago
     validThrough: oneWeekFromNow,
@@ -111,8 +115,10 @@ export const mockCreators: Creator[] = [
     id: "creator-3",
     email: "alex.character@example.com",
     fullName: "Alex the Adventurer",
-    creatorRightsId: "CR-2024-00367",
-    creatorType: "Character",
+    talentRightsId: "TR-2024-00367",
+    creatorRightsId: "TR-2024-00367", // Backward compatibility
+    talentType: "Character",
+    creatorType: "Character", // Backward compatibility
     avatarUrl: "https://i.pravatar.cc/150?u=alex.adventurer",
     validFrom: new Date(now.getTime() - 2 * 30 * 24 * 60 * 60 * 1000), // 2 months ago
     validThrough: threeMonthsAgo, // Expired
@@ -131,8 +137,10 @@ export const mockCreators: Creator[] = [
     id: "creator-4",
     email: "michael.actor@example.com",
     fullName: "Michael Chen",
-    creatorRightsId: "CR-2024-00489",
-    creatorType: "Real Person",
+    talentRightsId: "TR-2024-00489",
+    creatorRightsId: "TR-2024-00489", // Backward compatibility
+    talentType: "Real Person",
+    creatorType: "Real Person", // Backward compatibility
     avatarUrl: "https://i.pravatar.cc/150?u=michael.actor",
     validFrom: new Date(now.getTime() - 1 * 30 * 24 * 60 * 60 * 1000), // 1 month ago
     validThrough: oneMonthFromNow,
@@ -165,8 +173,10 @@ export const mockCreators: Creator[] = [
     id: "creator-5",
     email: "emma.mascot@example.com",
     fullName: "Emma the Elephant",
-    creatorRightsId: "CR-2024-00501",
-    creatorType: "Brand Mascot",
+    talentRightsId: "TR-2024-00501",
+    creatorRightsId: "TR-2024-00501", // Backward compatibility
+    talentType: "Brand Mascot",
+    creatorType: "Brand Mascot", // Backward compatibility
     avatarUrl: "https://i.pravatar.cc/150?u=emma.elephant",
     validFrom: new Date(now.getTime() - 4 * 30 * 24 * 60 * 60 * 1000), // 4 months ago
     validThrough: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000), // 20 days from now

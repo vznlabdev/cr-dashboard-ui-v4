@@ -99,12 +99,15 @@ export function CreatorAccountProvider({ children }: { children: React.ReactNode
     const validThrough = new Date(now);
     validThrough.setFullYear(validThrough.getFullYear() + 1); // Default 1 year
 
+    const rightsId = `TR-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
     const newCreator: Creator = {
       id: `creator-${Date.now()}`,
       email: form.email,
       fullName: form.fullName,
-      creatorRightsId: `CR-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`,
-      creatorType: form.creatorType,
+      talentRightsId: rightsId,
+      creatorRightsId: rightsId, // Backward compatibility
+      talentType: form.talentType,
+      creatorType: form.talentType, // Backward compatibility
       validFrom,
       validThrough,
       rightsStatus: calculateRightsStatus(validThrough),
@@ -117,8 +120,10 @@ export function CreatorAccountProvider({ children }: { children: React.ReactNode
         id: "",
         email: form.email,
         fullName: form.fullName,
-        creatorRightsId: "",
-        creatorType: form.creatorType,
+        talentRightsId: rightsId,
+        creatorRightsId: rightsId,
+        talentType: form.talentType,
+        creatorType: form.talentType,
         validFrom,
         validThrough,
         rightsStatus: "Authorized",

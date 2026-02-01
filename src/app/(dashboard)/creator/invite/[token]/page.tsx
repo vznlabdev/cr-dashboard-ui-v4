@@ -108,7 +108,7 @@ export default function CreatorInviteAcceptancePage() {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         fullName: formData.fullName.trim(),
-        creatorType: formData.creatorType,
+        talentType: formData.creatorType,
         acceptTerms: formData.acceptTerms,
       })
 

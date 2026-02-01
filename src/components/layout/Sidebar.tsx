@@ -80,8 +80,8 @@ const baseNavSections: NavSection[] = [
         icon: FileImage,
       },
       {
-        title: "Creators",
-        href: "/creative/creators",
+        title: "Talent Rights",
+        href: "/creative/talent-rights",
         icon: User,
       },
       {

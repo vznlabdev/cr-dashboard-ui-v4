@@ -99,7 +99,7 @@ export function CreatorCard({
     }
 
     return (
-      <Link href={`/creative/creators/${creator.id}`} className={cn("block", className)}>
+      <Link href={`/creative/talent-rights/${creator.id}`} className={cn("block", className)}>
         {cardContent}
       </Link>
     )
@@ -195,7 +195,7 @@ export function CreatorCard({
   }
 
   return (
-    <Link href={`/creative/creators/${creator.id}`} className={cn("block", className)}>
+    <Link href={`/creative/talent-rights/${creator.id}`} className={cn("block", className)}>
       {cardContent}
     </Link>
   )
