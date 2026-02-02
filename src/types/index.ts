@@ -49,6 +49,7 @@ export interface Project {
   targetDate?: string; // Target completion date (ISO string or formatted date)
   creatorIds?: string[]; // Creators credited on this project
   updates?: ProjectUpdate[]; // Project status updates
+  archived?: boolean; // Whether the project is archived
 }
 
 export interface Asset {
