@@ -103,7 +103,7 @@ export default function AssetReviewPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="h-7 -ml-2" asChild>
-                <Link href={`/creative/assets/${asset.id}`}>
+                <Link href={`/creative/assets/${assetId}`}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Back
                 </Link>
@@ -217,50 +217,50 @@ export default function AssetReviewPage() {
             <TabsList className="h-auto bg-transparent p-0 gap-0">
               <TabsTrigger 
                 value="all"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
                 All Checks
               </TabsTrigger>
               <TabsTrigger 
                 value="copyright"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <Shield className="h-4 w-4 mr-2" />
+                <Shield className="h-4 w-4 mr-1.5" />
                 Copyright
               </TabsTrigger>
               <TabsTrigger 
                 value="accessibility"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye className="h-4 w-4 mr-1.5" />
                 ADA
               </TabsTrigger>
               <TabsTrigger 
                 value="seo"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-4 w-4 mr-1.5" />
                 SEO
               </TabsTrigger>
               <TabsTrigger 
                 value="brandCompliance"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <Palette className="h-4 w-4 mr-2" />
+                <Palette className="h-4 w-4 mr-1.5" />
                 Brand
               </TabsTrigger>
               <TabsTrigger 
                 value="performance"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <Zap className="h-4 w-4 mr-2" />
+                <Zap className="h-4 w-4 mr-1.5" />
                 Performance
               </TabsTrigger>
               <TabsTrigger 
                 value="security"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm flex items-center"
               >
-                <ShieldCheck className="h-4 w-4 mr-2" />
+                <ShieldCheck className="h-4 w-4 mr-1.5" />
                 Security
               </TabsTrigger>
             </TabsList>
@@ -271,12 +271,12 @@ export default function AssetReviewPage() {
             <div className="grid md:grid-cols-2 gap-3">
               {reviewData?.copyright.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Shield className="h-4 w-4 text-purple-600" />
-                      <h3 className="font-semibold">Copyright</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Shield className="h-4 w-4 text-purple-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">Copyright</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {100 - reviewData.copyright.data.similarityScore}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -288,12 +288,12 @@ export default function AssetReviewPage() {
               
               {reviewData?.accessibility.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Eye className="h-4 w-4 text-blue-600" />
-                      <h3 className="font-semibold">Accessibility</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Eye className="h-4 w-4 text-blue-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">Accessibility</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {reviewData.accessibility.data.score}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -305,12 +305,12 @@ export default function AssetReviewPage() {
               
               {reviewData?.seo.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Search className="h-4 w-4 text-green-600" />
-                      <h3 className="font-semibold">SEO</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Search className="h-4 w-4 text-green-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">SEO</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {reviewData.seo.data.score}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -322,12 +322,12 @@ export default function AssetReviewPage() {
               
               {reviewData?.brandCompliance.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Palette className="h-4 w-4 text-pink-600" />
-                      <h3 className="font-semibold">Brand Compliance</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Palette className="h-4 w-4 text-pink-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">Brand Compliance</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {reviewData.brandCompliance.data.score}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -339,12 +339,12 @@ export default function AssetReviewPage() {
               
               {reviewData?.performance.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="h-4 w-4 text-amber-600" />
-                      <h3 className="font-semibold">Performance</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Zap className="h-4 w-4 text-amber-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">Performance</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {reviewData.performance.data.score}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -356,12 +356,12 @@ export default function AssetReviewPage() {
               
               {reviewData?.security.data && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ShieldCheck className="h-4 w-4 text-red-600" />
-                      <h3 className="font-semibold">Security</h3>
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <ShieldCheck className="h-4 w-4 text-red-600 shrink-0" />
+                      <h3 className="text-sm font-semibold">Security</h3>
                     </div>
-                    <div className="text-2xl font-bold mb-1">
+                    <div className="text-2xl font-bold mb-0.5">
                       {reviewData.security.data.score}
                     </div>
                     <p className="text-xs text-muted-foreground">

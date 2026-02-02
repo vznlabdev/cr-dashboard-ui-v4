@@ -93,20 +93,22 @@ export function QuickStatsGrid({
           >
             <CardContent className="p-3">
               <div className="flex items-start justify-between mb-2">
-                <div className={cn('p-1.5 rounded-md', getScoreBgColor(score))}>
+                <div className={cn('p-1.5 rounded-md flex-shrink-0', getScoreBgColor(score))}>
                   <CheckIcon className={cn('h-4 w-4', score !== undefined ? getScoreColor(score) : check.color)} />
                 </div>
-                {isChecking ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                ) : isCompleted ? (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600">
-                    Done
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                    Run
-                  </Badge>
-                )}
+                <div className="flex-shrink-0">
+                  {isChecking ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                  ) : isCompleted ? (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600">
+                      Done
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      Run
+                    </Badge>
+                  )}
+                </div>
               </div>
               
               <div className="text-[10px] font-medium text-muted-foreground mb-1">
