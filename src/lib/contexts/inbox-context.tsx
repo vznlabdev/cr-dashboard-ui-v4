@@ -25,6 +25,11 @@ interface InboxContextType {
   archiveActivity: (id: string) => void
   deleteActivity: (id: string) => void
   
+  // Bulk actions
+  bulkMarkAsRead: (ids: string[]) => void
+  bulkArchive: (ids: string[]) => void
+  bulkDelete: (ids: string[]) => void
+  
   // Selection (for detail view)
   selectedActivity: InboxActivity | null
   selectActivity: (id: string) => void
@@ -412,6 +417,25 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     setActivities((prev) => prev.filter((a) => a.id !== id))
   }, [])
 
+  // Bulk mark as read
+  const bulkMarkAsRead = useCallback((ids: string[]) => {
+    setActivities((prev) =>
+      prev.map((a) => (ids.includes(a.id) ? { ...a, read: true } : a))
+    )
+  }, [])
+
+  // Bulk archive
+  const bulkArchive = useCallback((ids: string[]) => {
+    setActivities((prev) =>
+      prev.map((a) => (ids.includes(a.id) ? { ...a, archived: true } : a))
+    )
+  }, [])
+
+  // Bulk delete
+  const bulkDelete = useCallback((ids: string[]) => {
+    setActivities((prev) => prev.filter((a) => !ids.includes(a.id)))
+  }, [])
+
   // Toggle archived view
   const toggleArchived = useCallback(() => {
     setShowArchived((prev) => !prev)
@@ -439,6 +463,9 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
         markAllAsRead,
         archiveActivity,
         deleteActivity,
+        bulkMarkAsRead,
+        bulkArchive,
+        bulkDelete,
         selectedActivity,
         selectActivity,
         filteredActivities,

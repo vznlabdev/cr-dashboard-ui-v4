@@ -1,6 +1,7 @@
 "use client"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { formatTimeAgo } from "@/utils/time"
 import { ActivityIcon } from "./ActivityIcon"
@@ -10,25 +11,42 @@ interface ActivityListItemProps {
   activity: InboxActivity
   isSelected: boolean
   onClick: () => void
+  isCheckboxSelected?: boolean
+  onCheckboxChange?: (checked: boolean) => void
 }
 
 export function ActivityListItem({
   activity,
   isSelected,
   onClick,
+  isCheckboxSelected,
+  onCheckboxChange,
 }: ActivityListItemProps) {
   return (
-    <button
-      onClick={onClick}
+    <div
       className={cn(
-        "w-full text-left p-3 transition-all border-l-2",
+        "w-full text-left transition-all border-l-2 flex items-start gap-2 p-3",
         isSelected
           ? "bg-accent border-blue-500"
           : "border-transparent hover:bg-accent/50",
         !activity.read && "bg-accent/30"
       )}
     >
-      <div className="flex items-start gap-3">
+      {/* Checkbox */}
+      {onCheckboxChange && (
+        <div className="flex-shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isCheckboxSelected}
+            onCheckedChange={(checked) => onCheckboxChange(checked === true)}
+          />
+        </div>
+      )}
+
+      {/* Clickable content area */}
+      <button
+        onClick={onClick}
+        className="flex items-start gap-3 flex-1 min-w-0 text-left"
+      >
         {/* Activity Icon */}
         <div className="flex-shrink-0 mt-0.5">
           <ActivityIcon type={activity.type} size="sm" />
@@ -67,7 +85,7 @@ export function ActivityListItem({
             </span>
           </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </div>
   )
 }

@@ -1,13 +1,14 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ActivityListItem } from "@/components/inbox/ActivityListItem"
 import { ActivityDetailView } from "@/components/inbox/ActivityDetailView"
 import { InboxFilters } from "@/components/inbox/InboxFilters"
 import { useInbox } from "@/lib/contexts/inbox-context"
 import { groupByTime } from "@/utils/time"
-import { Archive, CheckCheck } from "lucide-react"
-import { useMemo } from "react"
+import { Archive, CheckCheck, Trash2, X } from "lucide-react"
+import { useMemo, useState } from "react"
 
 export default function InboxPage() {
   const {
@@ -22,7 +23,14 @@ export default function InboxPage() {
     selectActivity,
     markAsRead,
     archiveActivity,
+    deleteActivity,
+    bulkMarkAsRead,
+    bulkArchive,
+    bulkDelete,
   } = useInbox()
+
+  // Selection state for bulk actions
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set())
 
   // Group activities by time
   const groupedActivities = useMemo(
@@ -30,25 +38,34 @@ export default function InboxPage() {
     [filteredActivities]
   )
 
+  // Bulk action handlers
+  const handleBulkMarkRead = () => {
+    bulkMarkAsRead(Array.from(selectedActivities))
+    setSelectedActivities(new Set())
+  }
+
+  const handleBulkArchive = () => {
+    bulkArchive(Array.from(selectedActivities))
+    setSelectedActivities(new Set())
+  }
+
+  const handleBulkDelete = () => {
+    bulkDelete(Array.from(selectedActivities))
+    setSelectedActivities(new Set())
+  }
+
+  const handleCheckboxChange = (activityId: string, checked: boolean) => {
+    const newSelected = new Set(selectedActivities)
+    if (checked) {
+      newSelected.add(activityId)
+    } else {
+      newSelected.delete(activityId)
+    }
+    setSelectedActivities(newSelected)
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {/* Compact Main Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-        <h1 className="text-lg font-semibold">
-          {showArchived ? 'Archived' : 'Inbox'}
-        </h1>
-
-        <Button
-          variant={showArchived ? 'default' : 'outline'}
-          size="sm"
-          onClick={toggleArchived}
-          className="gap-2"
-        >
-          <Archive className="h-4 w-4" />
-          {showArchived ? 'Back to Inbox' : 'Archive'}
-        </Button>
-      </div>
-
       {/* Two-panel layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Activity List */}
@@ -56,33 +73,106 @@ export default function InboxPage() {
           {/* Left Panel Header */}
           <div className="sticky top-0 z-10 bg-background border-b border-border">
             <div className="flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
-                  {showArchived ? 'Archived' : 'Inbox'}
-                </span>
-                {!showArchived && unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-blue-600 text-white text-xs font-medium">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
+              {selectedActivities.size > 0 ? (
+                // Selection State
+                <>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      checked={selectedActivities.size === filteredActivities.length && filteredActivities.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked === true) {
+                          setSelectedActivities(new Set(filteredActivities.map(a => a.id)))
+                        } else {
+                          setSelectedActivities(new Set())
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">
+                      {selectedActivities.size} selected
+                    </span>
+                  </div>
 
-              <div className="flex items-center gap-1">
-                <InboxFilters currentFilter={filterBy} onFilterChange={setFilterBy} />
-                {!showArchived && unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={markAllAsRead}
-                    className="h-8 px-2 gap-1.5"
-                  >
-                    <CheckCheck className="h-3.5 w-3.5" />
-                    <span className="text-xs">Mark read</span>
-                  </Button>
-                )}
-              </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleBulkMarkRead}
+                      className="h-8 w-8 p-0"
+                      title="Mark as read"
+                    >
+                      <CheckCheck className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleBulkArchive}
+                      className="h-8 w-8 p-0"
+                      title="Archive"
+                    >
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      className="h-8 w-8 p-0"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedActivities(new Set())}
+                      className="h-8 w-8 p-0"
+                      title="Clear selection"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                // Default State
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {showArchived ? 'Archived' : 'Inbox'}
+                    </span>
+                    {!showArchived && unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-blue-600 text-white text-xs font-medium">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant={showArchived ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={toggleArchived}
+                      className="h-8 w-8 p-0"
+                      title={showArchived ? 'Back to Inbox' : 'View Archive'}
+                    >
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                    <InboxFilters currentFilter={filterBy} onFilterChange={setFilterBy} />
+                    {!showArchived && unreadCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={markAllAsRead}
+                        className="h-8 w-8 p-0"
+                        title="Mark all as read"
+                      >
+                        <CheckCheck className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
+
           {/* Today section */}
           {groupedActivities.today.length > 0 && (
             <div>
@@ -96,6 +186,8 @@ export default function InboxPage() {
                     activity={activity}
                     isSelected={selectedActivity?.id === activity.id}
                     onClick={() => selectActivity(activity.id)}
+                    isCheckboxSelected={selectedActivities.has(activity.id)}
+                    onCheckboxChange={(checked) => handleCheckboxChange(activity.id, checked)}
                   />
                 ))}
               </div>
@@ -115,6 +207,8 @@ export default function InboxPage() {
                     activity={activity}
                     isSelected={selectedActivity?.id === activity.id}
                     onClick={() => selectActivity(activity.id)}
+                    isCheckboxSelected={selectedActivities.has(activity.id)}
+                    onCheckboxChange={(checked) => handleCheckboxChange(activity.id, checked)}
                   />
                 ))}
               </div>
@@ -134,6 +228,8 @@ export default function InboxPage() {
                     activity={activity}
                     isSelected={selectedActivity?.id === activity.id}
                     onClick={() => selectActivity(activity.id)}
+                    isCheckboxSelected={selectedActivities.has(activity.id)}
+                    onCheckboxChange={(checked) => handleCheckboxChange(activity.id, checked)}
                   />
                 ))}
               </div>
@@ -153,6 +249,8 @@ export default function InboxPage() {
                     activity={activity}
                     isSelected={selectedActivity?.id === activity.id}
                     onClick={() => selectActivity(activity.id)}
+                    isCheckboxSelected={selectedActivities.has(activity.id)}
+                    onCheckboxChange={(checked) => handleCheckboxChange(activity.id, checked)}
                   />
                 ))}
               </div>
