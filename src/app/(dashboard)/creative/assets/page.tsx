@@ -226,13 +226,13 @@ export default function AssetsPage() {
     const view = views.find(v => v.id === viewId)
     if (view) {
       // Apply view-specific filters
-      if ('fileType' in view) {
+      if ('fileType' in view && view.fileType) {
         setFileTypeFilter(view.fileType)
       }
-      if ('contentType' in view) {
+      if ('contentType' in view && view.contentType) {
         setContentTypeFilter(view.contentType)
       }
-      if ('sortBy' in view) {
+      if ('sortBy' in view && view.sortBy) {
         setSortBy(view.sortBy)
       }
       // Reset to defaults for 'all' view
