@@ -7,11 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Switch } from "@/components/ui/switch"
 import {
   Upload,
   Search,
@@ -22,10 +18,13 @@ import {
   Trash2,
   Sparkles,
   Shield,
-  Filter,
   X,
   List,
   Grid,
+  Plus,
+  SlidersHorizontal,
+  ArrowUpDown,
+  ChevronDown,
 } from "lucide-react"
 import {
   Select,
@@ -48,6 +47,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
@@ -72,6 +73,10 @@ export default function AssetsPage() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [selectedView, setSelectedView] = useState('all')
+  const [sortBy, setSortBy] = useState('date-desc')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [showAllSelected, setShowAllSelected] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Combine assets and version groups for display
@@ -125,12 +130,41 @@ export default function AssetsPage() {
     })
   }, [combinedAssets, searchQuery, brandFilter, fileTypeFilter, designTypeFilter, contentTypeFilter])
 
+  // Sort filtered assets
+  const sortedAssets = useMemo(() => {
+    const sorted = [...filteredAssets]
+    switch (sortBy) {
+      case 'name-asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name))
+      case 'name-desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name))
+      case 'date-desc':
+        return sorted.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      case 'date-asc':
+        return sorted.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      case 'size-desc':
+        return sorted.sort((a, b) => b.fileSize - a.fileSize)
+      case 'size-asc':
+        return sorted.sort((a, b) => a.fileSize - b.fileSize)
+      default:
+        return sorted
+    }
+  }, [filteredAssets, sortBy])
+
+  // Define view tabs with counts
+  const views = useMemo(() => [
+    { id: 'all', label: 'All', count: sortedAssets.length },
+    { id: 'images', label: 'Images', fileType: 'image' as const },
+    { id: 'ai', label: 'AI Generated', contentType: 'ai_generated' as const },
+    { id: 'recent', label: 'Recent', sortBy: 'date-desc' as const },
+  ], [sortedAssets.length])
+
   // Calculate stats
-  const totalSize = filteredAssets.reduce((acc, a) => acc + a.fileSize, 0)
-  const imageCount = filteredAssets.filter((a) => a.fileType === "image").length
-  const documentCount = filteredAssets.filter((a) => a.fileType === "pdf" || a.fileType === "document").length
-  const aiCount = filteredAssets.filter((a) => a.contentType === "ai_generated").length
-  const originalCount = filteredAssets.filter((a) => a.contentType === "original").length
+  const totalSize = sortedAssets.reduce((acc, a) => acc + a.fileSize, 0)
+  const imageCount = sortedAssets.filter((a) => a.fileType === "image").length
+  const documentCount = sortedAssets.filter((a) => a.fileType === "pdf" || a.fileType === "document").length
+  const aiCount = sortedAssets.filter((a) => a.contentType === "ai_generated").length
+  const originalCount = sortedAssets.filter((a) => a.contentType === "original").length
 
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
@@ -144,10 +178,10 @@ export default function AssetsPage() {
   }
 
   const handleSelectAll = () => {
-    if (selectedAssets.size === filteredAssets.length) {
+    if (selectedAssets.size === sortedAssets.length) {
       setSelectedAssets(new Set())
     } else {
-      setSelectedAssets(new Set(filteredAssets.map((a) => a.id)))
+      setSelectedAssets(new Set(sortedAssets.map((a) => a.id)))
     }
   }
 
@@ -186,27 +220,53 @@ export default function AssetsPage() {
     ).length
   }, [])
 
+  // Handle view tab changes
+  const handleViewChange = (viewId: string) => {
+    setSelectedView(viewId)
+    const view = views.find(v => v.id === viewId)
+    if (view) {
+      // Apply view-specific filters
+      if ('fileType' in view) {
+        setFileTypeFilter(view.fileType)
+      }
+      if ('contentType' in view) {
+        setContentTypeFilter(view.contentType)
+      }
+      if ('sortBy' in view) {
+        setSortBy(view.sortBy)
+      }
+      // Reset to defaults for 'all' view
+      if (viewId === 'all') {
+        setFileTypeFilter('all')
+        setContentTypeFilter('all')
+        setSortBy('date-desc')
+      }
+    }
+  }
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + K: Focus search
+      // Cmd/Ctrl + K: Toggle search
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        searchInputRef.current?.focus()
+        setSearchOpen(prev => !prev)
       }
-      // Cmd/Ctrl + F: Open filters
+      // Cmd/Ctrl + F: Toggle filters
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
         e.preventDefault()
-        setFiltersOpen(true)
+        setFiltersOpen(prev => !prev)
       }
-      // Escape: Clear selection
-      if (e.key === 'Escape' && selectedAssets.size > 0) {
+      // Escape: Close search, filters, or clear selection (priority order)
+      if (e.key === 'Escape') {
+        setSearchOpen(false)
+        setFiltersOpen(false)
         setSelectedAssets(new Set())
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedAssets.size])
+  }, [])
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
@@ -215,7 +275,7 @@ export default function AssetsPage() {
         <div>
           <h1 className="text-xl font-semibold">Assets</h1>
           <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-            <span>{filteredAssets.length} {filteredAssets.length === 1 ? 'asset' : 'assets'}</span>
+            <span>{sortedAssets.length} {sortedAssets.length === 1 ? 'asset' : 'assets'}</span>
             <span>•</span>
             <span>{aiCount} AI</span>
             <span>•</span>
@@ -241,180 +301,269 @@ export default function AssetsPage() {
         </div>
       </div>
 
-      {/* Filters / Bulk Actions - Transforming Bar */}
-      {selectedAssets.size > 0 ? (
-        // Bulk Actions State
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={selectedAssets.size === filteredAssets.length}
-              onCheckedChange={(checked) => {
-                if (checked === true) {
-                  setSelectedAssets(new Set(filteredAssets.map(a => a.id)))
-                } else {
-                  setSelectedAssets(new Set())
-                }
-              }}
-            />
-            <span className="text-sm font-medium">
-              {selectedAssets.size} selected
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="h-8" onClick={handleBulkDownload}>
-              <Download className="mr-2 h-4 w-4" />
-              Download
+      {/* View Tabs + Icon Toolbar - Shopify Style */}
+      <div className="flex items-center justify-between py-3 border-b">
+        {/* Pill-style tabs on left */}
+        <div className="flex items-center gap-1">
+          {views.map(view => (
+            <Button
+              key={view.id}
+              variant={selectedView === view.id ? "secondary" : "ghost"}
+              size="sm"
+              className="h-8 rounded-full px-4"
+              onClick={() => handleViewChange(view.id)}
+            >
+              {view.label}
+              {view.id === 'all' && (
+                <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">{view.count}</Badge>
+              )}
             </Button>
-            <Button variant="ghost" size="sm" className="h-8" onClick={handleClearSelection}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          ))}
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
-      ) : (
-        // Filters State
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1">
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Search assets..."
-                className="pl-9 h-8 text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
 
-            {/* Filters Popover Button */}
-            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="ml-2 h-4 min-w-4 rounded-full px-1 text-[10px]">
-                      {activeFilterCount}
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="start">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-sm">Filter Assets</h4>
-                    {hasActiveFilters && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={clearFilters}>
-                        Clear all
-                      </Button>
-                    )}
-                  </div>
+        {/* Icon buttons on right */}
+        <div className="flex items-center gap-1">
+          {/* Search Icon */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setSearchOpen(!searchOpen)}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
 
-                  {/* Brand Filter */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Brand</label>
-                    <Select value={brandFilter} onValueChange={setBrandFilter}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Brands" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Brands</SelectItem>
-                        {mockBrands.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* File Type Filter */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">File Type</label>
-                    <Select value={fileTypeFilter} onValueChange={(v) => setFileTypeFilter(v as AssetFileType | "all")}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        {Object.entries(ASSET_FILE_TYPE_CONFIG).map(([key, config]) => (
-                          <SelectItem key={key} value={key}>
-                            {config.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Design Type Filter */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Category</label>
-                    <Select value={designTypeFilter} onValueChange={(v) => setDesignTypeFilter(v as DesignType | "all")}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => (
-                          <SelectItem key={key} value={key}>
-                            {config.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Content Type Filter */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Source</label>
-                    <Select value={contentTypeFilter} onValueChange={(v) => setContentTypeFilter(v as AssetContentType | "all")}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="All Sources" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Sources</SelectItem>
-                        <SelectItem value="ai_generated">
-                          <div className="flex items-center gap-1.5">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            AI Generated
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="original">Original</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Clear Filters - Inline */}
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" className="h-8 px-2" onClick={clearFilters}>
-                <X className="h-4 w-4" />
-              </Button>
+          {/* Filter Icon (Hamburger) */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 relative"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                {activeFilterCount}
+              </div>
             )}
-          </div>
+          </Button>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center border rounded-md">
+          {/* Sort Icon - opens sort menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Sort by</div>
+              <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                <DropdownMenuRadioItem value="name-asc">Product title</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="date-desc">Created</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="date-asc">Updated</DropdownMenuRadioItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioItem value="date-desc">↑ Newest first</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="date-asc">↓ Oldest first</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* View Toggle */}
+          <div className="flex items-center border rounded-md ml-2">
             <Button 
               variant={viewMode === 'table' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              className="h-8 px-3 rounded-r-none"
+              size="icon" 
+              className="h-8 w-8 rounded-r-none"
               onClick={() => setViewMode('table')}
             >
               <List className="h-4 w-4" />
             </Button>
             <Button 
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              className="h-8 px-3 rounded-l-none border-l"
+              size="icon" 
+              className="h-8 w-8 rounded-l-none border-l"
               onClick={() => setViewMode('grid')}
             >
               <Grid className="h-4 w-4" />
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Collapsible Search Bar */}
+      {searchOpen && (
+        <div className="flex items-center gap-2 py-2 border-b animate-in slide-in-from-top-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              placeholder="Search assets..."
+              className="pl-9 h-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setSearchOpen(false)}>
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Actions Bar - Shopify Style */}
+      {selectedAssets.size > 0 ? (
+        <div className="flex items-center justify-between py-2 border-b">
+          <div className="flex items-center gap-2">
+            {/* "Showing X selected" dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8">
+                  <Checkbox checked className="mr-2" />
+                  Showing {selectedAssets.size} selected
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleSelectAll}>
+                  Select all {sortedAssets.length}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleClearSelection}>
+                  Deselect all
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Action buttons */}
+            <Button variant="ghost" size="sm" className="h-8">
+              Bulk edit
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8">
+              Set as draft
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleBulkDownload}>
+                  Download
+                </DropdownMenuItem>
+                <DropdownMenuItem>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Show all selected toggle (right side) */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Show all selected</label>
+            <Switch checked={showAllSelected} onCheckedChange={setShowAllSelected} />
+          </div>
+        </div>
+      ) : null}
+
+      {/* Filter Panel (Simple for future) - Hidden by default per Shopify */}
+      {filtersOpen && !selectedAssets.size && (
+        <Card className="border-b rounded-none">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium">Filters</h3>
+              <Button variant="ghost" size="sm" onClick={() => setFiltersOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {/* Brand Filter */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Brand</label>
+                <Select value={brandFilter} onValueChange={setBrandFilter}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="All Brands" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Brands</SelectItem>
+                    {mockBrands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* File Type Filter */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium">File Type</label>
+                <Select value={fileTypeFilter} onValueChange={(v) => setFileTypeFilter(v as AssetFileType | "all")}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {Object.entries(ASSET_FILE_TYPE_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Category</label>
+                <Select value={designTypeFilter} onValueChange={(v) => setDesignTypeFilter(v as DesignType | "all")}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Source Filter */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Source</label>
+                <Select value={contentTypeFilter} onValueChange={(v) => setContentTypeFilter(v as AssetContentType | "all")}>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="All Sources" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sources</SelectItem>
+                    <SelectItem value="ai_generated">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        AI Generated
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="original">Original</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {hasActiveFilters && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear all filters
+                </Button>
+                <Button size="sm" onClick={() => setFiltersOpen(false)}>
+                  Done
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Assets View - Table or Grid */}
@@ -425,7 +574,7 @@ export default function AssetsPage() {
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="h-9 w-[30px]">
                   <Checkbox
-                    checked={selectedAssets.size === filteredAssets.length && filteredAssets.length > 0}
+                    checked={selectedAssets.size === sortedAssets.length && sortedAssets.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
@@ -436,7 +585,7 @@ export default function AssetsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAssets.length === 0 ? (
+              {sortedAssets.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -451,7 +600,7 @@ export default function AssetsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAssets.map((asset) => {
+                sortedAssets.map((asset) => {
                   const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
                   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
                   const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
@@ -577,7 +726,7 @@ export default function AssetsPage() {
       ) : (
         // Grid View
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {filteredAssets.length === 0 ? (
+          {sortedAssets.length === 0 ? (
             <div className="col-span-full flex flex-col items-center gap-2 text-muted-foreground py-12">
               <FileImage className="h-8 w-8 opacity-50" />
               <p className="text-sm">No assets found</p>
@@ -588,7 +737,7 @@ export default function AssetsPage() {
               )}
             </div>
           ) : (
-            filteredAssets.map((asset) => {
+            sortedAssets.map((asset) => {
               const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
               const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
               const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
