@@ -664,7 +664,8 @@ export default function AssetDetailPage() {
           </TabsContent>
         </Tabs>
       ) : (
-        /* Regular Asset - Two Column Grid */}
+        <>
+        {/* Regular Asset - Two Column Grid */}
         <div className="grid lg:grid-cols-3 gap-4">
           {/* Left Column - Preview & Content */}
           <div className="lg:col-span-2 space-y-4">
@@ -927,6 +928,7 @@ export default function AssetDetailPage() {
             )}
           </div>
         </div>
+        </>
       )}
 
       {/* Submit Version Dialog */}
