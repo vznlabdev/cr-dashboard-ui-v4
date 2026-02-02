@@ -280,7 +280,7 @@ export const mockTasks: Task[] = [
           fileSize: 45000,
           thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
           clearanceStatus: 'cleared' as const,
-          source: 'ai-generated' as const,
+          source: 'library' as const,
           uploadedAt: new Date('2025-12-02')
         }
       ]
@@ -328,7 +328,7 @@ export const mockTasks: Task[] = [
           fileSize: 45000,
           thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
           clearanceStatus: 'cleared' as const,
-          source: 'ai-generated' as const,
+          source: 'library' as const,
           uploadedAt: new Date('2025-12-02')
         }
       ]
