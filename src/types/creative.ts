@@ -126,6 +126,15 @@ export interface AssetVersion {
   approvalStatus?: "pending" | "approved" | "rejected"
   approvedBy?: string
   approvedAt?: Date
+  
+  // Comprehensive review data
+  reviewData?: AssetReviewData
+  quickScores?: {
+    overall: number
+    copyright: number
+    accessibility: number
+    seo: number
+  }
 }
 
 export interface VersionComment {
