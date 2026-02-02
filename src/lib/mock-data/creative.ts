@@ -1369,7 +1369,7 @@ export const mockAssets: Asset[] = [
           title: "Corporate Annual Report Template 2024",
           url: "https://example.com/report-template",
           similarity: 58,
-          type: "document",
+          type: "text",
           source: "Envato Elements",
         },
         {
@@ -1377,7 +1377,7 @@ export const mockAssets: Asset[] = [
           title: "Business Report Layout Design",
           url: "https://example.com/business-report",
           similarity: 42,
-          type: "document",
+          type: "text",
           source: "Adobe Stock",
         },
         {
