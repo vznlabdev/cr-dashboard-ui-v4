@@ -38,6 +38,7 @@ export interface Project {
   members?: string[]; // Array of member names or IDs
   targetDate?: string; // Target completion date (ISO string or formatted date)
   creatorIds?: string[]; // Creators credited on this project
+  updates?: ProjectUpdate[]; // Project status updates
 }
 
 export interface Asset {
@@ -133,6 +134,31 @@ export interface NotificationAction {
   label: string;
   href?: string;
   onClick?: () => void;
+}
+
+// ==============================================
+// Project Updates
+// ==============================================
+
+export type ProjectHealth = "on-track" | "at-risk" | "off-track";
+
+export interface ProjectUpdate {
+  id: string;
+  projectId: string;
+  content: string;
+  healthStatus: ProjectHealth;
+  author: {
+    name: string;
+    initials: string;
+    color: string;
+  };
+  timestamp: Date;
+  metadata: {
+    status: ProjectStatus;
+    lead: string;
+    targetDate?: string;
+    progress?: string;
+  };
 }
 
 // ==============================================

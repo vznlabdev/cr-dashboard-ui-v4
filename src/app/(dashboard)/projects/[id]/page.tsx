@@ -4,6 +4,8 @@ import { useParams, useRouter, notFound } from "next/navigation"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { ProjectTabs, ActivityItem, MilestoneItem } from "@/components/cr"
+import { ProjectUpdateDialog } from "@/components/projects/ProjectUpdateDialog"
+import { ProjectUpdateItem } from "@/components/projects/ProjectUpdateItem"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,7 +23,7 @@ import { ChevronRight, Plus, Calendar, User, Users, Building2, Clock, Target, Si
 import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { getTasksByProject, getCompanyById } from "@/lib/mock-data/projects-tasks"
-import type { Project } from "@/types"
+import type { Project, ProjectHealth } from "@/types"
 
 // Team members for project lead assignment
 const TEAM_MEMBERS = [
@@ -57,6 +59,8 @@ export default function ProjectOverviewPage() {
 
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(project.description || "")
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const [expandedUpdateId, setExpandedUpdateId] = useState<string | null>(null)
 
   // Mock activity data
   const activities = [
@@ -97,6 +101,52 @@ export default function ProjectOverviewPage() {
     updateProject(projectId, { description })
     setIsEditingDescription(false)
   }
+
+  const handleSaveUpdate = (update: { content: string; healthStatus: ProjectHealth }) => {
+    const leadMember = TEAM_MEMBERS.find(m => m.fullName === project.owner) || TEAM_MEMBERS[0]
+    
+    const newUpdate = {
+      id: `update-${Date.now()}`,
+      projectId: project.id,
+      content: update.content,
+      healthStatus: update.healthStatus,
+      author: {
+        name: leadMember.fullName,
+        initials: leadMember.initials,
+        color: leadMember.avatarColor
+      },
+      timestamp: new Date(),
+      metadata: {
+        status: project.status,
+        lead: project.owner,
+        targetDate: project.targetDate,
+        progress: `${Math.round((completedTasks / totalTasks) * 100)}%`
+      }
+    }
+
+    // Add update to project
+    const currentUpdates = project.updates || []
+    updateProject(projectId, { updates: [newUpdate, ...currentUpdates] })
+  }
+
+  // Combine updates and activities for the feed
+  const combinedFeed = useMemo(() => {
+    const updates = (project.updates || []).map(u => ({ 
+      type: 'update' as const, 
+      data: u,
+      timestamp: u.timestamp
+    }))
+    
+    const activityItems = activities.map((a, i) => ({ 
+      type: 'activity' as const, 
+      data: a,
+      timestamp: new Date(Date.now() - (i + 1) * 3600000) // Mock timestamps
+    }))
+    
+    return [...updates, ...activityItems].sort((a, b) => 
+      b.timestamp.getTime() - a.timestamp.getTime()
+    )
+  }, [project.updates, activities])
 
   const getPriorityIcon = (priority?: string) => {
     switch (priority) {
@@ -240,15 +290,25 @@ export default function ProjectOverviewPage() {
           <div className="border rounded-lg bg-card">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-semibold">Latest updates</h2>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" onClick={() => setUpdateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 New update
               </Button>
             </div>
             <div className="divide-y divide-border">
-              {activities.map((activity, index) => (
+              {combinedFeed.map((item, index) => (
                 <div key={index} className="px-4">
-                  <ActivityItem {...activity} />
+                  {item.type === 'update' ? (
+                    <ProjectUpdateItem
+                      update={item.data}
+                      isExpanded={expandedUpdateId === item.data.id}
+                      onToggle={() => setExpandedUpdateId(
+                        expandedUpdateId === item.data.id ? null : item.data.id
+                      )}
+                    />
+                  ) : (
+                    <ActivityItem {...item.data} />
+                  )}
                 </div>
               ))}
             </div>
@@ -464,6 +524,14 @@ export default function ProjectOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Project Update Dialog */}
+      <ProjectUpdateDialog
+        open={updateDialogOpen}
+        onOpenChange={setUpdateDialogOpen}
+        project={project}
+        onSave={handleSaveUpdate}
+      />
     </PageContainer>
   )
 }

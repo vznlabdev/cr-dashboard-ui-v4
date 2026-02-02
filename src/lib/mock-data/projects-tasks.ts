@@ -50,6 +50,36 @@ export const mockProjects: Project[] = [
     createdDate: 'June 15, 2024',
     owner: 'Jeff Gordon',
     creatorIds: ['creator-1', 'creator-2'],
+    updates: [
+      {
+        id: 'update-1',
+        projectId: '1',
+        content: 'Design phase completed ahead of schedule. Moving to development next week. The team has done an excellent job refining the brand guidelines and creating the initial asset library.',
+        healthStatus: 'on-track',
+        author: { name: 'Jeff Gordon', initials: 'JG', color: '#ef4444' },
+        timestamp: new Date('2025-01-28T14:30:00Z'),
+        metadata: {
+          status: 'Active',
+          lead: 'Jeff Gordon',
+          targetDate: 'Feb 28, 2025',
+          progress: '35%'
+        }
+      },
+      {
+        id: 'update-2',
+        projectId: '1',
+        content: 'Initial wireframes approved by stakeholders. Starting the design iteration phase.',
+        healthStatus: 'on-track',
+        author: { name: 'Jeff Gordon', initials: 'JG', color: '#ef4444' },
+        timestamp: new Date('2025-01-20T10:15:00Z'),
+        metadata: {
+          status: 'Active',
+          lead: 'Jeff Gordon',
+          targetDate: 'Feb 28, 2025',
+          progress: '20%'
+        }
+      }
+    ]
   },
   {
     id: '2',
@@ -65,6 +95,22 @@ export const mockProjects: Project[] = [
     createdDate: 'July 8, 2024',
     owner: 'Abdul Qadeer',
     creatorIds: ['creator-1'],
+    updates: [
+      {
+        id: 'update-3',
+        projectId: '2',
+        content: 'Video production is behind schedule due to voiceover delays. Working with the vendor to expedite the process. May need to adjust launch date.',
+        healthStatus: 'at-risk',
+        author: { name: 'Abdul Qadeer', initials: 'AQ', color: '#a855f7' },
+        timestamp: new Date('2025-01-29T16:45:00Z'),
+        metadata: {
+          status: 'Review',
+          lead: 'Abdul Qadeer',
+          targetDate: 'Feb 15, 2025',
+          progress: '60%'
+        }
+      }
+    ]
   },
   {
     id: '3',
