@@ -96,11 +96,6 @@ const baseNavSections: NavSection[] = [
     label: "Compliance",
     items: [
       {
-        title: "Asset Approvals",
-        href: "/creative/assets/approvals",
-        icon: CheckCircle2,
-      },
-      {
         title: "Legal",
         href: "/legal",
         icon: Scale,

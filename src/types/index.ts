@@ -11,6 +11,15 @@ import type { MediaManagerData } from './mediaManager'
 // Core Domain Types
 // ==============================================
 
+export interface CopyrightCheckCredits {
+  monthlyQuota: number; // e.g., 100 checks/month included
+  quotaUsed: number; // How many used this month
+  quotaRemaining: number; // Calculated: monthlyQuota - quotaUsed
+  additionalCredits: number; // Purchased credits beyond quota
+  resetDate: Date; // When quota resets (1st of next month)
+  pricePerCheck: number; // Cost in $ for checks beyond quota
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -20,6 +29,7 @@ export interface Company {
   status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
+  copyrightCheckCredits?: CopyrightCheckCredits; // Copyright check credit tracking
 }
 
 export interface Project {
@@ -106,6 +116,8 @@ export interface Task {
   };
   // Media Manager data - assets, Creator DNA, training data, references
   mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
+  // Asset approval aggregation status
+  assetApprovalStatus?: 'all_approved' | 'pending' | 'rejected' | 'none';  // Calculated based on linked assets
 }
 
 export interface Notification {

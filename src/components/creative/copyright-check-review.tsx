@@ -15,6 +15,8 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import {
   CheckCircle2,
@@ -46,6 +48,8 @@ export function CopyrightCheckReview({
 }: CopyrightCheckReviewProps) {
   const [rejectionReason, setRejectionReason] = useState("")
   const [showRejectInput, setShowRejectInput] = useState(false)
+  const [approvalReason, setApprovalReason] = useState("")
+  const [showApprovalReason, setShowApprovalReason] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
   if (!asset.copyrightCheckData) {
@@ -57,6 +61,8 @@ export function CopyrightCheckReview({
   const threshold = 30
   const passed = similarityScore < threshold
   const riskLevel = checkData.riskBreakdown.riskLevel
+  const matchCount = checkData.matchedSources.length
+  const isHighRisk = similarityScore > threshold || riskLevel === "high"
 
   const handleApprove = async () => {
     if (!onApprove) {
@@ -64,11 +70,28 @@ export function CopyrightCheckReview({
       return
     }
 
+    // Require reason for high-risk approvals
+    if (isHighRisk && !showApprovalReason) {
+      setShowApprovalReason(true)
+      return
+    }
+
+    if (isHighRisk && !approvalReason.trim()) {
+      toast.error("Please provide a reason for approving this high-risk asset")
+      return
+    }
+
     setIsProcessing(true)
     try {
       await onApprove(asset.id)
-      toast.success(`Asset "${asset.name}" approved successfully`)
+      if (isHighRisk) {
+        toast.success(`Asset approved with override. Reason logged.`)
+      } else {
+        toast.success(`Asset "${asset.name}" approved successfully`)
+      }
       onOpenChange(false)
+      setApprovalReason("")
+      setShowApprovalReason(false)
     } catch (error) {
       toast.error("Failed to approve asset")
       console.error(error)
@@ -322,17 +345,47 @@ export function CopyrightCheckReview({
 
           <Separator />
 
+          {/* High-Risk Approval Warning */}
+          {isHighRisk && showApprovalReason && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium">High-risk asset approval requires justification</p>
+                <p className="text-xs mt-1">
+                  This asset has a {similarityScore}% similarity score and {matchCount} potential matches.
+                  Please provide a reason for approval.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Approval Reason Input (for high-risk assets) */}
+          {showApprovalReason && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Approval Reason <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                value={approvalReason}
+                onChange={(e) => setApprovalReason(e.target.value)}
+                placeholder="Explain why this high-risk asset is being approved (e.g., client requested, legal clearance obtained, design modified)..."
+                className="min-h-[100px] resize-none text-sm"
+                disabled={isProcessing}
+              />
+            </div>
+          )}
+
           {/* Rejection Reason Input */}
           {showRejectInput && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <Label className="text-sm font-medium">
                 Rejection Reason <span className="text-destructive">*</span>
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Explain why this asset is being rejected..."
-                className="w-full min-h-[100px] p-3 border rounded-md resize-none text-sm"
+                className="min-h-[100px] resize-none text-sm"
                 disabled={isProcessing}
               />
             </div>
@@ -346,6 +399,8 @@ export function CopyrightCheckReview({
               onOpenChange(false)
               setShowRejectInput(false)
               setRejectionReason("")
+              setShowApprovalReason(false)
+              setApprovalReason("")
             }}
             disabled={isProcessing}
           >
@@ -353,7 +408,23 @@ export function CopyrightCheckReview({
           </Button>
           {!passed && asset.approvalStatus === "pending" && (
             <>
-              {!showRejectInput ? (
+              {showApprovalReason ? (
+                <Button
+                  onClick={handleApprove}
+                  disabled={isProcessing || !approvalReason.trim()}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isProcessing ? "Processing..." : "Confirm Approval"}
+                </Button>
+              ) : showRejectInput ? (
+                <Button
+                  variant="destructive"
+                  onClick={handleReject}
+                  disabled={isProcessing || !rejectionReason.trim()}
+                >
+                  {isProcessing ? "Processing..." : "Confirm Rejection"}
+                </Button>
+              ) : (
                 <>
                   <Button
                     variant="outline"
@@ -370,14 +441,6 @@ export function CopyrightCheckReview({
                     {isProcessing ? "Processing..." : "Approve"}
                   </Button>
                 </>
-              ) : (
-                <Button
-                  variant="destructive"
-                  onClick={handleReject}
-                  disabled={isProcessing || !rejectionReason.trim()}
-                >
-                  {isProcessing ? "Processing..." : "Confirm Rejection"}
-                </Button>
               )}
             </>
           )}

@@ -27,6 +27,8 @@ import {
   MoreHorizontal,
   Trash2,
   Plus,
+  RotateCcw,
+  FileBarChart,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -44,6 +46,7 @@ import {
 import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
 import type { AssetVersion } from "@/types/creative"
+import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 
 export default function AssetDetailPage() {
   const router = useRouter()
@@ -55,6 +58,8 @@ export default function AssetDetailPage() {
   const [selectedVersionId, setSelectedVersionId] = useState(versionGroup?.currentVersionId || "")
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"overview" | "versions">("overview")
+  const [isRunningCheck, setIsRunningCheck] = useState(false)
+  const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
   // Fallback to regular asset if not a version group
   const asset = versionGroup 
@@ -181,6 +186,12 @@ export default function AssetDetailPage() {
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
+            <Link href={`/creative/assets/${asset.id}/review`}>
+              <FileBarChart className="mr-2 h-4 w-4" />
+              Full Review
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/creative/assets">
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back
@@ -192,6 +203,34 @@ export default function AssetDetailPage() {
               Download
             </a>
           </Button>
+          {/* Run Copyright Check Button */}
+          {!asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending" ? (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                if (!canRunCheck()) {
+                  toast.error("No copyright check credits available")
+                  return
+                }
+                setIsRunningCheck(true)
+                try {
+                  await useCredit()
+                  // Simulate copyright check
+                  await new Promise(resolve => setTimeout(resolve, 2000))
+                  toast.success("Copyright check completed")
+                } catch (error) {
+                  toast.error("Failed to run copyright check")
+                } finally {
+                  setIsRunningCheck(false)
+                }
+              }}
+              disabled={isRunningCheck}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              {isRunningCheck ? "Checking..." : `Run Check (1 credit)`}
+            </Button>
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -202,6 +241,32 @@ export default function AssetDetailPage() {
               <DropdownMenuItem onClick={() => toast.success("Edit feature coming soon!")}>
                 Edit Details
               </DropdownMenuItem>
+              {asset.copyrightCheckStatus === "completed" && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={async () => {
+                      if (!canRunCheck()) {
+                        toast.error("No copyright check credits available")
+                        return
+                      }
+                      setIsRunningCheck(true)
+                      try {
+                        await useCredit()
+                        await new Promise(resolve => setTimeout(resolve, 2000))
+                        toast.success("Copyright check re-run completed")
+                      } catch (error) {
+                        toast.error("Failed to re-run copyright check")
+                      } finally {
+                        setIsRunningCheck(false)
+                      }
+                    }}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Re-run Check (1 credit)
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"

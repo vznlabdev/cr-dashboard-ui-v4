@@ -31,6 +31,8 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { CopyrightCheckReview } from "./copyright-check-review"
 import type { Asset } from "@/types/creative"
+import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface UploadAssetDialogProps {
   open: boolean
@@ -83,6 +85,7 @@ export function UploadAssetDialog({ open, onOpenChange }: UploadAssetDialogProps
     trainingDataSourceInput: "",
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { credits, canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
 
   // Detect file type from file
   const detectFileType = (file: File): AssetFileType => {
@@ -374,8 +377,30 @@ export function UploadAssetDialog({ open, onOpenChange }: UploadAssetDialogProps
         })
       }
 
-      // Start copyright check after upload completes
-      simulateCopyrightCheck(fileName)
+      // Start copyright check after upload completes (for AI-generated assets)
+      if (formData.contentType === "ai_generated") {
+        if (canRunCheck()) {
+          simulateCopyrightCheck(fileName)
+          // Use credit (in real app, this would be async and called after check starts)
+          useCredit().catch((error) => {
+            console.error("Failed to deduct credit:", error)
+          })
+        } else {
+          toast.warning(`No copyright check credits available. Asset uploaded without check.`)
+          setFileStates((prev) => {
+            const newStates = new Map(prev)
+            const state = newStates.get(fileName)
+            if (state) {
+              newStates.set(fileName, {
+                ...state,
+                copyrightCheckStatus: "pending",
+                copyrightCheckProgress: 0,
+              })
+            }
+            return newStates
+          })
+        }
+      }
     }
 
     // Wait for all copyright checks to complete
@@ -510,6 +535,19 @@ export function UploadAssetDialog({ open, onOpenChange }: UploadAssetDialogProps
           <DialogDescription>
             Upload files to the asset library. You can upload multiple files at once.
           </DialogDescription>
+          {/* Credit Balance Display */}
+          {credits && formData.contentType === "ai_generated" && (
+            <Alert className="mt-3">
+              <Shield className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <span className="font-medium">Auto-scan enabled:</span> AI-generated assets will be automatically checked for copyright.
+                <br />
+                <span className="text-muted-foreground">
+                  Credits available: {getTotalAvailable()} ({credits.quotaRemaining} quota + {credits.additionalCredits} additional)
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
         </DialogHeader>
 
         {/* Progress Section - Visible when uploading */}

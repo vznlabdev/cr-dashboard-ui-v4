@@ -31,7 +31,7 @@ import {
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow, Shield } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -42,6 +42,7 @@ import type { MediaManagerData } from "@/types/mediaManager"
 import { validateAllTabs, countMediaItems, hasMediaContent } from "@/utils/mediaValidation"
 import { clearMediaDataFromStorage } from "@/contexts/MediaManagerContext"
 import { getMediaCount, getMediaSummary, getMediaWarnings, hasMediaData } from "@/utils/mediaHelpers"
+import { mockAssets } from "@/lib/mock-data/creative"
 
 const STATUS_COLUMNS: { key: TaskStatus; label: string }[] = [
   { key: "submitted", label: "Submitted" },
@@ -87,6 +88,17 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
     }
   }
 
+  // Calculate pending approvals for this task
+  const getPendingApprovals = () => {
+    if (!task.mediaData?.assets) return 0
+    
+    const assetIds = task.mediaData.assets.map(a => a.id)
+    const assets = mockAssets.filter(a => assetIds.includes(a.id))
+    return assets.filter(a => a.approvalStatus === 'pending').length
+  }
+  
+  const pendingApprovals = getPendingApprovals()
+
   return (
     <Card 
       onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
@@ -95,7 +107,7 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
       <CardContent className="pt-4 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1">
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
               {/* AI Task Badge */}
               {(task.aiTool || (task.mode && task.mode !== 'manual')) && (
                 <Badge 
@@ -109,6 +121,17 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
                 >
                   <Bot className="h-3 w-3" />
                   <span>AI</span>
+                </Badge>
+              )}
+              {/* Pending Approvals Badge */}
+              {pendingApprovals > 0 && (
+                <Badge 
+                  variant="outline" 
+                  className="h-5 px-1.5 text-[10px] font-medium gap-0.5 shrink-0 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800"
+                  title={`${pendingApprovals} asset${pendingApprovals > 1 ? 's' : ''} pending approval`}
+                >
+                  <Shield className="h-3 w-3" />
+                  <span>{pendingApprovals}</span>
                 </Badge>
               )}
             </div>
@@ -258,6 +281,19 @@ function FlatKanbanBoard({
       return <div className="w-2 h-2 rounded-full bg-orange-500" title="Medium priority" />
     }
     
+    // Calculate asset approval status for the task
+    const getAssetApprovalCount = () => {
+      if (!task.mediaData?.assets) return null
+      
+      const assetIds = task.mediaData.assets.map(a => a.id)
+      const assets = mockAssets.filter(a => assetIds.includes(a.id))
+      const pending = assets.filter(a => a.approvalStatus === 'pending').length
+      
+      return pending > 0 ? pending : null
+    }
+    
+    const pendingApprovals = getAssetApprovalCount()
+    
     return (
       <Card
         onClick={() => router.push(`/projects/${projectId}/tasks/${task.id}`)}
@@ -372,6 +408,14 @@ function FlatKanbanBoard({
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Paperclip className="h-3.5 w-3.5" />
                   <span>{task.attachmentsCount}</span>
+                </div>
+              )}
+              
+              {/* Asset Approvals Pending */}
+              {pendingApprovals && (
+                <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400" title={`${pendingApprovals} asset${pendingApprovals > 1 ? 's' : ''} pending approval`}>
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>{pendingApprovals}</span>
                 </div>
               )}
               
@@ -2056,8 +2100,9 @@ export default function ProjectTasksPage() {
         if (!open) closeTaskModal()
       }}>
         <DialogContent 
-          className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-5xl max-h-[70vh] rounded-xl"
+          className="!bg-white dark:!bg-[#0d0e14] !border-gray-200 dark:!border-gray-800 !p-0 !gap-0 !w-full !max-w-5xl !max-h-[90vh] !rounded-xl !shadow-xl [&]:!backdrop-blur-none [&]:!bg-opacity-100"
           showCloseButton={false}
+          style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' } as React.CSSProperties}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -2065,7 +2110,7 @@ export default function ProjectTasksPage() {
             }
           }}
         >
-          <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
+          <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
             {/* Header - Fixed - Linear Style */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white dark:bg-[#0d0e14]">
               {/* Breadcrumb Navigation - Single Line, Minimal */}
@@ -2140,19 +2185,72 @@ export default function ProjectTasksPage() {
                 
                 <span className="text-gray-300 dark:text-gray-600">›</span>
                 
-                {/* Project - Clickable - Current Step */}
-                <button
-                  type="button"
-                  onClick={() => setShowProjectPicker(true)}
-                  className={cn(
-                    "text-sm font-normal transition-colors",
-                    !taskFormData.selectedProjectId 
-                      ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300" 
-                      : "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
+                {/* Project - Clickable */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowProjectPicker(!showProjectPicker)}
+                    className={cn(
+                      "text-sm font-normal transition-colors",
+                      !taskFormData.selectedProjectId 
+                        ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" 
+                        : "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
+                    )}
+                  >
+                    {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
+                  </button>
+                  
+                  {/* Project Picker Dropdown */}
+                  {showProjectPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowProjectPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-[400px] overflow-y-auto">
+                        <div className="p-1">
+                          {/* Clear Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, selectedProjectId: '' })
+                              setShowProjectPicker(false)
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">No Project</span>
+                          </button>
+                          
+                          {/* Project Options */}
+                          {allProjects.filter(p => !p.archived).map(project => (
+                            <button
+                              key={project.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.selectedProjectId === project.id 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, selectedProjectId: project.id })
+                                setShowProjectPicker(false)
+                              }}
+                            >
+                              <div 
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
+                              />
+                              <span className="text-xs font-medium">{project.name}</span>
+                              {taskFormData.selectedProjectId === project.id && <Check className="w-3 h-3 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   )}
-                >
-                  {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
-                </button>
+                </div>
               </div>
               
               {/* Close Button - Minimal */}
@@ -3214,57 +3312,6 @@ export default function ProjectTasksPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Project Picker Dialog */}
-      <Dialog open={showProjectPicker} onOpenChange={setShowProjectPicker}>
-        <DialogContent className="max-w-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-6">
-          <DialogTitle className="text-sm font-semibold mb-4 text-gray-900 dark:text-white">Select Project</DialogTitle>
-          
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              placeholder="Search projects..."
-              value={projectQuery}
-              onChange={(e) => setProjectQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400 transition-all duration-150"
-              autoFocus
-            />
-          </div>
-          
-          {/* Projects List */}
-          <div className="space-y-1 max-h-96 overflow-y-auto">
-            {(() => {
-              const searchLower = projectQuery.toLowerCase().trim()
-              const filteredProjects = searchLower === ''
-                ? allProjects
-                : allProjects.filter(p => p.name.toLowerCase().includes(searchLower))
-              
-              return filteredProjects.map(proj => (
-                <button
-                  key={proj.id}
-                  onClick={() => {
-                    setTaskFormData({ ...taskFormData, selectedProjectId: proj.id })
-                    setShowProjectPicker(false)
-                    setProjectQuery('')
-                    toast.success(`Project "${proj.name}" selected`)
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 text-left"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-xs font-semibold">{proj.name.charAt(0)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{proj.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{proj.status} • {proj.assets || 0} assets</p>
-                  </div>
-                  {taskFormData.selectedProjectId === proj.id && <Check className="w-4 h-4 text-blue-500" />}
-                </button>
-              ))
-            })()}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Media Manager Modal */}
       <MediaManager
         isOpen={showMediaManager}

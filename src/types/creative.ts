@@ -303,6 +303,7 @@ export interface PromptHistory {
 
 export type CopyrightCheckStatus = "pending" | "checking" | "completed" | "failed"
 export type ApprovalStatus = "pending" | "approved" | "rejected"
+export type CheckStatus = "not-started" | "pending" | "checking" | "completed" | "failed"
 
 export interface MatchedSource {
   id: string
@@ -327,6 +328,134 @@ export interface CopyrightCheckData {
   recommendations: string[]
   checkedAt: Date
   checkDuration?: number // in milliseconds
+}
+
+// ADA/Accessibility Check
+export interface AccessibilityIssue {
+  severity: "critical" | "serious" | "moderate" | "minor"
+  type: "contrast" | "text" | "structure" | "navigation" | "aria"
+  description: string
+  element?: string
+  recommendation: string
+}
+
+export interface AccessibilityCheckData {
+  score: number // 0-100, WCAG compliance score
+  issues: AccessibilityIssue[]
+  wcagLevel: "A" | "AA" | "AAA" | "none"
+  colorContrast: {
+    passed: boolean
+    ratio: number
+    recommendation: string
+  }
+  altText: {
+    present: boolean
+    quality: "good" | "fair" | "poor" | "missing"
+  }
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number
+}
+
+// SEO Check
+export interface SEOCheckData {
+  score: number // 0-100
+  imageOptimization: {
+    format: "optimal" | "acceptable" | "poor"
+    sizeRating: "excellent" | "good" | "large" | "too-large"
+    compressionPotential: number // percentage
+  }
+  metadata: {
+    filenameQuality: "descriptive" | "generic" | "poor"
+    altTextPresent: boolean
+    dimensionsOptimal: boolean
+  }
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number
+}
+
+// Brand Compliance Check
+export interface BrandComplianceCheckData {
+  score: number // 0-100
+  colorCompliance: {
+    passed: boolean
+    brandColorsUsed: string[]
+    offBrandColors: string[]
+  }
+  logoUsage: {
+    passed: boolean
+    issues: string[]
+  }
+  styleGuideAdherence: number // 0-100
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number
+}
+
+// Performance Check
+export interface PerformanceCheckData {
+  score: number // 0-100
+  fileSize: {
+    current: number
+    optimal: number
+    savings: number // bytes
+  }
+  loadTimeEstimate: number // milliseconds
+  compressionScore: number // 0-100
+  formatRecommendation?: string
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number
+}
+
+// Security/Malware Check
+export interface SecurityThreat {
+  severity: "critical" | "high" | "medium" | "low"
+  type: "malware" | "suspicious-code" | "metadata-leak" | "embedded-content"
+  description: string
+}
+
+export interface SecurityCheckData {
+  score: number // 0-100, 100 = clean
+  threats: SecurityThreat[]
+  safe: boolean
+  recommendations: string[]
+  checkedAt: Date
+  checkDuration?: number
+}
+
+// Comprehensive Asset Review Data
+export interface AssetReviewData {
+  overallScore: number // 0-100, weighted average
+  checksCompleted: number
+  totalChecks: number
+  copyright: {
+    status: CheckStatus
+    data?: CopyrightCheckData
+  }
+  accessibility: {
+    status: CheckStatus
+    data?: AccessibilityCheckData
+  }
+  seo: {
+    status: CheckStatus
+    data?: SEOCheckData
+  }
+  brandCompliance: {
+    status: CheckStatus
+    data?: BrandComplianceCheckData
+  }
+  performance: {
+    status: CheckStatus
+    data?: PerformanceCheckData
+  }
+  security: {
+    status: CheckStatus
+    data?: SecurityCheckData
+  }
+  lastReviewedAt?: Date
+  reviewedBy?: string
 }
 
 export interface Asset {
@@ -361,6 +490,14 @@ export interface Asset {
   approvedBy?: string // admin user ID
   approvedAt?: Date
   rejectionReason?: string
+  // Comprehensive review data
+  reviewData?: AssetReviewData
+  quickScores?: {
+    overall: number
+    copyright: number
+    accessibility: number
+    seo: number
+  }
 }
 
 export interface AssetFilterConfig {

@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Trash2,
   Sparkles,
+  Shield,
 } from "lucide-react"
 import {
   Select,
@@ -209,10 +210,21 @@ export default function AssetsPage() {
             {formatFileSize(totalSize)} total
           </div>
         </div>
-        <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Assets
-        </Button>
+        <div className="flex items-center gap-2">
+          {pendingApprovalCount > 0 && (
+            <Link href="/creative/assets/approvals">
+              <Button variant="outline" size="sm" className="border-amber-500 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                <Shield className="mr-2 h-4 w-4" />
+                Approvals
+                <Badge className="ml-2 bg-amber-500 text-white hover:bg-amber-500">{pendingApprovalCount}</Badge>
+              </Button>
+            </Link>
+          )}
+          <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Assets
+          </Button>
+        </div>
       </div>
 
       {/* Filters - Linear Style */}
@@ -367,7 +379,7 @@ export default function AssetsPage() {
               filteredAssets.map((asset) => {
                 const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
                 const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
-                const DesignIcon = getDesignTypeIcon(designTypeConfig.iconName)
+                const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
                 const isSelected = selectedAssets.has(asset.id)
 
                 return (
@@ -451,7 +463,7 @@ export default function AssetsPage() {
                       <div className="flex items-center gap-1.5">
                         <DesignIcon className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground truncate">
-                          {designTypeConfig.label}
+                          {designTypeConfig?.label || asset.designType}
                         </span>
                       </div>
                     </TableCell>

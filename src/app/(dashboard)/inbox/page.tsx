@@ -156,17 +156,6 @@ export default function InboxPage() {
                       <Archive className="h-4 w-4" />
                     </Button>
                     <InboxFilters currentFilter={filterBy} onFilterChange={setFilterBy} />
-                    {!showArchived && unreadCount > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={markAllAsRead}
-                        className="h-8 w-8 p-0"
-                        title="Mark all as read"
-                      >
-                        <CheckCheck className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </>
               )}

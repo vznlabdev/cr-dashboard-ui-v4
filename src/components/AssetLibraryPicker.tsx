@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { 
   X, 
   Search, 
@@ -340,9 +340,9 @@ export function AssetLibraryPicker({
       <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0 gap-0">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
             Select from Asset Library
-          </h2>
+          </DialogTitle>
           <button
             onClick={handleCancel}
             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"

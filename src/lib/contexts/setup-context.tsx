@@ -31,7 +31,9 @@ interface SetupContextType {
   setupState: SetupState
   isSetupComplete: boolean
   isDismissed: boolean
-  progress: string
+  progress: string // Now shows "5%" instead of "1/21"
+  progressPercentage: number // Raw percentage number (5)
+  detailedProgress: string // "1/21" for places that need it
   totalTasks: number
   completedTasks: number
   completeTask: (categoryId: string, taskId: string) => void
@@ -247,8 +249,12 @@ export function SetupProvider({ children }: { children: ReactNode }) {
         .every((task) => task.completed)
     ) || setupState.isComplete
 
-  // Progress string for badge
-  const progress = `${completedTasks}/${totalTasks}`
+  // Progress calculations
+  const progressPercentage = totalTasks > 0 
+    ? Math.round((completedTasks / totalTasks) * 100) 
+    : 0
+  const progress = `${progressPercentage}%`
+  const detailedProgress = `${completedTasks}/${totalTasks}`
 
   // Complete a specific task
   const completeTask = (categoryId: string, taskId: string) => {
@@ -316,6 +322,8 @@ export function SetupProvider({ children }: { children: ReactNode }) {
     isSetupComplete,
     isDismissed: setupState.isDismissed,
     progress,
+    progressPercentage,
+    detailedProgress,
     totalTasks,
     completedTasks,
     completeTask,

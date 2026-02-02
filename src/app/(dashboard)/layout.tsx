@@ -7,27 +7,34 @@ import { CreatorsProvider } from "@/contexts/creators-context";
 import { CreatorAccountProvider } from "@/contexts/creator-account-context";
 import { SetupProvider } from "@/lib/contexts/setup-context";
 import { InboxProvider } from "@/lib/contexts/inbox-context";
+import { CopyrightCreditsProvider } from "@/lib/contexts/copyright-credits-context";
+import { mockCompanies } from "@/lib/mock-data/projects-tasks";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Get credits from first company (in real app, get from current user's company)
+  const initialCredits = mockCompanies[0]?.copyrightCheckCredits || null
+
   return (
     <AccountProvider>
       <SetupProvider>
         <InboxProvider>
-          <SidebarProvider>
-            <NotificationProvider>
-              <DataProvider>
-                <CreatorsProvider>
-                  <CreatorAccountProvider>
-                    <MainLayout>{children}</MainLayout>
-                  </CreatorAccountProvider>
-                </CreatorsProvider>
-              </DataProvider>
-            </NotificationProvider>
-          </SidebarProvider>
+          <CopyrightCreditsProvider initialCredits={initialCredits}>
+            <SidebarProvider>
+              <NotificationProvider>
+                <DataProvider>
+                  <CreatorsProvider>
+                    <CreatorAccountProvider>
+                      <MainLayout>{children}</MainLayout>
+                    </CreatorAccountProvider>
+                  </CreatorsProvider>
+                </DataProvider>
+              </NotificationProvider>
+            </SidebarProvider>
+          </CopyrightCreditsProvider>
         </InboxProvider>
       </SetupProvider>
     </AccountProvider>

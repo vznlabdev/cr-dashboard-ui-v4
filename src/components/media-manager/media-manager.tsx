@@ -15,7 +15,7 @@ import { MOCK_ASSET_LIBRARY } from '@/lib/mockData'
 
 type CreationMethod = 'human-made' | 'ai-generated' | 'ai-enhanced'
 
-type TabId = 'assets' | 'prompts' | 'training' | 'references' | 'creator-dna'
+type TabId = 'assets' | 'prompts' | 'training' | 'references' | 'talent-rights'
 
 type ClearanceStatus = 'cleared' | 'pending' | 'uncleared'
 
@@ -163,14 +163,14 @@ export function MediaManager({
       { id: 'prompts', label: 'Prompts', required: false, disabled: false },
       { id: 'training', label: 'Training', required: false, disabled: false },
       { id: 'references', label: 'References', required: false, disabled: false },
-      { id: 'creator-dna', label: 'Creator DNA', required: true, disabled: false }
+      { id: 'talent-rights', label: 'Talent Rights', required: true, disabled: false }
     ]
 
     switch (creationMethod) {
       case 'human-made':
         return baseConfig.map(tab => ({
           ...tab,
-          required: tab.id === 'assets' || tab.id === 'creator-dna',
+          required: tab.id === 'assets' || tab.id === 'talent-rights',
           tooltip: tab.id === 'prompts' || tab.id === 'training' 
             ? 'Not typically used for human-made content' 
             : undefined
@@ -179,7 +179,7 @@ export function MediaManager({
       case 'ai-generated':
         return baseConfig.map(tab => ({
           ...tab,
-          required: tab.id === 'prompts' || tab.id === 'training' || tab.id === 'creator-dna',
+          required: tab.id === 'prompts' || tab.id === 'training' || tab.id === 'talent-rights',
           tooltip: tab.id === 'assets' 
             ? 'Not typically used for AI-generated content' 
             : undefined
@@ -188,7 +188,7 @@ export function MediaManager({
       case 'ai-enhanced':
         return baseConfig.map(tab => ({
           ...tab,
-          required: tab.id === 'assets' || tab.id === 'prompts' || tab.id === 'creator-dna',
+          required: tab.id === 'assets' || tab.id === 'prompts' || tab.id === 'talent-rights',
           tooltip: tab.id === 'training' 
             ? 'Not typically used for AI-enhanced content' 
             : undefined
@@ -212,7 +212,7 @@ export function MediaManager({
         return trainingData.length > 0
       case 'references':
         return references.length > 0
-      case 'creator-dna':
+      case 'talent-rights':
         return assignedCreators.length > 0
       default:
         return false
@@ -230,10 +230,10 @@ export function MediaManager({
       return
     }
 
-    // Validate Creator DNA (always required)
+    // Validate Talent Rights (always required)
     if (assignedCreators.length === 0) {
       toast.error('Please assign at least one creator/persona')
-      setActiveTab('creator-dna')
+      setActiveTab('talent-rights')
       return
     }
 
@@ -542,7 +542,11 @@ export function MediaManager({
   return (
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white dark:bg-[#0d0e14] border border-gray-200 dark:border-gray-800 p-0 w-full max-w-6xl max-h-[90vh] rounded-xl" showCloseButton={false}>
+      <DialogContent 
+        className="!bg-white dark:!bg-[#0d0e14] !border-gray-200 dark:!border-gray-800 !p-0 !gap-0 !w-full !max-w-5xl !max-h-[90vh] !rounded-xl !shadow-xl"
+        showCloseButton={false}
+        style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' } as React.CSSProperties}
+      >
         <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
@@ -557,11 +561,10 @@ export function MediaManager({
             </button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex items-center gap-1 px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 overflow-x-auto">
+          {/* Tab Navigation - Linear Style */}
+          <div className="flex items-center gap-6 px-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 overflow-x-auto">
             {tabs.map(tab => {
               const isActive = activeTab === tab.id
-              const isRequired = tab.required
               const hasTabContent = hasContent(tab.id)
               
               return (
@@ -569,11 +572,10 @@ export function MediaManager({
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "relative px-4 py-2 text-sm font-medium rounded-lg transition whitespace-nowrap",
+                    "relative py-3 text-sm font-medium transition whitespace-nowrap border-b-2 -mb-[1px]",
                     isActive 
-                      ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white" 
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50",
-                    isRequired && "font-semibold",
+                      ? "border-blue-500 text-gray-900 dark:text-white" 
+                      : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600",
                     tab.disabled && "opacity-50 cursor-not-allowed"
                   )}
                   disabled={tab.disabled}
@@ -582,7 +584,9 @@ export function MediaManager({
                   <span className="flex items-center gap-2">
                     {tab.label}
                     {hasTabContent && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                        <Check className="w-2.5 h-2.5" />
+                      </span>
                     )}
                   </span>
                 </button>
@@ -598,13 +602,13 @@ export function MediaManager({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowAssetLibrary(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                   >
                     <Link2 className="w-4 h-4" />
-                    Link from Asset Library
+                    Link from Library
                   </button>
                   
-                  <label className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition">
+                  <label className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-all">
                     <Upload className="w-4 h-4" />
                     Upload New
                     <input
@@ -638,10 +642,15 @@ export function MediaManager({
 
                 {/* Linked Assets Display */}
                 {linkedAssets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <ImageIcon className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      No assets linked. Link from library or upload new files.
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                      <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      No assets linked yet
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Link from your library or upload new files
                     </p>
                   </div>
                 ) : (
@@ -649,7 +658,7 @@ export function MediaManager({
                     {linkedAssets.map(asset => (
                       <div
                         key={asset.id}
-                        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all"
                       >
                         {/* Thumbnail */}
                         {asset.thumbnail ? (
@@ -774,10 +783,10 @@ export function MediaManager({
                 {/* Single Button */}
                 <button
                   onClick={() => setShowTrainingPicker(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                 >
                   <Link2 className="w-4 h-4" />
-                  Link Training Datasets from Asset Library
+                  Link from Asset Library
                 </button>
 
                 {/* Helper Text */}
@@ -787,18 +796,23 @@ export function MediaManager({
 
                 {/* Linked Training Data */}
                 {trainingData.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Folder className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      No training data linked. Link cleared datasets from your Asset Library.
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                      <Folder className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      No training data linked yet
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Link cleared datasets from your Asset Library
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {trainingData.map(dataset => (
                       <div
                         key={dataset.id}
-                        className="relative p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        className="relative p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all"
                       >
                         <button
                           onClick={() => handleRemoveTrainingData(dataset.id)}
@@ -830,15 +844,15 @@ export function MediaManager({
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => setShowReferenceLibraryPicker(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                   >
                     <Link2 className="w-4 h-4" />
-                    Link from Asset Library
+                    Link from Library
                   </button>
                   
-                  <label className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition">
+                  <label className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all">
                     <Upload className="w-4 h-4" />
-                    Upload Reference Files
+                    Upload Files
                     <input
                       type="file"
                       multiple
@@ -850,10 +864,10 @@ export function MediaManager({
 
                   <button
                     onClick={() => setShowUrlInput(!showUrlInput)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                   >
                     <Plus className="w-4 h-4" />
-                    Add URL Reference
+                    Add URL
                   </button>
                 </div>
 
@@ -898,18 +912,23 @@ export function MediaManager({
 
                 {/* References List */}
                 {references.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Star className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Add reference materials, inspiration images, or style guides.
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                      <Star className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      No references added yet
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Add inspiration, style guides, or reference materials
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {references.map((ref, index) => (
                       <div
                         key={ref.id}
-                        className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2"
+                        className="p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all space-y-2"
                       >
                         <div className="flex items-start gap-3">
                           {/* Reorder Buttons */}
@@ -1010,38 +1029,38 @@ export function MediaManager({
               </div>
             )}
 
-            {activeTab === 'creator-dna' && (
+            {activeTab === 'talent-rights' && (
               <div className="space-y-4">
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowPersonaPicker(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Creator/Persona
+                    <User className="w-4 h-4" />
+                    Add from Library
                   </button>
 
                   <button
                     onClick={() => setShowCreatePersona(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
                   >
                     <Plus className="w-4 h-4" />
-                    Create New Persona
+                    Create New
                   </button>
                 </div>
 
                 {/* Authorization Warning */}
                 {hasAuthWarnings && (
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                          Creator Authorization Warning
+                          Authorization Warning
                         </p>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                          One or more creators have expired or expiring authorizations. Please review before proceeding.
+                        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-0.5">
+                          One or more creators have expired or expiring authorizations.
                         </p>
                       </div>
                     </div>
@@ -1050,18 +1069,23 @@ export function MediaManager({
 
                 {/* Assigned Creators */}
                 {assignedCreators.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Users className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      No creators assigned. Add from library or create a new persona.
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                      <Users className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      No talent assigned yet
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Add talent from your library or create a new profile
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {assignedCreators.map(assignedCreator => (
                       <div
                         key={assignedCreator.persona.id}
-                        className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-3"
+                        className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all space-y-3"
                       >
                         <div className="flex items-start gap-3">
                           {/* Avatar */}
@@ -1175,16 +1199,16 @@ export function MediaManager({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0 bg-gray-50 dark:bg-gray-900/50">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
+              className="px-6 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow"
             >
               Save & Close
             </button>
@@ -1234,18 +1258,22 @@ export function MediaManager({
 
     {/* Create Persona Modal */}
     <Dialog open={showCreatePersona} onOpenChange={setShowCreatePersona}>
-      <DialogContent className="bg-white dark:bg-[#0d0e14] border border-gray-200 dark:border-gray-800 p-0 w-full max-w-lg rounded-xl">
+      <DialogContent 
+        className="!bg-white dark:!bg-[#0d0e14] !border-gray-200 dark:!border-gray-800 !p-0 !gap-0 !w-full !max-w-lg !rounded-xl !shadow-xl"
+        showCloseButton={false}
+        style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' } as React.CSSProperties}
+      >
         <div className="flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Create New Persona
             </h3>
             <button
               onClick={() => setShowCreatePersona(false)}
               className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
             >
-              <X className="w-4 h-4 text-gray-400" />
+              <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
@@ -1260,7 +1288,7 @@ export function MediaManager({
                 value={newPersonaName}
                 onChange={(e) => setNewPersonaName(e.target.value)}
                 placeholder="Creator name"
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
             </div>
 
@@ -1268,9 +1296,11 @@ export function MediaManager({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Authorization Document (Optional)
               </label>
-              <label className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition">
-                <Upload className="w-4 h-4" />
-                {newPersonaAuthDoc ? newPersonaAuthDoc.name : 'Choose file...'}
+              <label className="flex items-center gap-2 px-4 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all">
+                <Upload className="w-4 h-4 text-gray-500" />
+                <span className="flex-1 truncate text-gray-700 dark:text-gray-300">
+                  {newPersonaAuthDoc ? newPersonaAuthDoc.name : 'Choose file...'}
+                </span>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -1280,23 +1310,25 @@ export function MediaManager({
               </label>
             </div>
 
-            <p className="text-xs text-gray-500">
-              A NILP ID will be automatically generated upon creation.
-            </p>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                A NILP ID will be automatically generated upon creation.
+              </p>
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
             <button
               onClick={() => setShowCreatePersona(false)}
-              className="px-4 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleCreatePersona}
               disabled={!newPersonaName.trim()}
-              className="px-6 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Create & Assign
             </button>

@@ -18,6 +18,14 @@ export const mockCompanies: Company[] = [
     status: 'active',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: '2024-12-01T00:00:00Z',
+    copyrightCheckCredits: {
+      monthlyQuota: 100,
+      quotaUsed: 55,
+      quotaRemaining: 45,
+      additionalCredits: 20,
+      resetDate: new Date('2026-02-01T00:00:00Z'),
+      pricePerCheck: 0.50,
+    },
   },
   {
     id: 'company-2',
@@ -28,6 +36,14 @@ export const mockCompanies: Company[] = [
     status: 'active',
     created_at: '2024-03-10T00:00:00Z',
     updated_at: '2024-12-05T00:00:00Z',
+    copyrightCheckCredits: {
+      monthlyQuota: 50,
+      quotaUsed: 12,
+      quotaRemaining: 38,
+      additionalCredits: 0,
+      resetDate: new Date('2026-02-01T00:00:00Z'),
+      pricePerCheck: 0.50,
+    },
   },
 ]
 
@@ -254,7 +270,21 @@ export const mockTasks: Task[] = [
     isBillable: true,
     aiWorkflowStep: 2, // On "Select AI Tool" step
     completedSteps: [1], // Step 1 complete
-    mediaData: getSampleMediaData('ai-generated'),
+    mediaData: {
+      ...getSampleMediaData('ai-generated'),
+      assets: [
+        {
+          id: 'asset-4',
+          filename: 'Logo - Primary.svg',
+          fileType: 'image/svg+xml',
+          fileSize: 45000,
+          thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
+          clearanceStatus: 'cleared' as const,
+          source: 'ai-generated' as const,
+          uploadedAt: new Date('2025-12-02')
+        }
+      ]
+    },
   },
   {
     id: 'task-2',
@@ -288,7 +318,21 @@ export const mockTasks: Task[] = [
     aiTool: 'ChatGPT',
     aiTrackingLevel: 'full',
     completedSteps: [1, 2], // Steps 1 & 2 complete
-    mediaData: getSampleMediaData('ai-enhanced'),
+    mediaData: {
+      ...getSampleMediaData('ai-enhanced'),
+      assets: [
+        {
+          id: 'asset-4',
+          filename: 'Logo - Primary.svg',
+          fileType: 'image/svg+xml',
+          fileSize: 45000,
+          thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
+          clearanceStatus: 'cleared' as const,
+          source: 'ai-generated' as const,
+          uploadedAt: new Date('2025-12-02')
+        }
+      ]
+    },
   },
   {
     id: 'task-10',

@@ -22,7 +22,8 @@ import {
   Clock,
   FileText,
   Video,
-  File
+  File,
+  Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { VersionStatusBadge } from '@/components/assets'
@@ -30,6 +31,9 @@ import { formatFileSize } from '@/lib/format-utils'
 import Link from 'next/link'
 import type { AssetVersionGroup } from '@/types/creative'
 import type { AssignedCreator, LinkedAsset, ReferenceItem } from '@/types/mediaManager'
+import { CopyrightCheckReview } from '@/components/creative/copyright-check-review'
+import { mockAssets } from '@/lib/mock-data/creative'
+import { toast } from 'sonner'
 
 // =============================================================================
 // 1. DELIVERABLE VERSIONS CARD
@@ -43,6 +47,63 @@ interface DeliverableVersionsCardProps {
 
 export function DeliverableVersionsCard({ taskId, versionGroups, onUpload }: DeliverableVersionsCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [reviewAsset, setReviewAsset] = useState<any | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  // Get asset approval status
+  const getAssetApprovalStatus = (versionGroupId: string) => {
+    const asset = mockAssets.find(a => a.id === versionGroupId)
+    return {
+      approvalStatus: asset?.approvalStatus,
+      copyrightCheckData: asset?.copyrightCheckData,
+      approvedBy: asset?.approvedBy,
+      approvedAt: asset?.approvedAt,
+      rejectionReason: asset?.rejectionReason
+    }
+  }
+
+  // Handle approve
+  const handleApprove = async (versionGroupId: string, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    setIsProcessing(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500))
+      toast.success('Asset approved')
+      // In real implementation, update asset status via API
+    } catch (error) {
+      toast.error('Failed to approve asset')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Handle reject
+  const handleReject = async (versionGroupId: string, reason: string) => {
+    setIsProcessing(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500))
+      toast.success('Asset rejected')
+      setReviewAsset(null)
+      // In real implementation, update asset status via API
+    } catch (error) {
+      toast.error('Failed to reject asset')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Handle review click
+  const handleReview = (versionGroupId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const asset = mockAssets.find(a => a.id === versionGroupId)
+    if (asset) {
+      setReviewAsset(asset)
+    }
+  }
   
   if (versionGroups.length === 0) {
     return (
@@ -95,37 +156,143 @@ export function DeliverableVersionsCard({ taskId, versionGroups, onUpload }: Del
       <CardContent className="space-y-3">
         {displayGroups.map((group) => {
           const latestVersion = group.versions[group.versions.length - 1]
+          const approvalInfo = getAssetApprovalStatus(group.id)
+          const isPending = approvalInfo.approvalStatus === 'pending'
+          const isApproved = approvalInfo.approvalStatus === 'approved'
+          const isRejected = approvalInfo.approvalStatus === 'rejected'
           
           return (
-            <Link 
+            <div 
               key={group.id}
-              href={`/creative/assets/${group.id}`}
-              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors"
+              className="flex flex-col gap-2 p-3 rounded-lg border hover:bg-accent transition-colors"
             >
-              {latestVersion.thumbnailUrl && (
-                <img
-                  src={latestVersion.thumbnailUrl}
-                  alt={group.name}
-                  className="w-16 h-16 object-cover rounded"
-                />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-medium truncate">{group.name}</p>
-                  <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0.5">
-                    v{group.currentVersionNumber}
-                  </Badge>
-                  <VersionStatusBadge 
-                    status={latestVersion.status}
-                    className="text-[10px] px-1.5 py-0"
+              <div className="flex items-start gap-3">
+                {latestVersion.thumbnailUrl && (
+                  <img
+                    src={latestVersion.thumbnailUrl}
+                    alt={group.name}
+                    className="w-16 h-16 object-cover rounded"
                   />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Link 
+                      href={`/creative/assets/${group.id}`}
+                      className="text-sm font-medium truncate hover:text-blue-600"
+                    >
+                      {group.name}
+                    </Link>
+                    <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0.5">
+                      v{group.currentVersionNumber}
+                    </Badge>
+                    <VersionStatusBadge 
+                      status={latestVersion.status}
+                      className="text-[10px] px-1.5 py-0"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {group.totalVersions} {group.totalVersions === 1 ? 'version' : 'versions'} • {latestVersion.uploadedByName}
+                  </p>
+
+                  {/* Approval Status Indicators */}
+                  {isPending && approvalInfo.copyrightCheckData && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">Pending Approval</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Similarity: {approvalInfo.copyrightCheckData.similarityScore}%
+                      </span>
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-[10px] px-1.5 py-0",
+                          approvalInfo.copyrightCheckData.riskBreakdown.riskLevel === 'high' && "border-red-500 text-red-600",
+                          approvalInfo.copyrightCheckData.riskBreakdown.riskLevel === 'medium' && "border-amber-500 text-amber-600",
+                          approvalInfo.copyrightCheckData.riskBreakdown.riskLevel === 'low' && "border-green-500 text-green-600"
+                        )}
+                      >
+                        {approvalInfo.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()} RISK
+                      </Badge>
+                    </div>
+                  )}
+
+                  {isApproved && (
+                    <div className="flex items-center gap-1.5 mt-2 text-green-600 dark:text-green-400">
+                      <Check className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">Approved</span>
+                      {approvalInfo.approvedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          • {new Date(approvalInfo.approvedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {isRejected && (
+                    <div className="flex flex-col gap-1 mt-2">
+                      <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">Rejected</span>
+                      </div>
+                      {approvalInfo.rejectionReason && (
+                        <p className="text-xs text-muted-foreground">
+                          {approvalInfo.rejectionReason}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {group.totalVersions} {group.totalVersions === 1 ? 'version' : 'versions'} • {latestVersion.uploadedByName}
-                </p>
+                
+                <Link 
+                  href={`/creative/assets/${group.id}`}
+                  className="text-muted-foreground hover:text-foreground shrink-0"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Link>
               </div>
-              <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
-            </Link>
+
+              {/* Approval Actions for Pending Assets */}
+              {isPending && approvalInfo.copyrightCheckData && (
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs border-amber-500 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    onClick={(e) => handleReview(group.id, e)}
+                    disabled={isProcessing}
+                  >
+                    <Eye className="w-3 h-3 mr-1" />
+                    Review Details
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
+                    onClick={(e) => handleApprove(group.id, e)}
+                    disabled={isProcessing}
+                  >
+                    <Check className="w-3 h-3 mr-1" />
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const asset = mockAssets.find(a => a.id === group.id)
+                      if (asset) setReviewAsset(asset)
+                    }}
+                    disabled={isProcessing}
+                    title="Reject"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           )
         })}
         
@@ -150,6 +317,17 @@ export function DeliverableVersionsCard({ taskId, versionGroups, onUpload }: Del
           </Button>
         )}
       </CardContent>
+
+      {/* Copyright Check Review Modal */}
+      {reviewAsset && (
+        <CopyrightCheckReview
+          isOpen={!!reviewAsset}
+          onClose={() => setReviewAsset(null)}
+          asset={reviewAsset}
+          onApprove={() => handleApprove(reviewAsset.id)}
+          onReject={handleReject}
+        />
+      )}
     </Card>
   )
 }

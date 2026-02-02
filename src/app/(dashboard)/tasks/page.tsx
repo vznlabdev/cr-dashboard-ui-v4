@@ -842,8 +842,9 @@ export default function UnifiedTasksPage() {
         if (!open) closeTaskModal()
       }}>
         <DialogContent 
-          className="bg-white dark:bg-[#0d0e14] transition-all duration-300 border border-gray-200 dark:border-gray-800 p-0 w-full max-w-5xl max-h-[70vh] rounded-xl"
+          className="!bg-white dark:!bg-[#0d0e14] !border-gray-200 dark:!border-gray-800 !p-0 !gap-0 !w-full !max-w-5xl !max-h-[90vh] !rounded-xl !shadow-xl [&]:!backdrop-blur-none [&]:!bg-opacity-100"
           showCloseButton={false}
+          style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' } as React.CSSProperties}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
@@ -851,7 +852,7 @@ export default function UnifiedTasksPage() {
             }
           }}
         >
-          <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
+          <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
             {/* Header - Fixed - Linear Style */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 bg-white dark:bg-[#0d0e14]">
               {/* Breadcrumb Navigation - Single Line, Minimal */}
@@ -926,19 +927,67 @@ export default function UnifiedTasksPage() {
                 
                 <span className="text-gray-300 dark:text-gray-600">›</span>
                 
-                {/* Project - Clickable - NO DEFAULT PROJECT */}
-                <button
-                  type="button"
-                  onClick={() => setShowProjectPicker(true)}
-                  className={cn(
-                    "text-sm font-normal transition-colors",
-                    !taskFormData.selectedProjectId 
-                      ? "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" 
-                      : "text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
+                {/* Project - Clickable */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowProjectPicker(!showProjectPicker)}
+                    className="text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project"}
+                  </button>
+                  
+                  {/* Project Picker Dropdown */}
+                  {showProjectPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowProjectPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-[400px] overflow-y-auto">
+                        <div className="p-1">
+                          {/* Clear Option */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, selectedProjectId: '' })
+                              setShowProjectPicker(false)
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">No Project</span>
+                          </button>
+                          
+                          {/* Project Options */}
+                          {projects.map(project => (
+                            <button
+                              key={project.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.selectedProjectId === project.id 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, selectedProjectId: project.id })
+                                setShowProjectPicker(false)
+                              }}
+                            >
+                              <div 
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
+                              />
+                              <span className="text-xs font-medium">{project.name}</span>
+                              {taskFormData.selectedProjectId === project.id && <Check className="w-3 h-3 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   )}
-                >
-                  {taskFormData.selectedProjectId ? getProjectById(taskFormData.selectedProjectId)?.name : "Select Project (Optional)"}
-                </button>
+                </div>
               </div>
               
               {/* Close Button - Minimal */}
@@ -1582,61 +1631,6 @@ export default function UnifiedTasksPage() {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* Project Picker Modal */}
-      {showProjectPicker && (
-        <>
-          <div 
-            className="fixed inset-0 z-50 bg-black/50" 
-            onClick={() => setShowProjectPicker(false)}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full max-h-[60vh] overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-semibold">Select Project</h3>
-              </div>
-              <div className="p-2 overflow-y-auto flex-1">
-                {/* None Option */}
-                <button
-                  type="button"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
-                  onClick={() => {
-                    setTaskFormData({ ...taskFormData, selectedProjectId: '' })
-                    setShowProjectPicker(false)
-                  }}
-                >
-                  <Minus className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-600 dark:text-gray-400">No Project</span>
-                </button>
-                
-                {projects.map(project => (
-                  <button
-                    key={project.id}
-                    type="button"
-                    className={cn(
-                      "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
-                      taskFormData.selectedProjectId === project.id 
-                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
-                        : "text-gray-900 dark:text-white"
-                    )}
-                    onClick={() => {
-                      setTaskFormData({ ...taskFormData, selectedProjectId: project.id })
-                      setShowProjectPicker(false)
-                    }}
-                  >
-                    <div 
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: project.companyId === '1' ? '#3b82f6' : project.companyId === '2' ? '#8b5cf6' : '#10b981' }}
-                    />
-                    <span className="text-xs font-medium">{project.name}</span>
-                    {taskFormData.selectedProjectId === project.id && <Check className="w-3 h-3 ml-auto" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
       
       {/* Media Manager Modal */}
       <MediaManager
