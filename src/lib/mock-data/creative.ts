@@ -1489,7 +1489,7 @@ export const mockAssets: Asset[] = [
               recommendation: "Add descriptive alt text for all visual data representations",
             },
           ],
-          wcagLevel: "Fail",
+          wcagLevel: "none",
           colorContrast: {
             passed: false,
             ratio: 2.8,
