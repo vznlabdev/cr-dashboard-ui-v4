@@ -75,7 +75,7 @@ export interface AssetVersion {
   name: string
   description?: string
   fileUrl: string
-  thumbnailUrl?: string
+  thumbnailUrl: string
   fileType: AssetFileType
   contentType: AssetContentType  // "ai_generated" or "original"
   fileSize: number
