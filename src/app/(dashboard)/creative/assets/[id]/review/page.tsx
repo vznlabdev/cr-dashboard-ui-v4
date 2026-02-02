@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { mockAssets } from '@/lib/mock-data/creative'
+import { mockAssets, getVersionGroupById } from '@/lib/mock-data/creative'
 import { useAssetChecks } from '@/hooks/useAssetChecks'
 import { QuickStatsGrid } from '@/components/creative/review/QuickStatsGrid'
 import { CopyrightCheckPanel } from '@/components/creative/review/CopyrightCheckPanel'
@@ -43,8 +43,11 @@ export default function AssetReviewPage() {
   const router = useRouter()
   const assetId = params.id as string
   
-  // Find asset
-  const asset = mockAssets.find(a => a.id === assetId)
+  // Find asset - check both version groups and regular assets
+  const versionGroup = getVersionGroupById(assetId)
+  const asset = versionGroup 
+    ? versionGroup.versions[versionGroup.versions.length - 1]  // Latest version
+    : mockAssets.find(a => a.id === assetId)
   
   const [activeTab, setActiveTab] = useState<'all' | CheckType>('all')
   const [showExportDialog, setShowExportDialog] = useState(false)

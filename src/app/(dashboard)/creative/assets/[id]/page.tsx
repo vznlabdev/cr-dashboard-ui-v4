@@ -241,7 +241,7 @@ export default function AssetDetailPage() {
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>
-                <Link href={`/creative/assets/${asset.id}/review`}>
+                <Link href={`/creative/assets/${assetId}/review`}>
                   <FileBarChart className="mr-2 h-4 w-4" />
                   Full Review
                 </Link>
