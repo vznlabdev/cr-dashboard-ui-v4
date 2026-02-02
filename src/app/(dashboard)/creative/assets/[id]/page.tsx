@@ -23,7 +23,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ChevronLeft,
   MoreHorizontal,
   Trash2,
   Plus,
@@ -60,6 +59,45 @@ export default function AssetDetailPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "versions">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
+  
+  // Copyright check handlers
+  const handleRunCheck = async () => {
+    if (!canRunCheck()) {
+      toast.error("No copyright check credits available")
+      return
+    }
+    setIsRunningCheck(true)
+    try {
+      await useCredit()
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      toast.success("Copyright check completed")
+    } catch (error) {
+      toast.error("Failed to run copyright check")
+    } finally {
+      setIsRunningCheck(false)
+    }
+  }
+
+  const handleRerunCheck = async () => {
+    if (!canRunCheck()) {
+      toast.error("No copyright check credits available")
+      return
+    }
+    setIsRunningCheck(true)
+    try {
+      await useCredit()
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      toast.success("Copyright check re-run completed")
+    } catch (error) {
+      toast.error("Failed to re-run copyright check")
+    } finally {
+      setIsRunningCheck(false)
+    }
+  }
+
+  const handleDelete = () => {
+    toast.success("Delete feature coming soon!")
+  }
   
   // Fallback to regular asset if not a version group
   const asset = versionGroup 
@@ -113,9 +151,9 @@ export default function AssetDetailPage() {
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Header Section */}
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
             <Link href="/creative/assets" className="hover:text-foreground transition-colors">
               Assets
             </Link>
@@ -124,30 +162,31 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Title */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-semibold">{asset.name}</h1>
             {versionGroup && (
-              <Badge variant="outline" className="font-mono">
+              <Badge variant="outline" className="font-mono text-xs px-1.5 py-0">
                 v{(asset as AssetVersion).versionNumber}
               </Badge>
             )}
             {isAIGenerated && (
-              <div className="bg-yellow-400 rounded p-1">
-                <Sparkles className="h-4 w-4 text-black" />
-              </div>
+              <Badge variant="secondary" className="gap-1 px-1.5 py-0.5">
+                <Sparkles className="h-3 w-3" />
+                <span className="text-[10px]">AI</span>
+              </Badge>
             )}
           </div>
 
           {/* Inline Stats */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             {displayBrandId && (
               <Link 
                 href={`/creative/brands/${displayBrandId}`}
-                className="hover:text-foreground transition-colors flex items-center gap-1.5"
+                className="hover:text-foreground transition-colors flex items-center gap-1"
               >
                 {displayBrandColor && (
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: displayBrandColor }}
                   />
                 )}
@@ -179,99 +218,52 @@ export default function AssetDetailPage() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {versionGroup && (
-            <Button variant="outline" size="sm" onClick={() => setSubmitDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Version
-            </Button>
-          )}
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/creative/assets/${asset.id}/review`}>
-              <FileBarChart className="mr-2 h-4 w-4" />
-              Full Review
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/creative/assets">
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <Button size="sm" asChild>
+          {/* Primary action */}
+          <Button size="sm" className="h-8" asChild>
             <a href={asset.fileUrl} download>
               <Download className="mr-2 h-4 w-4" />
               Download
             </a>
           </Button>
-          {/* Run Copyright Check Button */}
-          {!asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending" ? (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={async () => {
-                if (!canRunCheck()) {
-                  toast.error("No copyright check credits available")
-                  return
-                }
-                setIsRunningCheck(true)
-                try {
-                  await useCredit()
-                  // Simulate copyright check
-                  await new Promise(resolve => setTimeout(resolve, 2000))
-                  toast.success("Copyright check completed")
-                } catch (error) {
-                  toast.error("Failed to run copyright check")
-                } finally {
-                  setIsRunningCheck(false)
-                }
-              }}
-              disabled={isRunningCheck}
-            >
-              <Shield className="mr-2 h-4 w-4" />
-              {isRunningCheck ? "Checking..." : `Run Check (1 credit)`}
-            </Button>
-          ) : null}
+
+          {/* Secondary actions in dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="h-8 px-3">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {versionGroup && (
+                <DropdownMenuItem onClick={() => setSubmitDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Version
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild>
+                <Link href={`/creative/assets/${asset.id}/review`}>
+                  <FileBarChart className="mr-2 h-4 w-4" />
+                  Full Review
+                </Link>
+              </DropdownMenuItem>
+              {(!asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending") && (
+                <DropdownMenuItem onClick={handleRunCheck} disabled={isRunningCheck}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
+                </DropdownMenuItem>
+              )}
+              {asset.copyrightCheckStatus === "completed" && (
+                <DropdownMenuItem onClick={handleRerunCheck} disabled={isRunningCheck}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Re-run Check (1 credit)
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => toast.success("Edit feature coming soon!")}>
                 Edit Details
               </DropdownMenuItem>
-              {asset.copyrightCheckStatus === "completed" && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={async () => {
-                      if (!canRunCheck()) {
-                        toast.error("No copyright check credits available")
-                        return
-                      }
-                      setIsRunningCheck(true)
-                      try {
-                        await useCredit()
-                        await new Promise(resolve => setTimeout(resolve, 2000))
-                        toast.success("Copyright check re-run completed")
-                      } catch (error) {
-                        toast.error("Failed to re-run copyright check")
-                      } finally {
-                        setIsRunningCheck(false)
-                      }
-                    }}
-                  >
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    Re-run Check (1 credit)
-                  </DropdownMenuItem>
-                </>
-              )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => toast.success("Delete feature coming soon!")}
-              >
+              <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Asset
               </DropdownMenuItem>
@@ -282,19 +274,19 @@ export default function AssetDetailPage() {
 
       {/* Tabs for Version Groups */}
       {versionGroup ? (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "versions")} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "versions")} className="space-y-4">
           {/* Tab Navigation - Linear Style */}
           <div className="border-b border-border">
             <TabsList className="h-auto bg-transparent p-0 gap-2">
               <TabsTrigger 
                 value="overview"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-3 pb-2"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger 
                 value="versions"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-3 pb-2"
               >
                 Versions ({versionGroup.totalVersions})
               </TabsTrigger>
@@ -302,14 +294,14 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid lg:grid-cols-3 gap-6">
+          <TabsContent value="overview" className="mt-4">
+            <div className="grid lg:grid-cols-3 gap-4">
               {/* Left Column - Preview & Content */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4">
                 {/* Preview Image */}
                 <Card>
             <CardContent className="p-0">
-              <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+              <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
                 {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
                   <Image
                     src={asset.thumbnailUrl}
@@ -332,10 +324,8 @@ export default function AssetDetailPage() {
           {/* Description */}
           {asset.description && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Description</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Description</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {asset.description}
                 </p>
@@ -346,13 +336,11 @@ export default function AssetDetailPage() {
           {/* Tags */}
           {asset && 'tags' in asset && asset.tags && asset.tags.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Tags</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
                   {asset.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
+                    <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
                       <Tag className="h-3 w-3 mr-1" />
                       {tag}
                     </Badge>
@@ -369,129 +357,106 @@ export default function AssetDetailPage() {
               </div>
 
               {/* Right Column - Metadata Sidebar */}
-              <div className="space-y-4">
-          {/* Brand Card */}
+              <div className="space-y-3">
+          {/* Metadata Card - Consolidated */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Palette className="h-4 w-4 text-muted-foreground" />
-                Brand
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4 space-y-3 text-sm">
+              {/* Brand */}
               {displayBrandId && (
-                <Link
-                  href={`/creative/brands/${displayBrandId}`}
-                  className="flex items-center gap-2 hover:underline"
-                >
-                  {displayBrandColor && (
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: displayBrandColor }}
-                    />
-                  )}
-                  <span className="text-sm font-medium">{displayBrandName}</span>
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Task Card (if applicable) */}
-          {asset.ticketId && asset.ticketTitle && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ListTodo className="h-4 w-4 text-muted-foreground" />
-                  From Task
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Link
-                  href={`/tasks`}
-                  className="text-sm font-medium hover:underline"
-                >
-                  {asset.ticketTitle}
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Details Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {designTypeConfig && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Design Type</p>
-                  <p className="text-sm font-medium">{designTypeConfig.label}</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Brand</p>
+                  <Link
+                    href={`/creative/brands/${displayBrandId}`}
+                    className="flex items-center gap-1.5 hover:underline"
+                  >
+                    {displayBrandColor && (
+                      <div
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: displayBrandColor }}
+                      />
+                    )}
+                    <span className="font-medium">{displayBrandName}</span>
+                  </Link>
                 </div>
               )}
 
-              {isAIGenerated && contentTypeConfig && (
+              {/* Task */}
+              {asset.ticketId && asset.ticketTitle && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Content Type</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="bg-yellow-400 rounded p-1">
-                      <Sparkles className="h-3 w-3 text-black" />
-                    </div>
-                    <p className="text-sm font-medium">{contentTypeConfig.label}</p>
-                  </div>
+                  <p className="text-xs text-muted-foreground mb-1.5">From Task</p>
+                  <Link href={`/tasks`} className="font-medium hover:underline">
+                    {asset.ticketTitle}
+                  </Link>
                 </div>
               )}
 
               <Separator />
 
-              <div>
-                <p className="text-xs text-muted-foreground">Uploaded By</p>
-                <p className="text-sm font-medium">{asset.uploadedByName}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-muted-foreground">Date</p>
-                <p className="text-sm font-medium">{formatDateLong(displayCreatedAt)}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* File Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">File Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">File Size</span>
-                <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Type</span>
-                <span className="font-medium">{asset.mimeType}</span>
-              </div>
-              {asset.dimensions && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Dimensions</span>
-                  <span className="font-medium">
-                    {asset.dimensions.width} × {asset.dimensions.height}
-                  </span>
+              {/* Design Type */}
+              {designTypeConfig && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Design Type</p>
+                  <p className="font-medium">{designTypeConfig.label}</p>
                 </div>
               )}
+
+              {/* Content Type - Remove duplicate AI badge, just show label */}
+              {contentTypeConfig && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Content Type</p>
+                  <p className="font-medium">{contentTypeConfig.label}</p>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Uploaded By */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">Uploaded By</p>
+                <p className="font-medium">{asset.uploadedByName}</p>
+              </div>
+
+              {/* Date */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">Date</p>
+                <p className="font-medium">{formatDateLong(displayCreatedAt)}</p>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Copyright Check Card */}
+          {/* File Information */}
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">File Information</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Size</span>
+                  <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium">{asset.mimeType}</span>
+                </div>
+                {asset.dimensions && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Dimensions</span>
+                    <span className="font-medium">
+                      {asset.dimensions.width} × {asset.dimensions.height}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Copyright Check */}
           {asset.copyrightCheckStatus && asset.copyrightCheckData && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  Copyright Check
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Similarity Score</span>
+              <CardContent className="pt-4 space-y-2.5">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Copyright Check</p>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Similarity</span>
                   <Badge
                     variant={
                       asset.copyrightCheckData.similarityScore < 30
@@ -507,8 +472,9 @@ export default function AssetDetailPage() {
                     {asset.copyrightCheckData.similarityScore}%
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Risk Level</span>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Risk Level</span>
                   <Badge
                     variant={
                       asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
@@ -521,20 +487,19 @@ export default function AssetDetailPage() {
                     {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
                   </Badge>
                 </div>
+                
                 {asset.copyrightCheckData.matchedSources.length > 0 && (
-                  <div>
-                    <span className="text-xs text-muted-foreground">
-                      {asset.copyrightCheckData.matchedSources.length} match
-                      {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
-                    </span>
+                  <div className="text-xs text-muted-foreground">
+                    {asset.copyrightCheckData.matchedSources.length} match
+                    {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
                   </div>
                 )}
 
                 {asset.approvalStatus && (
                   <>
                     <Separator />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Approval Status</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Approval</span>
                       <Badge
                         variant={
                           asset.approvalStatus === "approved"
@@ -570,22 +535,17 @@ export default function AssetDetailPage() {
             </Card>
           )}
 
-          {/* Credited Creators Card */}
+          {/* Credited Creators */}
           {creditedCreators.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Credited Creators
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-3">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                <div className="space-y-2">
                   {assetCreditsWithRoles.map(({ creator, role }) => (
-                    <div key={creator.id} className="flex flex-col items-center gap-1">
+                    <div key={creator.id} className="flex items-center justify-between">
                       <CreatorAvatarBadge creator={creator} size="sm" />
                       {role && (
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
                           {role}
                         </Badge>
                       )}
@@ -600,8 +560,8 @@ export default function AssetDetailPage() {
       </TabsContent>
 
       {/* Versions Tab Content */}
-      <TabsContent value="versions" className="mt-6">
-            <div className="space-y-6">
+      <TabsContent value="versions" className="mt-4">
+            <div className="space-y-4">
               {/* Full-width version history with inline comments */}
               {versionGroup.versions.sort((a, b) => b.versionNumber - a.versionNumber).map((version, index) => {
                 const isCurrent = version.id === selectedVersionId
@@ -704,14 +664,14 @@ export default function AssetDetailPage() {
           </TabsContent>
         </Tabs>
       ) : (
-        /* Regular Asset - Two Column Grid */
-        <div className="grid lg:grid-cols-3 gap-6">
+        /* Regular Asset - Two Column Grid */}
+        <div className="grid lg:grid-cols-3 gap-4">
           {/* Left Column - Preview & Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             {/* Preview Image */}
             <Card>
               <CardContent className="p-0">
-                <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
                   {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
                     <Image
                       src={asset.thumbnailUrl}
@@ -734,10 +694,8 @@ export default function AssetDetailPage() {
             {/* Description */}
             {asset.description && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Description</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Description</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {asset.description}
                   </p>
@@ -748,13 +706,11 @@ export default function AssetDetailPage() {
             {/* Tags */}
             {asset && 'tags' in asset && asset.tags && asset.tags.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Tags</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
+                <CardContent className="pt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Tags</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {asset.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
+                      <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
                         <Tag className="h-3 w-3 mr-1" />
                         {tag}
                       </Badge>
@@ -771,129 +727,106 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Right Column - Metadata Sidebar - Same as in tabs */}
-          <div className="space-y-4">
-            {/* Brand Card */}
+          <div className="space-y-3">
+            {/* Metadata Card - Consolidated */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-muted-foreground" />
-                  Brand
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4 space-y-3 text-sm">
+                {/* Brand */}
                 {displayBrandId && (
-                  <Link
-                    href={`/creative/brands/${displayBrandId}`}
-                    className="flex items-center gap-2 hover:underline"
-                  >
-                    {displayBrandColor && (
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: displayBrandColor }}
-                      />
-                    )}
-                    <span className="text-sm font-medium">{displayBrandName}</span>
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Task Card (if applicable) */}
-            {asset.ticketId && asset.ticketTitle && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ListTodo className="h-4 w-4 text-muted-foreground" />
-                    From Task
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Link
-                    href={`/tasks`}
-                    className="text-sm font-medium hover:underline"
-                  >
-                    {asset.ticketTitle}
-                  </Link>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Details Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {designTypeConfig && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Design Type</p>
-                    <p className="text-sm font-medium">{designTypeConfig.label}</p>
+                    <p className="text-xs text-muted-foreground mb-1.5">Brand</p>
+                    <Link
+                      href={`/creative/brands/${displayBrandId}`}
+                      className="flex items-center gap-1.5 hover:underline"
+                    >
+                      {displayBrandColor && (
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: displayBrandColor }}
+                        />
+                      )}
+                      <span className="font-medium">{displayBrandName}</span>
+                    </Link>
                   </div>
                 )}
 
-                {isAIGenerated && contentTypeConfig && (
+                {/* Task */}
+                {asset.ticketId && asset.ticketTitle && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Content Type</p>
-                    <div className="flex items-center gap-1.5">
-                      <div className="bg-yellow-400 rounded p-1">
-                        <Sparkles className="h-3 w-3 text-black" />
-                      </div>
-                      <p className="text-sm font-medium">{contentTypeConfig.label}</p>
-                    </div>
+                    <p className="text-xs text-muted-foreground mb-1.5">From Task</p>
+                    <Link href={`/tasks`} className="font-medium hover:underline">
+                      {asset.ticketTitle}
+                    </Link>
                   </div>
                 )}
 
                 <Separator />
 
-                <div>
-                  <p className="text-xs text-muted-foreground">Uploaded By</p>
-                  <p className="text-sm font-medium">{asset.uploadedByName}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">Date</p>
-                  <p className="text-sm font-medium">{formatDateLong(displayCreatedAt)}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* File Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">File Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">File Size</span>
-                  <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium">{asset.mimeType}</span>
-                </div>
-                {asset.dimensions && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Dimensions</span>
-                    <span className="font-medium">
-                      {asset.dimensions.width} × {asset.dimensions.height}
-                    </span>
+                {/* Design Type */}
+                {designTypeConfig && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Design Type</p>
+                    <p className="font-medium">{designTypeConfig.label}</p>
                   </div>
                 )}
+
+                {/* Content Type - Remove duplicate AI badge, just show label */}
+                {contentTypeConfig && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Content Type</p>
+                    <p className="font-medium">{contentTypeConfig.label}</p>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Uploaded By */}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Uploaded By</p>
+                  <p className="font-medium">{asset.uploadedByName}</p>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Date</p>
+                  <p className="font-medium">{formatDateLong(displayCreatedAt)}</p>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Copyright Check Card */}
+            {/* File Information */}
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">File Information</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Size</span>
+                    <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Type</span>
+                    <span className="font-medium">{asset.mimeType}</span>
+                  </div>
+                  {asset.dimensions && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Dimensions</span>
+                      <span className="font-medium">
+                        {asset.dimensions.width} × {asset.dimensions.height}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Copyright Check */}
             {asset.copyrightCheckStatus && asset.copyrightCheckData && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    Copyright Check
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Similarity Score</span>
+                <CardContent className="pt-4 space-y-2.5">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Copyright Check</p>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Similarity</span>
                     <Badge
                       variant={
                         asset.copyrightCheckData.similarityScore < 30
@@ -909,8 +842,9 @@ export default function AssetDetailPage() {
                       {asset.copyrightCheckData.similarityScore}%
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Risk Level</span>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Risk Level</span>
                     <Badge
                       variant={
                         asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
@@ -923,20 +857,19 @@ export default function AssetDetailPage() {
                       {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
                     </Badge>
                   </div>
+                  
                   {asset.copyrightCheckData.matchedSources.length > 0 && (
-                    <div>
-                      <span className="text-xs text-muted-foreground">
-                        {asset.copyrightCheckData.matchedSources.length} match
-                        {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
-                      </span>
+                    <div className="text-xs text-muted-foreground">
+                      {asset.copyrightCheckData.matchedSources.length} match
+                      {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
                     </div>
                   )}
 
                   {asset.approvalStatus && (
                     <>
                       <Separator />
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Approval Status</span>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Approval</span>
                         <Badge
                           variant={
                             asset.approvalStatus === "approved"
@@ -972,22 +905,17 @@ export default function AssetDetailPage() {
               </Card>
             )}
 
-            {/* Credited Creators Card */}
+            {/* Credited Creators */}
             {creditedCreators.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    Credited Creators
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-3">
+                <CardContent className="pt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                  <div className="space-y-2">
                     {assetCreditsWithRoles.map(({ creator, role }) => (
-                      <div key={creator.id} className="flex flex-col items-center gap-1">
+                      <div key={creator.id} className="flex items-center justify-between">
                         <CreatorAvatarBadge creator={creator} size="sm" />
                         {role && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">
                             {role}
                           </Badge>
                         )}

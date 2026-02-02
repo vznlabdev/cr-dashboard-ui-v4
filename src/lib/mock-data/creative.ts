@@ -1784,7 +1784,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-11-30"),
   },
   {
-    id: "asset-6",
+    id: "asset-21",
     name: "Product Catalog Spring 2025.pdf",
     description: "Complete product catalog for Spring 2025 collection",
     thumbnailUrl: "https://picsum.photos/seed/asset6/400/300",
@@ -1807,7 +1807,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-12-01"),
   },
   {
-    id: "asset-7",
+    id: "asset-22",
     name: "Promotional Flyer - Black Friday.pdf",
     description: "A4 promotional flyer for Black Friday sale",
     thumbnailUrl: "https://picsum.photos/seed/asset7/400/300",
@@ -1830,7 +1830,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-12-01"),
   },
   {
-    id: "asset-8",
+    id: "asset-23",
     name: "Demo Day Invitation.html",
     description: "Email invitation design for annual Demo Day event",
     thumbnailUrl: "https://picsum.photos/seed/asset8/400/300",
@@ -1853,7 +1853,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-11-25"),
   },
   {
-    id: "asset-9",
+    id: "asset-24",
     name: "Recipe Cards Collection.zip",
     description: "12 print-ready recipe cards featuring products",
     thumbnailUrl: "https://picsum.photos/seed/asset9/400/300",
@@ -1876,7 +1876,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-11-22"),
   },
   {
-    id: "asset-10",
+    id: "asset-25",
     name: "Sticker Pack Designs.ai",
     description: "8 die-cut sticker designs in Illustrator format",
     thumbnailUrl: "https://picsum.photos/seed/asset10/400/300",
@@ -1899,7 +1899,7 @@ export const mockAssets: Asset[] = [
     updatedAt: new Date("2025-11-20"),
   },
   {
-    id: "asset-11",
+    id: "asset-26",
     name: "Conference Keynote.pptx",
     description: "30-slide keynote presentation for industry conference",
     thumbnailUrl: "https://picsum.photos/seed/asset11/400/300",
