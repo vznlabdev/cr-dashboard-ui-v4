@@ -5,6 +5,8 @@
  * Import from here rather than duplicating type definitions.
  */
 
+import type { MediaManagerData } from './mediaManager'
+
 // ==============================================
 // Core Domain Types
 // ==============================================
@@ -101,6 +103,8 @@ export interface Task {
     feedback: string;  // Feedback from reviewer
     rejectedAt: string;  // ISO timestamp
   };
+  // Media Manager data - assets, Creator DNA, training data, references
+  mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
 }
 
 export interface Notification {

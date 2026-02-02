@@ -52,6 +52,128 @@ export interface Version {
   notes?: string
 }
 
+// =============================================================================
+// VERSION CONTROL TYPES
+// =============================================================================
+
+export type VersionStatus = 
+  | "draft"           // Being worked on
+  | "submitted"       // Submitted for review
+  | "client_review"   // Client is reviewing
+  | "client_approved" // Client approved, pending admin
+  | "admin_review"    // Admin is reviewing
+  | "approved"        // Final approval
+  | "rejected"        // Rejected, needs revision
+
+export interface AssetVersion {
+  id: string
+  versionNumber: number  // v1, v2, v3, etc.
+  parentAssetId: string  // Groups versions together
+  taskId?: string  // Link to task this version belongs to
+  
+  // File details
+  name: string
+  description?: string
+  fileUrl: string
+  thumbnailUrl?: string
+  fileType: AssetFileType
+  contentType: AssetContentType  // "ai_generated" or "original"
+  fileSize: number
+  mimeType: string
+  dimensions?: { width: number; height: number }
+  
+  // Version metadata
+  status: VersionStatus
+  uploadedAt: Date
+  uploadedById: string
+  uploadedByName: string
+  uploadedByRole: string  // UserRole
+  
+  // Review workflow
+  submittedAt?: Date
+  clientReviewedAt?: Date
+  clientReviewedBy?: string
+  adminApprovedAt?: Date
+  adminApprovedBy?: string
+  rejectedAt?: Date
+  rejectedBy?: string
+  rejectionReason?: string
+  
+  // Changes from previous version
+  changeNotes?: string  // What changed in this version
+  previousVersionId?: string  // Reference to previous version
+  
+  // Engagement
+  commentsCount: number
+  comments: VersionComment[]
+  
+  // AI generation details
+  promptHistory?: PromptHistory
+  aiModel?: string
+  
+  // Brand & design info (from parent group)
+  designType?: DesignType
+  tags?: string[]
+  ticketId?: string
+  ticketTitle?: string
+  
+  // Additional Asset-compatible fields
+  createdAt?: Date
+  updatedAt?: Date
+  copyrightCheckStatus?: "pending" | "in_progress" | "completed" | "failed"
+  copyrightCheckProgress?: number
+  copyrightCheckData?: any
+  approvalStatus?: "pending" | "approved" | "rejected"
+  approvedBy?: string
+  approvedAt?: Date
+}
+
+export interface VersionComment {
+  id: string
+  versionId: string
+  content: string
+  authorId: string
+  authorName: string
+  authorRole: string  // UserRole
+  authorAvatar?: string
+  createdAt: Date
+  updatedAt?: Date
+  
+  // For threaded comments
+  parentCommentId?: string
+  replies?: VersionComment[]
+  
+  // For specific feedback on areas of the asset
+  annotationX?: number  // X coordinate (percentage)
+  annotationY?: number  // Y coordinate (percentage)
+}
+
+export interface AssetVersionGroup {
+  id: string  // This is the parentAssetId
+  name: string
+  taskId?: string
+  projectId?: string
+  brandId: string
+  brandName: string
+  brandColor?: string
+  brandLogoUrl?: string
+  
+  // Current active version
+  currentVersionId: string
+  currentVersionNumber: number
+  latestVersionId: string
+  
+  // All versions
+  versions: AssetVersion[]
+  totalVersions: number
+  
+  // Metadata
+  createdAt: Date
+  updatedAt: Date
+  tags: string[]
+  designType: DesignType
+}
+
 export interface Comment {
   id: string
   content: string

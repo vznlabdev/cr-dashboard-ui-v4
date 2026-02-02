@@ -2,6 +2,7 @@
 // This will be replaced with API calls in production
 
 import type { Company, Project, TaskGroup, Task } from "@/types"
+import { getSampleMediaData } from "@/lib/mockData/initialStates"
 
 // =============================================================================
 // COMPANIES DATA
@@ -207,6 +208,7 @@ export const mockTasks: Task[] = [
     isBillable: true,
     aiWorkflowStep: 2, // On "Select AI Tool" step
     completedSteps: [1], // Step 1 complete
+    mediaData: getSampleMediaData('ai-generated'),
   },
   {
     id: 'task-2',
@@ -240,6 +242,7 @@ export const mockTasks: Task[] = [
     aiTool: 'ChatGPT',
     aiTrackingLevel: 'full',
     completedSteps: [1, 2], // Steps 1 & 2 complete
+    mediaData: getSampleMediaData('ai-enhanced'),
   },
   {
     id: 'task-10',
@@ -277,6 +280,7 @@ export const mockTasks: Task[] = [
     updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
     mode: 'generative',
     intendedUses: ['Print', 'Advertising/Campaigns', 'Internal'],
+    mediaData: getSampleMediaData('ai-generated'),
     deliverableType: 'Print',
     aiWorkflowStep: 5, // On "Upload Output" step
     aiTool: 'Midjourney',

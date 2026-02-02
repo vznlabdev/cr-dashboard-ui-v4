@@ -17,6 +17,7 @@ import {
   ArrowRight,
   MoreHorizontal,
   Trash2,
+  Sparkles,
 } from "lucide-react"
 import {
   Select,
@@ -40,12 +41,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
+import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { UploadAssetDialog } from "@/components/creative"
-import { AssetFileType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { AssetFileType, AssetContentType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG, AssetVersionGroup } from "@/types/creative"
+import { VersionStatusBadge } from "@/components/assets"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import NextImage from "next/image"
@@ -57,12 +59,49 @@ export default function AssetsPage() {
   const [brandFilter, setBrandFilter] = useState<string>("all")
   const [fileTypeFilter, setFileTypeFilter] = useState<AssetFileType | "all">("all")
   const [designTypeFilter, setDesignTypeFilter] = useState<DesignType | "all">("all")
+  const [contentTypeFilter, setContentTypeFilter] = useState<AssetContentType | "all">("all")
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set())
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 
-  // Filter assets
+  // Combine assets and version groups for display
+  type CombinedAssetType = (typeof mockAssets[0] & { isVersionGroup?: boolean; versionGroup?: AssetVersionGroup })
+  
+  const combinedAssets = useMemo(() => {
+    // Convert version groups to a display format
+    const versionGroupsAsAssets: CombinedAssetType[] = mockVersionGroups.map((group) => {
+      const latestVersion = group.versions[group.versions.length - 1]
+      return {
+        id: group.id,
+        name: group.name,
+        description: `${group.totalVersions} versions`,
+        isVersionGroup: true,
+        versionGroup: group,
+        thumbnailUrl: latestVersion?.thumbnailUrl || "",
+        fileUrl: latestVersion?.fileUrl || "",
+        fileType: latestVersion?.fileType || "image",
+        contentType: latestVersion?.contentType || "original",
+        mimeType: latestVersion?.mimeType || "image/png",
+        fileSize: latestVersion?.fileSize || 0,
+        dimensions: latestVersion?.dimensions,
+        brandId: group.brandId,
+        brandName: group.brandName,
+        brandColor: group.brandColor,
+        brandLogoUrl: group.brandLogoUrl,
+        designType: group.designType,
+        tags: group.tags,
+        uploadedById: latestVersion?.uploadedById || "",
+        uploadedByName: latestVersion?.uploadedByName || "",
+        createdAt: group.createdAt,
+        updatedAt: group.updatedAt,
+      } as CombinedAssetType
+    })
+    
+    return [...versionGroupsAsAssets, ...mockAssets]
+  }, [])
+
+  // Filter combined assets
   const filteredAssets = useMemo(() => {
-    return mockAssets.filter((asset) => {
+    return combinedAssets.filter((asset) => {
       const matchesSearch =
         asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asset.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -70,14 +109,17 @@ export default function AssetsPage() {
       const matchesBrand = brandFilter === "all" || asset.brandId === brandFilter
       const matchesFileType = fileTypeFilter === "all" || asset.fileType === fileTypeFilter
       const matchesDesignType = designTypeFilter === "all" || asset.designType === designTypeFilter
-      return matchesSearch && matchesBrand && matchesFileType && matchesDesignType
+      const matchesContentType = contentTypeFilter === "all" || asset.contentType === contentTypeFilter
+      return matchesSearch && matchesBrand && matchesFileType && matchesDesignType && matchesContentType
     })
-  }, [searchQuery, brandFilter, fileTypeFilter, designTypeFilter])
+  }, [combinedAssets, searchQuery, brandFilter, fileTypeFilter, designTypeFilter, contentTypeFilter])
 
   // Calculate stats
   const totalSize = filteredAssets.reduce((acc, a) => acc + a.fileSize, 0)
   const imageCount = filteredAssets.filter((a) => a.fileType === "image").length
   const documentCount = filteredAssets.filter((a) => a.fileType === "pdf" || a.fileType === "document").length
+  const aiCount = filteredAssets.filter((a) => a.contentType === "ai_generated").length
+  const originalCount = filteredAssets.filter((a) => a.contentType === "original").length
 
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
@@ -112,9 +154,10 @@ export default function AssetsPage() {
     setBrandFilter("all")
     setFileTypeFilter("all")
     setDesignTypeFilter("all")
+    setContentTypeFilter("all")
   }
 
-  const hasActiveFilters = searchQuery || brandFilter !== "all" || fileTypeFilter !== "all" || designTypeFilter !== "all"
+  const hasActiveFilters = searchQuery || brandFilter !== "all" || fileTypeFilter !== "all" || designTypeFilter !== "all" || contentTypeFilter !== "all"
 
   // Count assets pending approval
   const pendingApprovalCount = useMemo(() => {
@@ -159,9 +202,9 @@ export default function AssetsPage() {
           <div className="text-sm text-muted-foreground mt-1">
             {filteredAssets.length} {filteredAssets.length === 1 ? 'asset' : 'assets'}
             {' • '}
-            {imageCount} images
+            {aiCount} AI
             {' • '}
-            {documentCount} documents
+            {originalCount} original
             {' • '}
             {formatFileSize(totalSize)} total
           </div>
@@ -227,6 +270,23 @@ export default function AssetsPage() {
                 {config.label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        {/* Content Type Filter */}
+        <Select value={contentTypeFilter} onValueChange={(v) => setContentTypeFilter(v as AssetContentType | "all")}>
+          <SelectTrigger className="w-full sm:w-[130px] h-9">
+            <SelectValue placeholder="Source" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sources</SelectItem>
+            <SelectItem value="ai_generated">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI Generated
+              </div>
+            </SelectItem>
+            <SelectItem value="original">Original</SelectItem>
           </SelectContent>
         </Select>
 
@@ -336,12 +396,32 @@ export default function AssetsPage() {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{asset.name}</p>
-                          {asset.description && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {asset.description}
-                            </p>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">{asset.name}</p>
+                            {asset.contentType === "ai_generated" && (
+                              <div title="AI Generated">
+                                <Sparkles className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                              </div>
+                            )}
+                            {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
+                              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0.5">
+                                v{(asset as any).versionGroup.currentVersionNumber}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {asset.description && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {asset.description}
+                              </p>
+                            )}
+                            {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
+                              <VersionStatusBadge 
+                                status={(asset as any).versionGroup.versions[(asset as any).versionGroup.versions.length - 1]?.status}
+                                className="text-[10px] px-1.5 py-0"
+                              />
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     </TableCell>

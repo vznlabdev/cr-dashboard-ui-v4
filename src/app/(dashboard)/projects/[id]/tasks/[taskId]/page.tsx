@@ -52,15 +52,25 @@ import {
   ChevronDown,
   FileCheck,
   Image,
+  Plus,
 } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getTaskById, getTaskGroupById } from "@/lib/mock-data/projects-tasks"
+import { getVersionGroupsByTask } from "@/lib/mock-data/creative"
 import { useData } from "@/contexts/data-context"
 import type { Task } from "@/types"
+import type { TabId } from "@/types/mediaManager"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { MediaManager } from "@/components/media-manager/media-manager"
+import { 
+  DeliverableVersionsCard, 
+  CreatorDNACard, 
+  TrainingDataCard, 
+  ReferencesCard 
+} from "@/components/tasks/TaskResourceCards"
 import { aiToolsWhitelist, getAvailableToolsForProject, type AITool } from "@/lib/ai-tools-data"
 import {
   DropdownMenu,
@@ -151,6 +161,16 @@ export default function TaskDetailPage() {
   const [extensionStatus, setExtensionStatus] = useState<"active" | "inactive" | "not-detected">("active") // Mock as active
   const [toolLaunched, setToolLaunched] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  
+  // Media Manager state
+  const [mediaManagerOpen, setMediaManagerOpen] = useState(false)
+  const [mediaManagerInitialTab, setMediaManagerInitialTab] = useState<TabId>('assets')
+  
+  // Fetch version groups for this task
+  const versionGroups = useMemo(() => 
+    getVersionGroupsByTask(taskId), 
+    [taskId]
+  )
   
   // Upload state
   const [uploadedAssets, setUploadedAssets] = useState<Array<{
@@ -2651,27 +2671,68 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-          {/* Attachments/Versions Placeholder */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Attachments</CardTitle>
-                <CardDescription>
-                  Files and deliverables for this task
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => toast.info("Upload coming soon")}>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg">
-                <Paperclip className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">No attachments yet</p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Resource Cards - Progressive Disclosure */}
+          <div className="space-y-4">
+            {/* Always show Deliverables if task is in production or versions exist */}
+            {(versionGroups.length > 0 || task.status === 'production') && (
+              <DeliverableVersionsCard
+                taskId={taskId}
+                versionGroups={versionGroups}
+                onUpload={() => {
+                  toast.info("Upload coming soon")
+                }}
+              />
+            )}
+            
+            {/* Show Creator DNA card if assigned or AI generative task */}
+            {((task.mediaData?.creatorDNA && task.mediaData.creatorDNA.length > 0) || task.mode === 'generative') && (
+              <CreatorDNACard
+                creators={task.mediaData?.creatorDNA || []}
+                onManage={() => {
+                  setMediaManagerInitialTab('creator-dna')
+                  setMediaManagerOpen(true)
+                }}
+              />
+            )}
+            
+            {/* Show Training Data card if linked or AI task */}
+            {((task.mediaData?.training && task.mediaData.training.length > 0) || task.mode === 'generative') && (
+              <TrainingDataCard
+                datasets={task.mediaData?.training || []}
+                onManage={() => {
+                  setMediaManagerInitialTab('training')
+                  setMediaManagerOpen(true)
+                }}
+              />
+            )}
+            
+            {/* Show References card if any exist */}
+            {task.mediaData?.references && task.mediaData.references.length > 0 && (
+              <ReferencesCard
+                references={task.mediaData.references}
+                onManage={() => {
+                  setMediaManagerInitialTab('references')
+                  setMediaManagerOpen(true)
+                }}
+              />
+            )}
+            
+            {/* Quick setup button when no media data exists for AI tasks */}
+            {!task.mediaData && task.mode === 'generative' && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <Zap className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Set up AI resources for this task
+                  </p>
+                  <Button onClick={() => setMediaManagerOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Setup AI Resources
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
           {/* Comments - Linear Style with @Mentions & Reactions */}
           <Card id="comments-section" className="border-0 shadow-none">
@@ -3665,6 +3726,20 @@ export default function TaskDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Media Manager Modal */}
+      <MediaManager
+        isOpen={mediaManagerOpen}
+        onClose={() => setMediaManagerOpen(false)}
+        creationMethod={task.mode === 'generative' ? 'ai-generated' : 'human-made'}
+        taskId={taskId}
+        onSave={(data) => {
+          // Update task with media data
+          // In real app: API call to save task.mediaData = data
+          toast.success('Media resources saved to task')
+          setMediaManagerOpen(false)
+        }}
+      />
     </div>
   )
 }
