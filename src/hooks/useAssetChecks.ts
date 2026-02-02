@@ -1,7 +1,16 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import type { AssetReviewData, CheckStatus } from '@/types/creative'
+import type { 
+  AssetReviewData, 
+  CheckStatus,
+  CopyrightCheckData,
+  AccessibilityCheckData,
+  SEOCheckData,
+  BrandComplianceCheckData,
+  PerformanceCheckData,
+  SecurityCheckData
+} from '@/types/creative'
 import { 
   runCopyrightCheck, 
   runAccessibilityCheck, 
@@ -60,62 +69,66 @@ export function useAssetChecks(initialData?: AssetReviewData): UseAssetChecksRet
     setCheckStates(prev => ({ ...prev, [checkType]: 'checking' }))
 
     try {
-      let checkData
-      
       switch (checkType) {
-        case 'copyright':
-          checkData = await runCopyrightCheck(assetId, file)
+        case 'copyright': {
+          const checkData = await runCopyrightCheck(assetId, file)
           setReviewData(prev => prev ? {
             ...prev,
             copyright: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.copyright.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
           
-        case 'accessibility':
-          checkData = await runAccessibilityCheck(assetId, file)
+        case 'accessibility': {
+          const checkData = await runAccessibilityCheck(assetId, file)
           setReviewData(prev => prev ? {
             ...prev,
             accessibility: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.accessibility.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
           
-        case 'seo':
-          checkData = await runSEOCheck(assetId, file)
+        case 'seo': {
+          const checkData = await runSEOCheck(assetId, file)
           setReviewData(prev => prev ? {
             ...prev,
             seo: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.seo.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
           
-        case 'brandCompliance':
-          checkData = await runBrandComplianceCheck(assetId, file, brandId)
+        case 'brandCompliance': {
+          const checkData = await runBrandComplianceCheck(assetId, file, brandId)
           setReviewData(prev => prev ? {
             ...prev,
             brandCompliance: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.brandCompliance.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
           
-        case 'performance':
-          checkData = await runPerformanceCheck(assetId, file)
+        case 'performance': {
+          const checkData = await runPerformanceCheck(assetId, file)
           setReviewData(prev => prev ? {
             ...prev,
             performance: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.performance.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
           
-        case 'security':
-          checkData = await runSecurityCheck(assetId, file)
+        case 'security': {
+          const checkData = await runSecurityCheck(assetId, file)
           setReviewData(prev => prev ? {
             ...prev,
             security: { status: 'completed', data: checkData },
             checksCompleted: prev.checksCompleted + (prev.security.status === 'completed' ? 0 : 1)
           } : null)
           break
+        }
       }
 
       setCheckStates(prev => ({ ...prev, [checkType]: 'completed' }))
