@@ -29,6 +29,7 @@ import { useSidebar } from "./sidebar-context"
 import { AccountSwitcher } from "./AccountSwitcher"
 import { useSetup } from "@/lib/contexts/setup-context"
 import { useInbox } from "@/lib/contexts/inbox-context"
+import { getAllMenuItems } from "@/lib/settings-menu"
 
 interface NavItem {
   title: string
@@ -137,6 +138,9 @@ export function Sidebar() {
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
   const { unreadCount } = useInbox()
+  
+  // Check if we're in settings mode
+  const isSettingsRoute = pathname.startsWith('/settings')
   
   useEffect(() => {
     setMounted(true)
@@ -252,75 +256,123 @@ export function Sidebar() {
 
         {/* Navigation - Linear Style */}
         <nav className="flex-1 overflow-y-auto px-2 py-2">
-          {navSections.map((section, sectionIndex) => (
-            <div key={sectionIndex}>
-              {/* Section Items */}
+          {isSettingsRoute ? (
+            // Settings Menu
+            <>
+              {/* Back to app button */}
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 mb-4",
+                  "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  collapsed && "justify-center px-2"
+                )}
+                title={collapsed ? "Back to app" : undefined}
+              >
+                <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span>Back to app</span>}
+              </Link>
+
+              {/* Flat list of all settings */}
               <div className="space-y-px">
-                {section.items.map((item) => {
+                {getAllMenuItems().map((item) => {
                   const Icon = item.icon
-                  const isActive = item.href === "/" 
-                    ? pathname === item.href 
-                    : pathname.startsWith(item.href)
+                  const isActive = pathname === item.href
                   
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 relative group",
+                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150",
                         isActive
                           ? "bg-accent text-foreground"
                           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                         collapsed && "justify-center px-2"
                       )}
-                      title={collapsed ? item.title : undefined}
+                      title={collapsed ? item.label : undefined}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1">{item.title}</span>
-                          {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-medium rounded-md bg-blue-600 text-white">
-                              {item.badge}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {collapsed && item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
-                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-md bg-blue-600 text-white">
-                          {item.badge}
-                        </span>
-                      )}
+                      {!collapsed && <span>{item.label}</span>}
                     </Link>
                   )
                 })}
               </div>
-              
-              {/* Minimal spacing between sections */}
-              {sectionIndex < navSections.length - 1 && (
-                <div className="h-4" />
-              )}
-            </div>
-          ))}
+            </>
+          ) : (
+            // Normal Navigation
+            <>
+              {navSections.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  {/* Section Items */}
+                  <div className="space-y-px">
+                    {section.items.map((item) => {
+                      const Icon = item.icon
+                      const isActive = item.href === "/" 
+                        ? pathname === item.href 
+                        : pathname.startsWith(item.href)
+                      
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 relative group",
+                            isActive
+                              ? "bg-accent text-foreground"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                            collapsed && "justify-center px-2"
+                          )}
+                          title={collapsed ? item.title : undefined}
+                        >
+                          <Icon className="h-[18px] w-[18px] shrink-0" />
+                          {!collapsed && (
+                            <>
+                              <span className="flex-1">{item.title}</span>
+                              {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
+                                <span className="ml-auto inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-medium rounded-md bg-blue-600 text-white">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </>
+                          )}
+                          {collapsed && item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
+                            <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-md bg-blue-600 text-white">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* Minimal spacing between sections */}
+                  {sectionIndex < navSections.length - 1 && (
+                    <div className="h-4" />
+                  )}
+                </div>
+              ))}
 
-          {/* Minimal spacing before Settings */}
-          <div className="h-4" />
+              {/* Minimal spacing before Settings */}
+              <div className="h-4" />
 
-          {/* Settings */}
-          <Link
-            href="/settings"
-            className={cn(
-              "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150",
-              pathname === "/settings"
-                ? "bg-accent text-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-              collapsed && "justify-center px-2"
-            )}
-            title={collapsed ? "Settings" : undefined}
-          >
-            <Settings className="h-[18px] w-[18px] shrink-0" />
-            {!collapsed && <span>Settings</span>}
-          </Link>
+              {/* Settings */}
+              <Link
+                href="/settings"
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150",
+                  pathname.startsWith("/settings")
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  collapsed && "justify-center px-2"
+                )}
+                title={collapsed ? "Settings" : undefined}
+              >
+                <Settings className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span>Settings</span>}
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Collapse Toggle - Linear Style */}

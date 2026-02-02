@@ -35,6 +35,8 @@ import { AccountSwitcher } from "./AccountSwitcher"
 import { Separator } from "@/components/ui/separator"
 import { useSetup } from "@/lib/contexts/setup-context"
 import { useInbox } from "@/lib/contexts/inbox-context"
+import { getAllMenuItems } from "@/lib/settings-menu"
+import { ChevronLeft } from "lucide-react"
 
 interface NavItem {
   title: string
@@ -143,6 +145,9 @@ export function MobileNav() {
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
   const { unreadCount } = useInbox()
+  
+  // Check if we're in settings mode
+  const isSettingsRoute = pathname.startsWith('/settings')
 
   useEffect(() => {
     setMounted(true)
@@ -229,23 +234,28 @@ export function MobileNav() {
 
         {/* Navigation - Linear Style with Sections */}
         <nav className="flex flex-col px-3 py-2 overflow-y-auto">
-          {navSections.map((section, sectionIndex) => (
-            <div key={sectionIndex}>
-              {/* Section Label */}
-              {section.label && (
-                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {section.label}
-                </div>
-              )}
-              
-              {/* Section Items */}
-              <div className="space-y-px">
-                {section.items.map((item) => {
-                  const Icon = item.icon
-                  const isActive = item.href === "/" 
-                    ? pathname === item.href 
-                    : pathname.startsWith(item.href)
+          {isSettingsRoute ? (
+            // Settings Menu
+            <>
+              {/* Back to app button */}
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150 mb-4",
+                  "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+              >
+                <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
+                <span>Back to app</span>
+              </Link>
 
+              {/* Flat list of all settings */}
+              <div className="space-y-px">
+                {getAllMenuItems().map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  
                   return (
                     <Link
                       key={item.href}
@@ -259,41 +269,82 @@ export function MobileNav() {
                       )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
-                      <span className="flex-1">{item.title}</span>
-                      {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
-                        <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-medium rounded-md bg-blue-600 text-white">
-                          {item.badge}
-                        </span>
-                      )}
+                      <span>{item.label}</span>
                     </Link>
                   )
                 })}
               </div>
+            </>
+          ) : (
+            // Normal Navigation
+            <>
+              {navSections.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  {/* Section Label */}
+                  {section.label && (
+                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {section.label}
+                    </div>
+                  )}
+                  
+                  {/* Section Items */}
+                  <div className="space-y-px">
+                    {section.items.map((item) => {
+                      const Icon = item.icon
+                      const isActive = item.href === "/" 
+                        ? pathname === item.href 
+                        : pathname.startsWith(item.href)
 
-              {/* Spacing between sections */}
-              {sectionIndex < navSections.length - 1 && (
-                <div className="h-3" />
-              )}
-            </div>
-          ))}
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150",
+                            isActive
+                              ? "bg-accent text-foreground"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                          )}
+                        >
+                          <Icon className="h-[18px] w-[18px] shrink-0" />
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-medium rounded-md bg-blue-600 text-white">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      )
+                    })}
+                  </div>
 
-          {/* Separator before Settings */}
-          <Separator className="my-3" />
+                  {/* Spacing between sections */}
+                  {sectionIndex < navSections.length - 1 && (
+                    <div className="h-3" />
+                  )}
+                </div>
+              ))}
 
-          {/* Settings - always shown at bottom */}
-          <Link
-            href="/settings"
-            onClick={() => setOpen(false)}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150",
-              pathname === "/settings"
-                ? "bg-accent text-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-            )}
-          >
-            <Settings className="h-[18px] w-[18px] shrink-0" />
-            <span>Settings</span>
-          </Link>
+              {/* Separator before Settings */}
+              <Separator className="my-3" />
+
+              {/* Settings - always shown at bottom */}
+              <Link
+                href="/settings"
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150",
+                  pathname.startsWith("/settings")
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+              >
+                <Settings className="h-[18px] w-[18px] shrink-0" />
+                <span>Settings</span>
+              </Link>
+            </>
+          )}
         </nav>
       </SheetContent>
     </Sheet>
