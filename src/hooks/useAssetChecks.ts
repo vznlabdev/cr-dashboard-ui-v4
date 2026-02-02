@@ -101,7 +101,7 @@ export function useAssetChecks(initialData?: AssetReviewData): UseAssetChecksRet
         }
           
         case 'brandCompliance': {
-          const checkData = await runBrandComplianceCheck(assetId, file, brandId)
+          const checkData = await runBrandComplianceCheck(assetId, file, brandId || '')
           setReviewData(prev => prev ? {
             ...prev,
             brandCompliance: { status: 'completed', data: checkData },
