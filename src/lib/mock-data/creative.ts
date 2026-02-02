@@ -1484,7 +1484,7 @@ export const mockAssets: Asset[] = [
             },
             {
               severity: "serious",
-              type: "images",
+              type: "aria",
               description: "Charts and graphs lack alt text descriptions",
               recommendation: "Add descriptive alt text for all visual data representations",
             },
