@@ -24,44 +24,42 @@ export function SecurityCheckPanel({ data }: SecurityCheckPanelProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Score Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
-            Security Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-xs font-medium text-muted-foreground">Security Score</span>
+          </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-4xl font-bold">{score}</div>
-              <div className="text-sm text-muted-foreground">out of 100</div>
+              <div className="text-3xl font-bold">{score}</div>
+              <div className="text-xs text-muted-foreground">out of 100</div>
             </div>
             <div className="text-right">
-              <Badge variant={safe ? 'default' : 'destructive'} className={safe ? 'bg-green-600' : ''}>
+              <Badge variant={safe ? 'default' : 'destructive'} className={cn('text-xs px-2 py-0.5', safe && 'bg-green-600')}>
                 {safe ? 'Safe' : 'Threats Detected'}
               </Badge>
-              <div className="text-xs text-muted-foreground mt-1">
-                Checked {format(data.checkedAt, 'MMM d, h:mm a')}
+              <div className="text-[10px] text-muted-foreground mt-1">
+                {format(data.checkedAt, 'MMM d, h:mm a')}
               </div>
             </div>
           </div>
           
-          <Progress value={score} className="h-2" />
+          <Progress value={score} className="h-1.5" />
 
           {safe ? (
-            <Alert>
+            <Alert className="py-2">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 No security threats detected. This asset is safe to use.
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="py-2">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 Security threats detected. Review before using this asset.
               </AlertDescription>
             </Alert>
@@ -72,11 +70,11 @@ export function SecurityCheckPanel({ data }: SecurityCheckPanelProps) {
       {/* Threats List */}
       {threats.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Security Threats ({threats.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-xs font-medium text-muted-foreground">Security Threats ({threats.length})</span>
+            </div>
+            <div className="space-y-2">
               {threats.map((threat, idx) => {
                 const config = severityConfig[threat.severity]
                 const ThreatIcon = config.icon
@@ -85,23 +83,23 @@ export function SecurityCheckPanel({ data }: SecurityCheckPanelProps) {
                   <div 
                     key={idx}
                     className={cn(
-                      'p-3 rounded-lg border',
+                      'p-2 rounded-md border',
                       config.bg,
                       'border-gray-200 dark:border-gray-700'
                     )}
                   >
-                    <div className="flex items-start gap-3">
-                      <ThreatIcon className={cn('h-4 w-4 mt-0.5 shrink-0', config.color)} />
+                    <div className="flex items-start gap-2">
+                      <ThreatIcon className={cn('h-3.5 w-3.5 mt-0.5 shrink-0', config.color)} />
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {config.label}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {threat.type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium">{threat.description}</p>
+                        <p className="text-xs font-medium">{threat.description}</p>
                       </div>
                     </div>
                   </div>
@@ -114,37 +112,37 @@ export function SecurityCheckPanel({ data }: SecurityCheckPanelProps) {
 
       {/* Security Scan Details */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Scan Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <Lock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Malware Scan</span>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Scan Details</span>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+              <div className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs">Malware Scan</span>
               </div>
-              <Badge variant={safe ? 'default' : 'destructive'} className={safe ? 'bg-green-600' : ''}>
+              <Badge variant={safe ? 'default' : 'destructive'} className={cn('text-[10px] px-1.5 py-0', safe && 'bg-green-600')}>
                 {safe ? 'Clean' : 'Flagged'}
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Metadata Analysis</span>
+            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs">Metadata Analysis</span>
               </div>
-              <Badge variant={threats.some(t => t.type === 'metadata-leak') ? 'destructive' : 'default'}>
+              <Badge variant={threats.some(t => t.type === 'metadata-leak') ? 'destructive' : 'default'} className="text-[10px] px-1.5 py-0">
                 {threats.some(t => t.type === 'metadata-leak') ? 'Issues Found' : 'Clean'}
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Suspicious Content</span>
+            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs">Suspicious Content</span>
               </div>
-              <Badge variant={threats.some(t => t.type === 'suspicious-code') ? 'destructive' : 'default'}>
+              <Badge variant={threats.some(t => t.type === 'suspicious-code') ? 'destructive' : 'default'} className="text-[10px] px-1.5 py-0">
                 {threats.some(t => t.type === 'suspicious-code') ? 'Detected' : 'None'}
               </Badge>
             </div>
@@ -154,13 +152,13 @@ export function SecurityCheckPanel({ data }: SecurityCheckPanelProps) {
 
       {/* Recommendations */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Recommendations</span>
+          </div>
+          <ul className="space-y-1.5">
             {data.recommendations.map((rec, idx) => (
-              <li key={idx} className="text-sm flex items-start gap-2">
+              <li key={idx} className="text-xs flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">•</span>
                 <span>{rec}</span>
               </li>

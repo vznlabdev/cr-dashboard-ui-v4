@@ -97,25 +97,23 @@ export default function AssetReviewPage() {
 
   return (
     <PageContainer>
-      <div className="space-y-6">
+      <div className="space-y-2">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Button variant="ghost" size="sm" asChild>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="h-7 -ml-2" asChild>
                 <Link href={`/creative/assets/${asset.id}`}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
-                  Back to Asset
+                  Back
                 </Link>
               </Button>
-            </div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">{asset.name}</h1>
+              <h1 className="text-xl font-semibold">{asset.name}</h1>
               {overallScore !== undefined && (
                 <Badge 
                   variant="outline" 
                   className={cn(
-                    'text-lg px-3 py-1',
+                    'text-sm px-2 py-0.5',
                     overallScore >= 80 && 'border-green-500 text-green-700 bg-green-50',
                     overallScore >= 50 && overallScore < 80 && 'border-amber-500 text-amber-700 bg-amber-50',
                     overallScore < 50 && 'border-red-500 text-red-700 bg-red-50'
@@ -125,7 +123,7 @@ export default function AssetReviewPage() {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5 ml-[52px]">
               {asset.brandName} • {asset.designType}
             </p>
           </div>
@@ -135,6 +133,7 @@ export default function AssetReviewPage() {
             <Button 
               variant="outline" 
               size="sm"
+              className="h-8"
               onClick={handleRunAllChecks}
               disabled={isAnyChecking}
             >
@@ -152,7 +151,8 @@ export default function AssetReviewPage() {
             </Button>
             <Button 
               variant="outline" 
-              size="sm" 
+              size="sm"
+              className="h-8"
               onClick={() => setShowExportDialog(true)}
               disabled={!reviewData || checksProgress === 0}
             >
@@ -171,37 +171,33 @@ export default function AssetReviewPage() {
         />
 
         {/* Preview and Quick Stats Grid */}
-        <div className="grid lg:grid-cols-5 gap-6">
+        <div className="grid lg:grid-cols-5 gap-3">
           {/* Asset Preview */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardContent className="p-4">
-                <div className="aspect-video relative rounded-lg overflow-hidden bg-muted">
-                  <Image
-                    src={asset.thumbnailUrl}
-                    alt={asset.name}
-                    fill
-                    className="object-contain"
-                  />
+          <div className="lg:col-span-2 space-y-2">
+            <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+              <Image
+                src={asset.thumbnailUrl}
+                alt={asset.name}
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="font-medium">{asset.fileType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Progress:</span>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{checksProgress}% complete</Badge>
+              </div>
+              {getTotalAvailable() > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Credits:</span>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{getTotalAvailable()} available</Badge>
                 </div>
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type:</span>
-                    <span className="font-medium">{asset.fileType}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Progress:</span>
-                    <Badge variant="outline">{checksProgress}% complete</Badge>
-                  </div>
-                  {getTotalAvailable() > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Credits:</span>
-                      <Badge variant="outline">{getTotalAvailable()} available</Badge>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </div>
 
           {/* Quick Stats Grid */}
@@ -217,52 +213,52 @@ export default function AssetReviewPage() {
 
         {/* Tabs for Detailed Results */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <div className="border-b border-border">
+          <div className="border-b border-border/50">
             <TabsList className="h-auto bg-transparent p-0 gap-0">
               <TabsTrigger 
                 value="all"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 All Checks
               </TabsTrigger>
               <TabsTrigger 
                 value="copyright"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Copyright
               </TabsTrigger>
               <TabsTrigger 
                 value="accessibility"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 ADA
               </TabsTrigger>
               <TabsTrigger 
                 value="seo"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <Search className="h-4 w-4 mr-2" />
                 SEO
               </TabsTrigger>
               <TabsTrigger 
                 value="brandCompliance"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <Palette className="h-4 w-4 mr-2" />
                 Brand
               </TabsTrigger>
               <TabsTrigger 
                 value="performance"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <Zap className="h-4 w-4 mr-2" />
                 Performance
               </TabsTrigger>
               <TabsTrigger 
                 value="security"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 <ShieldCheck className="h-4 w-4 mr-2" />
                 Security
@@ -271,8 +267,8 @@ export default function AssetReviewPage() {
           </div>
 
           {/* All Checks Summary */}
-          <TabsContent value="all" className="mt-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <TabsContent value="all" className="mt-2">
+            <div className="grid md:grid-cols-2 gap-3">
               {reviewData?.copyright.data && (
                 <Card>
                   <CardContent className="p-4">
@@ -378,10 +374,10 @@ export default function AssetReviewPage() {
 
             {/* Empty state for "All" tab */}
             {checksProgress === 0 && (
-              <div className="text-center py-12 border rounded-lg">
-                <PlayCircle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">No Checks Run Yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <PlayCircle className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">No Checks Run Yet</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Run comprehensive checks to analyze this asset
                 </p>
                 <Button onClick={handleRunAllChecks} disabled={isAnyChecking}>
@@ -393,14 +389,14 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* Copyright Tab */}
-          <TabsContent value="copyright" className="mt-6">
+          <TabsContent value="copyright" className="mt-2">
             {reviewData?.copyright.data ? (
               <CopyrightCheckPanel data={reviewData.copyright.data} />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">Copyright Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <Shield className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">Copyright Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Analyze this asset for copyright similarities
                 </p>
                 <Button 
@@ -424,14 +420,14 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* Accessibility Tab */}
-          <TabsContent value="accessibility" className="mt-6">
+          <TabsContent value="accessibility" className="mt-2">
             {reviewData?.accessibility.data ? (
               <AccessibilityCheckPanel data={reviewData.accessibility.data} />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">Accessibility Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <Eye className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">Accessibility Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Check WCAG compliance and accessibility standards
                 </p>
                 <Button 
@@ -455,7 +451,7 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* SEO Tab */}
-          <TabsContent value="seo" className="mt-6">
+          <TabsContent value="seo" className="mt-2">
             {reviewData?.seo.data ? (
               <SEOCheckPanel 
                 data={reviewData.seo.data} 
@@ -463,10 +459,10 @@ export default function AssetReviewPage() {
                 fileSize={asset.fileSize}
               />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">SEO Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <Search className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">SEO Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Analyze image optimization and SEO factors
                 </p>
                 <Button 
@@ -490,17 +486,17 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* Brand Compliance Tab */}
-          <TabsContent value="brandCompliance" className="mt-6">
+          <TabsContent value="brandCompliance" className="mt-2">
             {reviewData?.brandCompliance.data ? (
               <BrandCompliancePanel 
                 data={reviewData.brandCompliance.data}
                 brandName={asset.brandName}
               />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">Brand Compliance Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <Palette className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">Brand Compliance Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Validate colors, logos, and brand guidelines
                 </p>
                 <Button 
@@ -524,14 +520,14 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* Performance Tab */}
-          <TabsContent value="performance" className="mt-6">
+          <TabsContent value="performance" className="mt-2">
             {reviewData?.performance.data ? (
               <PerformanceCheckPanel data={reviewData.performance.data} />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">Performance Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <Zap className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">Performance Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Analyze file size, load times, and optimization potential
                 </p>
                 <Button 
@@ -555,14 +551,14 @@ export default function AssetReviewPage() {
           </TabsContent>
 
           {/* Security Tab */}
-          <TabsContent value="security" className="mt-6">
+          <TabsContent value="security" className="mt-2">
             {reviewData?.security.data ? (
               <SecurityCheckPanel data={reviewData.security.data} />
             ) : (
-              <div className="text-center py-12 border rounded-lg">
-                <ShieldCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <h3 className="font-semibold mb-1">Security Check Not Run</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-8 border rounded-lg">
+                <ShieldCheck className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-sm mb-1">Security Check Not Run</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   Scan for malware, threats, and metadata issues
                 </p>
                 <Button 

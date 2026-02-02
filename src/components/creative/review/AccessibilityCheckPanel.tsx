@@ -25,25 +25,24 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Score Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5" />
-            Accessibility Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Eye className="h-4 w-4" />
+            <span className="text-xs font-medium text-muted-foreground">Accessibility Score</span>
+          </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-4xl font-bold">{score}</div>
-              <div className="text-sm text-muted-foreground">out of 100</div>
+              <div className="text-3xl font-bold">{score}</div>
+              <div className="text-xs text-muted-foreground">out of 100</div>
             </div>
-            <div className="text-right space-y-2">
+            <div className="text-right space-y-1">
               <Badge 
                 variant="outline"
                 className={cn(
+                  'text-xs px-2 py-0.5',
                   wcagLevel === 'AAA' ? 'border-green-500 text-green-700' :
                   wcagLevel === 'AA' ? 'border-blue-500 text-blue-700' :
                   wcagLevel === 'A' ? 'border-amber-500 text-amber-700' :
@@ -52,25 +51,25 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
               >
                 WCAG {wcagLevel}
               </Badge>
-              <div className="text-xs text-muted-foreground">
-                Checked {format(data.checkedAt, 'MMM d, h:mm a')}
+              <div className="text-[10px] text-muted-foreground">
+                {format(data.checkedAt, 'MMM d, h:mm a')}
               </div>
             </div>
           </div>
           
-          <Progress value={score} className="h-2" />
+          <Progress value={score} className="h-1.5" />
 
           {score >= 80 ? (
-            <Alert>
+            <Alert className="py-2">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 This asset meets accessibility standards
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="py-2">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 This asset has accessibility issues that need attention
               </AlertDescription>
             </Alert>
@@ -80,28 +79,28 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
 
       {/* Color Contrast Check */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Color Contrast</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm">Contrast Ratio</span>
-            <Badge variant={colorContrast.passed ? 'default' : 'destructive'}>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Color Contrast</span>
+          </div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs">Contrast Ratio</span>
+            <Badge variant={colorContrast.passed ? 'default' : 'destructive'} className="text-xs px-2 py-0.5">
               {colorContrast.ratio.toFixed(2)}:1
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {colorContrast.recommendation}
           </p>
-          <div className="mt-3">
+          <div className="mt-2">
             {colorContrast.passed ? (
-              <div className="flex items-center gap-2 text-sm text-green-600">
-                <CheckCircle2 className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 text-xs text-green-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Passes WCAG standards</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-sm text-red-600">
-                <XCircle className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 text-xs text-red-600">
+                <XCircle className="h-3.5 w-3.5" />
                 <span>Does not meet WCAG standards</span>
               </div>
             )}
@@ -111,19 +110,20 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
 
       {/* Alt Text Check */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Alt Text Quality</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm">Present</span>
-            <Badge variant={altText.present ? 'default' : 'destructive'}>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Alt Text Quality</span>
+          </div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs">Present</span>
+            <Badge variant={altText.present ? 'default' : 'destructive'} className="text-xs px-2 py-0.5">
               {altText.present ? 'Yes' : 'No'}
             </Badge>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm">Quality</span>
+            <span className="text-xs">Quality</span>
             <Badge variant="outline" className={cn(
+              'text-[10px] px-1.5 py-0',
               altText.quality === 'good' && 'border-green-500 text-green-700',
               altText.quality === 'fair' && 'border-amber-500 text-amber-700',
               (altText.quality === 'poor' || altText.quality === 'missing') && 'border-red-500 text-red-700'
@@ -137,11 +137,11 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
       {/* Issues List */}
       {issues.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Issues Found ({issues.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-xs font-medium text-muted-foreground">Issues Found ({issues.length})</span>
+            </div>
+            <div className="space-y-2">
               {issues.map((issue, idx) => {
                 const config = severityConfig[issue.severity]
                 const SeverityIcon = config.icon
@@ -150,27 +150,27 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
                   <div 
                     key={idx}
                     className={cn(
-                      'p-3 rounded-lg border',
+                      'p-2 rounded-md border',
                       config.bg,
                       'border-gray-200 dark:border-gray-700'
                     )}
                   >
-                    <div className="flex items-start gap-3">
-                      <SeverityIcon className={cn('h-4 w-4 mt-0.5 shrink-0', config.color)} />
+                    <div className="flex items-start gap-2">
+                      <SeverityIcon className={cn('h-3.5 w-3.5 mt-0.5 shrink-0', config.color)} />
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {config.label}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {issue.type}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium">{issue.description}</p>
+                        <p className="text-xs font-medium">{issue.description}</p>
                         {issue.element && (
-                          <p className="text-xs text-muted-foreground">Element: {issue.element}</p>
+                          <p className="text-[10px] text-muted-foreground">Element: {issue.element}</p>
                         )}
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <p className="text-[10px] text-muted-foreground mt-1">
                           💡 {issue.recommendation}
                         </p>
                       </div>
@@ -185,13 +185,13 @@ export function AccessibilityCheckPanel({ data }: AccessibilityCheckPanelProps) 
 
       {/* Recommendations */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Recommendations</span>
+          </div>
+          <ul className="space-y-1.5">
             {data.recommendations.map((rec, idx) => (
-              <li key={idx} className="text-sm flex items-start gap-2">
+              <li key={idx} className="text-xs flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">•</span>
                 <span>{rec}</span>
               </li>

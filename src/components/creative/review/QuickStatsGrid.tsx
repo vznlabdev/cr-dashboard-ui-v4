@@ -74,7 +74,7 @@ export function QuickStatsGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
       {checkConfigs.map((check) => {
         const CheckIcon = check.icon
         const status = checkStates[check.id] || 'not-started'
@@ -91,30 +91,30 @@ export function QuickStatsGrid({
             )}
             onClick={() => !isChecking && onRunCheck(check.id)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className={cn('p-2 rounded-lg', getScoreBgColor(score))}>
-                  <CheckIcon className={cn('h-5 w-5', score !== undefined ? getScoreColor(score) : check.color)} />
+            <CardContent className="p-3">
+              <div className="flex items-start justify-between mb-2">
+                <div className={cn('p-1.5 rounded-md', getScoreBgColor(score))}>
+                  <CheckIcon className={cn('h-4 w-4', score !== undefined ? getScoreColor(score) : check.color)} />
                 </div>
                 {isChecking ? (
                   <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                 ) : isCompleted ? (
-                  <Badge variant="outline" className="text-xs border-green-500 text-green-600">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600">
                     Done
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                     Run
                   </Badge>
                 )}
               </div>
               
-              <div className="text-xs font-medium text-muted-foreground mb-1">
+              <div className="text-[10px] font-medium text-muted-foreground mb-1">
                 {check.label}
               </div>
               
               {score !== undefined ? (
-                <div className={cn('text-3xl font-bold', getScoreColor(score))}>
+                <div className={cn('text-2xl font-bold', getScoreColor(score))}>
                   {score}
                 </div>
               ) : (

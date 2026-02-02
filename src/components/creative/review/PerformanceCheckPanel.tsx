@@ -20,41 +20,39 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
   const savingsPercentage = ((fileSize.savings / fileSize.current) * 100).toFixed(1)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Score Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Performance Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Zap className="h-4 w-4" />
+            <span className="text-xs font-medium text-muted-foreground">Performance Score</span>
+          </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-4xl font-bold">{score}</div>
-              <div className="text-sm text-muted-foreground">out of 100</div>
+              <div className="text-3xl font-bold">{score}</div>
+              <div className="text-xs text-muted-foreground">out of 100</div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-muted-foreground">
-                Checked {format(data.checkedAt, 'MMM d, h:mm a')}
+              <div className="text-[10px] text-muted-foreground">
+                {format(data.checkedAt, 'MMM d, h:mm a')}
               </div>
             </div>
           </div>
           
-          <Progress value={score} className="h-2" />
+          <Progress value={score} className="h-1.5" />
 
           {score >= 70 ? (
-            <Alert>
+            <Alert className="py-2">
               <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 This asset is well-optimized for performance
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="py-2">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs">
                 This asset could be optimized for better performance
               </AlertDescription>
             </Alert>
@@ -64,32 +62,32 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
 
       {/* File Size Analysis */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">File Size Analysis</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">File Size Analysis</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <div className="text-xs text-muted-foreground mb-1">Current Size</div>
-              <div className="text-lg font-semibold">{formatFileSize(fileSize.current)}</div>
+              <div className="text-[10px] text-muted-foreground mb-1">Current Size</div>
+              <div className="text-base font-semibold">{formatFileSize(fileSize.current)}</div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground mb-1">Optimal Size</div>
-              <div className="text-lg font-semibold text-green-600">
+              <div className="text-[10px] text-muted-foreground mb-1">Optimal Size</div>
+              <div className="text-base font-semibold text-green-600">
                 {formatFileSize(fileSize.optimal)}
               </div>
             </div>
           </div>
 
           {fileSize.savings > 0 && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-600">Potential Savings</span>
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingDown className="h-3.5 w-3.5 text-green-600" />
+                <span className="text-xs font-medium text-green-600">Potential Savings</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-green-700">{formatFileSize(fileSize.savings)}</span>
-                <Badge variant="outline" className="border-green-500 text-green-700">
+                <span className="text-xl font-bold text-green-700">{formatFileSize(fileSize.savings)}</span>
+                <Badge variant="outline" className="border-green-500 text-green-700 text-[10px] px-1.5 py-0">
                   -{savingsPercentage}%
                 </Badge>
               </div>
@@ -100,35 +98,35 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
 
       {/* Load Time Estimate */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Load Time Estimate</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            <Clock className="h-8 w-8 text-muted-foreground" />
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Load Time Estimate</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-6 w-6 text-muted-foreground" />
             <div>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold">
                 {loadTimeEstimate < 1000 
                   ? `${loadTimeEstimate}ms` 
                   : `${(loadTimeEstimate / 1000).toFixed(2)}s`}
               </div>
-              <div className="text-xs text-muted-foreground">
-                Estimated load time on 3G connection
+              <div className="text-[10px] text-muted-foreground">
+                Estimated on 3G
               </div>
             </div>
           </div>
           
-          <div className="mt-3">
+          <div className="mt-2">
             {loadTimeEstimate < 1000 ? (
-              <Badge variant="outline" className="border-green-500 text-green-700">
+              <Badge variant="outline" className="border-green-500 text-green-700 text-[10px] px-1.5 py-0">
                 Fast
               </Badge>
             ) : loadTimeEstimate < 2000 ? (
-              <Badge variant="outline" className="border-amber-500 text-amber-700">
+              <Badge variant="outline" className="border-amber-500 text-amber-700 text-[10px] px-1.5 py-0">
                 Moderate
               </Badge>
             ) : (
-              <Badge variant="outline" className="border-red-500 text-red-700">
+              <Badge variant="outline" className="border-red-500 text-red-700 text-[10px] px-1.5 py-0">
                 Slow
               </Badge>
             )}
@@ -138,13 +136,14 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
 
       {/* Compression Score */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Compression Analysis</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Compression Analysis</span>
+          </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm">Compression Efficiency</span>
+            <span className="text-xs">Compression Efficiency</span>
             <Badge variant="outline" className={cn(
+              'text-[10px] px-1.5 py-0',
               compressionScore >= 80 ? 'border-green-500 text-green-700' :
               compressionScore >= 60 ? 'border-amber-500 text-amber-700' :
               'border-red-500 text-red-700'
@@ -153,14 +152,14 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
             </Badge>
           </div>
           
-          <Progress value={compressionScore} className="h-2" />
+          <Progress value={compressionScore} className="h-1.5" />
 
           {formatRecommendation && (
-            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="text-xs font-medium text-blue-600 mb-1">
+            <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+              <div className="text-[10px] font-medium text-blue-600 mb-0.5">
                 Format Recommendation
               </div>
-              <p className="text-sm">{formatRecommendation}</p>
+              <p className="text-xs">{formatRecommendation}</p>
             </div>
           )}
         </CardContent>
@@ -168,13 +167,13 @@ export function PerformanceCheckPanel({ data }: PerformanceCheckPanelProps) {
 
       {/* Recommendations */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Recommendations</span>
+          </div>
+          <ul className="space-y-1.5">
             {data.recommendations.map((rec, idx) => (
-              <li key={idx} className="text-sm flex items-start gap-2">
+              <li key={idx} className="text-xs flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">•</span>
                 <span>{rec}</span>
               </li>
