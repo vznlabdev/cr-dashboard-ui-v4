@@ -1027,7 +1027,7 @@ export const mockAssets: Asset[] = [
           },
           altText: {
             present: true,
-            quality: "excellent",
+            quality: "good",
           },
           recommendations: [
             "Excellent accessibility overall",
