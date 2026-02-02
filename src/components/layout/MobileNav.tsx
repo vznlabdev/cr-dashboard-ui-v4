@@ -239,7 +239,7 @@ export function MobileNav() {
             <>
               {/* Back to app button */}
               <Link
-                href="/dashboard"
+                href="/inbox"
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150 mb-4",

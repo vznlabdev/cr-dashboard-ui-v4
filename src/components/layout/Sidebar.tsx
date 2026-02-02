@@ -261,7 +261,7 @@ export function Sidebar() {
             <>
               {/* Back to app button */}
               <Link
-                href="/dashboard"
+                href="/inbox"
                 className={cn(
                   "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 mb-4",
                   "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

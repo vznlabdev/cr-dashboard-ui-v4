@@ -1,15 +1,40 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { SettingsPageHeader } from "@/components/settings/SettingsPageHeader";
 
 export default function AccountPage() {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const userEmail = "john.doe@company.com"; // This would come from user context
+
+  const handleDeleteAccount = () => {
+    if (confirmEmail !== userEmail) {
+      toast.error("Email doesn't match. Please try again.");
+      return;
+    }
+    
+    // In a real app, this would call the API
+    toast.success("Account deletion request submitted");
+    setDeleteDialogOpen(false);
+    setConfirmEmail("");
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <SettingsPageHeader
@@ -132,13 +157,79 @@ export default function AccountPage() {
             </div>
             <Button 
               variant="destructive"
-              onClick={() => toast.error("Account deletion feature coming soon")}
+              onClick={() => setDeleteDialogOpen(true)}
+              className="transition-all duration-150"
             >
               Delete Account
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="rounded-full p-2 bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <DialogTitle>Delete Account</DialogTitle>
+            </div>
+            <DialogDescription className="pt-3">
+              This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+              <h4 className="text-sm font-semibold text-destructive mb-2">Warning: This will delete:</h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• All your projects and assets</li>
+                <li>• All compliance and legal records</li>
+                <li>• All team memberships and invitations</li>
+                <li>• All integration connections</li>
+                <li>• All historical data and analytics</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm-email">
+                Type <span className="font-mono font-semibold">{userEmail}</span> to confirm
+              </Label>
+              <Input
+                id="confirm-email"
+                type="email"
+                placeholder="Enter your email address"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setConfirmEmail("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={confirmEmail !== userEmail}
+              className="transition-all duration-150"
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Permanently Delete Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
