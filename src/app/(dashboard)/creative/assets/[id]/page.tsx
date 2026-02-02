@@ -148,7 +148,7 @@ export default function AssetDetailPage() {
   const isAIGenerated = asset && 'contentType' in asset && asset.contentType === "ai_generated"
 
   return (
-    <PageContainer className="space-y-6 animate-fade-in">
+    <PageContainer className="space-y-2 animate-fade-in">
       {/* Header Section */}
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
@@ -274,19 +274,19 @@ export default function AssetDetailPage() {
 
       {/* Tabs for Version Groups */}
       {versionGroup ? (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "versions")} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "versions")}>
           {/* Tab Navigation - Linear Style */}
-          <div className="border-b border-border">
-            <TabsList className="h-auto bg-transparent p-0 gap-2">
+          <div className="border-b border-border/50">
+            <TabsList className="h-auto bg-transparent p-0 gap-0">
               <TabsTrigger 
                 value="overview"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-3 pb-2"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger 
                 value="versions"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-3 pb-2"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 Versions ({versionGroup.totalVersions})
               </TabsTrigger>
@@ -294,10 +294,10 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-4">
-            <div className="grid lg:grid-cols-3 gap-4">
+          <TabsContent value="overview" className="mt-2">
+            <div className="grid lg:grid-cols-3 gap-3">
               {/* Left Column - Preview & Content */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-2 space-y-2">
                 {/* Preview Image */}
                 <Card>
             <CardContent className="p-0">
@@ -357,7 +357,7 @@ export default function AssetDetailPage() {
               </div>
 
               {/* Right Column - Metadata Sidebar */}
-              <div className="space-y-3">
+              <div className="space-y-2">
           {/* Metadata Card - Consolidated */}
           <Card>
             <CardContent className="pt-4 space-y-3 text-sm">
@@ -560,8 +560,8 @@ export default function AssetDetailPage() {
       </TabsContent>
 
       {/* Versions Tab Content */}
-      <TabsContent value="versions" className="mt-4">
-            <div className="space-y-4">
+      <TabsContent value="versions" className="mt-2">
+            <div className="space-y-3">
               {/* Full-width version history with inline comments */}
               {versionGroup.versions.sort((a, b) => b.versionNumber - a.versionNumber).map((version, index) => {
                 const isCurrent = version.id === selectedVersionId
@@ -666,9 +666,9 @@ export default function AssetDetailPage() {
       ) : (
         <>
         {/* Regular Asset - Two Column Grid */}
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid lg:grid-cols-3 gap-3">
           {/* Left Column - Preview & Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-2">
             {/* Preview Image */}
             <Card>
               <CardContent className="p-0">
@@ -728,7 +728,7 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Right Column - Metadata Sidebar - Same as in tabs */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Metadata Card - Consolidated */}
             <Card>
               <CardContent className="pt-4 space-y-3 text-sm">
