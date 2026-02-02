@@ -15,3 +15,10 @@ export { UploadAssetDialog } from "./upload-asset-dialog"
 export { CopyrightCheckReview } from "./copyright-check-review"
 export { PromptHistory } from "./PromptHistory"
 
+// Bulk Edit Components
+export { BulkEditorSheet } from "./BulkEditorSheet"
+export { BulkEditTable } from "./BulkEditTable"
+export { EditableCell } from "./EditableCell"
+export { ColumnSelector } from "./ColumnSelector"
+export { TalentPicker } from "./TalentPicker"
+

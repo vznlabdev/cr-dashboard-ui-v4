@@ -25,6 +25,7 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   ChevronDown,
+  CheckSquare,
 } from "lucide-react"
 import {
   Select,
@@ -421,7 +422,7 @@ export default function AssetsPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8">
-                  <Checkbox checked className="mr-2" />
+                  <CheckSquare className="mr-2 h-4 w-4" />
                   Showing {selectedAssets.size} selected
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -437,7 +438,15 @@ export default function AssetsPage() {
             </DropdownMenu>
 
             {/* Action buttons */}
-            <Button variant="ghost" size="sm" className="h-8">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8" 
+              onClick={() => {
+                const ids = Array.from(selectedAssets).join(',')
+                router.push(`/creative/assets/bulk-edit?ids=${ids}`)
+              }}
+            >
               Bulk edit
             </Button>
             <Button variant="ghost" size="sm" className="h-8">

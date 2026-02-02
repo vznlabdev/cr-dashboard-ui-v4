@@ -31,6 +31,7 @@ import {
   Image as ImageIcon,
   Users as UsersIcon,
   Sparkles,
+  Plus,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -42,7 +43,8 @@ import { formatDateLong, getInitials } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { EmptyState } from "@/components/cr"
-import { NilpDropdownTab } from "@/components/talent-rights"
+import { NilpDropdownTab, ContractCard } from "@/components/talent-rights"
+import type { TalentContract } from "@/types/talent-contracts"
 
 export default function TalentRightsDetailPage() {
   const params = useParams()
@@ -52,8 +54,13 @@ export default function TalentRightsDetailPage() {
   
   // State for managing active tab
   const [currentTab, setCurrentTab] = useState<string>("overview")
+  const [createContractOpen, setCreateContractOpen] = useState(false)
+  const [selectedContract, setSelectedContract] = useState<TalentContract | null>(null)
 
   const talent = getTalentById(id)
+  
+  // Mock contracts data - TODO: Replace with context
+  const contractsForTalent: TalentContract[] = []
 
   if (!talent) {
     notFound()
@@ -229,6 +236,14 @@ export default function TalentRightsDetailPage() {
               <TabsTrigger value="overview" className="whitespace-nowrap rounded-none">
                 Overview
               </TabsTrigger>
+              <TabsTrigger value="contracts" className="whitespace-nowrap rounded-none">
+                Contracts
+                {contractsForTalent.length > 0 && (
+                  <Badge variant="secondary" className="ml-2 h-4 px-1.5 text-[10px]">
+                    {contractsForTalent.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
             </TabsList>
             
             <NilpDropdownTab
@@ -301,6 +316,46 @@ export default function TalentRightsDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Contracts Tab */}
+        <TabsContent value="contracts" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Contracts</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage talent agreements and negotiations
+              </p>
+            </div>
+            <Button size="sm" onClick={() => setCreateContractOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Contract
+            </Button>
+          </div>
+
+          {contractsForTalent.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No contracts yet"
+              description="Create a contract to begin managing talent agreements"
+              action={{
+                label: "Create Contract",
+                onClick: () => setCreateContractOpen(true),
+              }}
+            />
+          ) : (
+            <div className="space-y-4">
+              {contractsForTalent.map((contract) => (
+                <ContractCard
+                  key={contract.id}
+                  contract={contract}
+                  onView={() => setSelectedContract(contract)}
+                  onNegotiate={() => {}}
+                  onSign={() => {}}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* NILP™ Name Rights Tab */}
