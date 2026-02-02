@@ -1478,7 +1478,7 @@ export const mockAssets: Asset[] = [
             },
             {
               severity: "serious",
-              type: "readability",
+              type: "text",
               description: "Small font sizes make content difficult to read",
               recommendation: "Increase body text to minimum 12pt for print documents",
             },
