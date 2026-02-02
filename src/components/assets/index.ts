@@ -1,0 +1,8 @@
+/**
+ * Asset Components Barrel Export
+ */
+
+export { VersionStatusBadge } from "./VersionStatusBadge"
+export { VersionHistoryPanel } from "./VersionHistoryPanel"
+export { SubmitVersionDialog } from "./SubmitVersionDialog"
+export { VersionComments } from "./VersionComments"
