@@ -99,7 +99,7 @@ export function InlineEditField({
         onClick={() => setIsEditing(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="w-full text-left hover:bg-accent/50 px-3 py-2 rounded-md text-sm transition-colors group"
+        className="w-full text-left hover:bg-accent/20 px-2 py-1.5 rounded border border-transparent hover:border-border text-sm transition-all duration-150 group"
       >
         <div className="flex items-center justify-between">
           <span>{formatValue(localValue, field) || <span className="text-muted-foreground">Add {field.label.toLowerCase()}...</span>}</span>
@@ -370,11 +370,12 @@ export function InlineEditField({
   return (
     <div className={cn("space-y-1.5", className)}>
       {showLabel && (
-        <label className="text-xs font-medium text-muted-foreground">
+        <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
           {label || field.label}
+          {saving && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
         </label>
       )}
-      <div className={cn(saving && "opacity-50 pointer-events-none")}>
+      <div className={cn(saving && "opacity-60 pointer-events-none")}>
         {renderField()}
       </div>
       {field.helpText && (

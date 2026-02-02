@@ -353,13 +353,13 @@ export default function AssetDetailPage() {
 
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="mt-2">
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid lg:grid-cols-3 gap-3">
               {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-2 space-y-3">
                 {/* Basic Information Card - Inline Editable */}
                 {nameField && descriptionField && (
                   <Card>
-                    <CardContent className="pt-6 space-y-4">
+                    <CardContent className="pt-4 space-y-3">
                       <InlineEditField
                         field={nameField}
                         value={asset.name}
@@ -404,16 +404,16 @@ export default function AssetDetailPage() {
                   </CardContent>
                 </Card>
 
-                {/* Expandable SEO Section */}
+                {/* File Properties Section */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                    <h3 className="text-sm font-semibold">SEO & Metadata</h3>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">File Properties</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <Card className="mt-2">
-                      <CardContent className="pt-6 space-y-4">
-                        {EDITABLE_FIELDS.filter(f => f.category === "seo").slice(0, 3).map(field => (
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
                           <InlineEditField
                             key={field.id}
                             field={field}
@@ -425,83 +425,185 @@ export default function AssetDetailPage() {
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
+
+                {/* Expandable SEO Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Copyright & Legal Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
                 
                 {/* Expandable Accessibility Section */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                    <h3 className="text-sm font-semibold">Accessibility</h3>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <Card className="mt-2">
-                      <CardContent className="pt-6 space-y-4">
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">WCAG Level</span>
-                            {asset.reviewData?.accessibility?.data?.wcagLevel ? (
-                              <Badge variant="outline" className="font-medium">
-                                {asset.reviewData.accessibility.data.wcagLevel}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground">Not checked</span>
-                            )}
-                          </div>
-                          {asset.reviewData?.accessibility?.data?.score !== undefined && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Score</span>
-                              <span className="font-medium">{asset.reviewData.accessibility.data.score}/100</span>
-                            </div>
-                          )}
-                        </div>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
                       </CardContent>
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
                 
-                {/* Expandable Advanced Metadata Section */}
+                {/* Performance Section */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                    <h3 className="text-sm font-semibold">Advanced Metadata</h3>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <Card className="mt-2">
-                      <CardContent className="pt-6 space-y-4">
-                        {/* C2PA / Content Credentials */}
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Content Credentials (C2PA)</p>
-                          <div className="text-sm text-muted-foreground">
-                            C2PA manifest available for verification
-                          </div>
-                        </div>
-                        
-                        <Separator />
-                        
-                        {/* Performance */}
-                        {asset.reviewData?.performance?.data && (
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-2">Performance</p>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Optimization Score</span>
-                                <span className="font-medium">{asset.reviewData.performance.data.optimizationScore}/100</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
                       </CardContent>
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
                 
-                {/* Prompt History (AI Generated Only) */}
-                {isAIGenerated && asset.promptHistory && (
-                  <PromptContent history={asset.promptHistory} />
+                {/* Security Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* AI Generation Section (for AI-generated assets) */}
+                {isAIGenerated && (
+                  <Collapsible defaultOpen={true}>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Generation</h3>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <Card className="mt-2 border-l-2 border-l-purple-500">
+                        <CardContent className="pt-4 space-y-3">
+                          {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                            <InlineEditField
+                              key={field.id}
+                              field={field}
+                              value={field.path.includes('.') 
+                                ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                                : asset[field.path as keyof typeof asset]
+                              }
+                              onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                            />
+                          ))}
+                          
+                          {/* Keep original PromptContent for full history */}
+                          {asset.promptHistory && (
+                            <>
+                              <Separator />
+                              <PromptContent history={asset.promptHistory} />
+                            </>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+                
+                {/* Version Management Section (version groups only) */}
+                {versionGroup && (
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Version Management</h3>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <Card className="mt-2 border-l-2 border-l-accent">
+                        <CardContent className="pt-4 space-y-3">
+                          {EDITABLE_FIELDS.filter(f => f.category === "version").map(field => (
+                            <InlineEditField
+                              key={field.id}
+                              field={field}
+                              value={asset[field.path as keyof typeof asset]}
+                              onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                            />
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </CollapsibleContent>
+                  </Collapsible>
                 )}
               </div>
 
               {/* Right Column - Metadata Sidebar */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Status Card - Shopify Style */}
                 {statusField && (
                   <Card>
@@ -524,7 +626,7 @@ export default function AssetDetailPage() {
                   <CardHeader>
                     <CardTitle className="text-sm">Organization</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     {/* Brand */}
                     {brandField && (
                       <InlineEditField
@@ -559,12 +661,19 @@ export default function AssetDetailPage() {
                   <CardHeader>
                     <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-sm text-muted-foreground">
-                      {asset.talentRights && Array.isArray(asset.talentRights) && asset.talentRights.length > 0
-                        ? `${asset.talentRights.length} talent assigned`
-                        : "No talent assigned"}
-                    </div>
+                  <CardContent className="space-y-3">
+                    {(() => {
+                      const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                      return creatorIdsField && (
+                        <InlineEditField
+                          field={creatorIdsField}
+                          value={asset.creatorIds || []}
+                          onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                          label="Assign Talent"
+                        />
+                      )
+                    })()}
+                    
                     {creditedCreators.length > 0 && (
                       <>
                         <Separator />
@@ -879,13 +988,13 @@ export default function AssetDetailPage() {
       ) : (
         <>
         {/* Regular Asset - Two Column Grid */}
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid lg:grid-cols-3 gap-3">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             {/* Basic Information Card - Inline Editable */}
             {nameField && descriptionField && (
               <Card>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="pt-4 space-y-3">
                   <InlineEditField
                     field={nameField}
                     value={asset.name}
@@ -930,16 +1039,16 @@ export default function AssetDetailPage() {
               </CardContent>
             </Card>
             
-            {/* Expandable SEO Section */}
+            {/* File Properties Section */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                <h3 className="text-sm font-semibold">SEO & Metadata</h3>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">File Properties</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Card className="mt-2">
-                  <CardContent className="pt-6 space-y-4">
-                    {EDITABLE_FIELDS.filter(f => f.category === "seo").slice(0, 3).map(field => (
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
                       <InlineEditField
                         key={field.id}
                         field={field}
@@ -952,60 +1061,160 @@ export default function AssetDetailPage() {
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Expandable Accessibility Section */}
+            {/* Expandable SEO Section */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                <h3 className="text-sm font-semibold">Accessibility</h3>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Card className="mt-2">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">WCAG Level</span>
-                        {asset.reviewData?.accessibility?.data?.wcagLevel ? (
-                          <Badge variant="outline" className="font-medium">
-                            {asset.reviewData.accessibility.data.wcagLevel}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">Not checked</span>
-                        )}
-                      </div>
-                    </div>
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={field.path.includes('.') 
+                          ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                          : asset[field.path as keyof typeof asset]
+                        }
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
                   </CardContent>
                 </Card>
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Expandable Advanced Metadata Section */}
+            {/* Copyright & Legal Section */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
-                <h3 className="text-sm font-semibold">Advanced Metadata</h3>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Card className="mt-2">
-                  <CardContent className="pt-6 space-y-4">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Content Credentials (C2PA)</p>
-                      <div className="text-sm text-muted-foreground">
-                        C2PA manifest available for verification
-                      </div>
-                    </div>
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={field.path.includes('.') 
+                          ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                          : asset[field.path as keyof typeof asset]
+                        }
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Expandable Accessibility Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Performance Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Security Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <Card className="mt-2 border-l-2 border-l-accent">
+                  <CardContent className="pt-4 space-y-3">
+                    {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
                   </CardContent>
                 </Card>
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Prompt History (AI Generated Only) */}
-            {isAIGenerated && asset.promptHistory && (
-              <PromptContent history={asset.promptHistory} />
+            {/* AI Generation Section (for AI-generated assets) */}
+            {isAIGenerated && (
+              <Collapsible defaultOpen={true}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Generation</h3>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2">
+                  <Card className="mt-2 border-l-2 border-l-purple-500">
+                    <CardContent className="pt-4 space-y-3">
+                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                        <InlineEditField
+                          key={field.id}
+                          field={field}
+                          value={field.path.includes('.') 
+                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                            : asset[field.path as keyof typeof asset]
+                          }
+                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                        />
+                      ))}
+                      
+                      {/* Keep original PromptContent for full history */}
+                      {asset.promptHistory && (
+                        <>
+                          <Separator />
+                          <PromptContent history={asset.promptHistory} />
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </div>
 
           {/* Right Column - Metadata Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Status Card - Shopify Style */}
             {statusField && (
               <Card>
@@ -1028,7 +1237,7 @@ export default function AssetDetailPage() {
               <CardHeader>
                 <CardTitle className="text-sm">Organization</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {/* Brand */}
                 {brandField && (
                   <InlineEditField
@@ -1063,12 +1272,19 @@ export default function AssetDetailPage() {
               <CardHeader>
                 <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  {asset.talentRights && Array.isArray(asset.talentRights) && asset.talentRights.length > 0
-                    ? `${asset.talentRights.length} talent assigned`
-                    : "No talent assigned"}
-                </div>
+              <CardContent className="space-y-3">
+                {(() => {
+                  const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                  return creatorIdsField && (
+                    <InlineEditField
+                      field={creatorIdsField}
+                      value={asset.creatorIds || []}
+                      onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                      label="Assign Talent"
+                    />
+                  )
+                })()}
+                
                 {creditedCreators.length > 0 && (
                   <>
                     <Separator />
