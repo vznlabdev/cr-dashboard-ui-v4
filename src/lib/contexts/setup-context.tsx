@@ -39,76 +39,182 @@ interface SetupContextType {
   resetSetup: () => void
 }
 
-// Initial setup state with mock data
+// Initial setup state with admin-focused categories
 const initialSetupState: SetupState = {
   isComplete: false,
   isDismissed: false,
   categories: [
     {
-      id: "profile",
-      title: "Complete your profile",
-      description: "Add your personal information and preferences",
+      id: "company-settings",
+      title: "Setup Company Settings",
+      description: "Configure your primary company profile, sub-accounts, approvals, and AI tools",
       locked: false,
       tasks: [
         {
-          id: "photo",
-          title: "Add profile photo",
+          id: "company-profile",
+          title: "Complete primary company profile",
           completed: false,
           required: true,
+        },
+        {
+          id: "sub-accounts",
+          title: "Add sub-company accounts (if applicable)",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "approval-workflows",
+          title: "Configure approval workflows",
+          completed: false,
+          required: true,
+        },
+        {
+          id: "ai-tools",
+          title: "Set up AI tools and integrations",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "personal-profile",
+          title: "Complete your personal admin profile",
+          completed: false,
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "team-members",
+      title: "Add Team Members",
+      description: "Invite company admins, creative team, talent, and clients",
+      locked: true,
+      tasks: [
+        {
+          id: "company-admins",
+          title: "Add company administrators",
+          completed: false,
+          required: true,
+        },
+        {
+          id: "creative-team",
+          title: "Invite creative team members",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "talent",
+          title: "Add talent and contractors",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "clients",
+          title: "Invite client stakeholders",
+          completed: false,
+          required: false,
+        },
+      ],
+    },
+    {
+      id: "brands",
+      title: "Create Brand Profiles",
+      description: "Set up brand profiles for your organization",
+      locked: true,
+      tasks: [
+        {
+          id: "first-brand",
+          title: "Create your first brand profile",
+          completed: false,
+          required: true,
+        },
+        {
+          id: "brand-assets",
+          title: "Upload brand assets and guidelines",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "additional-brands",
+          title: "Add additional brands (if applicable)",
+          completed: false,
+          required: false,
+        },
+      ],
+    },
+    {
+      id: "projects",
+      title: "Setup Projects",
+      description: "Create your first project and configure project settings",
+      locked: true,
+      tasks: [
+        {
+          id: "first-project",
+          title: "Create your first project",
+          completed: false,
+          required: true,
+        },
+        {
+          id: "project-templates",
+          title: "Set up project templates",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "project-permissions",
+          title: "Configure project permissions",
+          completed: false,
+          required: false,
+        },
+      ],
+    },
+    {
+      id: "tasks",
+      title: "Create Tasks",
+      description: "Add tasks to your project and assign team members",
+      locked: true,
+      tasks: [
+        {
+          id: "first-task",
+          title: "Create your first task",
+          completed: false,
+          required: true,
+        },
+        {
+          id: "task-workflow",
+          title: "Configure task workflow stages",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "task-assignments",
+          title: "Assign tasks to team members",
+          completed: false,
+          required: false,
+        },
+      ],
+    },
+    {
+      id: "reporting",
+      title: "Configure Reporting and Dashboards",
+      description: "Set up analytics, reports, and dashboard preferences",
+      locked: true,
+      tasks: [
+        {
+          id: "dashboard-layout",
+          title: "Customize your dashboard layout",
+          completed: false,
+          required: false,
+        },
+        {
+          id: "report-preferences",
+          title: "Configure report preferences",
+          completed: false,
+          required: false,
         },
         {
           id: "notifications",
-          title: "Set notification preferences",
-          completed: false,
-          required: false,
-        },
-      ],
-    },
-    {
-      id: "team",
-      title: "Add team members",
-      description: "Invite your team to collaborate",
-      locked: false,
-      tasks: [
-        {
-          id: "invite",
-          title: "Invite your first team member",
+          title: "Set up notification preferences",
           completed: false,
           required: true,
-        },
-      ],
-    },
-    {
-      id: "project",
-      title: "Create first project",
-      description: "Start organizing your work",
-      locked: false,
-      tasks: [
-        {
-          id: "create",
-          title: "Start your first project",
-          completed: false,
-          required: true,
-        },
-      ],
-    },
-    {
-      id: "integrations",
-      title: "Set up integrations",
-      description: "Connect your favorite tools",
-      locked: false,
-      tasks: [
-        {
-          id: "calendar",
-          title: "Connect calendar",
-          completed: false,
-          required: false,
-        },
-        {
-          id: "storage",
-          title: "Link storage provider",
-          completed: false,
-          required: false,
         },
       ],
     },
@@ -159,8 +265,26 @@ export function SetupProvider({ children }: { children: ReactNode }) {
         return category
       })
 
+      // Sequential unlocking: unlock next category when all required tasks in previous are complete
+      const categoryOrder = ["company-settings", "team-members", "brands", "projects", "tasks", "reporting"]
+      const updatedCategories = newCategories.map((category, index) => {
+        if (index === 0) {
+          // First category is always unlocked
+          return { ...category, locked: false }
+        }
+        
+        // Check if previous category has all required tasks complete
+        const prevCategoryId = categoryOrder[index - 1]
+        const prevCategory = newCategories.find((cat) => cat.id === prevCategoryId)
+        const prevRequiredComplete = prevCategory
+          ? prevCategory.tasks.filter((task) => task.required).every((task) => task.completed)
+          : false
+        
+        return { ...category, locked: !prevRequiredComplete }
+      })
+
       // Check if all required tasks are now complete
-      const allRequiredComplete = newCategories.every((category) =>
+      const allRequiredComplete = updatedCategories.every((category) =>
         category.tasks
           .filter((task) => task.required)
           .every((task) => task.completed)
@@ -168,7 +292,7 @@ export function SetupProvider({ children }: { children: ReactNode }) {
 
       return {
         ...prev,
-        categories: newCategories,
+        categories: updatedCategories,
         isComplete: allRequiredComplete,
       }
     })

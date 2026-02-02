@@ -199,7 +199,7 @@ export default function ProjectsPage() {
           <SelectTrigger className="w-full sm:w-[150px] h-9">
             <SelectValue placeholder="Lead" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="bottom" align="start" sideOffset={4} avoidCollisions={false}>
             <SelectItem value="all">All Leads</SelectItem>
             {TEAM_MEMBERS.map((member) => (
               <SelectItem key={member.id} value={member.fullName}>
@@ -385,7 +385,12 @@ export default function ProjectsPage() {
                       {/* Brand - Simple Display */}
                       <TableCell 
                         className="py-2 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (project.companyId) {
+                            router.push(`/creative/brands/${project.companyId}`)
+                          }
+                        }}
                       >
                         <div className="flex items-center gap-1.5">
                           <div 

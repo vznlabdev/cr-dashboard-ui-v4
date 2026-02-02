@@ -40,9 +40,11 @@ const TEAM_MEMBERS = [
 interface NewProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  setupMode?: boolean;
+  onProjectCreated?: (projectId: string) => void;
 }
 
-export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) {
+export function NewProjectDialog({ open, onOpenChange, setupMode, onProjectCreated }: NewProjectDialogProps) {
   const { createProject } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const companies = getAllCompanies();
@@ -85,7 +87,14 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         risk: "Low", // Default to Low risk
       });
       
-      toast.success(`Project "${newProject.name}" created successfully!`);
+      if (setupMode) {
+        toast.success(`Great! Your first project "${newProject.name}" has been created. Next, let's add some tasks.`);
+      } else {
+        toast.success(`Project "${newProject.name}" created successfully!`);
+      }
+      
+      // Callback for setup mode
+      onProjectCreated?.(newProject.id);
       
       // Reset form
       setFormData({
@@ -127,10 +136,12 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <FolderPlus className="h-5 w-5" />
-            Create New Project
+            {setupMode ? "Create Your First Project" : "Create New Project"}
           </DialogTitle>
           <DialogDescription>
-            Start a new AI content creation project with provenance tracking
+            {setupMode 
+              ? "Start by creating a project to organize your creative work and tasks"
+              : "Start a new AI content creation project with provenance tracking"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

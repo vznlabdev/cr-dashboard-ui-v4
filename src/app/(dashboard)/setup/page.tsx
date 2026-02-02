@@ -196,14 +196,16 @@ export default function SetupPage() {
 
 // Helper function to get previous category title
 function getPreviousCategoryTitle(categoryId: string): string {
-  const categoryOrder = ["profile", "team", "project", "integrations"]
+  const categoryOrder = ["company-settings", "team-members", "brands", "projects", "tasks", "reporting"]
   const currentIndex = categoryOrder.indexOf(categoryId)
   if (currentIndex > 0) {
     const titles: Record<string, string> = {
-      profile: "Complete your profile",
-      team: "Add team members",
-      project: "Create first project",
-      integrations: "Set up integrations",
+      "company-settings": "Setup Company Settings",
+      "team-members": "Add Team Members",
+      "brands": "Create Brand Profiles",
+      "projects": "Setup Projects",
+      "tasks": "Create Tasks",
+      "reporting": "Configure Reporting and Dashboards",
     }
     return titles[categoryOrder[currentIndex - 1]] || "the previous step"
   }

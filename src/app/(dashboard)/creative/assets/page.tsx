@@ -380,7 +380,7 @@ export default function AssetsPage() {
                     <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={(checked) => handleSelect(asset.id, checked as boolean)}
+                        onCheckedChange={(checked) => handleSelect(asset.id, checked === true)}
                       />
                     </TableCell>
 

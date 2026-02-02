@@ -2,19 +2,28 @@
 
 import { cn } from "@/lib/utils"
 import { ChevronDown } from "lucide-react"
-import { useState } from "react"
+import { useState, ReactNode } from "react"
 import type { SetupTask } from "@/lib/contexts/setup-context"
+import { Button } from "@/components/ui/button"
 
 interface SetupTaskDetailProps {
   task: SetupTask
   categoryId: string
   onToggle: (categoryId: string, taskId: string) => void
+  actionButton?: {
+    label: string
+    onClick: () => void
+    variant?: "default" | "outline" | "secondary"
+  }
+  children?: ReactNode
 }
 
 export function SetupTaskDetail({
   task,
   categoryId,
   onToggle,
+  actionButton,
+  children,
 }: SetupTaskDetailProps) {
   const [showDetails, setShowDetails] = useState(false)
 
@@ -62,6 +71,22 @@ export function SetupTaskDetail({
             {getTaskDescription(task.id)}
           </p>
 
+          {/* Action button */}
+          {actionButton && !task.completed && (
+            <div className="mb-3">
+              <Button
+                onClick={actionButton.onClick}
+                variant={actionButton.variant || "default"}
+                size="sm"
+              >
+                {actionButton.label}
+              </Button>
+            </div>
+          )}
+
+          {/* Custom children content */}
+          {children && <div className="mb-3">{children}</div>}
+
           {/* Optional "What you'll need" section */}
           {hasTaskDetails(task.id) && (
             <button
@@ -92,10 +117,63 @@ export function SetupTaskDetail({
 // Helper functions to provide task-specific content
 function getTaskDescription(taskId: string): string {
   const descriptions: Record<string, string> = {
+    // Company Settings
+    "company-profile":
+      "Set up your primary company details including name, industry, size, and contact information.",
+    "sub-accounts":
+      "Create sub-accounts for departments, divisions, or subsidiaries to manage permissions hierarchically.",
+    "approval-workflows":
+      "Define the approval stages and approvers for your content review process.",
+    "ai-tools":
+      "Enable AI-powered tools like GPT-4, DALL-E, and content analyzers to enhance your workflow.",
+    "personal-profile":
+      "Complete your admin profile with photo, bio, and notification preferences.",
+    
+    // Team Members
+    "company-admins":
+      "Invite administrators who will have full access to settings, projects, and team management.",
+    "creative-team":
+      "Invite creative team members who will create and manage content and assets.",
+    "talent":
+      "Add talent, contractors, and freelancers who will contribute to your projects.",
+    "clients":
+      "Invite client stakeholders who need visibility into project progress and approvals.",
+    
+    // Brands
+    "first-brand":
+      "Create your first brand profile with logo, colors, and brand guidelines.",
+    "brand-assets":
+      "Upload brand assets like logos, fonts, and style guides for team reference.",
+    "additional-brands":
+      "Add more brand profiles if you manage multiple brands or sub-brands.",
+    
+    // Projects
+    "first-project":
+      "Create your first project to start organizing tasks, assets, and team collaboration.",
+    "project-templates":
+      "Set up reusable project templates for common workflows and project types.",
+    "project-permissions":
+      "Configure who can view, edit, and manage projects across your organization.",
+    
+    // Tasks
+    "first-task":
+      "Add your first task to the project with assignees, due dates, and deliverables.",
+    "task-workflow":
+      "Customize task stages like To Do, In Progress, Review, and Complete.",
+    "task-assignments":
+      "Assign tasks to team members and set up notifications for updates.",
+    
+    // Reporting
+    "dashboard-layout":
+      "Customize your dashboard with widgets for projects, tasks, analytics, and KPIs.",
+    "report-preferences":
+      "Configure automated reports and choose which metrics to track.",
+    "notifications":
+      "Set up how and when you receive notifications about tasks, approvals, and updates.",
+    
+    // Legacy tasks (keeping for backwards compatibility)
     photo:
       "Add a profile picture to personalize your account and help your team recognize you.",
-    notifications:
-      "Configure how and when you want to receive notifications about tasks, mentions, and updates.",
     invite:
       "Invite team members to collaborate on projects and manage creative assets together.",
     create:
@@ -109,11 +187,30 @@ function getTaskDescription(taskId: string): string {
 }
 
 function hasTaskDetails(taskId: string): boolean {
-  return ["invite", "calendar", "storage"].includes(taskId)
+  return [
+    "company-admins",
+    "ai-tools",
+    "first-brand",
+    "project-templates",
+    "task-workflow",
+    "invite",
+    "calendar",
+    "storage",
+  ].includes(taskId)
 }
 
 function getTaskDetails(taskId: string): string {
   const details: Record<string, string> = {
+    "company-admins":
+      "Admin team members will receive an email invitation with setup instructions. They'll have access to all company settings and can manage other users.",
+    "ai-tools":
+      "AI tools require API keys from providers like OpenAI. You can set usage limits to control costs. Tools can be enabled or disabled at any time.",
+    "first-brand":
+      "You'll need your brand logo, primary colors, and any existing brand guidelines. This helps maintain consistency across all creative assets.",
+    "project-templates":
+      "Templates save time by pre-configuring tasks, workflows, and team assignments for recurring project types like campaigns or product launches.",
+    "task-workflow":
+      "Custom workflows help match your team's process. You can add stages, set approval requirements, and configure automatic transitions.",
     invite:
       "You'll need team member email addresses. They'll receive an invitation to join your workspace.",
     calendar:

@@ -1,6 +1,7 @@
 "use client"
 
 import { useParams, useRouter, notFound } from "next/navigation"
+import Link from "next/link"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { ProjectTabs, ActivityItem, MilestoneItem } from "@/components/cr"
@@ -482,7 +483,7 @@ export default function ProjectOverviewPage() {
                   <SelectTrigger className="h-8">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="bottom" align="start" sideOffset={4} avoidCollisions={false}>
                     {TEAM_MEMBERS.map((member) => (
                       <SelectItem key={member.id} value={member.fullName}>
                         {member.name}
@@ -506,10 +507,13 @@ export default function ProjectOverviewPage() {
               {/* Brand */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Brand</Label>
-                <div className="flex items-center gap-2 text-sm py-1">
+                <Link 
+                  href={`/creative/brands/${project.companyId}`}
+                  className="flex items-center gap-2 text-sm py-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                >
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span>{company?.name || 'Unknown'}</span>
-                </div>
+                </Link>
               </div>
 
               {/* Created */}
