@@ -321,8 +321,8 @@ export function DeliverableVersionsCard({ taskId, versionGroups, onUpload }: Del
       {/* Copyright Check Review Modal */}
       {reviewAsset && (
         <CopyrightCheckReview
-          isOpen={!!reviewAsset}
-          onClose={() => setReviewAsset(null)}
+          open={!!reviewAsset}
+          onOpenChange={(open) => !open && setReviewAsset(null)}
           asset={reviewAsset}
           onApprove={() => handleApprove(reviewAsset.id)}
           onReject={handleReject}
