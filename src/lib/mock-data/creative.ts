@@ -1257,7 +1257,7 @@ export const mockAssets: Asset[] = [
           score: 70,
           imageOptimization: {
             format: "acceptable",
-            sizeRating: "fair",
+            sizeRating: "large",
             compressionPotential: 35,
           },
           metadata: {
