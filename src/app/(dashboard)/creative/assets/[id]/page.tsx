@@ -299,9 +299,7 @@ export default function AssetDetailPage() {
               {/* Left Column - Preview & Content */}
               <div className="lg:col-span-2 space-y-2">
                 {/* Preview Image */}
-                <Card>
-            <CardContent className="p-0">
-              <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
                 {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
                   <Image
                     src={asset.thumbnailUrl}
@@ -318,8 +316,6 @@ export default function AssetDetailPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
 
           {/* Description */}
           {asset.description && (
@@ -670,27 +666,23 @@ export default function AssetDetailPage() {
           {/* Left Column - Preview & Content */}
           <div className="lg:col-span-2 space-y-2">
             {/* Preview Image */}
-            <Card>
-              <CardContent className="p-0">
-                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
-                  {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
-                    <Image
-                      src={asset.thumbnailUrl}
-                      alt={asset.name}
-                      fill
-                      className="object-contain"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Preview not available for this file type
-                      </p>
-                    </div>
-                  )}
+            <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+              {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                <Image
+                  src={asset.thumbnailUrl}
+                  alt={asset.name}
+                  fill
+                  className="object-contain"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Preview not available for this file type
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
 
             {/* Description */}
             {asset.description && (
