@@ -48,19 +48,21 @@ export const EDITABLE_FIELDS: EditableField[] = [
   {
     id: "brandId",
     label: "Brand",
-    type: "select",
+    type: "searchable-select",
     category: "brand",
     path: "brandId",
     editable: true,
+    searchable: true,
     options: [], // Populated dynamically from brands context
   },
   {
     id: "designType",
     label: "Design Type",
-    type: "select",
+    type: "badge-multiselect",
     category: "brand",
     path: "designType",
     editable: true,
+    badgeColor: "purple",
     options: [
       { value: "digital_marketing", label: "Digital Marketing" },
       { value: "social_media", label: "Social Media" },
@@ -133,6 +135,7 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "files",
     path: "fileSize",
     editable: false,
+    unit: "MB",
     helpText: "Read-only: Calculated from file",
   },
   
@@ -374,15 +377,16 @@ export const EDITABLE_FIELDS: EditableField[] = [
   // APPROVAL & STATUS
   {
     id: "approvalStatus",
-    label: "Approval Status",
-    type: "select",
+    label: "Status",
+    type: "badge-select",
     category: "approval",
     path: "approvalStatus",
     editable: true,
     options: [
-      { value: "pending", label: "Pending" },
-      { value: "approved", label: "Approved" },
-      { value: "rejected", label: "Rejected" },
+      { value: "draft", label: "Draft", color: "gray" },
+      { value: "pending", label: "Pending", color: "yellow" },
+      { value: "approved", label: "Approved", color: "green" },
+      { value: "rejected", label: "Rejected", color: "red" },
     ],
   },
   {

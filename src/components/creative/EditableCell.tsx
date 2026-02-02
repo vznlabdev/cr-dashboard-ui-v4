@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { TagInput } from "@/components/ui/tag-input"
 import { TalentPicker } from "./TalentPicker"
-import { CalendarIcon, AlertCircle } from "lucide-react"
+import { CalendarIcon, AlertCircle, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { EditableField } from "@/types/bulk-edit"
 import { format } from "date-fns"
@@ -28,6 +29,7 @@ interface EditableCellProps {
 export function EditableCell({ field, value, originalValue, hasChange, error, onChange }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [localValue, setLocalValue] = useState(value)
+  const [searchQuery, setSearchQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   
   useEffect(() => {
@@ -157,6 +159,151 @@ export function EditableCell({ field, value, originalValue, hasChange, error, on
           />
         )
       
+      case "badge-select": {
+        const statusConfig = field.options?.find(o => o.value === localValue)
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 hover:bg-accent/50 px-2 py-1 rounded">
+                <Badge 
+                  className={cn(
+                    "font-semibold text-xs rounded-md px-2 py-0.5",
+                    statusConfig?.color === "green" && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                    statusConfig?.color === "yellow" && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+                    statusConfig?.color === "purple" && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+                    statusConfig?.color === "red" && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+                    statusConfig?.color === "gray" && "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400"
+                  )}
+                >
+                  {statusConfig?.label || localValue || "Select"}
+                </Badge>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[180px] p-1" align="start">
+              {field.options?.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setLocalValue(opt.value); onChange(opt.value) }}
+                  className="w-full text-left px-2 py-1.5 hover:bg-accent rounded text-sm flex items-center gap-2"
+                >
+                  <Badge 
+                    className={cn(
+                      "font-semibold text-xs rounded-md px-2 py-0.5",
+                      opt.color === "green" && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                      opt.color === "yellow" && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+                      opt.color === "purple" && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+                      opt.color === "red" && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+                      opt.color === "gray" && "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400"
+                    )}
+                  >
+                    {opt.label}
+                  </Badge>
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        )
+      }
+      
+      case "badge-multiselect": {
+        const selectedBadges = Array.isArray(localValue) ? localValue : []
+        const badgeColor = field.badgeColor || "purple"
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1 flex-wrap hover:bg-accent/50 px-2 py-1 rounded min-h-[28px]">
+                {selectedBadges.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">Select...</span>
+                ) : (
+                  selectedBadges.map(val => {
+                    const opt = field.options?.find(o => o.value === val)
+                    return (
+                      <Badge 
+                        key={val} 
+                        className={cn(
+                          "font-semibold text-xs rounded-md px-2 py-0.5",
+                          badgeColor === "purple" && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+                          badgeColor === "blue" && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                          badgeColor === "green" && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                        )}
+                      >
+                        {opt?.label || val}
+                      </Badge>
+                    )
+                  })
+                )}
+                <ChevronDown className="h-3 w-3 text-muted-foreground ml-1" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[240px] p-2" align="start">
+              <div className="space-y-1 max-h-[300px] overflow-auto">
+                {field.options?.map(opt => (
+                  <label key={opt.value} className="flex items-center gap-2 p-1.5 hover:bg-accent rounded cursor-pointer">
+                    <Checkbox
+                      checked={selectedBadges.includes(opt.value)}
+                      onCheckedChange={(checked) => {
+                        const newValue = checked
+                          ? [...selectedBadges, opt.value]
+                          : selectedBadges.filter((v: string) => v !== opt.value)
+                        setLocalValue(newValue)
+                        onChange(newValue)
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )
+      }
+      
+      case "searchable-select": {
+        const filteredOptions = field.options?.filter(opt =>
+          opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || []
+        const selectedOption = field.options?.find(o => o.value === localValue)
+        
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 text-sm hover:bg-accent/50 px-2 py-1 rounded w-full justify-between">
+                <span className="truncate">{selectedOption?.label || localValue || "Select..."}</span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[220px] p-2" align="start">
+              <Input 
+                placeholder="Search..." 
+                className="h-8 mb-2 text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-0.5">
+                  {filteredOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { 
+                        setLocalValue(opt.value)
+                        onChange(opt.value)
+                        setSearchQuery("")
+                      }}
+                      className="w-full text-left px-2 py-1.5 hover:bg-accent rounded text-sm"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+        )
+      }
+      
       default:
         return <span className="text-xs text-muted-foreground">Unsupported type</span>
     }
@@ -211,10 +358,55 @@ function formatValue(value: any, field: EditableField): React.ReactNode {
     case "multiselect":
       return Array.isArray(value) ? value.join(", ") : "-"
     case "select":
+    case "searchable-select":
       const option = field.options?.find(o => o.value === value)
       return option?.label || value
+    case "badge-select": {
+      const statusConfig = field.options?.find(o => o.value === value)
+      return (
+        <Badge 
+          className={cn(
+            "font-semibold text-xs rounded-md px-2 py-0.5",
+            statusConfig?.color === "green" && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+            statusConfig?.color === "yellow" && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+            statusConfig?.color === "purple" && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+            statusConfig?.color === "red" && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+            statusConfig?.color === "gray" && "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400"
+          )}
+        >
+          {statusConfig?.label || value}
+        </Badge>
+      )
+    }
+    case "badge-multiselect": {
+      const selectedBadges = Array.isArray(value) ? value : []
+      const badgeColor = field.badgeColor || "purple"
+      if (selectedBadges.length === 0) return <span className="text-muted-foreground">-</span>
+      return (
+        <div className="flex items-center gap-1 flex-wrap">
+          {selectedBadges.map((val: string) => {
+            const opt = field.options?.find(o => o.value === val)
+            return (
+              <Badge 
+                key={val}
+                className={cn(
+                  "font-semibold text-xs rounded-md px-2 py-0.5",
+                  badgeColor === "purple" && "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+                  badgeColor === "blue" && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+                  badgeColor === "green" && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                )}
+              >
+                {opt?.label || val}
+              </Badge>
+            )
+          })}
+        </div>
+      )
+    }
     case "talent":
       return Array.isArray(value) ? `${value.length} selected` : "-"
+    case "number":
+      return field.unit ? `${value} ${field.unit}` : String(value)
     default:
       return String(value)
   }

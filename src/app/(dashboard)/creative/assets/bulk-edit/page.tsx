@@ -5,19 +5,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Columns, Search, AlertTriangle } from "lucide-react"
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { ArrowLeft, Columns, Search, AlertTriangle, ChevronDown, FileImage } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { mockAssets, mockVersionGroups } from "@/lib/mock-data/creative"
-import { BULK_EDIT_CATEGORIES, EDITABLE_FIELDS, getFieldsByCategory } from "@/config/bulk-edit-fields"
+import { BULK_EDIT_CATEGORIES, EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
 import { EditableCell } from "@/components/creative"
 import type { Asset, AssetVersion } from "@/types/creative"
 import type { BulkEditChange } from "@/types/bulk-edit"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import NextImage from "next/image"
 
 // Helper function to get nested value from object
 function getNestedValue(obj: any, path: string): any {
@@ -61,21 +62,10 @@ function BulkEditPageContent() {
   const [saving, setSaving] = useState(false)
   const [columnsPanelOpen, setColumnsPanelOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
   
   // Derived state
   const hasChanges = changes.length > 0
   const errorCount = changes.filter(c => c.error).length
-  const fieldsByCategory = useMemo(() => getFieldsByCategory(), [])
-  
-  // Get columns for current tab
-  const currentColumns = useMemo(() => {
-    if (activeTab === "all") {
-      return selectedColumns
-    }
-    const categoryFields = fieldsByCategory[activeTab] || []
-    return categoryFields.map(f => f.id).filter(id => selectedColumns.includes(id))
-  }, [activeTab, selectedColumns, fieldsByCategory])
   
   // Cell change handler
   const handleCellChange = useCallback((assetId: string, fieldPath: string, newValue: any, oldValue: any) => {
@@ -225,130 +215,72 @@ function BulkEditPageContent() {
         </div>
       </div>
       
-      {/* Linear-Style Compact Tabs - h-9 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b bg-background px-4 shrink-0">
-          <TabsList className="h-9 bg-transparent border-0 gap-4">
-            <TabsTrigger 
-              value="all" 
-              className="h-9 px-2 text-xs data-[state=active]:border-b-2 rounded-none"
-            >
-              All Fields
-            </TabsTrigger>
-            <TabsTrigger value="basic" className="h-9 px-2 text-xs rounded-none">
-              Basic
-            </TabsTrigger>
-            <TabsTrigger value="brand" className="h-9 px-2 text-xs rounded-none">
-              Brand
-            </TabsTrigger>
-            <TabsTrigger value="files" className="h-9 px-2 text-xs rounded-none">
-              Files
-            </TabsTrigger>
-            <TabsTrigger value="copyright" className="h-9 px-2 text-xs rounded-none">
-              Copyright
-            </TabsTrigger>
-            <TabsTrigger value="accessibility" className="h-9 px-2 text-xs rounded-none">
-              A11y
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="h-9 px-2 text-xs rounded-none">
-              SEO
-            </TabsTrigger>
-            <TabsTrigger value="talent" className="h-9 px-2 text-xs rounded-none">
-              Talent
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="h-9 px-2 text-xs rounded-none">
-              AI
-            </TabsTrigger>
-            <TabsTrigger value="approval" className="h-9 px-2 text-xs rounded-none">
-              Approval
-            </TabsTrigger>
-            <TabsTrigger value="version" className="h-9 px-2 text-xs rounded-none">
-              Version
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        
-        {/* Table Content - All Tabs */}
-        {Object.keys(BULK_EDIT_CATEGORIES).map(categoryKey => (
-          <TabsContent 
-            key={categoryKey} 
-            value={categoryKey} 
-            className="flex-1 m-0 overflow-hidden"
-          >
-            <LinearStyleTable 
-              assets={selectedAssets}
-              columns={currentColumns}
-              changes={changes}
-              onCellChange={handleCellChange}
-              getChangeForCell={getChangeForCell}
-              getCellValue={getCellValue}
-            />
-          </TabsContent>
-        ))}
-        
-        <TabsContent value="all" className="flex-1 m-0 overflow-hidden">
-          <LinearStyleTable 
-            assets={selectedAssets}
-            columns={currentColumns}
-            changes={changes}
-            onCellChange={handleCellChange}
-            getChangeForCell={getChangeForCell}
-            getCellValue={getCellValue}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Shopify-Style Single Table View - No Tabs */}
+      <div className="flex-1 overflow-auto">
+        <LinearStyleTable 
+          assets={selectedAssets}
+          columns={selectedColumns}
+          changes={changes}
+          onCellChange={handleCellChange}
+          getChangeForCell={getChangeForCell}
+          getCellValue={getCellValue}
+        />
+      </div>
       
-      {/* Linear-Style Compact Column Selector Side Panel */}
+      {/* Shopify-Style Column Selector Side Panel with Collapsible Groups */}
       <Sheet open={columnsPanelOpen} onOpenChange={setColumnsPanelOpen}>
-        <SheetContent side="right" className="w-[340px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-[320px] p-0 flex flex-col">
           <SheetHeader className="px-4 py-3 border-b shrink-0">
-            <SheetTitle className="text-base">Columns</SheetTitle>
-            <SheetDescription className="text-xs">
-              {selectedColumns.length} selected
-            </SheetDescription>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-sm font-bold">Columns</SheetTitle>
+              <span className="text-xs text-muted-foreground">{selectedColumns.length} selected</span>
+            </div>
           </SheetHeader>
           
-          {/* Compact search */}
-          <div className="px-4 py-2 border-b shrink-0">
+          {/* Search */}
+          <div className="px-4 py-3 border-b shrink-0">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input 
                 placeholder="Search fields" 
-                className="h-8 text-xs pl-8"
+                className="h-8 text-sm pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
           
-          {/* Dense grouped checkboxes */}
+          {/* Collapsible Category Groups (Shopify Style) */}
           <ScrollArea className="flex-1">
-            <div className="px-4 py-2">
+            <div className="p-3">
               {Object.entries(BULK_EDIT_CATEGORIES).map(([key, label]) => {
                 const categoryFields = filteredFields.filter(f => f.category === key && f.editable)
                 if (categoryFields.length === 0) return null
                 
                 return (
-                  <div key={key} className="mb-4">
-                    <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
-                      {label}
-                    </h3>
-                    <div className="space-y-0.5">
-                      {categoryFields.map(field => (
-                        <label 
-                          key={field.id} 
-                          className="flex items-center gap-2 py-1 px-1.5 hover:bg-accent/50 rounded cursor-pointer"
-                        >
-                          <Checkbox 
-                            checked={selectedColumns.includes(field.id)}
-                            onCheckedChange={() => handleToggleColumn(field.id)}
-                            className="h-3.5 w-3.5"
-                          />
-                          <span className="text-xs">{field.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  <Collapsible key={key} defaultOpen={key === "basic" || key === "brand"} className="mb-3">
+                    <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-bold hover:bg-accent/50 rounded px-2 group">
+                      <span>{label}</span>
+                      <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <div className="space-y-0.5 pl-2">
+                        {categoryFields.map(field => (
+                          <label 
+                            key={field.id} 
+                            className="flex items-center gap-2 py-1.5 px-2 hover:bg-accent/50 rounded cursor-pointer"
+                          >
+                            <Checkbox 
+                              checked={selectedColumns.includes(field.id)}
+                              onCheckedChange={() => handleToggleColumn(field.id)}
+                              className="h-4 w-4"
+                            />
+                            <span className="text-sm">{field.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 )
               })}
             </div>
@@ -383,16 +315,16 @@ function LinearStyleTable({
   
   return (
     <div className="flex-1 overflow-auto">
-      <table className="w-full text-xs">
+      <table className="w-max min-w-full text-sm font-medium">
         <thead className="sticky top-0 bg-background z-10 border-b">
-          <tr className="h-8">
-            <th className="sticky left-0 bg-background z-20 px-3 py-1.5 text-left font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
-              Asset
+          <tr className="h-9">
+            <th className="sticky left-0 bg-background z-20 px-3 py-2 text-left text-xs font-bold text-foreground">
+              Asset Name
             </th>
             {fields.map(field => (
               <th 
                 key={field.id} 
-                className="px-3 py-1.5 text-left font-medium text-[11px] text-muted-foreground uppercase tracking-wide min-w-[180px]"
+                className="px-3 py-2 text-left text-xs font-bold text-foreground min-w-[160px]"
               >
                 {field.label}
               </th>
@@ -403,11 +335,28 @@ function LinearStyleTable({
           {assets.map((asset) => (
             <tr 
               key={asset.id} 
-              className="border-b border-border/40 hover:bg-accent/30 transition-colors h-8"
+              className="border-b border-border hover:bg-accent/20 transition-colors h-9"
             >
-              <td className="sticky left-0 bg-background z-10 px-3 py-1.5 font-medium text-xs">
-                <div className="truncate max-w-[160px]" title={asset.name}>
-                  {asset.name}
+              <td className="sticky left-0 bg-background z-10 px-3 py-2 font-medium text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded overflow-hidden border shrink-0">
+                    {asset.thumbnailUrl ? (
+                      <NextImage 
+                        src={asset.thumbnailUrl} 
+                        alt={asset.name}
+                        width={28}
+                        height={28}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <FileImage className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-medium text-sm truncate max-w-[200px]" title={asset.name}>
+                    {asset.name}
+                  </span>
                 </div>
               </td>
               {fields.map(field => {
@@ -416,7 +365,7 @@ function LinearStyleTable({
                 const change = getChangeForCell(asset.id, field.path)
                 
                 return (
-                  <td key={field.id} className="px-3 py-1">
+                  <td key={field.id} className="px-3 py-2">
                     <EditableCell
                       field={field}
                       value={value}
