@@ -298,7 +298,7 @@ export function TaskComments({
 
                       {/* Quick Reactions Dropdown */}
                       {showReactionPicker === comment.id && (
-                        <div className="absolute left-0 top-6 z-50 bg-popover border border-border rounded-lg shadow-lg p-2">
+                        <div className="absolute left-0 top-6 z-50 bg-white dark:bg-gray-950 border border-border rounded-lg shadow-lg p-2">
                           <div className="flex gap-1">
                             {QUICK_REACTIONS.map((emoji) => (
                               <button
@@ -344,7 +344,7 @@ export function TaskComments({
           {showMentions && filteredMembers.length > 0 && (
             <div
               ref={mentionDropdownRef}
-              className="absolute z-50 mt-1 w-64 bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
+              className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-950 border border-border rounded-lg shadow-lg overflow-hidden"
               style={{ top: mentionPosition.top, left: mentionPosition.left }}
             >
               {filteredMembers.map((member, index) => (

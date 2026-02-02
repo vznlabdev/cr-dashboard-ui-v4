@@ -231,10 +231,8 @@ function BulkEditPageContent() {
       <Sheet open={columnsPanelOpen} onOpenChange={setColumnsPanelOpen}>
         <SheetContent side="right" className="w-[320px] p-0 flex flex-col">
           <SheetHeader className="px-4 py-3 border-b shrink-0">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-sm font-bold">Columns</SheetTitle>
-              <span className="text-xs text-muted-foreground">{selectedColumns.length} selected</span>
-            </div>
+            <SheetTitle className="text-sm font-bold">Columns</SheetTitle>
+            <span className="text-xs text-muted-foreground">{selectedColumns.length} selected</span>
           </SheetHeader>
           
           {/* Search */}

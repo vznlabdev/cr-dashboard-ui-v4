@@ -78,7 +78,7 @@ export function NilpDropdownTab({ currentTab, onTabChange }: NilpDropdownTabProp
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-56 !bg-popover !backdrop-blur-none !border-border"
+        className="w-56"
       >
         {nilpCategories.map((category) => {
           const Icon = category.icon
