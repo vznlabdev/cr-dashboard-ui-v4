@@ -1477,13 +1477,13 @@ export const mockAssets: Asset[] = [
               recommendation: "Add semantic heading hierarchy and table of contents",
             },
             {
-              severity: "major",
+              severity: "serious",
               type: "readability",
               description: "Small font sizes make content difficult to read",
               recommendation: "Increase body text to minimum 12pt for print documents",
             },
             {
-              severity: "major",
+              severity: "serious",
               type: "images",
               description: "Charts and graphs lack alt text descriptions",
               recommendation: "Add descriptive alt text for all visual data representations",
