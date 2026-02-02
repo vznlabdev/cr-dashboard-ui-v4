@@ -112,6 +112,10 @@ export interface AssetVersion {
   aiModel?: string
   
   // Brand & design info (from parent group)
+  brandId?: string
+  brandName?: string
+  brandColor?: string
+  brandLogoUrl?: string
   designType?: DesignType
   tags?: string[]
   ticketId?: string
