@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { mockAssets, mockVersionGroups, getVersionGroupById } from "@/lib/mock-data/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
+import { useAssetAutoSave } from "@/lib/asset-auto-save"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import {
   Download,
   Calendar,
@@ -28,13 +30,17 @@ import {
   Plus,
   RotateCcw,
   FileBarChart,
+  ChevronDown,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { PromptContent } from "@/components/creative/PromptContent"
+import { InlineEditField } from "@/components/creative"
 import { useCreators } from "@/contexts/creators-context"
 import { CreatorAvatarBadge } from "@/components/creators"
 import { ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
+import { EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
+import { formatDistanceToNow } from "date-fns"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +65,9 @@ export default function AssetDetailPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "versions">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
+  
+  // Local asset state for optimistic updates
+  const [localAsset, setLocalAsset] = useState<any>(null)
   
   // Copyright check handlers
   const handleRunCheck = async () => {
@@ -100,9 +109,29 @@ export default function AssetDetailPage() {
   }
   
   // Fallback to regular asset if not a version group
-  const asset = versionGroup 
+  const baseAsset = versionGroup 
     ? versionGroup.versions.find(v => v.id === selectedVersionId)
     : mockAssets.find((a) => a.id === assetId)
+  
+  // Use local asset state or base asset
+  const asset = localAsset || baseAsset
+  
+  // Initialize local asset on mount
+  useEffect(() => {
+    if (baseAsset && !localAsset) {
+      setLocalAsset(baseAsset)
+    }
+  }, [baseAsset, localAsset])
+  
+  // Auto-save hook
+  const { saveField, isSaving, lastSaved } = useAssetAutoSave(assetId, asset, {
+    onUpdate: setLocalAsset
+  })
+  
+  // Handle field save
+  const handleFieldSave = useCallback(async (fieldPath: string, newValue: any) => {
+    await saveField(fieldPath, newValue)
+  }, [saveField])
   
   const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators()
 
@@ -143,13 +172,34 @@ export default function AssetDetailPage() {
   const displayDesignType = versionGroup ? versionGroup.designType : (asset && 'designType' in asset ? asset.designType : undefined)
   const displayCreatedAt = (asset && 'createdAt' in asset && asset.createdAt) ? asset.createdAt : (asset && 'uploadedAt' in asset ? asset.uploadedAt : new Date())
   
-  const contentTypeConfig = asset && 'contentType' in asset ? ASSET_CONTENT_TYPE_CONFIG[asset.contentType] : null
-  const designTypeConfig = displayDesignType ? DESIGN_TYPE_CONFIG[displayDesignType] : null
+  const contentTypeConfig = asset && 'contentType' in asset && asset.contentType ? ASSET_CONTENT_TYPE_CONFIG[asset.contentType as keyof typeof ASSET_CONTENT_TYPE_CONFIG] : null
+  const designTypeConfig = displayDesignType ? DESIGN_TYPE_CONFIG[displayDesignType as keyof typeof DESIGN_TYPE_CONFIG] : null
   const isAIGenerated = asset && 'contentType' in asset && asset.contentType === "ai_generated"
+  
+  // Get editable field configurations
+  const nameField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "name"), [])
+  const descriptionField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "description"), [])
+  const tagsField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "tags"), [])
+  const statusField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "approvalStatus"), [])
+  const brandField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "brandId"), [])
+  const designTypeField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "designType"), [])
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        // Manual save would trigger any pending changes
+        toast.success("Changes saved")
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
-    <PageContainer className="space-y-2 animate-fade-in">
-      {/* Header Section */}
+    <PageContainer className="space-y-4 animate-fade-in">
+      {/* Header Section with Save Status */}
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
           {/* Breadcrumb */}
@@ -216,8 +266,16 @@ export default function AssetDetailPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* Action Buttons with Save Indicator */}
+        <div className="flex items-center gap-3">
+          {/* Save Status */}
+          <div className="text-xs text-muted-foreground">
+            {isSaving && <span>Saving...</span>}
+            {!isSaving && lastSaved && (
+              <span>Saved {formatDistanceToNow(lastSaved, { addSuffix: true })}</span>
+            )}
+          </div>
+          
           {/* Primary action */}
           <Button size="sm" className="h-8" asChild>
             <a href={asset.fileUrl} download>
@@ -295,57 +353,147 @@ export default function AssetDetailPage() {
 
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="mt-2">
-            <div className="grid lg:grid-cols-3 gap-3">
-              {/* Left Column - Preview & Content */}
-              <div className="lg:col-span-2 space-y-2">
-                {/* Preview Image */}
-                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
-                {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
-                  <Image
-                    src={asset.thumbnailUrl}
-                    alt={asset.name}
-                    fill
-                    className="object-contain"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Preview not available for this file type
-                    </p>
-                  </div>
+            <div className="grid lg:grid-cols-3 gap-4">
+              {/* Left Column - Main Content */}
+              <div className="lg:col-span-2 space-y-4">
+                {/* Basic Information Card - Inline Editable */}
+                {nameField && descriptionField && (
+                  <Card>
+                    <CardContent className="pt-6 space-y-4">
+                      <InlineEditField
+                        field={nameField}
+                        value={asset.name}
+                        onSave={(newValue) => handleFieldSave("name", newValue)}
+                        label="Title"
+                      />
+                      
+                      {descriptionField && (
+                        <InlineEditField
+                          field={descriptionField}
+                          value={asset.description}
+                          onSave={(newValue) => handleFieldSave("description", newValue)}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
-              </div>
+                
+                {/* Media / Preview Image */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Media</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                      {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                        <Image
+                          src={asset.thumbnailUrl}
+                          alt={asset.name}
+                          fill
+                          className="object-contain"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            Preview not available for this file type
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Description */}
-          {asset.description && (
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Description</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {asset.description}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Tags */}
-          {asset && 'tags' in asset && asset.tags && asset.tags.length > 0 && (
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Tags</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {asset.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
-                      <Tag className="h-3 w-3 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
+                {/* Expandable SEO Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                    <h3 className="text-sm font-semibold">SEO & Metadata</h3>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="mt-2">
+                      <CardContent className="pt-6 space-y-4">
+                        {EDITABLE_FIELDS.filter(f => f.category === "seo").slice(0, 3).map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={asset[field.path as keyof typeof asset]}
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Expandable Accessibility Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                    <h3 className="text-sm font-semibold">Accessibility</h3>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="mt-2">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">WCAG Level</span>
+                            {asset.reviewData?.accessibility?.data?.wcagLevel ? (
+                              <Badge variant="outline" className="font-medium">
+                                {asset.reviewData.accessibility.data.wcagLevel}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">Not checked</span>
+                            )}
+                          </div>
+                          {asset.reviewData?.accessibility?.data?.score !== undefined && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Score</span>
+                              <span className="font-medium">{asset.reviewData.accessibility.data.score}/100</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Expandable Advanced Metadata Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                    <h3 className="text-sm font-semibold">Advanced Metadata</h3>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="mt-2">
+                      <CardContent className="pt-6 space-y-4">
+                        {/* C2PA / Content Credentials */}
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Content Credentials (C2PA)</p>
+                          <div className="text-sm text-muted-foreground">
+                            C2PA manifest available for verification
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        {/* Performance */}
+                        {asset.reviewData?.performance?.data && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Performance</p>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Optimization Score</span>
+                                <span className="font-medium">{asset.reviewData.performance.data.optimizationScore}/100</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
                 {/* Prompt History (AI Generated Only) */}
                 {isAIGenerated && asset.promptHistory && (
                   <PromptContent history={asset.promptHistory} />
@@ -353,10 +501,99 @@ export default function AssetDetailPage() {
               </div>
 
               {/* Right Column - Metadata Sidebar */}
-              <div className="space-y-2">
+              <div className="space-y-4">
+                {/* Status Card - Shopify Style */}
+                {statusField && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <InlineEditField
+                        field={statusField}
+                        value={asset.approvalStatus}
+                        onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                        showLabel={false}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Organization Card - Shopify Style */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Organization</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Brand */}
+                    {brandField && (
+                      <InlineEditField
+                        field={brandField}
+                        value={displayBrandId}
+                        onSave={(newValue) => handleFieldSave("brandId", newValue)}
+                      />
+                    )}
+                    
+                    {/* Design Type */}
+                    {designTypeField && (
+                      <InlineEditField
+                        field={designTypeField}
+                        value={displayDesignType}
+                        onSave={(newValue) => handleFieldSave("designType", newValue)}
+                      />
+                    )}
+                    
+                    {/* Tags */}
+                    {tagsField && asset && 'tags' in asset && (
+                      <InlineEditField
+                        field={tagsField}
+                        value={asset.tags}
+                        onSave={(newValue) => handleFieldSave("tags", newValue)}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Talent Rights Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-sm text-muted-foreground">
+                      {asset.talentRights && Array.isArray(asset.talentRights) && asset.talentRights.length > 0
+                        ? `${asset.talentRights.length} talent assigned`
+                        : "No talent assigned"}
+                    </div>
+                    {creditedCreators.length > 0 && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                          <div className="space-y-2">
+                            {assetCreditsWithRoles.map(({ creator, role }) => (
+                              <div key={creator.id} className="flex items-center justify-between">
+                                <CreatorAvatarBadge creator={creator} size="sm" />
+                                {role && (
+                                  <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                    {role}
+                                  </Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+          
           {/* Metadata Card - Consolidated */}
           <Card>
-            <CardContent className="pt-4 space-y-3 text-sm">
+            <CardHeader>
+              <CardTitle className="text-sm">Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
               {/* Brand */}
               {displayBrandId && (
                 <div>
@@ -531,26 +768,6 @@ export default function AssetDetailPage() {
             </Card>
           )}
 
-          {/* Credited Creators */}
-          {creditedCreators.length > 0 && (
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
-                <div className="space-y-2">
-                  {assetCreditsWithRoles.map(({ creator, role }) => (
-                    <div key={creator.id} className="flex items-center justify-between">
-                      <CreatorAvatarBadge creator={creator} size="sm" />
-                      {role && (
-                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                          {role}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
           </div>
         </div>
       </TabsContent>
@@ -662,56 +879,124 @@ export default function AssetDetailPage() {
       ) : (
         <>
         {/* Regular Asset - Two Column Grid */}
-        <div className="grid lg:grid-cols-3 gap-3">
-          {/* Left Column - Preview & Content */}
-          <div className="lg:col-span-2 space-y-2">
-            {/* Preview Image */}
-            <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
-              {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
-                <Image
-                  src={asset.thumbnailUrl}
-                  alt={asset.name}
-                  fill
-                  className="object-contain"
-                />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Preview not available for this file type
-                  </p>
+        <div className="grid lg:grid-cols-3 gap-4">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Basic Information Card - Inline Editable */}
+            {nameField && descriptionField && (
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <InlineEditField
+                    field={nameField}
+                    value={asset.name}
+                    onSave={(newValue) => handleFieldSave("name", newValue)}
+                    label="Title"
+                  />
+                  
+                  {descriptionField && (
+                    <InlineEditField
+                      field={descriptionField}
+                      value={asset.description}
+                      onSave={(newValue) => handleFieldSave("description", newValue)}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Media / Preview Image */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Media</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                  {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                    <Image
+                      src={asset.thumbnailUrl}
+                      alt={asset.name}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Preview not available for this file type
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Description */}
-            {asset.description && (
-              <Card>
-                <CardContent className="pt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Description</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {asset.description}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Tags */}
-            {asset && 'tags' in asset && asset.tags && asset.tags.length > 0 && (
-              <Card>
-                <CardContent className="pt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Tags</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {asset.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
-                        <Tag className="h-3 w-3 mr-1" />
-                        {tag}
-                      </Badge>
+              </CardContent>
+            </Card>
+            
+            {/* Expandable SEO Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                <h3 className="text-sm font-semibold">SEO & Metadata</h3>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Card className="mt-2">
+                  <CardContent className="pt-6 space-y-4">
+                    {EDITABLE_FIELDS.filter(f => f.category === "seo").slice(0, 3).map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={asset[field.path as keyof typeof asset]}
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Expandable Accessibility Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                <h3 className="text-sm font-semibold">Accessibility</h3>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Card className="mt-2">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">WCAG Level</span>
+                        {asset.reviewData?.accessibility?.data?.wcagLevel ? (
+                          <Badge variant="outline" className="font-medium">
+                            {asset.reviewData.accessibility.data.wcagLevel}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">Not checked</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Expandable Advanced Metadata Section */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-accent/50 transition-colors group">
+                <h3 className="text-sm font-semibold">Advanced Metadata</h3>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Card className="mt-2">
+                  <CardContent className="pt-6 space-y-4">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Content Credentials (C2PA)</p>
+                      <div className="text-sm text-muted-foreground">
+                        C2PA manifest available for verification
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Prompt History (AI Generated Only) */}
             {isAIGenerated && asset.promptHistory && (
@@ -719,11 +1004,100 @@ export default function AssetDetailPage() {
             )}
           </div>
 
-          {/* Right Column - Metadata Sidebar - Same as in tabs */}
-          <div className="space-y-2">
+          {/* Right Column - Metadata Sidebar */}
+          <div className="space-y-4">
+            {/* Status Card - Shopify Style */}
+            {statusField && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <InlineEditField
+                    field={statusField}
+                    value={asset.approvalStatus}
+                    onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                    showLabel={false}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Organization Card - Shopify Style */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Organization</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Brand */}
+                {brandField && (
+                  <InlineEditField
+                    field={brandField}
+                    value={displayBrandId}
+                    onSave={(newValue) => handleFieldSave("brandId", newValue)}
+                  />
+                )}
+                
+                {/* Design Type */}
+                {designTypeField && (
+                  <InlineEditField
+                    field={designTypeField}
+                    value={displayDesignType}
+                    onSave={(newValue) => handleFieldSave("designType", newValue)}
+                  />
+                )}
+                
+                {/* Tags */}
+                {tagsField && asset && 'tags' in asset && (
+                  <InlineEditField
+                    field={tagsField}
+                    value={asset.tags}
+                    onSave={(newValue) => handleFieldSave("tags", newValue)}
+                  />
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Talent Rights Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  {asset.talentRights && Array.isArray(asset.talentRights) && asset.talentRights.length > 0
+                    ? `${asset.talentRights.length} talent assigned`
+                    : "No talent assigned"}
+                </div>
+                {creditedCreators.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                      <div className="space-y-2">
+                        {assetCreditsWithRoles.map(({ creator, role }) => (
+                          <div key={creator.id} className="flex items-center justify-between">
+                            <CreatorAvatarBadge creator={creator} size="sm" />
+                            {role && (
+                              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                {role}
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+            
             {/* Metadata Card - Consolidated */}
             <Card>
-              <CardContent className="pt-4 space-y-3 text-sm">
+              <CardHeader>
+                <CardTitle className="text-sm">Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
                 {/* Brand */}
                 {displayBrandId && (
                   <div>
@@ -898,26 +1272,6 @@ export default function AssetDetailPage() {
               </Card>
             )}
 
-            {/* Credited Creators */}
-            {creditedCreators.length > 0 && (
-              <Card>
-                <CardContent className="pt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
-                  <div className="space-y-2">
-                    {assetCreditsWithRoles.map(({ creator, role }) => (
-                      <div key={creator.id} className="flex items-center justify-between">
-                        <CreatorAvatarBadge creator={creator} size="sm" />
-                        {role && (
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                            {role}
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
         </>

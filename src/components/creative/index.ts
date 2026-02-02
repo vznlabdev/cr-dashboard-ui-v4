@@ -21,4 +21,5 @@ export { BulkEditTable } from "./BulkEditTable"
 export { EditableCell } from "./EditableCell"
 export { ColumnSelector } from "./ColumnSelector"
 export { TalentPicker } from "./TalentPicker"
+export { InlineEditField } from "./InlineEditField"
 
