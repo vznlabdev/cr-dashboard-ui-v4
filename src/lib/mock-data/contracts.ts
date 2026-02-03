@@ -4,8 +4,8 @@ export const mockContracts: TalentContract[] = [
   // Nike - Active NILP Rights Agreement
   {
     id: "contract-1",
-    talentId: "talent-1",
-    talentName: "Michael Chen",
+    talentId: "creator-1",
+    talentName: "Sarah Johnson",
     templateType: "standard",
     contractType: "nilp_rights_agreement",
     status: "signed",
@@ -16,8 +16,8 @@ export const mockContracts: TalentContract[] = [
     brandLogoUrl: "https://placehold.co/100x100/000000/white?text=NIKE",
     projectId: "task-245",
     projectTitle: "Q1 2025 Campaign",
-    contractUrl: "/contracts/Nike_NILP_Agreement_MichaelChen.pdf",
-    signedContractUrl: "/contracts/Nike_NILP_Agreement_MichaelChen_Signed.pdf",
+    contractUrl: "/contracts/Nike_NILP_Agreement_SarahJohnson.pdf",
+    signedContractUrl: "/contracts/Nike_NILP_Agreement_SarahJohnson_Signed.pdf",
     
     nilpRights: {
       name: {
@@ -81,8 +81,8 @@ export const mockContracts: TalentContract[] = [
       {
         id: "doc-1",
         type: "contract",
-        fileName: "Nike_NILP_Agreement_MichaelChen.pdf",
-        fileUrl: "/contracts/Nike_NILP_Agreement_MichaelChen.pdf",
+        fileName: "Nike_NILP_Agreement_SarahJohnson.pdf",
+        fileUrl: "/contracts/Nike_NILP_Agreement_SarahJohnson.pdf",
         fileSize: 2100000,
         uploadedAt: new Date("2024-12-27"),
         uploadedBy: "admin-1",
@@ -159,16 +159,16 @@ export const mockContracts: TalentContract[] = [
         id: "hist-2",
         action: "viewed",
         timestamp: new Date("2024-12-27"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen",
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson",
         details: "Contract reviewed"
       },
       {
         id: "hist-3",
         action: "signed",
         timestamp: new Date("2024-12-28"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen",
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson",
         details: "Electronically signed"
       },
       {
@@ -199,8 +199,8 @@ export const mockContracts: TalentContract[] = [
   // Samsung - Active Brand Endorsement
   {
     id: "contract-2",
-    talentId: "talent-1",
-    talentName: "Michael Chen",
+    talentId: "creator-1",
+    talentName: "Sarah Johnson",
     templateType: "standard",
     contractType: "brand_endorsement",
     status: "signed",
@@ -331,8 +331,8 @@ export const mockContracts: TalentContract[] = [
         id: "hist-7",
         action: "signed",
         timestamp: new Date("2024-12-15"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen"
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson"
       },
       {
         id: "hist-8",
@@ -350,11 +350,11 @@ export const mockContracts: TalentContract[] = [
     updatedBy: "admin-1"
   },
   
-  // Toyota - Expiring Soon
+  // Toyota - Expiring Soon (Brand Mascot)
   {
     id: "contract-3",
-    talentId: "talent-1",
-    talentName: "Michael Chen",
+    talentId: "creator-2",
+    talentName: "Brandy the Bear",
     templateType: "standard",
     contractType: "usage_rights",
     status: "signed",
@@ -486,8 +486,8 @@ export const mockContracts: TalentContract[] = [
         id: "hist-10",
         action: "signed",
         timestamp: new Date("2024-10-28"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen"
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson"
       },
       {
         id: "hist-11",
@@ -508,8 +508,8 @@ export const mockContracts: TalentContract[] = [
   // Coca-Cola - Pending Signature
   {
     id: "contract-4",
-    talentId: "talent-1",
-    talentName: "Michael Chen",
+    talentId: "creator-1",
+    talentName: "Sarah Johnson",
     templateType: "standard",
     contractType: "nilp_rights_agreement",
     status: "pending_signature",
@@ -634,8 +634,8 @@ export const mockContracts: TalentContract[] = [
         id: "hist-13",
         action: "viewed",
         timestamp: new Date("2024-12-29"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen",
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson",
         details: "Contract reviewed - awaiting signature"
       }
     ],
@@ -647,11 +647,11 @@ export const mockContracts: TalentContract[] = [
     updatedBy: "admin-1"
   },
   
-  // Apple - Expired
+  // Apple - Expired (Athlete)
   {
     id: "contract-5",
-    talentId: "talent-1",
-    talentName: "Michael Chen",
+    talentId: "creator-4",
+    talentName: "Marcus Thompson",
     templateType: "standard",
     contractType: "nilp_rights_agreement",
     status: "expired",
@@ -776,8 +776,8 @@ export const mockContracts: TalentContract[] = [
         id: "hist-15",
         action: "signed",
         timestamp: new Date("2024-10-20"),
-        performedBy: "talent-1",
-        performedByName: "Michael Chen"
+        performedBy: "creator-1",
+        performedByName: "Sarah Johnson"
       },
       {
         id: "hist-16",
