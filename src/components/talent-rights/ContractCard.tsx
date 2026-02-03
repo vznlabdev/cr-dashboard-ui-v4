@@ -71,26 +71,24 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
       <div className="flex items-center justify-between gap-4">
         {/* Main Info */}
         <div className="flex-1 min-w-0 space-y-1">
-          {/* Line 1: Status, Title, Brand, Amount, Expiration */}
+          {/* Line 1: Talent, Brand, Amount, Expiration, Status, Title */}
           <div className="flex items-center gap-3 text-sm">
-            <Badge 
-              variant="outline" 
-              className={cn("text-[10px] px-1.5 py-0 h-5 border-0", statusConfig.color)}
-            >
-              {statusConfig.label}
-            </Badge>
-            
-            <span className="font-medium truncate">{contract.title}</span>
-            <span className="text-muted-foreground">-</span>
-            <span className="text-muted-foreground text-xs">{contract.talentName}</span>
+            {/* Primary: Who */}
+            <span className="font-medium">{contract.talentName}</span>
             
             <span className="text-muted-foreground/40">|</span>
-            <span className="text-muted-foreground text-xs">{contract.brandName}</span>
+            
+            {/* Primary: Client */}
+            <span className="text-muted-foreground">{contract.brandName}</span>
             
             <span className="text-muted-foreground/40">|</span>
+            
+            {/* Primary: Value */}
             <span className="font-semibold">${contract.compensation.totalAmount.toLocaleString()}</span>
             
             <span className="text-muted-foreground/40">|</span>
+            
+            {/* Primary: Timeline */}
             <span className={cn(
               "text-xs",
               isExpiringSoon && isActive && "text-orange-600 font-medium"
@@ -104,6 +102,19 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
                 {daysUntilExpiration}d
               </Badge>
             )}
+            
+            <span className="text-muted-foreground/40">|</span>
+            
+            {/* Secondary: Status + Title */}
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant="outline" 
+                className={cn("text-[10px] px-1.5 py-0 h-5 border-0", statusConfig.color)}
+              >
+                {statusConfig.label}
+              </Badge>
+              <span className="text-xs text-muted-foreground truncate">{contract.title}</span>
+            </div>
           </div>
 
           {/* Line 2: Contract ID, NILP, Category, Territory */}
