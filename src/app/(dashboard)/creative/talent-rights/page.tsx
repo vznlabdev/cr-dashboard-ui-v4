@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { UserPlus, Search, LayoutGrid, List, Mail, X, Download, ChevronDown, SlidersHorizontal, Plus } from "lucide-react"
+import { UserPlus, Search, LayoutGrid, List, Mail, X, Download, ChevronDown, SlidersHorizontal, Plus, FileText } from "lucide-react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -162,6 +162,17 @@ export default function TalentRightsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            asChild
+          >
+            <Link href="/creative/talent-rights/contracts">
+              <FileText className="mr-2 h-4 w-4" />
+              Contracts
+            </Link>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8">
