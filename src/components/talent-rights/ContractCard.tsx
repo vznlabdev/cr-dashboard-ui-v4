@@ -65,34 +65,39 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
       href={`/creative/talent-rights/contracts/${contract.id}`}
       className={cn(
         "block group border-b last:border-b-0 hover:bg-muted/50 transition-colors",
-        compact ? "py-2 px-3" : "py-3 px-4"
+        compact ? "py-2.5 px-4" : "py-3 px-4"
       )}
     >
       <div className="flex items-center justify-between gap-4">
         {/* Main Info */}
         <div className="flex-1 min-w-0 space-y-1">
           {/* Line 1: Status, Title, Brand, Amount, Expiration */}
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-3 text-sm">
             <Badge 
               variant="outline" 
               className={cn("text-[10px] px-1.5 py-0 h-5 border-0", statusConfig.color)}
             >
               {statusConfig.label}
             </Badge>
+            
             <span className="font-medium truncate">{contract.title}</span>
-            <span className="text-muted-foreground">•</span>
-            <span className="text-muted-foreground">{contract.talentName}</span>
-            <span className="text-muted-foreground">•</span>
-            <span className="text-muted-foreground">{contract.brandName}</span>
-            <span className="text-muted-foreground">•</span>
-            <span className="font-medium">${contract.compensation.totalAmount.toLocaleString()}</span>
-            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground text-xs">{contract.talentName}</span>
+            
+            <span className="text-muted-foreground/40">|</span>
+            <span className="text-muted-foreground text-xs">{contract.brandName}</span>
+            
+            <span className="text-muted-foreground/40">|</span>
+            <span className="font-semibold">${contract.compensation.totalAmount.toLocaleString()}</span>
+            
+            <span className="text-muted-foreground/40">|</span>
             <span className={cn(
-              "text-muted-foreground",
+              "text-xs",
               isExpiringSoon && isActive && "text-orange-600 font-medium"
             )}>
-              {isActive ? `Expires ${formatDate(contract.terms.expirationDate)}` : formatDate(contract.terms.expirationDate)}
+              {formatDate(contract.terms.expirationDate)}
             </span>
+            
             {isExpiringSoon && isActive && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-orange-500 text-orange-600">
                 <AlertTriangle className="h-2.5 w-2.5 mr-1" />
@@ -102,33 +107,31 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
           </div>
 
           {/* Line 2: Contract ID, NILP, Category, Territory */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="font-mono">{contract.contractId}</span>
+            
             {nilpIndicator && (
               <>
-                <span>•</span>
+                <span className="text-muted-foreground/40">|</span>
                 <span className="font-mono font-medium">{nilpIndicator}</span>
               </>
             )}
-            <span>•</span>
-            <span>{contract.terms.category}</span>
-            <span>•</span>
-            <span>{contract.terms.territory.join(", ")}</span>
-            {contract.terms.exclusivity.isExclusive && (
-              <>
-                <span>•</span>
+            
+            <span className="text-muted-foreground/40">|</span>
+            <span>{contract.terms.category} • {contract.terms.territory.join(", ")}</span>
+            
+            <span className="text-muted-foreground/40">|</span>
+            <div className="flex items-center gap-1.5">
+              {contract.terms.exclusivity.isExclusive && (
                 <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">Exclusive</Badge>
-              </>
-            )}
-            {contract.compensation.paymentStatus === "paid" && (
-              <>
-                <span>•</span>
+              )}
+              {contract.compensation.paymentStatus === "paid" && (
                 <span className="text-green-600 flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                   Paid
                 </span>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
