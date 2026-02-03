@@ -1393,96 +1393,77 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      {/* Clearance Rejection Banner */}
+      {/* Clearance Rejection Banner - Compact Linear Style */}
       {task.clearanceRejection && (
         <Card className="border-red-500 dark:border-red-800 bg-red-50 dark:bg-red-950/20">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-red-900 dark:text-red-200 flex items-center gap-2">
-                    🚨 NEEDS CHANGES
-                  </h3>
-                  <p className="text-sm text-red-800 dark:text-red-300 mt-1">
-                    Your submission has been rejected by{" "}
+          <CardContent className="py-3 px-4">
+            <div className="space-y-2">
+              {/* Line 1: Status, Asset, and Actions */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+                  <span className="text-xs font-bold text-red-900 dark:text-red-200 uppercase">
+                    Needs Changes
+                  </span>
+                  <span className="text-muted-foreground/40">|</span>
+                  <span className="text-xs text-red-800 dark:text-red-300">
+                    Rejected by{" "}
                     {task.clearanceRejection.rejectedBy === "legal" && "Legal Review"}
                     {task.clearanceRejection.rejectedBy === "admin" && "Admin Review"}
                     {task.clearanceRejection.rejectedBy === "qa" && "QA Review"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Rejected Asset */}
-              <div className="pl-9 space-y-2">
-                <div>
-                  <span className="text-sm font-medium text-red-900 dark:text-red-200">
-                    Rejected Asset:
                   </span>
-                  <span className="text-sm text-red-800 dark:text-red-300 ml-2">
-                    {task.clearanceRejection.rejectedAsset}
+                  <span className="text-muted-foreground/40">|</span>
+                  <span className="text-xs text-red-800 dark:text-red-300 truncate">
+                    Asset: {task.clearanceRejection.rejectedAsset}
                   </span>
                 </div>
-
-                {/* Feedback */}
-                <div>
-                  <p className="text-sm font-medium text-red-900 dark:text-red-200 mb-1">
-                    Feedback from{" "}
-                    {task.clearanceRejection.rejectedBy === "legal" && "Legal Team"}
-                    {task.clearanceRejection.rejectedBy === "admin" && "Admin Team"}
-                    {task.clearanceRejection.rejectedBy === "qa" && "QA Team"}:
-                  </p>
-                  <p className="text-sm text-red-800 dark:text-red-300 italic border-l-2 border-red-400 dark:border-red-600 pl-3">
-                    "{task.clearanceRejection.feedback}"
-                  </p>
-                </div>
-
-                {/* What you need to do */}
-                <div>
-                  <p className="text-sm font-medium text-red-900 dark:text-red-200 mb-1">
-                    What you need to do:
-                  </p>
-                  <p className="text-sm text-red-800 dark:text-red-300">
-                    This output must be updated.
-                  </p>
+                
+                {/* Action Buttons - Compact Inline */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs bg-white dark:bg-gray-900 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/40"
+                    onClick={() => toast.info("Asset viewer coming soon")}
+                  >
+                    <Eye className="mr-1 h-3 w-3" />
+                    View Asset
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs bg-white dark:bg-gray-900 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/40"
+                    onClick={() => {
+                      const commentsSection = document.getElementById('comments-section')
+                      if (commentsSection) {
+                        commentsSection.scrollIntoView({ behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <MessageSquare className="mr-1 h-3 w-3" />
+                    Details
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white"
+                    onClick={() => setAddressFeedbackOpen(true)}
+                  >
+                    <Edit className="mr-1 h-3 w-3" />
+                    Address
+                  </Button>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 pl-9 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white dark:bg-gray-900 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/40"
-                  onClick={() => toast.info("Asset viewer coming soon")}
-                >
-                  <Eye className="mr-2 h-3.5 w-3.5" />
-                  View Asset
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white dark:bg-gray-900 border-red-300 dark:border-red-700 text-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/40"
-                  onClick={() => {
-                    // Scroll to comments section
-                    const commentsSection = document.getElementById('comments-section')
-                    if (commentsSection) {
-                      commentsSection.scrollIntoView({ behavior: 'smooth' })
-                    }
-                  }}
-                >
-                  <MessageSquare className="mr-2 h-3.5 w-3.5" />
-                  View Clearance Details
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white"
-                  onClick={() => setAddressFeedbackOpen(true)}
-                >
-                  <Edit className="mr-2 h-3.5 w-3.5" />
-                  Address Feedback
-                </Button>
+              
+              {/* Line 2: Feedback - Compact */}
+              <div className="flex items-start gap-2 text-xs pl-6">
+                <span className="text-red-900 dark:text-red-200 font-medium shrink-0">
+                  {task.clearanceRejection.rejectedBy === "legal" && "Legal:"}
+                  {task.clearanceRejection.rejectedBy === "admin" && "Admin:"}
+                  {task.clearanceRejection.rejectedBy === "qa" && "QA:"}
+                </span>
+                <span className="text-red-800 dark:text-red-300 italic">
+                  "{task.clearanceRejection.feedback}"
+                </span>
               </div>
             </div>
           </CardContent>
