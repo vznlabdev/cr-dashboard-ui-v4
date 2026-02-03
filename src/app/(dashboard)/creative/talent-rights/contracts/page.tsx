@@ -152,9 +152,9 @@ export default function ContractsPage() {
     if (statusFilter !== 'all') count++
     if (typeFilter !== 'all') count++
     if (brandFilter !== 'all') count++
-    if (talentFilter !== 'all') count++
+    // Note: talentFilter is NOT counted here because it's an inline control, not inside the dropdown
     return count
-  }, [statusFilter, typeFilter, brandFilter, talentFilter])
+  }, [statusFilter, typeFilter, brandFilter])
 
   const clearFilters = () => {
     setSearchQuery("")
