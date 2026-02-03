@@ -37,9 +37,10 @@ import { RenewalRequestDialog } from "@/components/talent-rights/RenewalRequestD
 
 export default function ContractDetailPage({ params }: { params: { contractId: string } }) {
   const { getContractById } = useContracts()
-  const contract = getContractById(params.contractId)
   const [signModalOpen, setSignModalOpen] = useState(false)
   const [renewalDialogOpen, setRenewalDialogOpen] = useState(false)
+  
+  const contract = getContractById(params.contractId)
 
   if (!contract) {
     notFound()

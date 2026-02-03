@@ -341,18 +341,10 @@ export default function ContractsPage() {
                   ? "Try adjusting your search or filters"
                   : "Upload your first NILP contract to get started"
               }
-              action={
-                searchQuery || activeFilterCount > 0 ? (
-                  <Button variant="outline" size="sm" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => setUploadModalOpen(true)}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Contract
-                  </Button>
-                )
-              }
+              action={{
+                label: searchQuery || activeFilterCount > 0 ? "Clear Filters" : "Upload Contract",
+                onClick: searchQuery || activeFilterCount > 0 ? clearFilters : () => setUploadModalOpen(true)
+              }}
             />
           </div>
         ) : (
