@@ -70,10 +70,10 @@ export function SignContractModal({ contract, open, onOpenChange }: SignContract
         </DialogHeader>
 
         <ScrollArea className="flex-1 px-6" style={{ maxHeight: 'calc(90vh - 180px)' }}>
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 py-4">
             {/* Contract Preview */}
             <section>
-              <h3 className="text-sm font-semibold mb-3">CONTRACT PREVIEW</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground mb-2">Contract Preview</h3>
               <Card className="bg-muted/30">
                 <CardContent className="p-6 text-center">
                   <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-3" />
@@ -97,7 +97,7 @@ export function SignContractModal({ contract, open, onOpenChange }: SignContract
 
             {/* Key Terms */}
             <section>
-              <h3 className="text-sm font-semibold mb-3">KEY NILP TERMS</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground mb-2">Key NILP Terms</h3>
               <Card className="bg-muted/30">
                 <CardContent className="p-4 space-y-3 text-sm">
                   <div>
@@ -149,7 +149,7 @@ export function SignContractModal({ contract, open, onOpenChange }: SignContract
 
             {/* Acknowledgements */}
             <section>
-              <h3 className="text-sm font-semibold mb-3">ACKNOWLEDGEMENTS</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground mb-2">Acknowledgements</h3>
               <div className="space-y-3">
                 <div className="flex items-start gap-2">
                   <Checkbox 
@@ -210,7 +210,7 @@ export function SignContractModal({ contract, open, onOpenChange }: SignContract
 
             {/* Electronic Signature */}
             <section>
-              <h3 className="text-sm font-semibold mb-3">ELECTRONIC SIGNATURE</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground mb-2">Electronic Signature</h3>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signature">Type your full legal name to sign:</Label>

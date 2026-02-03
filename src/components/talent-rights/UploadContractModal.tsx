@@ -190,17 +190,21 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
     setPaidDate("")
   }
 
+  const selectedTalent = talentRights.find(t => t.id === talentId)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload Contract</DialogTitle>
+          <DialogTitle>
+            {prefilledTalentId && selectedTalent ? `New Contract for ${selectedTalent.fullName}` : "Upload Contract"}
+          </DialogTitle>
           <DialogDescription>
-            Upload existing NILP contracts for tracking and management
+            {prefilledTalentId ? "Create a new NILP contract for this talent" : "Upload existing NILP contracts for tracking and management"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-4">
           {/* File Upload */}
           <div>
             <Label className="text-sm font-semibold mb-2 block">Contract Document</Label>
@@ -258,8 +262,8 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
           <Separator />
 
           {/* Contract Details */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">CONTRACT DETAILS</h3>
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground">Contract Details</h3>
             
             <div className="space-y-2">
               <Label htmlFor="title">Contract Title *</Label>
@@ -302,7 +306,7 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="talent">Talent *</Label>
-                <Select value={talentId} onValueChange={setTalentId}>
+                <Select value={talentId} onValueChange={setTalentId} disabled={!!prefilledTalentId}>
                   <SelectTrigger id="talent">
                     <SelectValue placeholder="Select talent" />
                   </SelectTrigger>
@@ -328,12 +332,9 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
             </div>
           </div>
 
-          <Separator />
-
           {/* NILP Rights Granted */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">NILP RIGHTS GRANTED</h3>
-            <p className="text-xs text-muted-foreground">Select which NILP rights are included:</p>
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground">NILP Rights Granted</h3>
             
             <div className="space-y-3">
               <div className="flex items-start gap-2">
@@ -426,11 +427,9 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
             </div>
           </div>
 
-          <Separator />
-
           {/* Terms & Dates */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">TERMS & DATES</h3>
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground">Terms & Dates</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -510,11 +509,9 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
             </div>
           </div>
 
-          <Separator />
-
           {/* Compensation */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">COMPENSATION (optional)</h3>
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground">Compensation (optional)</h3>
             
             <div className="space-y-2">
               <Label htmlFor="amount">NILP Fee Amount</Label>
@@ -561,11 +558,9 @@ export function UploadContractModal({ open, onOpenChange, prefilledTalentId }: U
             </div>
           </div>
 
-          <Separator />
-
           {/* Notifications */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">NOTIFICATIONS</h3>
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground">Notifications</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Checkbox 

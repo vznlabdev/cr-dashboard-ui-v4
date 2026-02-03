@@ -7,10 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Search, SlidersHorizontal, Plus, Upload, AlertTriangle, CheckCircle2, Clock, DollarSign, FileCheck } from "lucide-react"
+import { FileText, Search, SlidersHorizontal, Plus, Upload, AlertTriangle, CheckCircle2, Clock, DollarSign, FileCheck, Download } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ContractCard } from "@/components/talent-rights/ContractCard"
 import { UploadContractModal } from "@/components/talent-rights/UploadContractModal"
-import { ContractDetailView } from "@/components/talent-rights/ContractDetailView"
 import { SignContractModal } from "@/components/talent-rights/SignContractModal"
 import { RenewalRequestDialog } from "@/components/talent-rights/RenewalRequestDialog"
 import { EmptyState } from "@/components/cr"
@@ -41,7 +48,6 @@ export default function ContractsPage() {
   const [selectedView, setSelectedView] = useState<ViewTab>("all")
   const [sortBy, setSortBy] = useState<"expiration" | "created" | "brand">("expiration")
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [detailContract, setDetailContract] = useState<TalentContract | null>(null)
   const [signContract, setSignContract] = useState<TalentContract | null>(null)
   const [renewalContract, setRenewalContract] = useState<TalentContract | null>(null)
 
@@ -138,272 +144,229 @@ export default function ContractsPage() {
 
   return (
     <PageContainer className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Contracts</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage all agreements, NILP rights deals, and usage contracts
-          </p>
+      {/* Compact Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold">Contracts</h1>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+              {stats.active} active
+            </Badge>
+            {stats.expiring > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-orange-500 text-orange-600">
+                {stats.expiring} expiring
+              </Badge>
+            )}
+            {stats.pending > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
+                {stats.pending} pending
+              </Badge>
+            )}
+          </div>
         </div>
         <Button size="sm" className="h-8" onClick={() => setUploadModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Upload Contract
+          New Contract
         </Button>
       </div>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription className="text-xs">Active Contracts</CardDescription>
-            <CardTitle className="text-2xl font-bold">{stats.active}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-muted-foreground">Currently live</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription className="text-xs flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-orange-500" />
-              Expiring Soon
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold">{stats.expiring}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-muted-foreground">&lt;30 days</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription className="text-xs">Total Contracts</CardDescription>
-            <CardTitle className="text-2xl font-bold">{stats.total}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-muted-foreground">All time</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription className="text-xs flex items-center gap-1">
-              <FileCheck className="h-3 w-3 text-blue-500" />
-              Pending Review
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold">{stats.pending}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xs text-muted-foreground">Awaiting sign</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Compact Filters */}
+      <div className="flex items-center gap-2">
+        <div className="relative w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search contracts by title, ID, brand, or talent..."
-            className="pl-9 h-9"
+            placeholder="Search contracts..."
+            className="pl-8 h-8 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
-            <SelectTrigger className="w-[140px] h-9">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="pending_signature">Pending Signature</SelectItem>
-              <SelectItem value="signed">Signed</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={brandFilter} onValueChange={setBrandFilter}>
-            <SelectTrigger className="w-[140px] h-9">
-              <SelectValue placeholder="Brand" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {brands.map(brand => (
-                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ContractType | "all")}>
-            <SelectTrigger className="w-[160px] h-9">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="nilp_rights_agreement">NILP Rights</SelectItem>
-              <SelectItem value="usage_rights">Usage Rights</SelectItem>
-              <SelectItem value="brand_endorsement">Endorsement</SelectItem>
-              <SelectItem value="work_for_hire">Work for Hire</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-            <SelectTrigger className="w-[140px] h-9">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="expiration">Expiration</SelectItem>
-              <SelectItem value="created">Date Created</SelectItem>
-              <SelectItem value="brand">Brand Name</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {activeFilterCount > 0 && (
-            <Button variant="ghost" size="sm" className="h-9" onClick={clearFilters}>
-              Clear ({activeFilterCount})
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8">
+              <SlidersHorizontal className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                  {activeFilterCount}
+                </Badge>
+              )}
             </Button>
-          )}
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel className="text-xs">Filters</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            <div className="p-2 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Status</label>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="pending_signature">Pending</SelectItem>
+                    <SelectItem value="signed">Signed</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Brand</label>
+                <Select value={brandFilter} onValueChange={setBrandFilter}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Brands</SelectItem>
+                    {brands.map(brand => (
+                      <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Type</label>
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ContractType | "all")}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="nilp_rights_agreement">NILP Rights</SelectItem>
+                    <SelectItem value="usage_rights">Usage Rights</SelectItem>
+                    <SelectItem value="brand_endorsement">Endorsement</SelectItem>
+                    <SelectItem value="work_for_hire">Work for Hire</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {activeFilterCount > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={clearFilters} className="text-xs">
+                  Clear all filters
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+          <SelectTrigger className="w-36 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="expiration">Sort: Expiration</SelectItem>
+            <SelectItem value="created">Sort: Created</SelectItem>
+            <SelectItem value="brand">Sort: Brand</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b">
-        <Button
-          variant={selectedView === 'all' ? 'secondary' : 'ghost'}
-          size="sm"
-          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-          data-state={selectedView === 'all' ? 'active' : ''}
+      {/* Minimal Tabs */}
+      <div className="flex items-center gap-6 text-sm border-b">
+        <button
+          className={cn(
+            "pb-2 border-b-2 transition-colors",
+            selectedView === 'all' 
+              ? "border-primary font-medium" 
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => setSelectedView('all')}
         >
-          All
-          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
-            {contracts.length}
-          </Badge>
-        </Button>
-        <Button
-          variant={selectedView === 'active' ? 'secondary' : 'ghost'}
-          size="sm"
-          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-          data-state={selectedView === 'active' ? 'active' : ''}
+          All <span className={cn(selectedView === 'all' ? "" : "text-muted-foreground")}>({contracts.length})</span>
+        </button>
+        <button
+          className={cn(
+            "pb-2 border-b-2 transition-colors",
+            selectedView === 'active' 
+              ? "border-primary font-medium" 
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => setSelectedView('active')}
         >
-          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-green-500" />
-          Active
-          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
-            {stats.active}
-          </Badge>
-        </Button>
-        <Button
-          variant={selectedView === 'expiring' ? 'secondary' : 'ghost'}
-          size="sm"
-          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-          data-state={selectedView === 'expiring' ? 'active' : ''}
+          Active <span className={cn(selectedView === 'active' ? "" : "text-muted-foreground")}>({stats.active})</span>
+        </button>
+        <button
+          className={cn(
+            "pb-2 border-b-2 transition-colors",
+            selectedView === 'expiring' 
+              ? "border-primary font-medium" 
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => setSelectedView('expiring')}
         >
-          <AlertTriangle className="mr-1.5 h-3.5 w-3.5 text-orange-500" />
-          Expiring Soon
-          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
-            {stats.expiring}
-          </Badge>
-        </Button>
-        <Button
-          variant={selectedView === 'pending' ? 'secondary' : 'ghost'}
-          size="sm"
-          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-          data-state={selectedView === 'pending' ? 'active' : ''}
+          Expiring <span className={cn(selectedView === 'expiring' ? "" : "text-muted-foreground")}>({stats.expiring})</span>
+        </button>
+        <button
+          className={cn(
+            "pb-2 border-b-2 transition-colors",
+            selectedView === 'pending' 
+              ? "border-primary font-medium" 
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => setSelectedView('pending')}
         >
-          <Clock className="mr-1.5 h-3.5 w-3.5 text-blue-500" />
-          Pending
-          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
-            {stats.pending}
-          </Badge>
-        </Button>
-        <Button
-          variant={selectedView === 'expired' ? 'secondary' : 'ghost'}
-          size="sm"
-          className="h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-          data-state={selectedView === 'expired' ? 'active' : ''}
+          Pending <span className={cn(selectedView === 'pending' ? "" : "text-muted-foreground")}>({stats.pending})</span>
+        </button>
+        <button
+          className={cn(
+            "pb-2 border-b-2 transition-colors",
+            selectedView === 'expired' 
+              ? "border-primary font-medium" 
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => setSelectedView('expired')}
         >
-          Expired
-        </Button>
+          Expired <span className={cn(selectedView === 'expired' ? "" : "text-muted-foreground")}>({getExpiredContracts().length})</span>
+        </button>
       </div>
 
       {/* Contract List */}
-      <div className="space-y-4">
+      <div className="border rounded-lg overflow-hidden">
         {filteredContracts.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No contracts found"
-            description={
-              searchQuery || activeFilterCount > 0
-                ? "Try adjusting your search or filters"
-                : "Upload your first NILP contract to get started"
-            }
-            action={
-              searchQuery || activeFilterCount > 0 ? (
-                <Button variant="outline" size="sm" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              ) : (
-                <Button size="sm" onClick={() => setUploadModalOpen(true)}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Contract
-                </Button>
-              )
-            }
-          />
+          <div className="py-12">
+            <EmptyState
+              icon={FileText}
+              title="No contracts found"
+              description={
+                searchQuery || activeFilterCount > 0
+                  ? "Try adjusting your search or filters"
+                  : "Upload your first NILP contract to get started"
+              }
+              action={
+                searchQuery || activeFilterCount > 0 ? (
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => setUploadModalOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Contract
+                  </Button>
+                )
+              }
+            />
+          </div>
         ) : (
-          <>
-            {selectedView === "active" && (
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-medium text-muted-foreground">
-                  ACTIVE CONTRACTS ({filteredContracts.length})
-                </h2>
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => toast.info("Export feature coming soon")}>
-                  <Download className="mr-1.5 h-3.5 w-3.5" />
-                  Export All
-                </Button>
-              </div>
-            )}
-            
-            {selectedView === "expiring" && (
-              <div className="flex items-center gap-2 mb-2 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
-                <p className="text-sm">
-                  <span className="font-medium">{filteredContracts.length} contract{filteredContracts.length !== 1 ? 's' : ''}</span> expiring in the next 30 days. Consider renewal options.
-                </p>
-              </div>
-            )}
-            
-            {selectedView === "pending" && (
-              <div className="flex items-center gap-2 mb-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <FileCheck className="h-4 w-4 text-blue-500 shrink-0" />
-                <p className="text-sm">
-                  <span className="font-medium">{filteredContracts.length} contract{filteredContracts.length !== 1 ? 's' : ''}</span> awaiting signature or review.
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {filteredContracts.map((contract) => (
-                <ContractCard 
-                  key={contract.id} 
-                  contract={contract}
-                  onViewDetails={() => setDetailContract(contract)}
-                  onSign={() => setSignContract(contract)}
-                  onRenewal={() => setRenewalContract(contract)}
-                />
-              ))}
-            </div>
-          </>
+          <div>
+            {filteredContracts.map((contract) => (
+              <ContractCard 
+                key={contract.id} 
+                contract={contract}
+                onSign={() => setSignContract(contract)}
+                onRenewal={() => setRenewalContract(contract)}
+                compact
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -412,18 +375,6 @@ export default function ContractsPage() {
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
       />
-      
-      {detailContract && (
-        <ContractDetailView
-          contract={detailContract}
-          open={!!detailContract}
-          onOpenChange={(open) => !open && setDetailContract(null)}
-          onRequestRenewal={() => {
-            setRenewalContract(detailContract)
-            setDetailContract(null)
-          }}
-        />
-      )}
       
       {signContract && (
         <SignContractModal

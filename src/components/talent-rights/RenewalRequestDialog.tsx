@@ -73,7 +73,7 @@ export function RenewalRequestDialog({ contract, open, onOpenChange }: RenewalRe
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-4">
           {/* Contract Info */}
           <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
             <CardContent className="p-4">
@@ -97,8 +97,8 @@ export function RenewalRequestDialog({ contract, open, onOpenChange }: RenewalRe
           </Card>
 
           {/* Renewal Options */}
-          <div className="space-y-4">
-            <Label className="text-sm font-semibold">RENEWAL OPTIONS</Label>
+          <div className="space-y-3">
+            <Label className="text-xs font-semibold text-muted-foreground">Renewal Options</Label>
             <RadioGroup value={selectedOption} onValueChange={(value) => setSelectedOption(value as RenewalOption)}>
               {/* Extend Current Terms */}
               <div className="flex items-start gap-2 pb-3 border-b">

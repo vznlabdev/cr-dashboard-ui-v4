@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { useTalentRights } from "@/contexts/talent-rights-context"
 import { useData } from "@/contexts/data-context"
+import { useContracts } from "@/contexts/contracts-context"
 import { PageContainer } from "@/components/layout/PageContainer"
 import {
   User,
@@ -43,24 +44,33 @@ import { formatDateLong, getInitials } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { EmptyState } from "@/components/cr"
-import { NilpDropdownTab, ContractCard } from "@/components/talent-rights"
+import { NilpDropdownTab, ContractCard, UploadContractModal, SignContractModal, RenewalRequestDialog } from "@/components/talent-rights"
 import type { TalentContract } from "@/types/talent-contracts"
+import { getTotalContractValue } from "@/lib/mock-data/contracts"
 
 export default function TalentRightsDetailPage() {
   const params = useParams()
   const id = params.id as string
   const { getTalentById, getAllCreditsByTalent } = useTalentRights()
   const { projects, getAssetById } = useData()
+  const { getContractsByTalent } = useContracts()
   
   // State for managing active tab
   const [currentTab, setCurrentTab] = useState<string>("overview")
-  const [createContractOpen, setCreateContractOpen] = useState(false)
-  const [selectedContract, setSelectedContract] = useState<TalentContract | null>(null)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [signContract, setSignContract] = useState<TalentContract | null>(null)
+  const [renewalContract, setRenewalContract] = useState<TalentContract | null>(null)
 
   const talent = getTalentById(id)
   
-  // Mock contracts data - TODO: Replace with context
-  const contractsForTalent: TalentContract[] = []
+  // Get contracts for this talent
+  const contractsForTalent = talent ? getContractsByTalent(talent.id) : []
+  const activeContracts = contractsForTalent.filter(c => c.status === "signed")
+  const totalContractValue = getTotalContractValue(activeContracts)
+  const expiringContracts = contractsForTalent.filter(c => {
+    const daysRemaining = Math.ceil((new Date(c.terms.expirationDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    return c.status === "signed" && daysRemaining > 0 && daysRemaining <= 30
+  })
 
   if (!talent) {
     notFound()
@@ -319,15 +329,29 @@ export default function TalentRightsDetailPage() {
         </TabsContent>
 
         {/* Contracts Tab */}
-        <TabsContent value="contracts" className="space-y-6">
+        <TabsContent value="contracts" className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Contracts</h3>
-              <p className="text-sm text-muted-foreground">
-                Manage talent agreements and negotiations
-              </p>
+            <div className="flex items-center gap-3">
+              <h3 className="text-base font-semibold">Contracts</h3>
+              {contractsForTalent.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{activeContracts.length} active</span>
+                  {totalContractValue > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>${totalContractValue.toLocaleString()} total</span>
+                    </>
+                  )}
+                  {expiringContracts.length > 0 && (
+                    <>
+                      <span>•</span>
+                      <span className="text-orange-600">{expiringContracts.length} expiring</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
-            <Button size="sm" onClick={() => setCreateContractOpen(true)}>
+            <Button size="sm" onClick={() => setUploadModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Contract
             </Button>
@@ -340,18 +364,18 @@ export default function TalentRightsDetailPage() {
               description="Create a contract to begin managing talent agreements"
               action={{
                 label: "Create Contract",
-                onClick: () => setCreateContractOpen(true),
+                onClick: () => setUploadModalOpen(true),
               }}
             />
           ) : (
-            <div className="space-y-4">
+            <div className="border rounded-lg overflow-hidden">
               {contractsForTalent.map((contract) => (
                 <ContractCard
                   key={contract.id}
                   contract={contract}
-                  onView={() => setSelectedContract(contract)}
-                  onNegotiate={() => {}}
-                  onSign={() => {}}
+                  onSign={() => setSignContract(contract)}
+                  onRenewal={() => setRenewalContract(contract)}
+                  compact
                 />
               ))}
             </div>
@@ -835,6 +859,29 @@ export default function TalentRightsDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <UploadContractModal 
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        prefilledTalentId={talent.id}
+      />
+      
+      {signContract && (
+        <SignContractModal
+          contract={signContract}
+          open={!!signContract}
+          onOpenChange={(open) => !open && setSignContract(null)}
+        />
+      )}
+      
+      {renewalContract && (
+        <RenewalRequestDialog
+          contract={renewalContract}
+          open={!!renewalContract}
+          onOpenChange={(open) => !open && setRenewalContract(null)}
+        />
+      )}
     </PageContainer>
   )
 }
