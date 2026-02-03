@@ -358,7 +358,7 @@ function getWorkloadColor(load: number) {
 
 const ticketPipeline = [
   { name: "Submitted", count: 3, color: "text-blue-500" },
-  { name: "Assessment", count: 2, color: "text-purple-500" },
+  { name: "Compliance", count: 2, color: "text-purple-500" },
   { name: "Assigned", count: 2, color: "text-amber-500" },
   { name: "Production", count: 5, color: "text-orange-500" },
   { name: "QA Review", count: 2, color: "text-cyan-500" },
@@ -404,7 +404,7 @@ const recentTickets = [
     title: "Product Packaging Design",
     brand: "NatureFresh",
     type: "Packaging",
-    status: "Assessment",
+    status: "Compliance",
     badgeVariant: "outline" as const,
     time: "1 day ago",
     bgColor: "bg-purple-500/10",

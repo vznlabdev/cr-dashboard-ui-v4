@@ -137,7 +137,7 @@ export interface Notification {
 
 export type ProjectStatus = "Active" | "Review" | "Draft" | "Approved";
 export type AssetStatus = "Draft" | "Review" | "Approved" | "Rejected";
-export type TaskStatus = "submitted" | "assessment" | "assigned" | "production" | "qa_review" | "delivered";
+export type TaskStatus = "submitted" | "compliance" | "assigned" | "production" | "qa_review" | "delivered";
 export type RiskLevel = "Low" | "Medium" | "High";
 export type ContentType = "Image" | "Video" | "Audio" | "Text" | "AR/VR";
 export type AIMethod = "AI Augmented" | "AI Generative" | "Multimodal";

@@ -133,7 +133,7 @@ npm test             # Run tests (after installing test dependencies)
 **Kanban Board**
 - Full-width layout with horizontal scrolling
 - Sticky column headers
-- Status-based columns (Submitted, Assessment, Assigned, Production, QA Review, Delivered)
+- Status-based columns (Submitted, Compliance, Assigned, Production, QA Review, Delivered)
 - View mode switching (Kanban/grid/list)
 - Custom minimal scrollbars
 
@@ -167,7 +167,7 @@ npm test             # Run tests (after installing test dependencies)
 - Rights documentation and tracking
 - Creator Rights ID generation (CR-YYYY-#####)
 - Rights status calculation (Authorized, Expiring Soon, Expired)
-- Risk level assessment based on rights validity
+- Risk level compliance based on rights validity
 - Profile completion tracking
 
 **Creator Crediting**
@@ -210,7 +210,7 @@ src/
 │   │   │   ├── team/             # Team member management
 │   │   │   └── assets/           # Asset library
 │   │   ├── legal/                # Legal review
-│   │   ├── insurance/            # Risk assessment
+│   │   ├── insurance/            # Risk compliance
 │   │   ├── integrations/         # AI tool connections
 │   │   ├── settings/             # Configuration
 │   │   ├── analytics/            # Coming soon

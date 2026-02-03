@@ -83,7 +83,7 @@ export const USER_ROLE_LABELS: Record<string, string> = {
 export const USER_ROLE_DESCRIPTIONS: Record<string, string> = {
   "Company Admin": "Full access to all settings, projects, and team management",
   "Legal Reviewer": "Approve/reject assets, view compliance data, access audit logs",
-  "Insurance Analyst": "View risk assessments, export reports, no approval permissions",
+  "Insurance Analyst": "View risk compliance, export reports, no approval permissions",
   "Content Creator": "Upload assets, view own projects, no approval permissions",
 };
 

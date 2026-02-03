@@ -65,7 +65,7 @@ export default function TeamPage() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
 
   // Internal roles to show in filter
-  const internalRoles: WorkflowRole[] = ["team_leader", "creative", "qa", "assessment"]
+  const internalRoles: WorkflowRole[] = ["team_leader", "creative", "qa", "compliance"]
 
   // Helper functions
   const getInitials = (name: string) => {

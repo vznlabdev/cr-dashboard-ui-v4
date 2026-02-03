@@ -266,7 +266,7 @@ export const mockTickets: Ticket[] = [
     updatedAt: new Date("2025-12-03"),
   },
 
-  // ASSESSMENT
+  // COMPLIANCE
   {
     id: "ticket-4",
     title: "Annual Report Design",
@@ -278,7 +278,7 @@ export const mockTickets: Ticket[] = [
     projectTag: "Corporate",
     targetAudience: "Shareholders, Board members, Investors",
     description: "Design our 2024 Annual Report. Approximately 40 pages including financials, letter from CEO, and key highlights. Need to convey professionalism and growth.",
-    status: "assessment",
+    status: "compliance",
     priority: "high",
     attachments: [],
     versions: [],
@@ -303,7 +303,7 @@ export const mockTickets: Ticket[] = [
     projectTag: "Social 2024",
     targetAudience: "Gen Z, Instagram users",
     description: "Create a set of 10 Instagram story templates for product launches, sales announcements, and behind-the-scenes content. Should be bold and eye-catching.",
-    status: "assessment",
+    status: "compliance",
     priority: "medium",
     mode: "assisted",
     intendedUses: ["Social Media", "Advertising/Campaigns"],
@@ -2875,7 +2875,7 @@ export function getTeamMemberById(id: string): TeamMember | undefined {
 export function getTicketCountByStatus(): Record<TicketStatus, number> {
   return {
     submitted: getTicketsByStatus("submitted").length,
-    assessment: getTicketsByStatus("assessment").length,
+    compliance: getTicketsByStatus("compliance").length,
     assigned: getTicketsByStatus("assigned").length,
     production: getTicketsByStatus("production").length,
     qa_review: getTicketsByStatus("qa_review").length,

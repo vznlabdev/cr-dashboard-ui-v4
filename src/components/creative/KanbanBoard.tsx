@@ -13,7 +13,7 @@ interface KanbanBoardProps {
 
 const COLUMN_ORDER: TicketStatus[] = [
   "submitted",
-  "assessment",
+  "compliance",
   "assigned",
   "production",
   "qa_review",

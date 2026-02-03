@@ -657,7 +657,7 @@ Export legal package (CSV)
 ## 7. Insurance/Risk API
 
 ### **GET /api/insurance/risk-data**
-Get risk assessment data
+Get risk compliance data
 
 **Response:**
 ```typescript

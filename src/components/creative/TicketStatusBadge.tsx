@@ -50,7 +50,7 @@ export function TicketStatusBadge({
             status === "production" ? "bg-orange-500" :
             status === "qa_review" ? "bg-cyan-500" :
             status === "assigned" ? "bg-amber-500" :
-            status === "assessment" ? "bg-purple-500" :
+            status === "compliance" ? "bg-purple-500" :
             "bg-blue-500"
           )}
         />

@@ -2,7 +2,7 @@
 
 > **AI Content Provenance & Governance Platform with Creative Workspace**
 
-A modern, professional dashboard for managing AI-generated content with full provenance tracking, legal compliance, risk assessment, and a comprehensive creative workspace for managing design workflows.
+A modern, professional dashboard for managing AI-generated content with full provenance tracking, legal compliance, risk compliance, and a comprehensive creative workspace for managing design workflows.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.7-black) ![React](https://img.shields.io/badge/React-19.2.1-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-4.0-38bdf8) ![Build](https://img.shields.io/badge/build-passing-success)
 
@@ -43,7 +43,7 @@ A modern, professional dashboard for managing AI-generated content with full pro
 - **Project Detail** - Assets, workflow, audit trail, AI metadata
 - **Asset Detail** - Lineage, rights, compliance tracking
 - **Legal Review** - Compliance tracking, issue management, approvals
-- **Insurance Risk** - Risk assessment and coverage analysis
+- **Insurance Risk** - Risk compliance and coverage analysis
 - **Integrations** - AI tool connections (Midjourney, ChatGPT, etc.)
 - **Settings** - Multi-tab configuration (Policies, Risk, Notifications, Team, Integrations, Profile)
 - **Analytics** - Coming soon page
@@ -136,7 +136,7 @@ src/
 │   │   │   ├── team/             # Team member management
 │   │   │   └── assets/           # Asset library
 │   │   ├── legal/                # Legal review
-│   │   ├── insurance/            # Risk assessment
+│   │   ├── insurance/            # Risk compliance
 │   │   ├── integrations/         # AI tool connections
 │   │   ├── settings/             # Configuration
 │   │   ├── analytics/            # Coming soon
@@ -190,7 +190,7 @@ src/
 - **Full-width layout** - Breaks out of container for maximum space
 - **Horizontal scrolling** - Smooth scroll with visual indicators
 - **Sticky column headers** - Headers stay visible while scrolling
-- **Status-based columns** - Submitted, Assessment, Assigned, Production, QA Review, Delivered
+- **Status-based columns** - Submitted, Compliance, Assigned, Production, QA Review, Delivered
 - **View modes** - Switch between Kanban and grid/list views per status
 - **Custom scrollbars** - Minimal, consistent across browsers
 

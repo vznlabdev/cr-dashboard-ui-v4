@@ -46,7 +46,7 @@ import { mockAssets } from "@/lib/mock-data/creative"
 
 const STATUS_COLUMNS: { key: TaskStatus; label: string }[] = [
   { key: "submitted", label: "Submitted" },
-  { key: "assessment", label: "Assessment" },
+  { key: "compliance", label: "Compliance" },
   { key: "assigned", label: "Assigned" },
   { key: "production", label: "Production" },
   { key: "qa_review", label: "QA Review" },
@@ -79,7 +79,7 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
         return "secondary"
       case "assigned":
         return "outline"
-      case "assessment":
+      case "compliance":
         return "outline"
       case "submitted":
         return "outline"
@@ -203,7 +203,7 @@ function FlatKanbanBoard({
   const tasksByColumn = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = {
       submitted: [],
-      assessment: [],
+      compliance: [],
       assigned: [],
       production: [],
       qa_review: [],
@@ -520,7 +520,7 @@ function TaskGroupSwimlane({
   const tasksByColumn = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = {
       submitted: [],
-      assessment: [],
+      compliance: [],
       assigned: [],
       production: [],
       qa_review: [],
@@ -538,7 +538,7 @@ function TaskGroupSwimlane({
   const columnCounts = useMemo(() => {
     const counts: Record<TaskStatus, number> = {
       submitted: 0,
-      assessment: 0,
+      compliance: 0,
       assigned: 0,
       production: 0,
       qa_review: 0,
@@ -742,7 +742,7 @@ function StreamView({
         return "secondary"
       case "assigned":
         return "outline"
-      case "assessment":
+      case "compliance":
         return "outline"
       case "submitted":
         return "outline"

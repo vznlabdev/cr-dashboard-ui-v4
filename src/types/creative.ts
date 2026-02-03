@@ -7,7 +7,7 @@
 
 export type TicketStatus =
   | "submitted"
-  | "assessment"
+  | "compliance"
   | "assigned"
   | "production"
   | "qa_review"
@@ -554,7 +554,7 @@ export const ASSET_CONTENT_TYPE_CONFIG: Record<AssetContentType, AssetContentTyp
 // =============================================================================
 
 export type WorkflowRole =
-  | "assessment"
+  | "compliance"
   | "team_leader"
   | "creative"
   | "qa"
@@ -591,8 +591,8 @@ export const TICKET_STATUS_CONFIG: Record<TicketStatus, TicketStatusConfig> = {
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/30",
   },
-  assessment: {
-    label: "Assessment",
+  compliance: {
+    label: "Compliance",
     color: "text-purple-600",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/30",
@@ -663,8 +663,8 @@ export interface WorkflowRoleConfig {
 }
 
 export const WORKFLOW_ROLE_CONFIG: Record<WorkflowRole, WorkflowRoleConfig> = {
-  assessment: {
-    label: "Assessment",
+  compliance: {
+    label: "Compliance",
     description: "Reviews tickets, estimates work, assigns creatives",
     color: "text-purple-600",
     bgColor: "bg-purple-500/10",

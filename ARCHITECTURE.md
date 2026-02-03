@@ -75,7 +75,7 @@ app/
     │   └── assets/            # Asset library
     │
     ├── legal/                 # Legal review
-    ├── insurance/             # Risk assessment
+    ├── insurance/             # Risk compliance
     ├── integrations/          # AI tool connections
     ├── settings/              # Configuration
     └── analytics/             # Coming soon

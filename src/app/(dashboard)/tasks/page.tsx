@@ -37,7 +37,7 @@ import { toast } from "sonner"
 const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },
   { value: "submitted", label: "Submitted" },
-  { value: "assessment", label: "Assessment" },
+  { value: "compliance", label: "Compliance" },
   { value: "assigned", label: "Assigned" },
   { value: "production", label: "Production" },
   { value: "qa_review", label: "QA Review" },

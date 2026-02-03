@@ -40,10 +40,10 @@ const roles = [
   {
     id: "3",
     name: "Insurance Analyst",
-    description: "View risk assessments, export reports, no approval permissions",
+    description: "View risk compliance, export reports, no approval permissions",
     userCount: 1,
     permissions: [
-      "View risk assessments",
+      "View risk compliance",
       "Export reports",
       "View compliance data",
     ],

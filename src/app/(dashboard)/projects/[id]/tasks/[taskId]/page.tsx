@@ -113,7 +113,7 @@ interface Comment {
 const TaskStatusBadge = ({ status }: { status: Task['status'] }) => {
   const config = {
     submitted: { label: "Submitted", className: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-    assessment: { label: "Assessment", className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+    compliance: { label: "Compliance", className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
     assigned: { label: "Assigned", className: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
     production: { label: "Production", className: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
     qa_review: { label: "QA Review", className: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" },

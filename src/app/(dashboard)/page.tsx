@@ -132,7 +132,7 @@ export default function DashboardPage() {
       },
       {
         icon: Shield,
-        title: "Risk Assessment Due",
+        title: "Risk Compliance Due",
         description: "Quarterly insurance report needs review",
         bgColor: "bg-blue-500/10",
         iconColor: "text-blue-500",
@@ -284,7 +284,7 @@ export default function DashboardPage() {
               <div>
                 <CardTitle className="text-lg sm:text-xl">Insurance & Risk Summary</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
-                  Portfolio-level insurance metrics and risk assessment
+                  Portfolio-level insurance metrics and risk compliance
                 </CardDescription>
               </div>
               <ArrowUpRight className="h-5 w-5 text-primary" />

@@ -493,7 +493,7 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "security",
     path: "reviewData.security.data.score",
     editable: false,
-    helpText: "Security assessment score (0-100)",
+    helpText: "Security compliance score (0-100)",
   },
   {
     id: "securitySafe",

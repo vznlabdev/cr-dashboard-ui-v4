@@ -99,7 +99,7 @@ export function RiskScoresPanel({ scores, className }: RiskScoresPanelProps) {
       <CardHeader>
         <CardTitle>Five Key Risk Scores</CardTitle>
         <CardDescription>
-          Critical metrics for insurance underwriting assessment
+          Critical metrics for insurance underwriting compliance
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

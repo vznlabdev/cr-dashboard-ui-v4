@@ -239,7 +239,7 @@ export default function InsurancePage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Insurance Risk Dashboard</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            AI content risk assessment and underwriting intelligence
+            AI content risk compliance and underwriting intelligence
           </p>
         </div>
         <Button 
@@ -259,7 +259,7 @@ export default function InsurancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Risk Grade</CardTitle>
-                <CardDescription>Portfolio assessment</CardDescription>
+                <CardDescription>Portfolio compliance</CardDescription>
               </div>
               <div className={`text-4xl font-bold ${getRiskGradeColor(riskGrade)}`}>
                 {riskGrade}
