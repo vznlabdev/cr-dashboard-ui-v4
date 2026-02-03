@@ -5,6 +5,7 @@ import { NotificationProvider } from "@/contexts/notification-context";
 import { AccountProvider } from "@/contexts/account-context";
 import { CreatorsProvider } from "@/contexts/creators-context";
 import { CreatorAccountProvider } from "@/contexts/creator-account-context";
+import { ContractsProvider } from "@/contexts/contracts-context";
 import { SetupProvider } from "@/lib/contexts/setup-context";
 import { InboxProvider } from "@/lib/contexts/inbox-context";
 import { CopyrightCreditsProvider } from "@/lib/contexts/copyright-credits-context";
@@ -27,9 +28,11 @@ export default function DashboardLayout({
               <NotificationProvider>
                 <DataProvider>
                   <CreatorsProvider>
-                    <CreatorAccountProvider>
-                      <MainLayout>{children}</MainLayout>
-                    </CreatorAccountProvider>
+                    <ContractsProvider>
+                      <CreatorAccountProvider>
+                        <MainLayout>{children}</MainLayout>
+                      </CreatorAccountProvider>
+                    </ContractsProvider>
                   </CreatorsProvider>
                 </DataProvider>
               </NotificationProvider>
