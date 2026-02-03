@@ -44,7 +44,7 @@ import { formatDateLong, getInitials } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { EmptyState } from "@/components/cr"
-import { NilpDropdownTab, ContractCard, UploadContractModal, SignContractModal, RenewalRequestDialog } from "@/components/talent-rights"
+import { NilpDropdownTab, ContractCard } from "@/components/talent-rights"
 import type { TalentContract } from "@/types/talent-contracts"
 import { getTotalContractValue } from "@/lib/mock-data/contracts"
 
@@ -57,9 +57,6 @@ export default function TalentRightsDetailPage() {
   
   // State for managing active tab
   const [currentTab, setCurrentTab] = useState<string>("overview")
-  const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [signContract, setSignContract] = useState<TalentContract | null>(null)
-  const [renewalContract, setRenewalContract] = useState<TalentContract | null>(null)
 
   const talent = getTalentById(id)
   
@@ -351,10 +348,20 @@ export default function TalentRightsDetailPage() {
                 </div>
               )}
             </div>
-            <Button size="sm" onClick={() => setUploadModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Contract
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/creative/talent-rights/contracts">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View All
+                </Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href={`/creative/talent-rights/contracts/new?talentId=${talent.id}`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Contract
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {contractsForTalent.length === 0 ? (
@@ -364,7 +371,7 @@ export default function TalentRightsDetailPage() {
               description="Create a contract to begin managing talent agreements"
               action={{
                 label: "Create Contract",
-                onClick: () => setUploadModalOpen(true),
+                href: `/creative/talent-rights/contracts/new?talentId=${talent.id}`,
               }}
             />
           ) : (
@@ -373,8 +380,6 @@ export default function TalentRightsDetailPage() {
                 <ContractCard
                   key={contract.id}
                   contract={contract}
-                  onSign={() => setSignContract(contract)}
-                  onRenewal={() => setRenewalContract(contract)}
                   compact
                 />
               ))}
@@ -859,29 +864,6 @@ export default function TalentRightsDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Modals */}
-      <UploadContractModal 
-        open={uploadModalOpen}
-        onOpenChange={setUploadModalOpen}
-        prefilledTalentId={talent.id}
-      />
-      
-      {signContract && (
-        <SignContractModal
-          contract={signContract}
-          open={!!signContract}
-          onOpenChange={(open) => !open && setSignContract(null)}
-        />
-      )}
-      
-      {renewalContract && (
-        <RenewalRequestDialog
-          contract={renewalContract}
-          open={!!renewalContract}
-          onOpenChange={(open) => !open && setRenewalContract(null)}
-        />
-      )}
     </PageContainer>
   )
 }

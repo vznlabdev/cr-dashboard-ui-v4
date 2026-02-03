@@ -129,49 +129,6 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
             )}
           </div>
         </div>
-
-        {/* Actions (visible on hover) */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {contract.status === "pending_signature" && onSign && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-7 text-xs"
-              onClick={(e) => {
-                e.preventDefault()
-                onSign()
-              }}
-            >
-              <CheckCircle2 className="mr-1 h-3 w-3" />
-              Sign
-            </Button>
-          )}
-          {isExpiringSoon && isActive && onRenewal && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-7 text-xs"
-              onClick={(e) => {
-                e.preventDefault()
-                onRenewal()
-              }}
-            >
-              <RefreshCw className="mr-1 h-3 w-3" />
-              Renew
-            </Button>
-          )}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-7 w-7"
-            onClick={(e) => {
-              e.preventDefault()
-              toast.info("Download feature coming soon")
-            }}
-          >
-            <Download className="h-3.5 w-3.5" />
-          </Button>
-        </div>
       </div>
     </Link>
   )
