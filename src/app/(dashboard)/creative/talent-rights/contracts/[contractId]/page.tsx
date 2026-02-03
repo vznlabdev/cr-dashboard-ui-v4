@@ -31,16 +31,17 @@ import { getDaysUntilExpiration } from "@/types/talent-contracts"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useState, use } from "react"
 import { SignContractModal } from "@/components/talent-rights/SignContractModal"
 import { RenewalRequestDialog } from "@/components/talent-rights/RenewalRequestDialog"
 
-export default function ContractDetailPage({ params }: { params: { contractId: string } }) {
+export default function ContractDetailPage({ params }: { params: Promise<{ contractId: string }> }) {
   const { getContractById } = useContracts()
   const [signModalOpen, setSignModalOpen] = useState(false)
   const [renewalDialogOpen, setRenewalDialogOpen] = useState(false)
   
-  const contract = getContractById(params.contractId)
+  const { contractId } = use(params)
+  const contract = getContractById(contractId)
 
   if (!contract) {
     notFound()
