@@ -221,6 +221,18 @@ export default function ContractsPage() {
           />
         </div>
 
+        <Select value={talentFilter} onValueChange={setTalentFilter}>
+          <SelectTrigger className="w-48 h-8 text-xs">
+            <SelectValue placeholder="All Talent" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Talent</SelectItem>
+            {talents.map(talent => (
+              <SelectItem key={talent} value={talent}>{talent}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8">
@@ -264,21 +276,6 @@ export default function ContractsPage() {
                     <SelectItem value="all">All Brands</SelectItem>
                     {brands.map(brand => (
                       <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Talent</label>
-                <Select value={talentFilter} onValueChange={setTalentFilter}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Talent</SelectItem>
-                    {talents.map(talent => (
-                      <SelectItem key={talent} value={talent}>{talent}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

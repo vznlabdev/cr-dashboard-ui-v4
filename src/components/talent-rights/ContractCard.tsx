@@ -81,6 +81,8 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
             </Badge>
             <span className="font-medium truncate">{contract.title}</span>
             <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">{contract.talentName}</span>
+            <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">{contract.brandName}</span>
             <span className="text-muted-foreground">•</span>
             <span className="font-medium">${contract.compensation.totalAmount.toLocaleString()}</span>
