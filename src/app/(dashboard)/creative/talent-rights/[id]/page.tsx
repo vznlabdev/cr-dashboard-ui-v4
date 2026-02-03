@@ -44,7 +44,7 @@ import { formatDateLong, getInitials } from "@/lib/format-utils"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { EmptyState } from "@/components/cr"
-import { NilpDropdownTab, ContractCard } from "@/components/talent-rights"
+import { NilpDropdownTab, ContractCard, UploadContractModal } from "@/components/talent-rights"
 import type { TalentContract } from "@/types/talent-contracts"
 import { getTotalContractValue } from "@/lib/mock-data/contracts"
 
@@ -57,6 +57,7 @@ export default function TalentRightsDetailPage() {
   
   // State for managing active tab
   const [currentTab, setCurrentTab] = useState<string>("overview")
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
   const talent = getTalentById(id)
   
@@ -351,11 +352,9 @@ export default function TalentRightsDetailPage() {
                   View All
                 </Link>
               </Button>
-              <Button size="sm" asChild>
-                <Link href={`/creative/talent-rights/contracts/new?talentId=${talent.id}`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Contract
-                </Link>
+              <Button size="sm" onClick={() => setUploadModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Contract
               </Button>
             </div>
           </div>
@@ -367,7 +366,7 @@ export default function TalentRightsDetailPage() {
               description="Create a contract to begin managing talent agreements"
               action={{
                 label: "Create Contract",
-                href: `/creative/talent-rights/contracts/new?talentId=${talent.id}`,
+                onClick: () => setUploadModalOpen(true),
               }}
             />
           ) : (
@@ -860,6 +859,13 @@ export default function TalentRightsDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Upload Contract Modal */}
+      <UploadContractModal 
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        prefilledTalentId={talent.id}
+      />
     </PageContainer>
   )
 }
