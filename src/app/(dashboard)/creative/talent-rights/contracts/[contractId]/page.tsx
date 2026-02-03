@@ -72,278 +72,313 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Header */}
+      {/* Compact Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold mb-2">{contract.title}</h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+          <h1 className="text-xl font-semibold mb-1">{contract.title}</h1>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <span className="font-mono">{contract.contractId}</span>
             <span>•</span>
             {isActive ? (
-              <Badge variant="default" className="flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" />
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-0 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
                 Active
               </Badge>
             ) : contract.status === "pending_signature" ? (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Pending Signature
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-0 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                Pending
               </Badge>
             ) : contract.status === "expired" ? (
-              <Badge variant="destructive" className="flex items-center gap-1">
-                <XCircle className="h-3 w-3" />
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-0 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">
                 Expired
               </Badge>
             ) : (
-              <Badge variant="outline">{contract.status}</Badge>
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px]">{contract.status}</Badge>
             )}
             <span>•</span>
             <span>{contract.talentName}</span>
+            {isExpiringSoon && isActive && (
+              <>
+                <span>•</span>
+                <span className="text-orange-600 font-medium">Expires in {daysRemaining}d</span>
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {contract.status === "pending_signature" && (
             <Button size="sm" onClick={() => setSignModalOpen(true)}>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
               Sign Contract
             </Button>
           )}
           {isActive && isExpiringSoon && (
             <Button size="sm" onClick={() => setRenewalDialogOpen(true)}>
-              <RefreshCw className="mr-2 h-4 w-4" />
               Request Renewal
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => toast.info("Download feature coming soon")}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
+          <Button variant="ghost" size="sm" onClick={() => toast.info("Download feature coming soon")}>
+            <Download className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
+      {/* Expiration Warning */}
+      {isExpiringSoon && isActive && (
+        <div className="rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800 p-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+            <div className="flex-1 text-sm">
+              <p className="font-medium text-orange-900 dark:text-orange-100">
+                Contract expires in {daysRemaining} days
+              </p>
+              <p className="text-xs text-orange-700 dark:text-orange-200 mt-1">
+                Consider requesting renewal to maintain {contract.terms.category} rights
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setRenewalDialogOpen(true)}>
+              Request Renewal
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="documents">
-            Documents
-            <Badge variant="secondary" className="ml-2 h-4 px-1.5 text-[10px]">
-              {contract.documents.length}
-            </Badge>
+        <TabsList className="h-9 bg-transparent border-b w-full justify-start rounded-none p-0">
+          <TabsTrigger value="overview" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+            Overview
           </TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="terms">Terms</TabsTrigger>
+          <TabsTrigger value="documents" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+            Documents ({contract.documents.length})
+          </TabsTrigger>
+          <TabsTrigger value="history" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+            History
+          </TabsTrigger>
+          <TabsTrigger value="terms" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+            Terms
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-4">
           {/* Contract Information */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Contract Information</h3>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+              Contract Information
+            </h3>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
               <div>
-                <span className="text-muted-foreground text-xs">Brand</span>
-                <p className="font-medium">{contract.brandName}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Brand</dt>
+                <dd className="font-medium">{contract.brandName}</dd>
               </div>
               <div>
-                <span className="text-muted-foreground text-xs">Type</span>
-                <p className="font-medium capitalize">{contract.contractType.replace(/_/g, ' ')}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Type</dt>
+                <dd className="font-medium capitalize">{contract.contractType.replace(/_/g, ' ')}</dd>
               </div>
               {contract.projectTitle && (
                 <div className="col-span-2">
-                  <span className="text-muted-foreground text-xs">Project</span>
-                  <p className="font-medium">{contract.projectTitle}</p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Project</dt>
+                  <dd className="font-medium">{contract.projectTitle}</dd>
                 </div>
               )}
               <div>
-                <span className="text-muted-foreground text-xs">Effective Date</span>
-                <p className="font-medium">{formatDateLong(contract.terms.effectiveDate)}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Effective Date</dt>
+                <dd className="font-medium">{formatDateLong(contract.terms.effectiveDate)}</dd>
               </div>
               <div>
-                <span className="text-muted-foreground text-xs">Expiration Date</span>
-                <p className={cn("font-medium", isExpiringSoon && "text-orange-600")}>
+                <dt className="text-xs text-muted-foreground mb-0.5">Expiration Date</dt>
+                <dd className={cn("font-medium", isExpiringSoon && "text-orange-600")}>
                   {formatDateLong(contract.terms.expirationDate)}
                   {isActive && <span className="ml-2 text-xs">({daysRemaining} days)</span>}
-                </p>
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
 
-          {/* NILP Rights */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">NILP Rights Granted</h3>
-            <div className="space-y-4 text-sm">
+          {/* NILP Rights - Compact Table */}
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+              NILP Rights Granted
+            </h3>
+            <div className="space-y-2.5">
               {/* Name */}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  {contract.nilpRights.name.included ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-gray-400" />
-                  )}
-                  <span className="font-medium">Name Rights</span>
-                </div>
-                {contract.nilpRights.name.included && (
-                  <div className="ml-6 text-xs text-muted-foreground space-y-1">
+              <div className="grid grid-cols-[auto_80px_1fr] gap-4 text-sm items-start">
+                {contract.nilpRights.name.included ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                )}
+                <span className={cn("font-medium", !contract.nilpRights.name.included && "text-muted-foreground")}>
+                  Name
+                </span>
+                {contract.nilpRights.name.included ? (
+                  <div className="text-xs text-muted-foreground">
                     {contract.nilpRights.name.usage && contract.nilpRights.name.usage.length > 0 && (
-                      <p>Usage: {contract.nilpRights.name.usage.join(", ")}</p>
+                      <span>{contract.nilpRights.name.usage.join(", ")}</span>
                     )}
                     {contract.nilpRights.name.restrictions && (
-                      <p>Restrictions: {contract.nilpRights.name.restrictions}</p>
+                      <span className="block mt-1">{contract.nilpRights.name.restrictions}</span>
                     )}
                   </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Not included</span>
                 )}
               </div>
 
               {/* Image */}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  {contract.nilpRights.image.included ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-gray-400" />
-                  )}
-                  <span className="font-medium">Image Rights</span>
-                </div>
-                {contract.nilpRights.image.included && (
-                  <div className="ml-6 text-xs text-muted-foreground space-y-1">
+              <div className="grid grid-cols-[auto_80px_1fr] gap-4 text-sm items-start">
+                {contract.nilpRights.image.included ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                )}
+                <span className={cn("font-medium", !contract.nilpRights.image.included && "text-muted-foreground")}>
+                  Image
+                </span>
+                {contract.nilpRights.image.included ? (
+                  <div className="text-xs text-muted-foreground">
                     {contract.nilpRights.image.usage && contract.nilpRights.image.usage.length > 0 && (
-                      <p>Usage: {contract.nilpRights.image.usage.join(", ")}</p>
+                      <span>{contract.nilpRights.image.usage.join(", ")}</span>
                     )}
                     {contract.nilpRights.image.restrictions && (
-                      <p>Restrictions: {contract.nilpRights.image.restrictions}</p>
+                      <span className="block mt-1">{contract.nilpRights.image.restrictions}</span>
                     )}
                   </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Not included</span>
                 )}
               </div>
 
               {/* Likeness */}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  {contract.nilpRights.likeness.included ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-gray-400" />
-                  )}
-                  <span className="font-medium">Likeness Rights</span>
-                </div>
-                {contract.nilpRights.likeness.included && (
-                  <div className="ml-6 text-xs text-muted-foreground space-y-1">
+              <div className="grid grid-cols-[auto_80px_1fr] gap-4 text-sm items-start">
+                {contract.nilpRights.likeness.included ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                )}
+                <span className={cn("font-medium", !contract.nilpRights.likeness.included && "text-muted-foreground")}>
+                  Likeness
+                </span>
+                {contract.nilpRights.likeness.included ? (
+                  <div className="text-xs text-muted-foreground space-y-0.5">
                     {contract.nilpRights.likeness.aiGeneration && <p>AI generation allowed</p>}
                     {contract.nilpRights.likeness.approvedTools && contract.nilpRights.likeness.approvedTools.length > 0 && (
                       <p>Tools: {contract.nilpRights.likeness.approvedTools.join(", ")}</p>
                     )}
                     {contract.nilpRights.likeness.requiresApproval && <p>Prior approval required</p>}
-                    {contract.nilpRights.likeness.restrictions && (
-                      <p>Restrictions: {contract.nilpRights.likeness.restrictions}</p>
-                    )}
+                    {contract.nilpRights.likeness.restrictions && <p>{contract.nilpRights.likeness.restrictions}</p>}
                   </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {contract.nilpRights.likeness.restrictions || "Not included"}
+                  </span>
                 )}
               </div>
 
               {/* Persona */}
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  {contract.nilpRights.persona.included ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-gray-400" />
-                  )}
-                  <span className="font-medium">Persona Rights</span>
-                </div>
-                {contract.nilpRights.persona.included && (
-                  <div className="ml-6 text-xs text-muted-foreground space-y-1">
+              <div className="grid grid-cols-[auto_80px_1fr] gap-4 text-sm items-start">
+                {contract.nilpRights.persona.included ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-gray-400 mt-0.5" />
+                )}
+                <span className={cn("font-medium", !contract.nilpRights.persona.included && "text-muted-foreground")}>
+                  Persona
+                </span>
+                {contract.nilpRights.persona.included ? (
+                  <div className="text-xs text-muted-foreground space-y-0.5">
                     {contract.nilpRights.persona.personalityTraits && contract.nilpRights.persona.personalityTraits.length > 0 && (
-                      <p>Traits: {contract.nilpRights.persona.personalityTraits.join(", ")}</p>
+                      <p>{contract.nilpRights.persona.personalityTraits.join(", ")}</p>
                     )}
-                    {contract.nilpRights.persona.brandVoice && (
-                      <p>Voice: {contract.nilpRights.persona.brandVoice}</p>
-                    )}
-                    {contract.nilpRights.persona.messagingTone && (
-                      <p>Tone: {contract.nilpRights.persona.messagingTone}</p>
-                    )}
-                    {contract.nilpRights.persona.restrictions && (
-                      <p>Restrictions: {contract.nilpRights.persona.restrictions}</p>
-                    )}
+                    {contract.nilpRights.persona.brandVoice && <p>{contract.nilpRights.persona.brandVoice}</p>}
+                    {contract.nilpRights.persona.messagingTone && <p>{contract.nilpRights.persona.messagingTone}</p>}
+                    {contract.nilpRights.persona.restrictions && <p>{contract.nilpRights.persona.restrictions}</p>}
                   </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {contract.nilpRights.persona.restrictions || "Not included"}
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
           {/* Terms & Compensation */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Terms</h3>
-              <div className="space-y-2 text-sm">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="rounded-lg border bg-card p-4">
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                Terms
+              </h3>
+              <dl className="space-y-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground text-xs">Territory</span>
-                  <p>{contract.terms.territory.join(", ")}</p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Territory</dt>
+                  <dd>{contract.terms.territory.join(", ")}</dd>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-xs">Category</span>
-                  <p>{contract.terms.category}</p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Category</dt>
+                  <dd>{contract.terms.category}</dd>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-xs">Media Channels</span>
-                  <p className="capitalize">{contract.terms.mediaChannels.join(", ")}</p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Media Channels</dt>
+                  <dd className="capitalize">{contract.terms.mediaChannels.join(", ")}</dd>
                 </div>
                 <div>
-                  <span className="text-muted-foreground text-xs">Exclusivity</span>
-                  <p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Exclusivity</dt>
+                  <dd>
                     {contract.terms.exclusivity.isExclusive ? (
-                      <>
-                        <Badge variant="secondary" className="text-xs">Exclusive</Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">Exclusive</Badge>
                         {contract.terms.exclusivity.competitors && contract.terms.exclusivity.competitors.length > 0 && (
-                          <span className="ml-2 text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             Blocks: {contract.terms.exclusivity.competitors.join(", ")}
                           </span>
                         )}
-                      </>
+                      </div>
                     ) : (
                       "Non-exclusive"
                     )}
-                  </p>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Compensation</h3>
-              <div className="space-y-2 text-sm">
+            <div className="rounded-lg border bg-card p-4">
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                Compensation
+              </h3>
+              <div className="space-y-2.5 text-sm">
                 <div>
-                  <span className="text-muted-foreground text-xs">Total Amount</span>
-                  <p className="text-xl font-bold">${contract.compensation.totalAmount.toLocaleString()} {contract.compensation.currency}</p>
+                  <dt className="text-xs text-muted-foreground mb-0.5">Total Amount</dt>
+                  <dd className="text-xl font-bold">${contract.compensation.totalAmount.toLocaleString()} {contract.compensation.currency}</dd>
                 </div>
                 {contract.compensation.breakdown && (
                   <div>
-                    <span className="text-muted-foreground text-xs">Breakdown</span>
-                    <div className="space-y-1 mt-1">
+                    <dt className="text-xs text-muted-foreground mb-1">Breakdown</dt>
+                    <dd className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       {contract.compensation.breakdown.nameRights && (
-                        <p className="text-xs">Name: ${contract.compensation.breakdown.nameRights.toLocaleString()}</p>
+                        <span>Name: ${contract.compensation.breakdown.nameRights.toLocaleString()}</span>
                       )}
                       {contract.compensation.breakdown.imageRights && (
-                        <p className="text-xs">Image: ${contract.compensation.breakdown.imageRights.toLocaleString()}</p>
+                        <span>Image: ${contract.compensation.breakdown.imageRights.toLocaleString()}</span>
                       )}
                       {contract.compensation.breakdown.likenessRights && (
-                        <p className="text-xs">Likeness: ${contract.compensation.breakdown.likenessRights.toLocaleString()}</p>
+                        <span>Likeness: ${contract.compensation.breakdown.likenessRights.toLocaleString()}</span>
                       )}
                       {contract.compensation.breakdown.personaRights && (
-                        <p className="text-xs">Persona: ${contract.compensation.breakdown.personaRights.toLocaleString()}</p>
+                        <span>Persona: ${contract.compensation.breakdown.personaRights.toLocaleString()}</span>
                       )}
-                    </div>
+                    </dd>
                   </div>
                 )}
                 <div>
-                  <span className="text-muted-foreground text-xs">Payment Status</span>
-                  <div className="flex items-center gap-2 mt-1">
+                  <dt className="text-xs text-muted-foreground mb-0.5">Payment Status</dt>
+                  <dd className="flex items-center gap-2">
                     {contract.compensation.paymentStatus === "paid" ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                         <span>Paid</span>
                         {contract.compensation.paidAt && (
                           <span className="text-xs text-muted-foreground">
-                            ({formatDateLong(contract.compensation.paidAt)})
+                            {formatDateLong(contract.compensation.paidAt)}
                           </span>
                         )}
                       </>
@@ -353,7 +388,7 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
                         <span>Pending</span>
                       </>
                     )}
-                  </div>
+                  </dd>
                 </div>
               </div>
             </div>
@@ -361,12 +396,14 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
 
           {/* Special Provisions */}
           {contract.specialProvisions && contract.specialProvisions.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Special Provisions</h3>
-              <ul className="space-y-1 text-sm">
+            <div className="rounded-lg border bg-card p-4">
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                Special Provisions
+              </h3>
+              <ul className="space-y-1.5 text-sm">
                 {contract.specialProvisions.map((provision, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground mt-0.5">•</span>
                     <span>{provision}</span>
                   </li>
                 ))}
@@ -417,7 +454,7 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
           )}
         </TabsContent>
 
-        {/* History Tab */}
+        {/* History Tab - Timeline Style */}
         <TabsContent value="history" className="space-y-4">
           {contract.contractHistory.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -425,19 +462,33 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
               <p className="text-sm">No history available</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {contract.contractHistory.map((entry) => (
-                <div key={entry.id} className="flex gap-4 text-sm">
-                  <span className="text-muted-foreground text-xs w-32 shrink-0">
-                    {formatDateLong(entry.timestamp)}
-                  </span>
-                  <div className="flex-1">
-                    <span className="capitalize font-medium">{entry.action.replace(/_/g, ' ')}</span>
+            <div className="relative pl-6 space-y-4">
+              {/* Vertical timeline line */}
+              <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
+              
+              {contract.contractHistory.map((entry, idx) => (
+                <div key={entry.id} className="relative">
+                  {/* Timeline dot */}
+                  <div className="absolute -left-6 top-1 h-4 w-4 rounded-full border-2 border-border bg-background flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                  </div>
+                  
+                  <div className="text-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="capitalize font-medium">{entry.action.replace(/_/g, ' ')}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateLong(entry.timestamp)}
+                      </span>
+                    </div>
                     {entry.performedByName && (
-                      <span className="text-muted-foreground ml-2">by {entry.performedByName}</span>
+                      <p className="text-xs text-muted-foreground">
+                        by {entry.performedByName}
+                      </p>
                     )}
                     {entry.details && (
-                      <p className="text-xs text-muted-foreground mt-1">{entry.details}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {entry.details}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -447,31 +498,35 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
         </TabsContent>
 
         {/* Terms Tab */}
-        <TabsContent value="terms" className="space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Usage Rights & Restrictions</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+        <TabsContent value="terms" className="space-y-4">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+              Usage Rights & Restrictions
+            </h3>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground text-xs">Territory</span>
-                <p>{contract.terms.territory.join(", ")}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Territory</dt>
+                <dd>{contract.terms.territory.join(", ")}</dd>
               </div>
               <div>
-                <span className="text-muted-foreground text-xs">Category</span>
-                <p>{contract.terms.category}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Category</dt>
+                <dd>{contract.terms.category}</dd>
               </div>
               <div className="col-span-2">
-                <span className="text-muted-foreground text-xs">Media Channels</span>
-                <p className="capitalize">{contract.terms.mediaChannels.join(", ")}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Media Channels</dt>
+                <dd className="capitalize">{contract.terms.mediaChannels.join(", ")}</dd>
               </div>
               <div className="col-span-2">
-                <span className="text-muted-foreground text-xs">Intended Use</span>
-                <p>{contract.terms.intendedUse}</p>
+                <dt className="text-xs text-muted-foreground mb-0.5">Intended Use</dt>
+                <dd>{contract.terms.intendedUse}</dd>
               </div>
-            </div>
+            </dl>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Rights & Protections</h3>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+              Rights & Protections
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 {contract.approvalRights ? (
@@ -499,8 +554,10 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
           </div>
 
           {/* Reminders */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Reminders</h3>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+              Reminders
+            </h3>
             <div className="space-y-2 text-sm">
               {contract.reminders.map((reminder, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -511,7 +568,7 @@ export default function ContractDetailPage({ params }: { params: { contractId: s
                     {reminder.type === "category_available" && "Category becomes available"}
                   </span>
                   {reminder.triggeredAt && (
-                    <Badge variant="outline" className="text-[10px] px-1">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
                       Sent {formatDateLong(reminder.triggeredAt)}
                     </Badge>
                   )}
