@@ -53,6 +53,7 @@ export default function ContractsPage() {
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "all">("all")
   const [typeFilter, setTypeFilter] = useState<ContractType | "all">("all")
   const [brandFilter, setBrandFilter] = useState<string>("all")
+  const [talentFilter, setTalentFilter] = useState<string>("all")
   const [selectedView, setSelectedView] = useState<ViewTab>("all")
   const [sortBy, setSortBy] = useState<"expiration" | "created" | "brand">("expiration")
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
@@ -78,6 +79,12 @@ export default function ContractsPage() {
   const brands = useMemo(() => {
     const uniqueBrands = Array.from(new Set(contracts.map(c => c.brandName))).sort()
     return uniqueBrands
+  }, [contracts])
+
+  // Get unique talents
+  const talents = useMemo(() => {
+    const uniqueTalents = Array.from(new Set(contracts.map(c => c.talentName))).sort()
+    return uniqueTalents
   }, [contracts])
 
   // Filter and sort contracts
@@ -120,6 +127,11 @@ export default function ContractsPage() {
       filtered = filtered.filter(c => c.brandName === brandFilter)
     }
 
+    // Apply talent filter
+    if (talentFilter !== "all") {
+      filtered = filtered.filter(c => c.talentName === talentFilter)
+    }
+
     // Sort
     filtered = [...filtered].sort((a, b) => {
       if (sortBy === "expiration") {
@@ -133,21 +145,23 @@ export default function ContractsPage() {
     })
 
     return filtered
-  }, [contracts, selectedView, searchQuery, statusFilter, typeFilter, brandFilter, sortBy, getActiveContracts, getExpiringContracts, getPendingContracts, getExpiredContracts])
+  }, [contracts, selectedView, searchQuery, statusFilter, typeFilter, brandFilter, talentFilter, sortBy, getActiveContracts, getExpiringContracts, getPendingContracts, getExpiredContracts])
 
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (statusFilter !== 'all') count++
     if (typeFilter !== 'all') count++
     if (brandFilter !== 'all') count++
+    if (talentFilter !== 'all') count++
     return count
-  }, [statusFilter, typeFilter, brandFilter])
+  }, [statusFilter, typeFilter, brandFilter, talentFilter])
 
   const clearFilters = () => {
     setSearchQuery("")
     setStatusFilter("all")
     setTypeFilter("all")
     setBrandFilter("all")
+    setTalentFilter("all")
   }
 
   return (
@@ -250,6 +264,21 @@ export default function ContractsPage() {
                     <SelectItem value="all">All Brands</SelectItem>
                     {brands.map(brand => (
                       <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Talent</label>
+                <Select value={talentFilter} onValueChange={setTalentFilter}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Talent</SelectItem>
+                    {talents.map(talent => (
+                      <SelectItem key={talent} value={talent}>{talent}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
