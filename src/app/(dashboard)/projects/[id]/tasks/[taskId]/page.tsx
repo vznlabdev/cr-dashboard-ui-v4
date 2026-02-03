@@ -1492,42 +1492,6 @@ export default function TaskDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* AI Workflow Section - Moved to top */}
-          {(task.mode === 'generative' || task.mode === 'assisted') && (
-          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                  <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">AI Workflow</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Manage your AI-assisted creation process with guided steps, tool tracking, and evidence collection.
-                  </p>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Badge variant="outline">
-                      Step {task.aiWorkflowStep || 1} / 7
-                    </Badge>
-                    {task.aiTool && (
-                      <span className="text-sm text-muted-foreground">
-                        Using {task.aiTool}
-                      </span>
-                    )}
-                  </div>
-                  <Button asChild size="lg" className="w-full sm:w-auto">
-                    <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
-                      <Rocket className="mr-2 h-4 w-4" />
-                      {task.aiWorkflowStep && task.aiWorkflowStep > 1 ? 'Continue Workflow' : 'Start AI Workflow'}
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          )}
-
           {/* Description */}
           <Card>
             <CardHeader>
@@ -2752,6 +2716,114 @@ export default function TaskDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Task Details & Actions - Unified */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Details & Actions</CardTitle>
+                {/* Mode Badge */}
+                {task.mode && task.mode !== "manual" && (
+                  <Badge 
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] font-semibold px-2 py-0.5 gap-1",
+                      task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+                      task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
+                    )}
+                  >
+                    <Zap className="h-2.5 w-2.5" />
+                    {task.mode === "generative" ? "AI Gen" : "AI Assist"}
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Workflow Step - Compact */}
+              {task.mode !== "manual" && (
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                  <span>Step {task.aiWorkflowStep || 1} / 7</span>
+                  {task.aiTool && (
+                    <>
+                      <span>•</span>
+                      <span>{task.aiTool}</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </CardHeader>
+            
+            <CardContent className="space-y-2">
+              {/* Primary Action - Dynamic based on workflow step */}
+              {task.mode !== "manual" ? (
+                // AI Workflow Actions
+                <>
+                  {/* Primary action changes based on step */}
+                  {(!task.aiWorkflowStep || task.aiWorkflowStep === 1) && (
+                    <Button className="w-full" asChild>
+                      <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
+                        <Rocket className="mr-2 h-4 w-4" />
+                        Start AI Workflow
+                      </Link>
+                    </Button>
+                  )}
+                  
+                  {task.aiWorkflowStep && task.aiWorkflowStep > 1 && task.aiWorkflowStep < 7 && (
+                    <Button className="w-full" asChild>
+                      <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
+                        <Rocket className="mr-2 h-4 w-4" />
+                        Continue Workflow
+                      </Link>
+                    </Button>
+                  )}
+                  
+                  {task.aiWorkflowStep === 7 && (
+                    <Button className="w-full" onClick={() => toast.info("Submit for clearance")}>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Submit for Clearance
+                    </Button>
+                  )}
+                </>
+              ) : (
+                // Manual Task Actions
+                <>
+                  <Button className="w-full" onClick={() => toast.info("Upload asset")}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Asset
+                  </Button>
+                  <Button className="w-full" variant="outline" onClick={() => toast.info("Link asset")}>
+                    <Link2 className="mr-2 h-4 w-4" />
+                    Link Existing Asset
+                  </Button>
+                </>
+              )}
+              
+              {/* More Actions Dropdown */}
+              <Separator className="my-2" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <MoreHorizontal className="mr-2 h-4 w-4" />
+                    More Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => toast.info("Edit task")}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Task
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast.info("Duplicate")}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => toast.info("Archive")}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </CardContent>
+          </Card>
+
           {/* Details */}
           <Card>
             <CardHeader>
@@ -2937,147 +3009,6 @@ export default function TaskDetailPage() {
                   })}
                 </span>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {/* AI Task Actions - Step-specific */}
-                  {/* Step 2: Select AI Tool */}
-                  {task.aiWorkflowStep === 2 && (
-                    <>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => toast.info("Select AI tool coming soon")}
-                      >
-                        <Zap className="mr-2 h-4 w-4" />
-                        Select AI Tool
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => toast.info("Skip to manual coming soon")}
-                      >
-                        <SkipForward className="mr-2 h-4 w-4" />
-                        Skip to Manual
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Step 3 or 4: Create Prompt / Generate Output */}
-                  {(task.aiWorkflowStep === 3 || task.aiWorkflowStep === 4) && (
-                    <>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => toast.info(`Launching ${task.aiTool || "AI Tool"}...`)}
-                      >
-                        <Rocket className="mr-2 h-4 w-4" />
-                        Launch Tool
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => toast.info("View workflow coming soon")}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Workflow
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Step 5: Upload Output */}
-                  {task.aiWorkflowStep === 5 && (
-                    <>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => toast.info("Upload asset coming soon")}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Asset
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => toast.info("Link existing asset coming soon")}
-                      >
-                        <Link2 className="mr-2 h-4 w-4" />
-                        Link Existing Asset
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Step 6 or 7: Review/Submit */}
-                  {(task.aiWorkflowStep === 6 || task.aiWorkflowStep === 7) && (
-                    <>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => toast.info("Submit for clearance coming soon")}
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Submit for Clearance
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => toast.info("Request changes coming soon")}
-                      >
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        Request Changes
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Step 1 or undefined - default actions */}
-                  {(!task.aiWorkflowStep || task.aiWorkflowStep === 1) && (
-                    <>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => toast.info("Start workflow coming soon")}
-                      >
-                        <Play className="mr-2 h-4 w-4" />
-                        Start Workflow
-                      </Button>
-                      <Button 
-                        className="w-full" 
-                        variant="outline"
-                        onClick={() => toast.info("View workflow coming soon")}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Workflow
-                      </Button>
-                    </>
-                  )}
-
-              {/* Common Actions - Always Available */}
-              <Separator />
-              <Button 
-                className="w-full" 
-                variant="ghost"
-                onClick={() => toast.info("Edit task coming soon")}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Task
-              </Button>
-              <Button 
-                className="w-full" 
-                variant="ghost"
-                onClick={() => toast.info("Duplicate coming soon")}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-              </Button>
-              <Button 
-                className="w-full" 
-                variant="ghost"
-                onClick={() => toast.info("Archive coming soon")}
-              >
-                <Archive className="mr-2 h-4 w-4" />
-                Archive
-              </Button>
             </CardContent>
           </Card>
         </div>
