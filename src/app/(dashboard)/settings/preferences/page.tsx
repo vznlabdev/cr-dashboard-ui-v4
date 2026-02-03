@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectSeparator } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectSeparator, SelectGroup } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -204,62 +204,74 @@ export default function PreferencesPage() {
               </SelectTrigger>
               <SelectContent className="max-h-[400px]">
                 {/* UTC */}
-                <SelectLabel>Universal</SelectLabel>
-                {timezones.filter(tz => tz.region === "UTC").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Universal</SelectLabel>
+                  {timezones.filter(tz => tz.region === "UTC").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
                 
                 <SelectSeparator />
                 
                 {/* Americas */}
-                <SelectLabel>Americas</SelectLabel>
-                {timezones.filter(tz => tz.region === "Americas").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Americas</SelectLabel>
+                  {timezones.filter(tz => tz.region === "Americas").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
                 
                 <SelectSeparator />
                 
                 {/* Europe */}
-                <SelectLabel>Europe</SelectLabel>
-                {timezones.filter(tz => tz.region === "Europe").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Europe</SelectLabel>
+                  {timezones.filter(tz => tz.region === "Europe").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
                 
                 <SelectSeparator />
                 
                 {/* Asia */}
-                <SelectLabel>Asia</SelectLabel>
-                {timezones.filter(tz => tz.region === "Asia").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Asia</SelectLabel>
+                  {timezones.filter(tz => tz.region === "Asia").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
                 
                 <SelectSeparator />
                 
                 {/* Pacific */}
-                <SelectLabel>Pacific</SelectLabel>
-                {timezones.filter(tz => tz.region === "Pacific").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Pacific</SelectLabel>
+                  {timezones.filter(tz => tz.region === "Pacific").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
                 
                 <SelectSeparator />
                 
                 {/* Africa & Middle East */}
-                <SelectLabel>Africa & Middle East</SelectLabel>
-                {timezones.filter(tz => tz.region === "Africa").map(tz => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    {tz.label} ({tz.offset})
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Africa & Middle East</SelectLabel>
+                  {timezones.filter(tz => tz.region === "Africa").map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
