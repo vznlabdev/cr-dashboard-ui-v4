@@ -93,10 +93,6 @@ export default function CreatorDetailPage() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbLink href="/creative/creators">Creators</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

@@ -170,10 +170,6 @@ export default function ContractsPage() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbLink href="/creative/talent-rights">Talent Rights</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
