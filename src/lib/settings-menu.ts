@@ -41,6 +41,7 @@ export interface SettingsMenuSection {
 }
 
 export const settingsMenu: SettingsMenuSection[] = [
+  // Personal settings
   {
     id: "personal",
     label: "Personal",
@@ -79,9 +80,10 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
+  // Organization & Team
   {
     id: "organization",
-    label: "Organization",
+    label: "Organization & Team",
     items: [
       {
         id: "organization",
@@ -94,7 +96,7 @@ export const settingsMenu: SettingsMenuSection[] = [
       {
         id: "team",
         label: "Team",
-        href: "/settings/team",
+        href: "/creative/team",
         icon: Users,
         description: "Manage team members and invitations",
         keywords: ["members", "invite", "remove", "roles"],
@@ -117,6 +119,46 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
+  // Content & Rights - Groups creative admin priorities
+  {
+    id: "content-rights",
+    label: "Content & Rights",
+    items: [
+      {
+        id: "talent-rights",
+        label: "Talent Rights",
+        href: "/settings/talent-rights",
+        icon: FileText,
+        description: "External talent agreements",
+        keywords: ["talent", "rights", "agreements", "licensing"],
+      },
+      {
+        id: "ai-tools",
+        label: "AI Tool Whitelist",
+        href: "/settings/ai-tools",
+        icon: Cpu,
+        description: "Manage approved AI tools",
+        keywords: ["whitelist", "tools", "ai", "approve"],
+      },
+      {
+        id: "ai-approval-settings",
+        label: "Approval Settings",
+        href: "/settings/ai-tools/approval-settings",
+        icon: Shield,
+        description: "Tool approval workflow",
+        keywords: ["approval", "workflow", "block", "detect"],
+      },
+      {
+        id: "ai-project-restrictions",
+        label: "Project Restrictions",
+        href: "/settings/ai-tools/project-restrictions",
+        icon: Lock,
+        description: "Project-specific tool access",
+        keywords: ["project", "restrictions", "access", "tools"],
+      },
+    ],
+  },
+  // Security & Compliance - Elevated for SOC2/ISO27001
   {
     id: "security-compliance",
     label: "Security & Compliance",
@@ -163,36 +205,7 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
-  {
-    id: "ai-tools",
-    label: "AI Tools",
-    items: [
-      {
-        id: "ai-tools",
-        label: "AI Tool Whitelist",
-        href: "/settings/ai-tools",
-        icon: Cpu,
-        description: "Manage approved AI tools",
-        keywords: ["whitelist", "tools", "ai", "approve"],
-      },
-      {
-        id: "ai-approval-settings",
-        label: "Approval Settings",
-        href: "/settings/ai-tools/approval-settings",
-        icon: Shield,
-        description: "Tool approval workflow",
-        keywords: ["approval", "workflow", "block", "detect"],
-      },
-      {
-        id: "ai-project-restrictions",
-        label: "Project Restrictions",
-        href: "/settings/ai-tools/project-restrictions",
-        icon: Lock,
-        description: "Project-specific tool access",
-        keywords: ["project", "restrictions", "access", "tools"],
-      },
-    ],
-  },
+  // Integrations
   {
     id: "integrations",
     label: "Integrations",
@@ -231,20 +244,7 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
-  {
-    id: "content",
-    label: "Content & Rights",
-    items: [
-      {
-        id: "talent-rights",
-        label: "Talent Rights",
-        href: "/settings/talent-rights",
-        icon: FileText,
-        description: "External talent agreements",
-        keywords: ["talent", "rights", "agreements", "licensing"],
-      },
-    ],
-  },
+  // Business
   {
     id: "business",
     label: "Business",
@@ -259,6 +259,7 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
+  // Developer
   {
     id: "developer",
     label: "Developer",
@@ -273,6 +274,7 @@ export const settingsMenu: SettingsMenuSection[] = [
       },
     ],
   },
+  // Data Management
   {
     id: "data",
     label: "Data Management",
