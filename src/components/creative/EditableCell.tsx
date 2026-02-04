@@ -321,7 +321,7 @@ export function EditableCell({ field, value, originalValue, hasChange, error, on
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full text-left hover:bg-accent/50 px-2 py-1 rounded text-sm"
+            className="w-full text-left hover:bg-accent/50 px-2 py-1 rounded text-sm text-foreground"
           >
             {formatValue(localValue, field)}
           </button>
@@ -351,16 +351,16 @@ function formatValue(value: any, field: EditableField): React.ReactNode {
   
   switch (field.type) {
     case "boolean":
-      return value ? "Yes" : "No"
+      return <span className="text-foreground">{value ? "Yes" : "No"}</span>
     case "date":
-      return format(new Date(value), "PP")
+      return <span className="text-foreground">{format(new Date(value), "PP")}</span>
     case "tags":
     case "multiselect":
-      return Array.isArray(value) ? value.join(", ") : "-"
+      return <span className="text-foreground">{Array.isArray(value) ? value.join(", ") : "-"}</span>
     case "select":
     case "searchable-select":
       const option = field.options?.find(o => o.value === value)
-      return option?.label || value
+      return <span className="text-foreground">{option?.label || value}</span>
     case "badge-select": {
       const statusConfig = field.options?.find(o => o.value === value)
       return (
@@ -404,10 +404,10 @@ function formatValue(value: any, field: EditableField): React.ReactNode {
       )
     }
     case "talent":
-      return Array.isArray(value) ? `${value.length} selected` : "-"
+      return <span className="text-foreground">{Array.isArray(value) ? `${value.length} selected` : "-"}</span>
     case "number":
-      return field.unit ? `${value} ${field.unit}` : String(value)
+      return <span className="text-foreground">{field.unit ? `${value} ${field.unit}` : String(value)}</span>
     default:
-      return String(value)
+      return <span className="text-foreground">{String(value)}</span>
   }
 }

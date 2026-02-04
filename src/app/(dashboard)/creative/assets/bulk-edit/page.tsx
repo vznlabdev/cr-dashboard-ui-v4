@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, Suspense } from "react"
+import { useState, useMemo, useCallback, Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { ArrowLeft, Columns, Search, AlertTriangle, ChevronDown, FileImage } from "lucide-react"
-import { PageContainer } from "@/components/layout/PageContainer"
 import { mockAssets, mockVersionGroups } from "@/lib/mock-data/creative"
 import { BULK_EDIT_CATEGORIES, EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
 import { EditableCell } from "@/components/creative"
@@ -19,7 +18,6 @@ import type { BulkEditChange } from "@/types/bulk-edit"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import NextImage from "next/image"
-import { StickyHorizontalScroll } from "@/components/ui/sticky-horizontal-scroll"
 
 // Helper function to get nested value from object
 function getNestedValue(obj: any, path: string): any {
@@ -57,7 +55,7 @@ function BulkEditPageContent() {
   
   // State
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
-    "name", "brandId", "designType", "tags", "approvalStatus"
+    "brandId", "designType", "tags", "approvalStatus"
   ])
   const [changes, setChanges] = useState<BulkEditChange[]>([])
   const [saving, setSaving] = useState(false)
@@ -155,22 +153,73 @@ function BulkEditPageContent() {
     )
   }, [searchQuery])
   
+  // Sync table width with bottom scrollbar
+  useEffect(() => {
+    const scrollArea = document.getElementById('bulk-edit-scroll-area')
+    const bottomContent = document.getElementById('bottom-scrollbar-content')
+    if (!scrollArea || !bottomContent) return
+    
+    const updateWidth = () => {
+      const table = scrollArea.querySelector('table')
+      if (table) {
+        bottomContent.style.width = `${table.scrollWidth}px`
+      }
+    }
+    
+    updateWidth()
+    const resizeObserver = new ResizeObserver(updateWidth)
+    const firstChild = scrollArea.firstElementChild
+    if (firstChild) {
+      resizeObserver.observe(firstChild)
+    }
+    
+    return () => resizeObserver.disconnect()
+  }, [selectedColumns, selectedAssets.length])
+  
+  // Sync scrolling between top and bottom scrollbars
+  useEffect(() => {
+    const mainScroll = document.getElementById('bulk-edit-scroll-area')
+    const bottomScroll = document.getElementById('bottom-scrollbar')
+    
+    if (!mainScroll || !bottomScroll) return
+    
+    const handleMainScroll = () => {
+      if (mainScroll.scrollLeft !== bottomScroll.scrollLeft) {
+        bottomScroll.scrollLeft = mainScroll.scrollLeft
+      }
+    }
+    
+    const handleBottomScroll = () => {
+      if (bottomScroll.scrollLeft !== mainScroll.scrollLeft) {
+        mainScroll.scrollLeft = bottomScroll.scrollLeft
+      }
+    }
+    
+    mainScroll.addEventListener('scroll', handleMainScroll)
+    bottomScroll.addEventListener('scroll', handleBottomScroll)
+    
+    return () => {
+      mainScroll.removeEventListener('scroll', handleMainScroll)
+      bottomScroll.removeEventListener('scroll', handleBottomScroll)
+    }
+  }, [])
+  
   // Show empty state if no assets selected
   if (selectedAssets.length === 0) {
     return (
-      <PageContainer className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center bg-background -m-4 md:-m-6 h-[calc(100vh-8rem)]">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">No assets selected</p>
           <Button size="sm" className="mt-2" onClick={() => router.push('/creative/assets')}>
             Back to assets
           </Button>
         </div>
-      </PageContainer>
+      </div>
     )
   }
   
   return (
-    <PageContainer className="flex flex-col h-[calc(100vh-4rem)] p-0">
+    <div className="flex flex-col bg-background -m-4 md:-m-6 h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)]">
       {/* Linear-Style Compact Header - h-11 */}
       <div className="flex items-center justify-between px-4 h-11 border-b bg-background shrink-0">
         <div className="flex items-center gap-3">
@@ -216,17 +265,25 @@ function BulkEditPageContent() {
         </div>
       </div>
       
-      {/* Shopify-Style Single Table View - No Tabs */}
-      <StickyHorizontalScroll className="flex-1">
-        <LinearStyleTable 
-          assets={selectedAssets}
-          columns={selectedColumns}
-          changes={changes}
-          onCellChange={handleCellChange}
-          getChangeForCell={getChangeForCell}
-          getCellValue={getCellValue}
-        />
-      </StickyHorizontalScroll>
+      {/* Table area with synchronized scrollbars */}
+      <div className="flex-1 flex flex-col min-h-0 relative">
+        {/* Main scrollable content */}
+        <div className="flex-1 overflow-auto scrollbar-hide" id="bulk-edit-scroll-area">
+          <LinearStyleTable 
+            assets={selectedAssets}
+            columns={selectedColumns}
+            changes={changes}
+            onCellChange={handleCellChange}
+            getChangeForCell={getChangeForCell}
+            getCellValue={getCellValue}
+          />
+        </div>
+        
+        {/* Sticky bottom scrollbar - only show when table is wider than viewport */}
+        <div className="overflow-x-auto overflow-y-hidden h-3 border-t bg-background" id="bottom-scrollbar">
+          <div id="bottom-scrollbar-content" style={{ height: 1 }} />
+        </div>
+      </div>
       
       {/* Shopify-Style Column Selector Side Panel with Collapsible Groups */}
       <Sheet open={columnsPanelOpen} onOpenChange={setColumnsPanelOpen}>
@@ -253,7 +310,7 @@ function BulkEditPageContent() {
           <ScrollArea className="flex-1">
             <div className="p-3">
               {Object.entries(BULK_EDIT_CATEGORIES).map(([key, label]) => {
-                const categoryFields = filteredFields.filter(f => f.category === key && f.editable)
+                const categoryFields = filteredFields.filter(f => f.category === key && f.editable && f.id !== 'name')
                 if (categoryFields.length === 0) return null
                 
                 return (
@@ -286,7 +343,7 @@ function BulkEditPageContent() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
-    </PageContainer>
+    </div>
   )
 }
 
@@ -313,17 +370,16 @@ function LinearStyleTable({
   }, [columns])
   
   return (
-    <div className="flex-1">
-      <table className="w-max min-w-full text-sm font-medium">
-        <thead className="sticky top-0 bg-background z-10 border-b">
-          <tr className="h-9">
-            <th className="sticky left-0 bg-background z-20 px-3 py-2 text-left text-xs font-bold text-foreground">
-              Asset Name
-            </th>
+    <table className="w-max min-w-full text-sm font-medium">
+      <thead className="sticky top-0 bg-background z-20 border-b">
+        <tr className="h-8">
+          <th className="sticky top-0 left-0 bg-background z-30 border-r px-2 py-1.5 text-left text-xs font-medium text-muted-foreground">
+            Asset Name
+          </th>
             {fields.map(field => (
               <th 
                 key={field.id} 
-                className="px-3 py-2 text-left text-xs font-bold text-foreground min-w-[160px]"
+                className="px-2 py-1.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]"
               >
                 {field.label}
               </th>
@@ -334,17 +390,17 @@ function LinearStyleTable({
           {assets.map((asset) => (
             <tr 
               key={asset.id} 
-              className="border-b border-border hover:bg-accent/20 transition-colors h-9"
+              className="border-b border-border hover:bg-accent/10 transition-colors h-8"
             >
-              <td className="sticky left-0 bg-background z-10 px-3 py-2 font-medium text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded overflow-hidden border shrink-0">
+              <td className="sticky left-0 bg-background z-30 border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] px-2 py-1.5 font-medium text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-6 w-6 rounded overflow-hidden border shrink-0">
                     {asset.thumbnailUrl ? (
                       <NextImage 
                         src={asset.thumbnailUrl} 
                         alt={asset.name}
-                        width={28}
-                        height={28}
+                        width={24}
+                        height={24}
                         className="object-cover w-full h-full"
                       />
                     ) : (
@@ -353,7 +409,7 @@ function LinearStyleTable({
                       </div>
                     )}
                   </div>
-                  <span className="font-medium text-sm truncate max-w-[200px]" title={asset.name}>
+                  <span className="font-medium text-xs truncate max-w-[200px]" title={asset.name}>
                     {asset.name}
                   </span>
                 </div>
@@ -364,7 +420,7 @@ function LinearStyleTable({
                 const change = getChangeForCell(asset.id, field.path)
                 
                 return (
-                  <td key={field.id} className="px-3 py-2">
+                  <td key={field.id} className="px-2 py-1.5">
                     <EditableCell
                       field={field}
                       value={value}
@@ -380,16 +436,15 @@ function LinearStyleTable({
           ))}
         </tbody>
       </table>
-    </div>
   )
 }
 
 export default function BulkEditPage() {
   return (
     <Suspense fallback={
-      <PageContainer className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center bg-background -m-4 md:-m-6 h-[calc(100vh-8rem)]">
         <p className="text-sm text-muted-foreground">Loading...</p>
-      </PageContainer>
+      </div>
     }>
       <BulkEditPageContent />
     </Suspense>
