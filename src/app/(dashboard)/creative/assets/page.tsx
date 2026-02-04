@@ -51,6 +51,14 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
@@ -64,6 +72,20 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import NextImage from "next/image"
 import Link from "next/link"
+
+// Custom View Type Definition
+interface CustomView {
+  id: string
+  label: string
+  isCustom: true
+  filters: {
+    brandFilter?: string
+    fileTypeFilter?: AssetFileType | "all"
+    designTypeFilter?: DesignType | "all"
+    contentTypeFilter?: AssetContentType | "all"
+    sortBy?: string
+  }
+}
 
 export default function AssetsPage() {
   const router = useRouter()
@@ -82,11 +104,47 @@ export default function AssetsPage() {
   const [showAllSelected, setShowAllSelected] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   
+  // Custom views state
+  const [customViews, setCustomViews] = useState<CustomView[]>([])
+  const [createViewDialogOpen, setCreateViewDialogOpen] = useState(false)
+  const [newViewName, setNewViewName] = useState("")
+  const [newViewFilters, setNewViewFilters] = useState({
+    brandFilter: brandFilter,
+    fileTypeFilter: fileTypeFilter,
+    designTypeFilter: designTypeFilter,
+    contentTypeFilter: contentTypeFilter,
+    sortBy: sortBy,
+  })
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(50)
   const [selectAllPages, setSelectAllPages] = useState(false)
   const [deselectedAssets, setDeselectedAssets] = useState<Set<string>>(new Set())
+
+  // Load custom views from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('assets-custom-views')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        setCustomViews(parsed)
+      }
+    } catch (error) {
+      console.error('Failed to load custom views:', error)
+      // Fallback to empty array on error
+    }
+  }, [])
+
+  // Save custom views to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('assets-custom-views', JSON.stringify(customViews))
+    } catch (error) {
+      console.error('Failed to save custom views:', error)
+      toast.error('Failed to save custom view')
+    }
+  }, [customViews])
 
   // Combine assets and version groups for display
   type CombinedAssetType = (typeof mockAssets[0] & { isVersionGroup?: boolean; versionGroup?: AssetVersionGroup })
@@ -183,20 +241,26 @@ export default function AssetsPage() {
   // Calculate total pages
   const totalPages = Math.ceil(displayAssets.length / pageSize)
 
-  // Define view tabs with counts
-  const views = useMemo(() => [
-    { id: 'all', label: 'All', count: sortedAssets.length },
-    { id: 'images', label: 'Images', fileType: 'image' as const },
-    { id: 'ai', label: 'AI Generated', contentType: 'ai_generated' as const },
-    { id: 'recent', label: 'Recent', sortBy: 'date-desc' as const },
-  ], [sortedAssets.length])
-
   // Calculate stats
   const totalSize = sortedAssets.reduce((acc, a) => acc + a.fileSize, 0)
   const imageCount = sortedAssets.filter((a) => a.fileType === "image").length
   const documentCount = sortedAssets.filter((a) => a.fileType === "pdf" || a.fileType === "document").length
   const aiCount = sortedAssets.filter((a) => a.contentType === "ai_generated").length
   const originalCount = sortedAssets.filter((a) => a.contentType === "original").length
+
+  // Define default view tabs
+  const defaultViews = useMemo(() => [
+    { id: 'all', label: 'All', count: sortedAssets.length },
+    { id: 'images', label: 'Images', fileType: 'image' as const, count: imageCount },
+    { id: 'ai', label: 'AI Generated', contentType: 'ai_generated' as const, count: aiCount },
+    { id: 'recent', label: 'Recent', sortBy: 'date-desc' as const, count: sortedAssets.length },
+  ], [sortedAssets.length, imageCount, aiCount])
+
+  // Merge default and custom views
+  const allViews = useMemo(() => [
+    ...defaultViews,
+    ...customViews
+  ], [defaultViews, customViews])
 
   // Calculate selection count
   const selectionCount = useMemo(() => {
@@ -319,25 +383,89 @@ export default function AssetsPage() {
   // Handle view tab changes
   const handleViewChange = (viewId: string) => {
     setSelectedView(viewId)
-    const view = views.find(v => v.id === viewId)
+    const view = allViews.find(v => v.id === viewId)
     if (view) {
-      // Apply view-specific filters
-      if ('fileType' in view && view.fileType) {
-        setFileTypeFilter(view.fileType)
-      }
-      if ('contentType' in view && view.contentType) {
-        setContentTypeFilter(view.contentType)
-      }
-      if ('sortBy' in view && view.sortBy) {
-        setSortBy(view.sortBy)
-      }
-      // Reset to defaults for 'all' view
-      if (viewId === 'all') {
-        setFileTypeFilter('all')
-        setContentTypeFilter('all')
-        setSortBy('date-desc')
+      // Check if it's a custom view with filters
+      if ('isCustom' in view && view.isCustom && view.filters) {
+        // Apply custom view filters
+        setBrandFilter(view.filters.brandFilter || 'all')
+        setFileTypeFilter(view.filters.fileTypeFilter || 'all')
+        setDesignTypeFilter(view.filters.designTypeFilter || 'all')
+        setContentTypeFilter(view.filters.contentTypeFilter || 'all')
+        setSortBy(view.filters.sortBy || 'date-desc')
+      } else {
+        // Apply default view filters (existing logic)
+        if ('fileType' in view && view.fileType) {
+          setFileTypeFilter(view.fileType)
+        }
+        if ('contentType' in view && view.contentType) {
+          setContentTypeFilter(view.contentType)
+        }
+        if ('sortBy' in view && view.sortBy) {
+          setSortBy(view.sortBy)
+        }
+        // Reset to defaults for 'all' view
+        if (viewId === 'all') {
+          setBrandFilter('all')
+          setFileTypeFilter('all')
+          setDesignTypeFilter('all')
+          setContentTypeFilter('all')
+          setSortBy('date-desc')
+        }
       }
     }
+  }
+
+  // Handle create view dialog open
+  const handleCreateView = () => {
+    // Pre-fill dialog with current filter state
+    setNewViewFilters({
+      brandFilter: brandFilter,
+      fileTypeFilter: fileTypeFilter,
+      designTypeFilter: designTypeFilter,
+      contentTypeFilter: contentTypeFilter,
+      sortBy: sortBy,
+    })
+    setNewViewName('')
+    setCreateViewDialogOpen(true)
+  }
+
+  // Handle save new view
+  const handleSaveView = () => {
+    if (!newViewName.trim()) {
+      toast.error('Please enter a view name')
+      return
+    }
+
+    const newView: CustomView = {
+      id: `custom-${Date.now()}`,
+      label: newViewName.trim(),
+      isCustom: true,
+      filters: newViewFilters,
+    }
+
+    setCustomViews([...customViews, newView])
+    setCreateViewDialogOpen(false)
+    setNewViewName('')
+    
+    // Switch to the new view
+    setTimeout(() => {
+      handleViewChange(newView.id)
+    }, 0)
+    
+    toast.success('View created')
+  }
+
+  // Handle delete view
+  const handleDeleteView = (viewId: string) => {
+    setCustomViews(customViews.filter(v => v.id !== viewId))
+    
+    // If the deleted view was active, switch to 'all'
+    if (selectedView === viewId) {
+      handleViewChange('all')
+    }
+    
+    toast('View deleted')
   }
 
   // Scroll to top on page change
@@ -411,29 +539,78 @@ export default function AssetsPage() {
 
       {/* View Tabs + Icon Toolbar - Shopify Style */}
       <div className="flex items-center justify-between py-3 border-b">
-        {/* Pill-style tabs on left */}
-        <div className="flex items-center gap-1">
-          {views.map(view => (
-            <Button
-              key={view.id}
-              variant={selectedView === view.id ? "secondary" : "ghost"}
-              size="sm"
-              className="h-8 rounded-full px-4"
-              onClick={() => handleViewChange(view.id)}
+        {/* Tabs with horizontal scroll and fade effect */}
+        <div className="relative flex-1 min-w-0">
+          {/* Left fade gradient */}
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          
+          {/* Scrollable tabs container */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide px-1">
+            {allViews.map(view => {
+              const isCustomView = 'isCustom' in view && view.isCustom
+              
+              // For custom views, wrap in positioned div for delete button
+              if (isCustomView) {
+                return (
+                  <div key={view.id} className="relative group">
+                    <Button
+                      variant={selectedView === view.id ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-8 rounded-full px-4 pr-8 shrink-0"
+                      onClick={() => handleViewChange(view.id)}
+                    >
+                      {view.label}
+                      {'count' in view && typeof view.count === 'number' && (
+                        <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">{view.count}</Badge>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteView(view.id)
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )
+              }
+              
+              // For default views, render clean button
+              return (
+                <Button
+                  key={view.id}
+                  variant={selectedView === view.id ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 rounded-full px-4 shrink-0"
+                  onClick={() => handleViewChange(view.id)}
+                >
+                  {view.label}
+                  {'count' in view && typeof view.count === 'number' && (
+                    <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">{view.count}</Badge>
+                  )}
+                </Button>
+              )
+            })}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full shrink-0"
+              onClick={handleCreateView}
             >
-              {view.label}
-              {view.id === 'all' && (
-                <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">{view.count}</Badge>
-              )}
+              <Plus className="h-4 w-4" />
             </Button>
-          ))}
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <Plus className="h-4 w-4" />
-          </Button>
+          </div>
+          
+          {/* Right fade gradient */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
         </div>
 
-        {/* Icon buttons on right */}
-        <div className="flex items-center gap-2">
+        {/* Right side controls - always visible */}
+        <div className="flex items-center gap-2 ml-2 shrink-0">
           {/* Page size selector */}
           <Select 
             value={pageSize.toString()} 
@@ -541,26 +718,6 @@ export default function AssetsPage() {
         </div>
       )}
 
-      {/* Banner for "All X assets selected" */}
-      {selectAllPages && (
-        <div className="flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800">
-          <div className="flex items-center gap-2">
-            <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              All {sortedAssets.length} assets are selected
-            </span>
-          </div>
-          <Button 
-            variant="link" 
-            size="sm" 
-            className="h-auto p-0 text-blue-600 dark:text-blue-400"
-            onClick={handleClearSelection}
-          >
-            Clear selection
-          </Button>
-        </div>
-      )}
-
       {/* Bulk Actions Bar - Shopify Style */}
       {selectionCount > 0 && !selectAllPages ? (
         <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
@@ -623,7 +780,23 @@ export default function AssetsPage() {
       {selectAllPages && (
         <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
           <div className="flex items-center gap-2">
-            {/* Action buttons */}
+            {/* "All X selected" dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8">
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                  All {selectionCount} selected
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleClearSelection}>
+                  Deselect all
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Bulk edit button */}
             <Button 
               variant="ghost" 
               size="sm" 
@@ -633,8 +806,10 @@ export default function AssetsPage() {
                 router.push(`/creative/assets/bulk-edit?ids=${ids}`)
               }}
             >
-              Bulk edit {selectionCount} assets
+              Bulk edit
             </Button>
+
+            {/* More actions menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -658,23 +833,31 @@ export default function AssetsPage() {
         </div>
       )}
 
-      {/* Filter Panel (Simple for future) - Hidden by default per Shopify */}
+      {/* Filter Panel - Linear Style Compact */}
       {filtersOpen && selectionCount === 0 && (
-        <Card className="border-b rounded-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium">Filters</h3>
-              <Button variant="ghost" size="sm" onClick={() => setFiltersOpen(false)}>
-                <X className="h-4 w-4" />
+        <div className="border-b bg-muted/30 px-3 py-2">
+          <div className="flex items-center gap-3">
+            {/* Title & Close */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-medium text-muted-foreground">Filters</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 -mr-1"
+                onClick={() => setFiltersOpen(false)}
+              >
+                <X className="h-3 w-3" />
               </Button>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {/* Brand Filter */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Brand</label>
+
+            {/* Filters in a row */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {/* Brand */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">Brand</label>
                 <Select value={brandFilter} onValueChange={setBrandFilter}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="All Brands" />
+                  <SelectTrigger className="h-7 w-[140px] text-xs">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Brands</SelectItem>
@@ -687,12 +870,12 @@ export default function AssetsPage() {
                 </Select>
               </div>
 
-              {/* File Type Filter */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium">File Type</label>
+              {/* File Type */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">File Type</label>
                 <Select value={fileTypeFilter} onValueChange={(v) => setFileTypeFilter(v as AssetFileType | "all")}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="All Types" />
+                  <SelectTrigger className="h-7 w-[120px] text-xs">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -705,12 +888,12 @@ export default function AssetsPage() {
                 </Select>
               </div>
 
-              {/* Category Filter */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Category</label>
+              {/* Category */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">Category</label>
                 <Select value={designTypeFilter} onValueChange={(v) => setDesignTypeFilter(v as DesignType | "all")}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="All Categories" />
+                  <SelectTrigger className="h-7 w-[130px] text-xs">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
@@ -723,18 +906,18 @@ export default function AssetsPage() {
                 </Select>
               </div>
 
-              {/* Source Filter */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Source</label>
+              {/* Source */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <label className="text-xs text-muted-foreground whitespace-nowrap">Source</label>
                 <Select value={contentTypeFilter} onValueChange={(v) => setContentTypeFilter(v as AssetContentType | "all")}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="All Sources" />
+                  <SelectTrigger className="h-7 w-[120px] text-xs">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sources</SelectItem>
                     <SelectItem value="ai_generated">
                       <div className="flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5" />
+                        <Sparkles className="h-3 w-3" />
                         AI Generated
                       </div>
                     </SelectItem>
@@ -743,19 +926,20 @@ export default function AssetsPage() {
                 </Select>
               </div>
             </div>
-            
+
+            {/* Clear button - only show when filters active */}
             {hasActiveFilters && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear all filters
-                </Button>
-                <Button size="sm" onClick={() => setFiltersOpen(false)}>
-                  Done
-                </Button>
-              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs shrink-0"
+                onClick={clearFilters}
+              >
+                Clear all
+              </Button>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Assets View - Table or Grid */}
@@ -1024,6 +1208,162 @@ export default function AssetsPage() {
           className="mt-2"
         />
       )}
+
+      {/* Create View Dialog */}
+      <Dialog open={createViewDialogOpen} onOpenChange={setCreateViewDialogOpen}>
+        <DialogContent className="max-w-[400px] p-4 gap-3">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-base font-medium">Create view</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {/* Name input */}
+            <div className="space-y-1.5">
+              <Label htmlFor="view-name" className="text-xs font-medium text-muted-foreground">
+                Name
+              </Label>
+              <Input
+                id="view-name"
+                placeholder="My filtered view"
+                value={newViewName}
+                onChange={(e) => setNewViewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newViewName.trim()) {
+                    handleSaveView()
+                  }
+                }}
+                className="h-8 text-sm"
+                autoFocus
+              />
+            </div>
+
+            {/* Filters section */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Filters</Label>
+              
+              <div className="space-y-2">
+                {/* Brand filter */}
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="view-brand" className="text-sm text-foreground w-24">Brand</Label>
+                  <Select 
+                    value={newViewFilters.brandFilter} 
+                    onValueChange={(val) => setNewViewFilters({...newViewFilters, brandFilter: val})}
+                  >
+                    <SelectTrigger id="view-brand" className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All brands</SelectItem>
+                      {mockBrands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* File type filter */}
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="view-file-type" className="text-sm text-foreground w-24">File type</Label>
+                  <Select 
+                    value={newViewFilters.fileTypeFilter} 
+                    onValueChange={(val) => setNewViewFilters({...newViewFilters, fileTypeFilter: val as AssetFileType | "all"})}
+                  >
+                    <SelectTrigger id="view-file-type" className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="pdf">PDF</SelectItem>
+                      <SelectItem value="document">Document</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Design type filter */}
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="view-design-type" className="text-sm text-foreground w-24">Design type</Label>
+                  <Select 
+                    value={newViewFilters.designTypeFilter} 
+                    onValueChange={(val) => setNewViewFilters({...newViewFilters, designTypeFilter: val as DesignType | "all"})}
+                  >
+                    <SelectTrigger id="view-design-type" className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All designs</SelectItem>
+                      {Object.entries(DESIGN_TYPE_CONFIG).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Content type filter */}
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="view-content-type" className="text-sm text-foreground w-24">Content type</Label>
+                  <Select 
+                    value={newViewFilters.contentTypeFilter} 
+                    onValueChange={(val) => setNewViewFilters({...newViewFilters, contentTypeFilter: val as AssetContentType | "all"})}
+                  >
+                    <SelectTrigger id="view-content-type" className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All content</SelectItem>
+                      <SelectItem value="ai_generated">AI Generated</SelectItem>
+                      <SelectItem value="original">Original</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sort by */}
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="view-sort" className="text-sm text-foreground w-24">Sort by</Label>
+                  <Select 
+                    value={newViewFilters.sortBy} 
+                    onValueChange={(val) => setNewViewFilters({...newViewFilters, sortBy: val})}
+                  >
+                    <SelectTrigger id="view-sort" className="h-8 text-sm flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date-desc">Most recent</SelectItem>
+                      <SelectItem value="date-asc">Oldest first</SelectItem>
+                      <SelectItem value="name-asc">Name A-Z</SelectItem>
+                      <SelectItem value="name-desc">Name Z-A</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCreateViewDialogOpen(false)}
+              className="h-8"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSaveView}
+              disabled={!newViewName.trim()}
+              className="h-8"
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Upload Dialog */}
       <UploadAssetDialog
