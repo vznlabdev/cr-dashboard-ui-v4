@@ -765,13 +765,14 @@ export default function AssetsPage() {
             <Table className="w-max min-w-full">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b">
-                <TableHead className="h-9 w-[30px]">
+                <TableHead className="sticky left-0 z-20 h-9 w-[30px] bg-background">
                   <Checkbox
                     checked={paginatedAssets.length > 0 && paginatedAssets.every(asset => isAssetSelected(asset.id))}
                     onCheckedChange={handleSelectAllOnPage}
                   />
                 </TableHead>
-                <TableHead className="h-9 min-w-[400px] text-xs font-medium">Asset</TableHead>
+                <TableHead className="sticky left-[30px] z-20 h-9 w-[50px] bg-background"></TableHead>
+                <TableHead className="h-9 min-w-[370px] text-xs font-medium">Asset</TableHead>
                 <TableHead className="h-9 min-w-[150px] text-xs font-medium">Brand</TableHead>
                 <TableHead className="h-9 min-w-[300px] text-xs font-medium">Info</TableHead>
                 <TableHead className="h-9 min-w-[100px] text-xs font-medium text-right"></TableHead>
@@ -780,7 +781,7 @@ export default function AssetsPage() {
             <TableBody>
               {displayAssets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <FileImage className="h-8 w-8 opacity-50" />
                       <p className="text-sm">No assets found</p>
@@ -806,44 +807,46 @@ export default function AssetsPage() {
                       onClick={() => router.push(`/creative/assets/${asset.id}`)}
                     >
                       {/* Checkbox */}
-                      <TableCell className="py-1.5" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="sticky left-0 z-10 py-1.5 bg-background" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={(checked) => handleSelect(asset.id, checked === true)}
                         />
                       </TableCell>
 
-                      {/* Asset with Thumbnail */}
+                      {/* Thumbnail - sticky */}
+                      <TableCell className="sticky left-[30px] z-10 py-1.5 bg-background">
+                        <div className="relative h-7 w-7 rounded overflow-hidden bg-muted shrink-0">
+                          <NextImage
+                            src={asset.thumbnailUrl}
+                            alt={asset.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </TableCell>
+
+                      {/* Asset Info - scrollable */}
                       <TableCell className="py-1.5">
-                        <div className="flex items-center gap-2">
-                          <div className="relative h-7 w-7 rounded overflow-hidden bg-muted shrink-0">
-                            <NextImage
-                              src={asset.thumbnailUrl}
-                              alt={asset.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-medium truncate">{asset.name}</p>
-                              {asset.contentType === "ai_generated" && (
-                                <div title="AI Generated">
-                                  <Sparkles className="h-3 w-3 text-purple-500 shrink-0" />
-                                </div>
-                              )}
-                              {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
-                                <Badge variant="outline" className="text-[10px] font-mono px-1 py-0">
-                                  v{(asset as any).versionGroup.currentVersionNumber}
-                                </Badge>
-                              ) : null}
-                            </div>
-                            {asset.description && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {asset.description}
-                              </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">{asset.name}</p>
+                            {asset.contentType === "ai_generated" && (
+                              <div title="AI Generated">
+                                <Sparkles className="h-3 w-3 text-purple-500 shrink-0" />
+                              </div>
                             )}
+                            {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
+                              <Badge variant="outline" className="text-[10px] font-mono px-1 py-0">
+                                v{(asset as any).versionGroup.currentVersionNumber}
+                              </Badge>
+                            ) : null}
                           </div>
+                          {asset.description && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {asset.description}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
 
@@ -1018,7 +1021,7 @@ export default function AssetsPage() {
           pageSize={pageSize}
           totalItems={displayAssets.length}
           onPageChange={setCurrentPage}
-          className="mt-6"
+          className="mt-2"
         />
       )}
 

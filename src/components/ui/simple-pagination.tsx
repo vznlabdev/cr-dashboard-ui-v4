@@ -23,30 +23,34 @@ export function SimplePagination({
   const endItem = Math.min(currentPage * pageSize, totalItems)
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 rounded-md bg-muted/50"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+    <div className={cn("flex items-center", className)}>
+      {/* Button group - arrows touching */}
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-r-none bg-muted/50"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
 
-      <div className="text-sm font-medium text-foreground min-w-[80px] text-center">
-        {startItem}-{endItem}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-l-none bg-muted/50"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 rounded-md bg-muted/50"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      {/* Count to the right */}
+      <div className="ml-3 text-sm font-medium text-foreground">
+        {startItem}-{endItem}
+      </div>
     </div>
   )
 }
