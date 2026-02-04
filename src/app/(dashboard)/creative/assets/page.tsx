@@ -766,7 +766,7 @@ export default function AssetsPage() {
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={(checked) => handleSelect(asset.id, checked === true)}
-                      className="bg-white shadow-sm"
+                      className="shadow-md"
                     />
                   </div>
 
