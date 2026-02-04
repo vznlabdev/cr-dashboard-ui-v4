@@ -2,6 +2,7 @@
 // This will be replaced with API calls in production
 
 import { Ticket, Brand, TeamMember, TicketStatus, Asset } from "@/types/creative"
+import { generateMockAssets } from "./generate-assets"
 
 // =============================================================================
 // TEAM MEMBERS
@@ -2851,6 +2852,9 @@ export const mockAssets: Asset[] = [
     },
   },
 ]
+
+// Append generated assets for pagination testing
+mockAssets.push(...generateMockAssets(75))
 
 // =============================================================================
 // HELPER FUNCTIONS

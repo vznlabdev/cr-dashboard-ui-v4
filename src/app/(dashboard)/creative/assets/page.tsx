@@ -58,6 +58,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { UploadAssetDialog } from "@/components/creative"
 import { AssetFileType, AssetContentType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG, AssetVersionGroup } from "@/types/creative"
 import { VersionStatusBadge } from "@/components/assets"
+import { Pagination } from "@/components/ui/pagination"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import NextImage from "next/image"
@@ -79,6 +80,12 @@ export default function AssetsPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [showAllSelected, setShowAllSelected] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [selectAllPages, setSelectAllPages] = useState(false)
+  const [deselectedAssets, setDeselectedAssets] = useState<Set<string>>(new Set())
 
   // Combine assets and version groups for display
   type CombinedAssetType = (typeof mockAssets[0] & { isVersionGroup?: boolean; versionGroup?: AssetVersionGroup })
@@ -152,6 +159,29 @@ export default function AssetsPage() {
     }
   }, [filteredAssets, sortBy])
 
+  // Apply "Show all selected" filter
+  const displayAssets = useMemo(() => {
+    if (!showAllSelected) return sortedAssets
+    
+    if (selectAllPages) {
+      // When all pages selected, show all except deselected
+      return sortedAssets.filter(asset => !deselectedAssets.has(asset.id))
+    } else {
+      // Show only individually selected assets
+      return sortedAssets.filter(asset => selectedAssets.has(asset.id))
+    }
+  }, [sortedAssets, showAllSelected, selectAllPages, selectedAssets, deselectedAssets])
+
+  // Paginate the display assets
+  const paginatedAssets = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return displayAssets.slice(startIndex, endIndex)
+  }, [displayAssets, currentPage, pageSize])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(displayAssets.length / pageSize)
+
   // Define view tabs with counts
   const views = useMemo(() => [
     { id: 'all', label: 'All', count: sortedAssets.length },
@@ -167,32 +197,96 @@ export default function AssetsPage() {
   const aiCount = sortedAssets.filter((a) => a.contentType === "ai_generated").length
   const originalCount = sortedAssets.filter((a) => a.contentType === "original").length
 
+  // Calculate selection count
+  const selectionCount = useMemo(() => {
+    if (selectAllPages) {
+      return sortedAssets.length - deselectedAssets.size
+    }
+    return selectedAssets.size
+  }, [selectAllPages, sortedAssets.length, deselectedAssets.size, selectedAssets.size])
+
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
-    const newSelected = new Set(selectedAssets)
-    if (selected) {
-      newSelected.add(id)
+    if (selectAllPages) {
+      // When all pages are selected, manage deselected items
+      const newDeselected = new Set(deselectedAssets)
+      if (selected) {
+        // Re-selecting: remove from deselected
+        newDeselected.delete(id)
+      } else {
+        // Deselecting: add to deselected
+        newDeselected.add(id)
+      }
+      setDeselectedAssets(newDeselected)
     } else {
-      newSelected.delete(id)
+      // Normal individual selection mode
+      const newSelected = new Set(selectedAssets)
+      if (selected) {
+        newSelected.add(id)
+      } else {
+        newSelected.delete(id)
+      }
+      setSelectedAssets(newSelected)
     }
-    setSelectedAssets(newSelected)
   }
 
-  const handleSelectAll = () => {
-    if (selectedAssets.size === sortedAssets.length) {
-      setSelectedAssets(new Set())
+  const handleSelectAllOnPage = () => {
+    // Select all items on current page
+    if (selectAllPages) {
+      // In all-pages mode, remove current page items from deselected
+      const newDeselected = new Set(deselectedAssets)
+      paginatedAssets.forEach(asset => newDeselected.delete(asset.id))
+      setDeselectedAssets(newDeselected)
     } else {
-      setSelectedAssets(new Set(sortedAssets.map((a) => a.id)))
+      // Check if all items on current page are selected
+      const allPageSelected = paginatedAssets.every(asset => selectedAssets.has(asset.id))
+      const newSelected = new Set(selectedAssets)
+      
+      if (allPageSelected) {
+        // Deselect all on page
+        paginatedAssets.forEach(asset => newSelected.delete(asset.id))
+      } else {
+        // Select all on page
+        paginatedAssets.forEach(asset => newSelected.add(asset.id))
+      }
+      setSelectedAssets(newSelected)
     }
+  }
+
+  const handleSelectAllAssets = () => {
+    // Select all assets across all pages
+    setSelectAllPages(true)
+    setDeselectedAssets(new Set())
+    setSelectedAssets(new Set())
   }
 
   const handleClearSelection = () => {
     setSelectedAssets(new Set())
+    setSelectAllPages(false)
+    setDeselectedAssets(new Set())
+  }
+
+  // Check if an asset is selected
+  const isAssetSelected = (id: string): boolean => {
+    if (selectAllPages) {
+      return !deselectedAssets.has(id)
+    }
+    return selectedAssets.has(id)
   }
 
   const handleBulkDownload = () => {
-    toast.success(`Downloading ${selectedAssets.size} assets...`)
+    toast.success(`Downloading ${selectionCount} assets...`)
     // In a real app, this would trigger a bulk download
+  }
+
+  // Get selected asset IDs (for bulk operations)
+  const getSelectedAssetIds = (): string[] => {
+    if (selectAllPages) {
+      return sortedAssets
+        .filter(asset => !deselectedAssets.has(asset.id))
+        .map(asset => asset.id)
+    }
+    return Array.from(selectedAssets)
   }
 
   const clearFilters = () => {
@@ -245,6 +339,16 @@ export default function AssetsPage() {
     }
   }
 
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentPage])
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, brandFilter, fileTypeFilter, designTypeFilter, contentTypeFilter, sortBy, showAllSelected])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -263,6 +367,8 @@ export default function AssetsPage() {
         setSearchOpen(false)
         setFiltersOpen(false)
         setSelectedAssets(new Set())
+        setSelectAllPages(false)
+        setDeselectedAssets(new Set())
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -326,7 +432,26 @@ export default function AssetsPage() {
         </div>
 
         {/* Icon buttons on right */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {/* Page size selector */}
+          <Select 
+            value={pageSize.toString()} 
+            onValueChange={(val) => {
+              setPageSize(Number(val))
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="h-8 w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 items</SelectItem>
+              <SelectItem value="50">50 items</SelectItem>
+              <SelectItem value="100">100 items</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-1">
           {/* Search Icon */}
           <Button 
             variant="ghost" 
@@ -372,24 +497,25 @@ export default function AssetsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* View Toggle */}
-          <div className="flex items-center border rounded-md ml-2">
-            <Button 
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'} 
-              size="icon" 
-              className="h-8 w-8 rounded-r-none"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-              size="icon" 
-              className="h-8 w-8 rounded-l-none border-l"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
+            {/* View Toggle */}
+            <div className="flex items-center border rounded-md">
+              <Button 
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'} 
+                size="icon" 
+                className="h-8 w-8 rounded-r-none"
+                onClick={() => setViewMode('table')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+                size="icon" 
+                className="h-8 w-8 rounded-l-none border-l"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -414,8 +540,28 @@ export default function AssetsPage() {
         </div>
       )}
 
+      {/* Banner for "All X assets selected" */}
+      {selectAllPages && (
+        <div className="flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              All {sortedAssets.length} assets are selected
+            </span>
+          </div>
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="h-auto p-0 text-blue-600 dark:text-blue-400"
+            onClick={handleClearSelection}
+          >
+            Clear selection
+          </Button>
+        </div>
+      )}
+
       {/* Bulk Actions Bar - Shopify Style */}
-      {selectedAssets.size > 0 ? (
+      {selectionCount > 0 && !selectAllPages ? (
         <div className="flex items-center justify-between py-2 border-b">
           <div className="flex items-center gap-2">
             {/* "Showing X selected" dropdown */}
@@ -423,13 +569,13 @@ export default function AssetsPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8">
                   <CheckSquare className="mr-2 h-4 w-4" />
-                  Showing {selectedAssets.size} selected
+                  Showing {selectionCount} selected
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleSelectAll}>
-                  Select all {sortedAssets.length}
+                <DropdownMenuItem onClick={handleSelectAllAssets}>
+                  Select all {sortedAssets.length} assets
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleClearSelection}>
                   Deselect all
@@ -443,14 +589,11 @@ export default function AssetsPage() {
               size="sm" 
               className="h-8" 
               onClick={() => {
-                const ids = Array.from(selectedAssets).join(',')
+                const ids = getSelectedAssetIds().join(',')
                 router.push(`/creative/assets/bulk-edit?ids=${ids}`)
               }}
             >
               Bulk edit
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8">
-              Set as draft
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -475,8 +618,47 @@ export default function AssetsPage() {
         </div>
       ) : null}
 
+      {/* Bulk Actions Bar when all pages selected */}
+      {selectAllPages && (
+        <div className="flex items-center justify-between py-2 border-b">
+          <div className="flex items-center gap-2">
+            {/* Action buttons */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8" 
+              onClick={() => {
+                const ids = getSelectedAssetIds().join(',')
+                router.push(`/creative/assets/bulk-edit?ids=${ids}`)
+              }}
+            >
+              Bulk edit {selectionCount} assets
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleBulkDownload}>
+                  Download
+                </DropdownMenuItem>
+                <DropdownMenuItem>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Show all selected toggle (right side) */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Show all selected</label>
+            <Switch checked={showAllSelected} onCheckedChange={setShowAllSelected} />
+          </div>
+        </div>
+      )}
+
       {/* Filter Panel (Simple for future) - Hidden by default per Shopify */}
-      {filtersOpen && !selectedAssets.size && (
+      {filtersOpen && selectionCount === 0 && (
         <Card className="border-b rounded-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -583,8 +765,8 @@ export default function AssetsPage() {
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="h-9 w-[30px]">
                   <Checkbox
-                    checked={selectedAssets.size === sortedAssets.length && sortedAssets.length > 0}
-                    onCheckedChange={handleSelectAll}
+                    checked={paginatedAssets.length > 0 && paginatedAssets.every(asset => isAssetSelected(asset.id))}
+                    onCheckedChange={handleSelectAllOnPage}
                   />
                 </TableHead>
                 <TableHead className="h-9 w-[40%] text-xs font-medium">Asset</TableHead>
@@ -594,7 +776,7 @@ export default function AssetsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedAssets.length === 0 ? (
+              {displayAssets.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -609,11 +791,11 @@ export default function AssetsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sortedAssets.map((asset) => {
+                paginatedAssets.map((asset) => {
                   const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
                   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
                   const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
-                  const isSelected = selectedAssets.has(asset.id)
+                  const isSelected = isAssetSelected(asset.id)
 
                   return (
                     <TableRow
@@ -735,7 +917,7 @@ export default function AssetsPage() {
       ) : (
         // Grid View
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {sortedAssets.length === 0 ? (
+          {displayAssets.length === 0 ? (
             <div className="col-span-full flex flex-col items-center gap-2 text-muted-foreground py-12">
               <FileImage className="h-8 w-8 opacity-50" />
               <p className="text-sm">No assets found</p>
@@ -746,11 +928,11 @@ export default function AssetsPage() {
               )}
             </div>
           ) : (
-            sortedAssets.map((asset) => {
+            paginatedAssets.map((asset) => {
               const fileTypeConfig = ASSET_FILE_TYPE_CONFIG[asset.fileType]
               const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
               const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
-              const isSelected = selectedAssets.has(asset.id)
+              const isSelected = isAssetSelected(asset.id)
 
               return (
                 <Card
@@ -823,6 +1005,17 @@ export default function AssetsPage() {
             })
           )}
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={displayAssets.length}
+          onPageChange={setCurrentPage}
+          className="mt-6"
+        />
       )}
 
       {/* Upload Dialog */}
