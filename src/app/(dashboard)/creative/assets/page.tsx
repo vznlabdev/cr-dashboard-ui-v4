@@ -58,7 +58,8 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { UploadAssetDialog } from "@/components/creative"
 import { AssetFileType, AssetContentType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG, AssetVersionGroup } from "@/types/creative"
 import { VersionStatusBadge } from "@/components/assets"
-import { Pagination } from "@/components/ui/pagination"
+import { SimplePagination } from "@/components/ui/simple-pagination"
+import { StickyHorizontalScroll } from "@/components/ui/sticky-horizontal-scroll"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import NextImage from "next/image"
@@ -562,7 +563,7 @@ export default function AssetsPage() {
 
       {/* Bulk Actions Bar - Shopify Style */}
       {selectionCount > 0 && !selectAllPages ? (
-        <div className="flex items-center justify-between py-2 border-b">
+        <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
           <div className="flex items-center gap-2">
             {/* "Showing X selected" dropdown */}
             <DropdownMenu>
@@ -620,7 +621,7 @@ export default function AssetsPage() {
 
       {/* Bulk Actions Bar when all pages selected */}
       {selectAllPages && (
-        <div className="flex items-center justify-between py-2 border-b">
+        <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
           <div className="flex items-center gap-2">
             {/* Action buttons */}
             <Button 
@@ -759,8 +760,9 @@ export default function AssetsPage() {
 
       {/* Assets View - Table or Grid */}
       {viewMode === 'table' ? (
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <Table>
+        <StickyHorizontalScroll>
+          <div className="border rounded-lg bg-card">
+            <Table className="w-max min-w-full">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="h-9 w-[30px]">
@@ -769,10 +771,10 @@ export default function AssetsPage() {
                     onCheckedChange={handleSelectAllOnPage}
                   />
                 </TableHead>
-                <TableHead className="h-9 w-[40%] text-xs font-medium">Asset</TableHead>
-                <TableHead className="h-9 w-[15%] text-xs font-medium">Brand</TableHead>
-                <TableHead className="h-9 w-[35%] text-xs font-medium">Info</TableHead>
-                <TableHead className="h-9 w-[10%] text-xs font-medium text-right"></TableHead>
+                <TableHead className="h-9 min-w-[400px] text-xs font-medium">Asset</TableHead>
+                <TableHead className="h-9 min-w-[150px] text-xs font-medium">Brand</TableHead>
+                <TableHead className="h-9 min-w-[300px] text-xs font-medium">Info</TableHead>
+                <TableHead className="h-9 min-w-[100px] text-xs font-medium text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -914,6 +916,7 @@ export default function AssetsPage() {
             </TableBody>
           </Table>
         </div>
+        </StickyHorizontalScroll>
       ) : (
         // Grid View
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -1009,9 +1012,10 @@ export default function AssetsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <Pagination
+        <SimplePagination
           currentPage={currentPage}
           totalPages={totalPages}
+          pageSize={pageSize}
           totalItems={displayAssets.length}
           onPageChange={setCurrentPage}
           className="mt-6"

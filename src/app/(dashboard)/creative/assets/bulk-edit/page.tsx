@@ -19,6 +19,7 @@ import type { BulkEditChange } from "@/types/bulk-edit"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import NextImage from "next/image"
+import { StickyHorizontalScroll } from "@/components/ui/sticky-horizontal-scroll"
 
 // Helper function to get nested value from object
 function getNestedValue(obj: any, path: string): any {
@@ -216,7 +217,7 @@ function BulkEditPageContent() {
       </div>
       
       {/* Shopify-Style Single Table View - No Tabs */}
-      <div className="flex-1 overflow-auto">
+      <StickyHorizontalScroll className="flex-1">
         <LinearStyleTable 
           assets={selectedAssets}
           columns={selectedColumns}
@@ -225,7 +226,7 @@ function BulkEditPageContent() {
           getChangeForCell={getChangeForCell}
           getCellValue={getCellValue}
         />
-      </div>
+      </StickyHorizontalScroll>
       
       {/* Shopify-Style Column Selector Side Panel with Collapsible Groups */}
       <Sheet open={columnsPanelOpen} onOpenChange={setColumnsPanelOpen}>
@@ -312,7 +313,7 @@ function LinearStyleTable({
   }, [columns])
   
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1">
       <table className="w-max min-w-full text-sm font-medium">
         <thead className="sticky top-0 bg-background z-10 border-b">
           <tr className="h-9">
