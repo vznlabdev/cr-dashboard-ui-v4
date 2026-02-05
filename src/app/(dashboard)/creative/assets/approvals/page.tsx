@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,7 @@ import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 import { ScoreBadge } from "@/components/creative/ScoreBadge"
 
 export default function AssetApprovalsPage() {
+  const topRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [brandFilter, setBrandFilter] = useState<string>("all")
   const [riskFilter, setRiskFilter] = useState<string>("all")
@@ -106,6 +107,7 @@ export default function AssetApprovalsPage() {
       const matchesBrand = brandFilter === "all" || asset.brandId === brandFilter
       const matchesRisk =
         riskFilter === "all" ||
+        !asset.copyrightCheckData || // Show unchecked assets regardless of risk filter
         (riskFilter === "low" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "low") ||
         (riskFilter === "medium" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "medium") ||
         (riskFilter === "high" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "high")
@@ -168,9 +170,29 @@ export default function AssetApprovalsPage() {
     setCurrentPage(1)
   }, [searchQuery, brandFilter, riskFilter, sortBy, showProcessed])
 
-  // Scroll to top when page changes
+  // Scroll to top when page changes - use scrollIntoView approach
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+      
+      // Additional fallback scrolls
+      const scrollContainer = document.getElementById('main-scroll-container')
+      if (scrollContainer) {
+        setTimeout(() => {
+          scrollContainer.scrollTop = 0
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+          }
+        }, 0)
+        
+        setTimeout(() => {
+          scrollContainer.scrollTop = 0
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+          }
+        }, 50)
+      }
+    }
   }, [currentPage])
 
   // Generate mock review data for quality checks
@@ -596,7 +618,7 @@ export default function AssetApprovalsPage() {
 
   return (
     <PageContainer>
-      <div className="space-y-4">
+      <div ref={topRef} className="space-y-4">
         {/* Minimal Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1195,15 +1217,14 @@ export default function AssetApprovalsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-end py-4">
-            <SimplePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalItems={filteredAssets.length}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+          <SimplePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredAssets.length}
+            onPageChange={setCurrentPage}
+            className="mt-2"
+          />
         )}
       </div>
     </PageContainer>

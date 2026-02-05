@@ -89,6 +89,7 @@ interface CustomView {
 
 export default function AssetsPage() {
   const router = useRouter()
+  const topRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [brandFilter, setBrandFilter] = useState<string>("all")
   const [fileTypeFilter, setFileTypeFilter] = useState<AssetFileType | "all">("all")
@@ -468,9 +469,29 @@ export default function AssetsPage() {
     toast('View deleted')
   }
 
-  // Scroll to top on page change
+  // Scroll to top on page change - use scrollIntoView approach
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+      
+      // Additional fallback scrolls
+      const scrollContainer = document.getElementById('main-scroll-container')
+      if (scrollContainer) {
+        setTimeout(() => {
+          scrollContainer.scrollTop = 0
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+          }
+        }, 0)
+        
+        setTimeout(() => {
+          scrollContainer.scrollTop = 0
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'auto', block: 'start' })
+          }
+        }, 50)
+      }
+    }
   }, [currentPage])
 
   // Reset to first page when filters change
@@ -506,6 +527,7 @@ export default function AssetsPage() {
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
+      <div ref={topRef} />
       {/* Page Header - Linear Style */}
       <div className="flex items-center justify-between">
         <div>

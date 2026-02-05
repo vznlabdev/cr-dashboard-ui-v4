@@ -18,6 +18,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="fixed inset-0 bg-gradient-to-br from-primary/3 via-background to-primary/2 pointer-events-none -z-10" />
       <Sidebar />
       <div 
+        id="main-scroll-container"
         className={cn(
           "flex flex-col flex-1 transition-all duration-300 w-full min-w-0 h-screen overflow-y-auto",
           "md:pl-60", // Desktop: sidebar padding
