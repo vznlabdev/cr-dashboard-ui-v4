@@ -320,7 +320,7 @@ function generateBasicReviewData(rng: () => number) {
           description: "Some text elements could use higher contrast",
           recommendation: "Increase contrast ratio for small text",
         }] : [],
-        wcagLevel: accessibilityScore >= 90 ? "AAA" : "AA",
+        wcagLevel: (accessibilityScore >= 90 ? "AAA" : "AA") as "none" | "A" | "AA" | "AAA",
         colorContrast: {
           passed: true,
           ratio: accessibilityScore >= 90 ? 7.1 : 4.8,
