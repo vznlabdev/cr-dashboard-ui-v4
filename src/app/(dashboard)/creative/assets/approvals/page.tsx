@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { SimplePagination } from "@/components/ui/simple-pagination"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
 import { Asset, AssetReviewData } from "@/types/creative"
@@ -33,6 +40,8 @@ import {
   ShieldCheck,
   FileBarChart,
   Loader2,
+  ChevronDown,
+  CheckSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -55,6 +64,11 @@ export default function AssetApprovalsPage() {
   const [showProcessed, setShowProcessed] = useState(false)
   const [checkingAssets, setCheckingAssets] = useState<Set<string>>(new Set())
   const [checksVersion, setChecksVersion] = useState(0) // Increment when checks complete to trigger recalculation
+  const [, forceUpdate] = useState({}) // Force re-render when mockAssets mutated
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(50)
+  const [selectAllPages, setSelectAllPages] = useState(false)
+  const [deselectedAssets, setDeselectedAssets] = useState<Set<string>>(new Set())
   const { credits, getTotalAvailable, useCredit } = useCopyrightCredits()
 
   // Get pending approval assets (including unchecked)
@@ -121,11 +135,43 @@ export default function AssetApprovalsPage() {
 
   // Calculate how many selected assets actually need checks
   const assetsNeedingChecks = useMemo(() => {
-    return Array.from(selectedAssets).filter(id => {
+    const selectedIds = selectAllPages
+      ? filteredAssets.filter(asset => !deselectedAssets.has(asset.id)).map(asset => asset.id)
+      : Array.from(selectedAssets)
+    
+    return selectedIds.filter(id => {
       const asset = mockAssets.find(a => a.id === id)
       return !asset?.reviewData
     }).length
-  }, [selectedAssets, checksVersion])
+  }, [selectedAssets, checksVersion, selectAllPages, filteredAssets, deselectedAssets])
+
+  // Calculate selection count (supports select all pages)
+  const selectionCount = useMemo(() => {
+    if (selectAllPages) {
+      return filteredAssets.length - deselectedAssets.size
+    }
+    return selectedAssets.size
+  }, [selectAllPages, filteredAssets.length, deselectedAssets.size, selectedAssets.size])
+
+  // Paginate filtered assets
+  const paginatedAssets = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return filteredAssets.slice(startIndex, endIndex)
+  }, [filteredAssets, currentPage, pageSize])
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredAssets.length / pageSize)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, brandFilter, riskFilter, sortBy, showProcessed])
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentPage])
 
   // Generate mock review data for quality checks
   const generateMockReviewData = (): AssetReviewData => {
@@ -290,24 +336,6 @@ export default function AssetApprovalsPage() {
   }
 
   // Selection handlers
-  const handleSelect = (id: string, selected: boolean) => {
-    const newSelected = new Set(selectedAssets)
-    if (selected) {
-      newSelected.add(id)
-    } else {
-      newSelected.delete(id)
-    }
-    setSelectedAssets(newSelected)
-  }
-
-  const handleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedAssets(new Set(filteredAssets.map((a) => a.id)))
-    } else {
-      setSelectedAssets(new Set())
-    }
-  }
-
   // Approval handlers
   const handleApprove = async (assetId: string) => {
     setIsProcessing(true)
@@ -360,7 +388,8 @@ export default function AssetApprovalsPage() {
   }
 
   const handleBulkApprove = async () => {
-    if (selectedAssets.size === 0) {
+    const selectedIds = getSelectedAssetIds()
+    if (selectedIds.length === 0) {
       toast.error("Please select at least one asset")
       return
     }
@@ -373,12 +402,12 @@ export default function AssetApprovalsPage() {
       // Mark assets as approved in local state
       setApprovedAssets(prev => {
         const updated = new Set(prev)
-        selectedAssets.forEach(id => updated.add(id))
+        selectedIds.forEach(id => updated.add(id))
         return updated
       })
       
-      toast.success(`Approved ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
-      setSelectedAssets(new Set())
+      toast.success(`Approved ${selectedIds.length} asset${selectedIds.length !== 1 ? "s" : ""}`)
+      handleClearSelection()
     } catch (error) {
       toast.error("Failed to approve assets")
       console.error(error)
@@ -388,7 +417,8 @@ export default function AssetApprovalsPage() {
   }
 
   const handleBulkReject = async () => {
-    if (selectedAssets.size === 0) {
+    const selectedIds = getSelectedAssetIds()
+    if (selectedIds.length === 0) {
       toast.error("Please select at least one asset")
       return
     }
@@ -398,7 +428,8 @@ export default function AssetApprovalsPage() {
   }
 
   const handleBulkRunChecks = async () => {
-    if (selectedAssets.size === 0) {
+    const selectedIds = getSelectedAssetIds()
+    if (selectedIds.length === 0) {
       toast.error("Please select at least one asset")
       return
     }
@@ -407,7 +438,7 @@ export default function AssetApprovalsPage() {
     const assetsToCheck: string[] = []
     const alreadyChecked: string[] = []
     
-    selectedAssets.forEach(id => {
+    selectedIds.forEach(id => {
       const asset = mockAssets.find(a => a.id === id)
       if (asset?.reviewData) {
         alreadyChecked.push(id)
@@ -454,6 +485,7 @@ export default function AssetApprovalsPage() {
           mockAssets[assetIndex].reviewData = mockReviewData
           mockAssets[assetIndex].copyrightCheckStatus = "completed"
           mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+          forceUpdate({}) // Trigger re-render after mutation
         }
       } catch (error) {
         console.error(`Failed to check asset ${assetId}:`, error)
@@ -472,7 +504,95 @@ export default function AssetApprovalsPage() {
     toast.success(`Completed checks on ${assetsToCheck.length} asset${assetsToCheck.length !== 1 ? 's' : ''}`)
   }
 
-  const allSelected = filteredAssets.length > 0 && selectedAssets.size === filteredAssets.length
+  // Selection handlers
+  const handleSelectAllAssets = () => {
+    setSelectAllPages(true)
+    setDeselectedAssets(new Set())
+    setSelectedAssets(new Set())
+  }
+
+  const handleClearSelection = () => {
+    setSelectedAssets(new Set())
+    setSelectAllPages(false)
+    setDeselectedAssets(new Set())
+  }
+
+  const isAssetSelected = (id: string): boolean => {
+    if (selectAllPages) {
+      return !deselectedAssets.has(id)
+    }
+    return selectedAssets.has(id)
+  }
+
+  const handleToggleAsset = (id: string, checked: boolean) => {
+    if (selectAllPages) {
+      if (checked) {
+        setDeselectedAssets(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      } else {
+        setDeselectedAssets(prev => new Set(prev).add(id))
+      }
+    } else {
+      if (checked) {
+        setSelectedAssets(prev => new Set(prev).add(id))
+      } else {
+        setSelectedAssets(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      }
+    }
+  }
+
+  const getSelectedAssetIds = (): string[] => {
+    if (selectAllPages) {
+      return filteredAssets
+        .filter(asset => !deselectedAssets.has(asset.id))
+        .map(asset => asset.id)
+    }
+    return Array.from(selectedAssets)
+  }
+
+  // Master checkbox for current page
+  const allPageSelected = paginatedAssets.length > 0 && 
+    paginatedAssets.every(asset => isAssetSelected(asset.id))
+
+  const handleToggleAllPage = (checked: boolean) => {
+    if (selectAllPages) {
+      if (!checked) {
+        // Deselect all on current page
+        const pageIds = paginatedAssets.map(a => a.id)
+        setDeselectedAssets(prev => new Set([...prev, ...pageIds]))
+      } else {
+        // Remove current page from deselected
+        setDeselectedAssets(prev => {
+          const next = new Set(prev)
+          paginatedAssets.forEach(a => next.delete(a.id))
+          return next
+        })
+      }
+    } else {
+      if (checked) {
+        const pageIds = paginatedAssets.map(a => a.id)
+        setSelectedAssets(prev => {
+          const next = new Set(prev)
+          pageIds.forEach(id => next.add(id))
+          return next
+        })
+      } else {
+        const pageIds = paginatedAssets.map(a => a.id)
+        setSelectedAssets(prev => {
+          const next = new Set(prev)
+          pageIds.forEach(id => next.delete(id))
+          return next
+        })
+      }
+    }
+  }
 
   return (
     <PageContainer>
@@ -504,7 +624,7 @@ export default function AssetApprovalsPage() {
               variant="default"
               size="sm"
               onClick={handleBulkRunChecks}
-              disabled={selectedAssets.size === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
+              disabled={selectionCount === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
               className="h-7 bg-blue-600 hover:bg-blue-700"
             >
               <Shield className="h-3.5 w-3.5 mr-1.5" />
@@ -518,85 +638,146 @@ export default function AssetApprovalsPage() {
           </Link>
         </div>
 
-        {/* Compact Action Bar - Linear Style */}
-        <div className="space-y-2.5">
-          {/* Row 1: Filters First */}
-          <div className="flex items-center gap-2">
-            {/* Search - flexible width */}
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search assets..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-8 text-sm"
-              />
-            </div>
-
-            {/* Brand Filter */}
-            <Select value={brandFilter} onValueChange={setBrandFilter}>
-              <SelectTrigger className="w-[130px] h-8 text-sm">
-                <SelectValue placeholder="All Brands" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
-                {mockBrands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Risk Filter */}
-            <Select value={riskFilter} onValueChange={setRiskFilter}>
-              <SelectTrigger className="w-[110px] h-8 text-sm">
-                <SelectValue placeholder="All Risk" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Risk</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[130px] h-8 text-sm">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="risk">Sort: Risk</SelectItem>
-                <SelectItem value="similarity">Sort: Similarity</SelectItem>
-                <SelectItem value="date">Sort: Date</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Filters Row */}
+        <div className="flex items-center gap-2">
+          {/* Search - flexible width */}
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search assets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
           </div>
 
-          {/* Row 2: Actions Below */}
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              onClick={handleBulkApprove}
-              disabled={selectedAssets.size === 0 || isProcessing}
-              className="h-8 bg-green-600 hover:bg-green-700"
-            >
-              <Check className="h-3.5 w-3.5 mr-1.5" />
-              Approve ({selectedAssets.size})
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkReject}
-              disabled={selectedAssets.size === 0 || isProcessing}
-              className="h-8"
-            >
-              <XCircle className="h-3.5 w-3.5 mr-1.5" />
-              Reject
-            </Button>
-          </div>
+          {/* Brand Filter */}
+          <Select value={brandFilter} onValueChange={setBrandFilter}>
+            <SelectTrigger className="w-[130px] h-8 text-sm">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {mockBrands.map((brand) => (
+                <SelectItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Risk Filter */}
+          <Select value={riskFilter} onValueChange={setRiskFilter}>
+            <SelectTrigger className="w-[110px] h-8 text-sm">
+              <SelectValue placeholder="All Risk" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Risk</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Sort */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[130px] h-8 text-sm">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="risk">Sort: Risk</SelectItem>
+              <SelectItem value="similarity">Sort: Similarity</SelectItem>
+              <SelectItem value="date">Sort: Date</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Bulk Actions Bar - Shopify Style */}
+        {selectionCount > 0 && !selectAllPages ? (
+          <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
+            <div className="flex items-center gap-2">
+              {/* "Showing X selected" dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    Showing {selectionCount} selected
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleSelectAllAssets}>
+                    Select all {filteredAssets.length} assets
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleClearSelection}>
+                    Deselect all
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Action buttons */}
+              <Button
+                size="sm"
+                onClick={handleBulkApprove}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8 bg-green-600 hover:bg-green-700"
+              >
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                Approve ({selectionCount})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkReject}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8"
+              >
+                <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                Reject
+              </Button>
+            </div>
+          </div>
+        ) : selectAllPages ? (
+          <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    All {selectionCount} selected
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleClearSelection}>
+                    Deselect all
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Action buttons */}
+              <Button
+                size="sm"
+                onClick={handleBulkApprove}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8 bg-green-600 hover:bg-green-700"
+              >
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                Approve ({selectionCount})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkReject}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8"
+              >
+                <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                Reject
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {/* Inline Bulk Reject Input */}
         {showRejectInput === "bulk" && (
@@ -620,6 +801,7 @@ export default function AssetApprovalsPage() {
                     toast.error("Please provide a rejection reason")
                     return
                   }
+                  const selectedIds = getSelectedAssetIds()
                   setIsProcessing(true)
                   try {
                     // INTEGRATION POINT: Call API to bulk reject assets
@@ -628,12 +810,12 @@ export default function AssetApprovalsPage() {
                     // Mark assets as rejected
                     setRejectedAssets(prev => {
                       const updated = new Set(prev)
-                      selectedAssets.forEach(id => updated.add(id))
+                      selectedIds.forEach(id => updated.add(id))
                       return updated
                     })
                     
-                    toast.success(`Rejected ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
-                    setSelectedAssets(new Set())
+                    toast.success(`Rejected ${selectedIds.length} asset${selectedIds.length !== 1 ? "s" : ""}`)
+                    handleClearSelection()
                     setShowRejectInput(null)
                     setBulkRejectionReason("")
                   } catch (error) {
@@ -665,15 +847,15 @@ export default function AssetApprovalsPage() {
         {/* Compact List */}
         <div className="border rounded-lg divide-y">
           {/* Select All Header */}
-          {filteredAssets.length > 0 && (
+          {paginatedAssets.length > 0 && (
             <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/20">
               <Checkbox
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
+                checked={allPageSelected}
+                onCheckedChange={handleToggleAllPage}
                 className="h-4 w-4"
               />
               <span className="text-xs text-muted-foreground">
-                {allSelected ? `All ${filteredAssets.length} selected` : `Select all ${filteredAssets.length}`}
+                {allPageSelected ? `All ${paginatedAssets.length} on page selected` : `Select all ${paginatedAssets.length} on page`}
               </span>
             </div>
           )}
@@ -687,11 +869,11 @@ export default function AssetApprovalsPage() {
               <p className="text-xs text-muted-foreground mt-1">All assets have been reviewed</p>
             </div>
           ) : (
-            filteredAssets.map((asset) => {
+            paginatedAssets.map((asset) => {
               const similarityScore = asset.copyrightCheckData?.similarityScore ?? 0
               const riskLevel = asset.copyrightCheckData?.riskBreakdown.riskLevel ?? "low"
               const matchCount = asset.copyrightCheckData?.matchedSources.length ?? 0
-              const isSelected = selectedAssets.has(asset.id)
+              const isSelected = isAssetSelected(asset.id)
               const isExpanded = expandedAsset === asset.id
               const needsCheck = !asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending"
               const isChecking = asset.copyrightCheckStatus === "checking"
@@ -717,7 +899,8 @@ export default function AssetApprovalsPage() {
                       {/* Checkbox */}
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={(checked) => handleSelect(asset.id, !!checked)}
+                        onCheckedChange={(checked) => handleToggleAsset(asset.id, !!checked)}
+                        onClick={(e) => e.stopPropagation()}
                         className="mt-0.5"
                       />
 
@@ -824,6 +1007,7 @@ export default function AssetApprovalsPage() {
                                   mockAssets[assetIndex].reviewData = mockReviewData
                                   mockAssets[assetIndex].copyrightCheckStatus = "completed"
                                   mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+                                  forceUpdate({}) // Trigger re-render after mutation
                                 }
                                 
                                 setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
@@ -1008,6 +1192,19 @@ export default function AssetApprovalsPage() {
             })
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-end py-4">
+            <SimplePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={filteredAssets.length}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </PageContainer>
   )

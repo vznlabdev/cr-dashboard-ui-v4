@@ -239,6 +239,11 @@ export function generateMockAssets(count: number = 75, seed: number = 12345): As
       uploadedByName: teamMember.name,
       createdAt,
       updatedAt: createdAt,
+      // Add approval status - 70% pending, 20% approved, 10% rejected
+      approvalStatus: (() => {
+        const rand = rng()
+        return rand < 0.7 ? "pending" : rand < 0.9 ? "approved" : "rejected"
+      })(),
       // Skip promptHistory, copyrightCheck fields for generated assets
     })
   }
