@@ -330,7 +330,7 @@ function generateBasicReviewData(rng: () => number) {
         },
         altText: {
           present: true,
-          quality: accessibilityScore >= 90 ? "good" : "fair",
+          quality: (accessibilityScore >= 90 ? "good" : "fair") as "good" | "fair" | "poor" | "missing",
         },
         recommendations: [
           accessibilityScore >= 90 
@@ -349,12 +349,12 @@ function generateBasicReviewData(rng: () => number) {
       data: { 
         score: seoScore,
         imageOptimization: {
-          format: seoScore >= 80 ? "optimal" : "acceptable",
-          sizeRating: seoScore >= 80 ? "good" : "large" as const,
+          format: (seoScore >= 80 ? "optimal" : "acceptable") as "optimal" | "acceptable" | "poor",
+          sizeRating: (seoScore >= 80 ? "good" : "large") as "excellent" | "good" | "large" | "too-large",
           compressionPotential: Math.floor((100 - seoScore) / 2),
         },
         metadata: {
-          filenameQuality: seoScore >= 80 ? "descriptive" : "generic",
+          filenameQuality: (seoScore >= 80 ? "descriptive" : "generic") as "descriptive" | "generic" | "poor",
           altTextPresent: true,
           dimensionsOptimal: seoScore >= 75,
         },
