@@ -6,14 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import { useTalentRights } from "@/contexts/talent-rights-context"
 import { useData } from "@/contexts/data-context"
 import { useContracts } from "@/contexts/contracts-context"
@@ -117,17 +110,13 @@ export default function TalentRightsDetailPage() {
   return (
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Breadcrumb Navigation */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/creative/talent-rights">Talent Rights</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{talent.fullName}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <LinearBreadcrumb
+        backHref="/creative/talent-rights"
+        segments={[
+          { label: "Talent Rights", href: "/creative/talent-rights" },
+          { label: talent.fullName }
+        ]}
+      />
 
       {/* Page Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

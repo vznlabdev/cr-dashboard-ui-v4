@@ -15,14 +15,7 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb";
 import { useData } from "@/contexts/data-context";
 import { useCreators } from "@/contexts/creators-context";
 import { notFound, useParams } from "next/navigation";
@@ -177,23 +170,14 @@ export default function AssetDetailPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Breadcrumb Navigation */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/projects">Projects</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/projects/${id}`}>
-              {project.name}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{asset.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <LinearBreadcrumb
+        backHref={`/projects/${id}`}
+        segments={[
+          { label: "Projects", href: "/projects" },
+          { label: project.name, href: `/projects/${id}` },
+          { label: asset.name }
+        ]}
+      />
 
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

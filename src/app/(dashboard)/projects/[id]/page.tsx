@@ -25,6 +25,7 @@ import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { getTasksByProject, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import type { Project, ProjectHealth } from "@/types"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 
 // Team members for project lead assignment
 const TEAM_MEMBERS = [
@@ -171,18 +172,14 @@ export default function ProjectOverviewPage() {
   return (
     <PageContainer className="space-y-0 animate-fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-        <button
-          onClick={() => router.push('/projects')}
-          className="hover:text-foreground transition-colors"
-        >
-          ← Back
-        </button>
-        <span>•</span>
-        <span>Projects</span>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground font-medium">{project.name}</span>
-      </div>
+      <LinearBreadcrumb
+        backHref="/projects"
+        segments={[
+          { label: "Projects", href: "/projects" },
+          { label: project.name }
+        ]}
+        className="mb-3"
+      />
 
       {/* Project Header */}
       <div className="flex items-center justify-between mb-4">

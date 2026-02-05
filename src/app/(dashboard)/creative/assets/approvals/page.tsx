@@ -120,6 +120,14 @@ export default function AssetApprovalsPage() {
     return filtered
   }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets])
 
+  // Calculate how many selected assets actually need checks
+  const assetsNeedingChecks = useMemo(() => {
+    return Array.from(selectedAssets).filter(id => {
+      const asset = mockAssets.find(a => a.id === id)
+      return !asset?.reviewData
+    }).length
+  }, [selectedAssets])
+
   // Generate mock review data for quality checks
   const generateMockReviewData = (): AssetReviewData => {
     const copyrightScore = Math.floor(Math.random() * 30) + 70 // 70-100
@@ -481,6 +489,7 @@ export default function AssetApprovalsPage() {
         if (assetIndex !== -1) {
           mockAssets[assetIndex].reviewData = mockReviewData
           mockAssets[assetIndex].copyrightCheckStatus = "completed"
+          mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
         }
       } catch (error) {
         console.error(`Failed to check asset ${assetId}:`, error)
@@ -530,11 +539,11 @@ export default function AssetApprovalsPage() {
               variant="default"
               size="sm"
               onClick={handleBulkRunChecks}
-              disabled={selectedAssets.size === 0 || isProcessing || getTotalAvailable() < selectedAssets.size}
+              disabled={selectedAssets.size === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
               className="h-7 bg-blue-600 hover:bg-blue-700"
             >
               <Shield className="h-3.5 w-3.5 mr-1.5" />
-              Run Checks ({selectedAssets.size})
+              Run Checks ({assetsNeedingChecks})
             </Button>
           </div>
           <Link href="/creative/assets">
@@ -901,6 +910,7 @@ export default function AssetApprovalsPage() {
                                 if (assetIndex !== -1) {
                                   mockAssets[assetIndex].reviewData = mockReviewData
                                   mockAssets[assetIndex].copyrightCheckStatus = "completed"
+                                  mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
                                 }
                                 
                                 toast.success("Quality check completed")

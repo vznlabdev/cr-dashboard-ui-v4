@@ -5,14 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import { useCreators } from "@/contexts/creators-context"
 import { useData } from "@/contexts/data-context"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -90,17 +83,13 @@ export default function CreatorDetailPage() {
   return (
     <PageContainer className="space-y-6 animate-fade-in">
       {/* Breadcrumb Navigation */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/creative/creators">Creators</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{creator.fullName}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <LinearBreadcrumb
+        backHref="/creative/creators"
+        segments={[
+          { label: "Creators", href: "/creative/creators" },
+          { label: creator.fullName }
+        ]}
+      />
 
       {/* Page Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

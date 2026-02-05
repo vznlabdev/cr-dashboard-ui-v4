@@ -5,14 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import { 
   Download, 
   ExternalLink, 
@@ -54,21 +47,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ contr
   return (
     <PageContainer className="space-y-4">
       {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/creative/talent-rights">Talent Rights</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/creative/talent-rights/contracts">Contracts</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{contract.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <LinearBreadcrumb
+        backHref="/creative/talent-rights/contracts"
+        segments={[
+          { label: "Talent Rights", href: "/creative/talent-rights" },
+          { label: "Contracts", href: "/creative/talent-rights/contracts" },
+          { label: contract.title }
+        ]}
+      />
 
       {/* Compact Header */}
       <div className="flex items-start justify-between gap-4">

@@ -38,6 +38,7 @@ import type { TaskStatus } from "@/types"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
 import { MediaManager } from "@/components/media-manager/media-manager"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import type { MediaManagerData } from "@/types/mediaManager"
 import { validateAllTabs, countMediaItems, hasMediaContent } from "@/utils/mediaValidation"
 import { clearMediaDataFromStorage } from "@/contexts/MediaManagerContext"
@@ -1788,18 +1789,14 @@ export default function ProjectTasksPage() {
       {/* Header - Linear Style, Streamlined */}
       <PageContainer className="space-y-0 animate-fade-in">
         {/* Compact Breadcrumbs */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-          <button
-            onClick={() => router.push('/projects')}
-            className="hover:text-foreground transition-colors"
-          >
-            ← Back
-          </button>
-          <span>•</span>
-          <span>Projects</span>
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground font-medium">{project.name}</span>
-        </div>
+        <LinearBreadcrumb
+          backHref="/projects"
+          segments={[
+            { label: "Projects", href: "/projects" },
+            { label: project.name }
+          ]}
+          className="mb-3"
+        />
         
         {/* Title Row + Metadata + Actions */}
         <div className="flex items-center justify-between mb-4">

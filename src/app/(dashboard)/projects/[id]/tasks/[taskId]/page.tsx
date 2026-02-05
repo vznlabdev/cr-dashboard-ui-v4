@@ -64,6 +64,7 @@ import type { Task } from "@/types"
 import type { TabId } from "@/types/mediaManager"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import { MediaManager } from "@/components/media-manager/media-manager"
 import { 
   DeliverableVersionsCard, 
@@ -1190,17 +1191,14 @@ export default function TaskDetailPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center text-sm text-muted-foreground">
-        <Link href="/projects" className="hover:text-foreground transition-colors">
-          Projects
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <Link href={`/projects/${projectId}/tasks`} className="hover:text-foreground transition-colors">
-          {project.name}
-        </Link>
-        <ChevronRight className="h-4 w-4 mx-1" />
-        <span className="text-foreground font-medium truncate max-w-[300px]">{task.title}</span>
-      </div>
+      <LinearBreadcrumb
+        backHref={`/projects/${projectId}/tasks`}
+        segments={[
+          { label: "Projects", href: "/projects" },
+          { label: project.name, href: `/projects/${projectId}/tasks` },
+          { label: task.title }
+        ]}
+      />
 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

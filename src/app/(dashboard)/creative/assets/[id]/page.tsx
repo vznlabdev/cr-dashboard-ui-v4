@@ -57,6 +57,7 @@ import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
 import type { AssetVersion, MatchedSource, AssetReviewData } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
+import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 
 export default function AssetDetailPage() {
   const router = useRouter()
@@ -426,18 +427,18 @@ export default function AssetDetailPage() {
 
   return (
     <PageContainer className="space-y-4 animate-fade-in">
+      {/* Breadcrumb */}
+      <LinearBreadcrumb
+        backHref="/creative/assets"
+        segments={[
+          { label: "Assets", href: "/creative/assets" },
+          { label: asset.name }
+        ]}
+      />
+      
       {/* Header Section with Save Status */}
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-            <Link href="/creative/assets" className="hover:text-foreground transition-colors">
-              Assets
-            </Link>
-            <span>/</span>
-            <span className="text-foreground">{asset.name}</span>
-          </div>
-
           {/* Title */}
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-semibold">{asset.name}</h1>
