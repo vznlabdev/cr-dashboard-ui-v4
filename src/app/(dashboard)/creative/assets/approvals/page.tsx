@@ -64,7 +64,7 @@ export default function AssetApprovalsPage() {
   const assetsByStatus = useMemo(() => {
     return {
       needsCheck: pendingAssets.filter(a => !a.copyrightCheckStatus || a.copyrightCheckStatus === "pending"),
-      checking: pendingAssets.filter(a => a.copyrightCheckStatus === "in_progress"),
+      checking: pendingAssets.filter(a => a.copyrightCheckStatus === "checking"),
       checked: pendingAssets.filter(a => a.copyrightCheckStatus === "completed"),
     }
   }, [pendingAssets])
@@ -239,7 +239,7 @@ export default function AssetApprovalsPage() {
     setIsProcessing(true)
     try {
       // INTEGRATION POINT: Call API to run copyright checks on multiple assets
-      // This should update copyrightCheckStatus to "in_progress" then "completed"
+      // This should update copyrightCheckStatus to "checking" then "completed"
       await new Promise((resolve) => setTimeout(resolve, 2000))
       toast.success(`Running checks on ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
       // Don't clear selection - let user see results and approve
@@ -513,7 +513,7 @@ export default function AssetApprovalsPage() {
               const isSelected = selectedAssets.has(asset.id)
               const isExpanded = expandedAsset === asset.id
               const needsCheck = !asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending"
-              const isChecking = asset.copyrightCheckStatus === "in_progress"
+              const isChecking = asset.copyrightCheckStatus === "checking"
               const isChecked = asset.copyrightCheckStatus === "completed"
 
               return (
