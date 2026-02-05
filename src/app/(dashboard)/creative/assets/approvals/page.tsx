@@ -50,12 +50,11 @@ export default function AssetApprovalsPage() {
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null)
   const [bulkRejectionReason, setBulkRejectionReason] = useState("")
   const [individualRejectionReason, setIndividualRejectionReason] = useState("")
-  const [showManualApproveConfirm, setShowManualApproveConfirm] = useState(false)
-  const [manualApproveReason, setManualApproveReason] = useState("")
   const [approvedAssets, setApprovedAssets] = useState<Set<string>>(new Set())
   const [rejectedAssets, setRejectedAssets] = useState<Set<string>>(new Set())
   const [showProcessed, setShowProcessed] = useState(false)
   const [checkingAssets, setCheckingAssets] = useState<Set<string>>(new Set())
+  const [checksVersion, setChecksVersion] = useState(0) // Increment when checks complete to trigger recalculation
   const { credits, getTotalAvailable, useCredit } = useCopyrightCredits()
 
   // Get pending approval assets (including unchecked)
@@ -75,7 +74,7 @@ export default function AssetApprovalsPage() {
       checking: pendingAssets.filter(a => a.copyrightCheckStatus === "checking"),
       checked: pendingAssets.filter(a => a.copyrightCheckStatus === "completed"),
     }
-  }, [pendingAssets])
+  }, [pendingAssets, checksVersion])
 
   // Filter and sort assets
   const filteredAssets = useMemo(() => {
@@ -118,7 +117,7 @@ export default function AssetApprovalsPage() {
     }
 
     return filtered
-  }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets])
+  }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets, checksVersion])
 
   // Calculate how many selected assets actually need checks
   const assetsNeedingChecks = useMemo(() => {
@@ -126,7 +125,7 @@ export default function AssetApprovalsPage() {
       const asset = mockAssets.find(a => a.id === id)
       return !asset?.reviewData
     }).length
-  }, [selectedAssets])
+  }, [selectedAssets, checksVersion])
 
   // Generate mock review data for quality checks
   const generateMockReviewData = (): AssetReviewData => {
@@ -398,41 +397,6 @@ export default function AssetApprovalsPage() {
     setShowRejectInput("bulk")
   }
 
-  const handleManualApprove = async () => {
-    if (selectedAssets.size === 0) {
-      toast.error("Please select at least one asset")
-      return
-    }
-
-    // Show inline confirmation for manual override
-    setShowManualApproveConfirm(true)
-  }
-
-  const confirmManualApprove = async (reason: string) => {
-    setIsProcessing(true)
-    try {
-      // INTEGRATION POINT: Call API to manually approve assets with override
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      
-      // Mark assets as approved
-      setApprovedAssets(prev => {
-        const updated = new Set(prev)
-        selectedAssets.forEach(id => updated.add(id))
-        return updated
-      })
-      
-      toast.success(`Manually approved ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""} with override`)
-      setSelectedAssets(new Set())
-      setShowManualApproveConfirm(false)
-      setManualApproveReason("")
-    } catch (error) {
-      toast.error("Failed to manually approve assets")
-      console.error(error)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
   const handleBulkRunChecks = async () => {
     if (selectedAssets.size === 0) {
       toast.error("Please select at least one asset")
@@ -504,6 +468,7 @@ export default function AssetApprovalsPage() {
     }
     
     setIsProcessing(false)
+    setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
     toast.success(`Completed checks on ${assetsToCheck.length} asset${assetsToCheck.length !== 1 ? 's' : ''}`)
   }
 
@@ -630,66 +595,8 @@ export default function AssetApprovalsPage() {
               <XCircle className="h-3.5 w-3.5 mr-1.5" />
               Reject
             </Button>
-            <div className="h-5 w-px bg-border" />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleManualApprove}
-              disabled={selectedAssets.size === 0 || isProcessing}
-              className="h-8"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-              Manual Approve
-            </Button>
           </div>
         </div>
-
-        {/* Inline Manual Approve Confirmation */}
-        {showManualApproveConfirm && (
-          <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Manual Approval Override</h3>
-                <p className="text-xs text-muted-foreground mb-3">
-                  You are about to manually approve {selectedAssets.size} asset{selectedAssets.size !== 1 ? "s" : ""} without copyright check validation. 
-                  Please provide a reason for this override.
-                </p>
-                <div className="space-y-2">
-                  <Label className="text-xs">Override Reason <span className="text-destructive">*</span></Label>
-                  <Textarea
-                    value={manualApproveReason}
-                    onChange={(e) => setManualApproveReason(e.target.value)}
-                    placeholder="e.g., Legal clearance obtained, Client requested, Low-risk use case..."
-                    className="h-20 text-sm"
-                    disabled={isProcessing}
-                  />
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => confirmManualApprove(manualApproveReason)}
-                    disabled={!manualApproveReason.trim() || isProcessing}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isProcessing ? "Processing..." : "Confirm Manual Approval"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setShowManualApproveConfirm(false)
-                      setManualApproveReason("")
-                    }}
-                    disabled={isProcessing}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Inline Bulk Reject Input */}
         {showRejectInput === "bulk" && (
@@ -818,7 +725,13 @@ export default function AssetApprovalsPage() {
                       <div className="flex-1 min-w-0">
                         {/* Line 1: Asset name + Status Badge */}
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-sm font-medium truncate">{asset.name}</span>
+                          <Link 
+                            href={`/creative/assets/${asset.id}`}
+                            className="text-sm font-medium truncate hover:text-blue-600 hover:underline transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {asset.name}
+                          </Link>
                           
                           {/* Status badge / Quality scores */}
                           {needsCheck ? (
@@ -913,6 +826,7 @@ export default function AssetApprovalsPage() {
                                   mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
                                 }
                                 
+                                setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
                                 toast.success("Quality check completed")
                               } catch (error) {
                                 toast.error("Failed to run check")
@@ -938,39 +852,78 @@ export default function AssetApprovalsPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {/* Full quality scores */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <ScoreBadge 
-                              icon={Shield} 
-                              score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
-                              label="Copyright"
-                              lastChecked={asset.reviewData?.copyright?.data?.checkedAt}
-                              size="md"
-                            />
-                            <ScoreBadge 
-                              icon={Eye} 
-                              score={asset.reviewData?.accessibility?.data?.score}
-                              label="Accessibility"
-                              size="md"
-                            />
-                            <ScoreBadge 
-                              icon={Zap} 
-                              score={asset.reviewData?.performance?.data?.score}
-                              label="Performance"
-                              size="md"
-                            />
-                            <ScoreBadge 
-                              icon={Palette} 
-                              score={asset.reviewData?.seo?.data?.score}
-                              label="SEO"
-                              size="md"
-                            />
-                            <ScoreBadge 
-                              icon={ShieldCheck} 
-                              score={asset.reviewData?.security?.data?.score}
-                              label="Security"
-                              size="md"
-                            />
+                          {/* Key Insights - Compact & Actionable */}
+                          <div className="space-y-2">
+                            {/* Copyright Insights */}
+                            {asset.reviewData?.copyright?.data && (
+                              <div className="flex items-start gap-2 text-xs">
+                                <Shield className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <span className="text-muted-foreground">Copyright: </span>
+                                  <span>{asset.reviewData.copyright.data.similarityScore}% similarity, </span>
+                                  <span className="font-medium">{asset.reviewData.copyright.data.riskBreakdown.riskLevel} risk</span>
+                                  {asset.reviewData.copyright.data.matchedSources.length > 0 && (
+                                    <span className="text-muted-foreground"> • {asset.reviewData.copyright.data.matchedSources.length} matches</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Accessibility Insights */}
+                            {asset.reviewData?.accessibility?.data && (
+                              <div className="flex items-start gap-2 text-xs">
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <span className="text-muted-foreground">Accessibility: </span>
+                                  <span className="font-medium">{asset.reviewData.accessibility.data.wcagLevel} compliant</span>
+                                  {asset.reviewData.accessibility.data.issues.length > 0 && (
+                                    <span className="text-amber-600"> • {asset.reviewData.accessibility.data.issues.length} issues</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Performance Insights */}
+                            {asset.reviewData?.performance?.data && (
+                              <div className="flex items-start gap-2 text-xs">
+                                <Zap className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <span className="text-muted-foreground">Performance: </span>
+                                  <span>{asset.reviewData.performance.data.loadTimeEstimate}ms load</span>
+                                  {asset.reviewData.performance.data.fileSize.savings > 0 && (
+                                    <span className="text-muted-foreground"> • Can save {Math.round(asset.reviewData.performance.data.fileSize.savings / 1000)}KB</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* SEO Insights */}
+                            {asset.reviewData?.seo?.data && (
+                              <div className="flex items-start gap-2 text-xs">
+                                <Palette className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <span className="text-muted-foreground">SEO: </span>
+                                  <span className="font-medium">{asset.reviewData.seo.data.imageOptimization.format} format</span>
+                                  <span className="text-muted-foreground"> • {asset.reviewData.seo.data.imageOptimization.sizeRating} size</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Security Insights */}
+                            {asset.reviewData?.security?.data && (
+                              <div className="flex items-start gap-2 text-xs">
+                                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <span className="text-muted-foreground">Security: </span>
+                                  <span className={cn(
+                                    "font-medium",
+                                    asset.reviewData.security.data.safe ? "text-green-600" : "text-red-600"
+                                  )}>
+                                    {asset.reviewData.security.data.safe ? "Safe" : "Threats detected"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Last checked info */}
