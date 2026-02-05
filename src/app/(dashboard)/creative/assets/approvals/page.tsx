@@ -136,7 +136,6 @@ export default function AssetApprovalsPage() {
         newSet.delete(assetId)
         return newSet
       })
-      setReviewAsset(null)
     } catch (error) {
       toast.error("Failed to approve asset")
       console.error(error)
@@ -156,7 +155,6 @@ export default function AssetApprovalsPage() {
         newSet.delete(assetId)
         return newSet
       })
-      setReviewAsset(null)
     } catch (error) {
       toast.error("Failed to reject asset")
       console.error(error)
