@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
-import type { AssetVersion } from "@/types/creative"
+import type { AssetVersion, MatchedSource } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 
 export default function AssetDetailPage() {
@@ -945,7 +945,7 @@ export default function AssetDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {asset.copyrightCheckData.matchedSources.map((source, index) => (
+                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index) => (
                         <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
                           <div className="flex-1">
                             <p className="font-medium">{source.title}</p>
@@ -1651,7 +1651,7 @@ export default function AssetDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {asset.copyrightCheckData.matchedSources.map((source, index) => (
+                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index) => (
                         <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
                           <div className="flex-1">
                             <p className="font-medium">{source.title}</p>
