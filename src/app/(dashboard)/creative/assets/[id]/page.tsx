@@ -154,7 +154,7 @@ export default function AssetDetailPage() {
           score: seoScore,
           imageOptimization: {
             format: seoScore >= 80 ? "optimal" : "acceptable",
-            sizeRating: seoScore >= 80 ? "good" : "acceptable",
+            sizeRating: seoScore >= 80 ? "good" : "large",
             compressionPotential: Math.floor((100 - seoScore) / 2),
           },
           metadata: {
