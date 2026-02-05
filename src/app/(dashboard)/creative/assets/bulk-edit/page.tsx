@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { ArrowLeft, Columns, Search, AlertTriangle, ChevronDown, FileImage } from "lucide-react"
-import { mockAssets, mockVersionGroups } from "@/lib/mock-data/creative"
+import { mockAssets, mockVersionGroups, mockBrands } from "@/lib/mock-data/creative"
 import { BULK_EDIT_CATEGORIES, EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
 import { EditableCell } from "@/components/creative"
 import type { Asset, AssetVersion } from "@/types/creative"
@@ -53,6 +53,23 @@ function BulkEditPageContent() {
     return allAssets.filter(a => expandedIds.includes(a.id))
   }, [allAssets, assetIds])
   
+  // Enrich EDITABLE_FIELDS with dynamic brand options
+  const enrichedFields = useMemo(() => {
+    return EDITABLE_FIELDS.map(field => {
+      if (field.id === 'brandId') {
+        // Explicitly preserve all field properties and add brand options
+        return {
+          ...field,
+          options: mockBrands.map(brand => ({
+            value: brand.id,
+            label: brand.name
+          }))
+        } as typeof field
+      }
+      return field
+    })
+  }, [])
+  
   // State
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "brandId", "designType", "tags", "approvalStatus"
@@ -61,6 +78,115 @@ function BulkEditPageContent() {
   const [saving, setSaving] = useState(false)
   const [columnsPanelOpen, setColumnsPanelOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    const groupIds = new Set<string>()
+    assetIds.forEach(id => {
+      const versionGroup = mockVersionGroups.find(vg => vg.id === id)
+      if (versionGroup) {
+        groupIds.add(versionGroup.id)
+      }
+    })
+    return groupIds
+  })
+  
+  // Enhanced asset list with parent-child relationships
+  const hierarchicalAssets = useMemo(() => {
+    const result: Array<{
+      asset: Asset | AssetVersion
+      isParent: boolean
+      isVersion: boolean
+      parentId?: string
+      versionNumber?: number
+      groupId?: string
+    }> = []
+    
+    assetIds.forEach(id => {
+      const versionGroup = mockVersionGroups.find(vg => vg.id === id)
+      if (versionGroup) {
+        // Add parent group entry with complete properties
+        const latestVersion = versionGroup.versions[versionGroup.versions.length - 1]
+        result.push({
+          asset: {
+            id: versionGroup.id,
+            name: versionGroup.name,
+            brandId: versionGroup.brandId,
+            brandName: versionGroup.brandName,
+            brandColor: versionGroup.brandColor,
+            brandLogoUrl: versionGroup.brandLogoUrl,
+            designType: versionGroup.designType,
+            tags: versionGroup.tags,
+            thumbnailUrl: latestVersion.thumbnailUrl,
+            fileUrl: latestVersion.fileUrl,
+            fileType: latestVersion.fileType,
+            contentType: latestVersion.contentType,
+            fileSize: latestVersion.fileSize,
+            mimeType: latestVersion.mimeType,
+            dimensions: latestVersion.dimensions,
+            createdAt: versionGroup.createdAt,
+            updatedAt: versionGroup.updatedAt,
+            approvalStatus: 'pending',
+            uploadedById: latestVersion.uploadedById,
+            uploadedByName: latestVersion.uploadedByName,
+          } as Asset,
+          isParent: true,
+          isVersion: false,
+          groupId: versionGroup.id
+        })
+        
+        // Add versions if expanded
+        if (expandedGroups.has(versionGroup.id)) {
+          versionGroup.versions.forEach(version => {
+            result.push({
+              asset: version,
+              isParent: false,
+              isVersion: true,
+              parentId: versionGroup.id,
+              versionNumber: version.versionNumber,
+              groupId: versionGroup.id
+            })
+          })
+        }
+      } else {
+        // Regular asset (not a version group)
+        const asset = allAssets.find(a => a.id === id)
+        if (asset) {
+          result.push({
+            asset,
+            isParent: false,
+            isVersion: false
+          })
+        }
+      }
+    })
+    
+    return result
+  }, [assetIds, expandedGroups, allAssets])
+  
+  // Persistent map to track which IDs are versions (independent of expand state)
+  const assetTypeMap = useMemo(() => {
+    const map = new Map<string, { isVersion: boolean; parentId?: string }>()
+    
+    assetIds.forEach(id => {
+      const versionGroup = mockVersionGroups.find(vg => vg.id === id)
+      if (versionGroup) {
+        // Mark parent
+        map.set(versionGroup.id, { isVersion: false })
+        
+        // Mark all versions
+        versionGroup.versions.forEach(version => {
+          map.set(version.id, { 
+            isVersion: true, 
+            parentId: versionGroup.id 
+          })
+        })
+      } else {
+        // Regular asset
+        map.set(id, { isVersion: false })
+      }
+    })
+    
+    return map
+  }, [assetIds])
   
   // Derived state
   const hasChanges = changes.length > 0
@@ -97,42 +223,56 @@ function BulkEditPageContent() {
     
     setSaving(true)
     try {
-      // Group changes by asset ID
-      const changesByAsset = changes.reduce((acc, change) => {
-        if (!acc[change.assetId]) acc[change.assetId] = []
-        acc[change.assetId].push(change)
-        return acc
-      }, {} as Record<string, BulkEditChange[]>)
+      // Group changes by type (version vs regular asset)
+      const versionChanges: BulkEditChange[] = []
+      const assetChanges: BulkEditChange[] = []
       
-      // Apply changes to each asset
-      for (const [assetId, assetChanges] of Object.entries(changesByAsset)) {
-        const asset = selectedAssets.find(a => a.id === assetId)
-        if (!asset) continue
-        
-        const updatedAsset = { ...asset }
-        assetChanges.forEach(change => {
-          const pathParts = change.fieldPath.split('.')
-          let current: any = updatedAsset
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            if (!current[pathParts[i]]) current[pathParts[i]] = {}
-            current = current[pathParts[i]]
-          }
-          current[pathParts[pathParts.length - 1]] = change.newValue
-        })
-        
-        // TODO: Save to backend/context
-        console.log('Updated asset:', assetId, updatedAsset)
-      }
+      changes.forEach(change => {
+        const assetType = assetTypeMap.get(change.assetId)
+        if (assetType?.isVersion) {
+          versionChanges.push({
+            ...change,
+            isVersion: true,
+            parentAssetId: assetType.parentId
+          })
+        } else {
+          assetChanges.push(change)
+        }
+      })
       
-      toast.success(`Successfully updated ${selectedAssets.length} assets`)
+      // In production, send to different endpoints
+      // await api.updateVersions(versionChanges)
+      // await api.updateAssets(assetChanges)
+      
+      console.log('Saving version changes:', versionChanges)
+      console.log('Saving asset changes:', assetChanges)
+      
+      // Simulate save delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      toast.success(`Successfully updated ${changes.length} fields (${versionChanges.length} version edits, ${assetChanges.length} asset edits)`)
       setChanges([])
-      router.push('/creative/assets')
+      // Optionally refresh or redirect
+      // router.push('/creative/assets')
     } catch (error) {
       toast.error("Failed to save changes")
     } finally {
       setSaving(false)
     }
   }
+  
+  // Expand/Collapse handler for version groups
+  const handleToggleExpand = useCallback((groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(groupId)) {
+        next.delete(groupId)
+      } else {
+        next.add(groupId)
+      }
+      return next
+    })
+  }, [])
   
   // Column toggle handler
   const handleToggleColumn = useCallback((fieldId: string) => {
@@ -145,13 +285,13 @@ function BulkEditPageContent() {
   
   // Filtered fields for column selector
   const filteredFields = useMemo(() => {
-    if (!searchQuery) return EDITABLE_FIELDS
+    if (!searchQuery) return enrichedFields
     const query = searchQuery.toLowerCase()
-    return EDITABLE_FIELDS.filter(f =>
+    return enrichedFields.filter(f =>
       f.label.toLowerCase().includes(query) ||
       f.helpText?.toLowerCase().includes(query)
     )
-  }, [searchQuery])
+  }, [searchQuery, enrichedFields])
   
   // Sync table width with bottom scrollbar
   useEffect(() => {
@@ -232,6 +372,28 @@ function BulkEditPageContent() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-base font-semibold">Editing {selectedAssets.length} assets</h1>
+          
+          {hierarchicalAssets.some(h => h.isParent) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => {
+                const allGroupIds = hierarchicalAssets
+                  .filter(h => h.isParent && h.groupId)
+                  .map(h => h.groupId!)
+                
+                if (expandedGroups.size === allGroupIds.length) {
+                  setExpandedGroups(new Set())
+                } else {
+                  setExpandedGroups(new Set(allGroupIds))
+                }
+              }}
+            >
+              {expandedGroups.size > 0 ? 'Collapse all' : 'Expand all'}
+            </Button>
+          )}
+          
           {hasChanges && (
             <Badge variant="secondary" className="h-5 text-[10px] px-1.5">
               {changes.length} changes
@@ -270,12 +432,15 @@ function BulkEditPageContent() {
         {/* Main scrollable content */}
         <div className="flex-1 overflow-auto scrollbar-hide" id="bulk-edit-scroll-area">
           <LinearStyleTable 
-            assets={selectedAssets}
+            assets={hierarchicalAssets}
             columns={selectedColumns}
             changes={changes}
             onCellChange={handleCellChange}
             getChangeForCell={getChangeForCell}
             getCellValue={getCellValue}
+            enrichedFields={enrichedFields}
+            expandedGroups={expandedGroups}
+            onToggleExpand={handleToggleExpand}
           />
         </div>
         
@@ -349,7 +514,14 @@ function BulkEditPageContent() {
 
 // Linear-Style Dense Table Component
 interface LinearStyleTableProps {
-  assets: (Asset | AssetVersion)[]
+  assets: Array<{
+    asset: Asset | AssetVersion
+    isParent: boolean
+    isVersion: boolean
+    parentId?: string
+    versionNumber?: number
+    groupId?: string
+  }>
   columns: string[]
   changes: BulkEditChange[]
   onCellChange: (assetId: string, fieldPath: string, newValue: any, oldValue: any) => void
@@ -363,11 +535,20 @@ function LinearStyleTable({
   changes, 
   onCellChange, 
   getChangeForCell, 
-  getCellValue 
-}: LinearStyleTableProps) {
+  getCellValue,
+  enrichedFields,
+  expandedGroups,
+  onToggleExpand
+}: LinearStyleTableProps & { 
+  enrichedFields: typeof EDITABLE_FIELDS
+  expandedGroups: Set<string>
+  onToggleExpand: (groupId: string) => void
+}) {
   const fields = useMemo(() => {
-    return columns.map(colId => EDITABLE_FIELDS.find(f => f.id === colId)).filter(Boolean) as typeof EDITABLE_FIELDS
-  }, [columns])
+    return columns
+      .map(colId => enrichedFields.find(f => f.id === colId))
+      .filter((field): field is typeof enrichedFields[number] => field !== undefined)
+  }, [columns, enrichedFields])
   
   return (
     <table className="w-max min-w-full text-sm font-medium">
@@ -376,65 +557,127 @@ function LinearStyleTable({
           <th className="sticky top-0 left-0 bg-background z-30 border-r px-2 py-1.5 text-left text-xs font-medium text-muted-foreground">
             Asset Name
           </th>
-            {fields.map(field => (
-              <th 
-                key={field.id} 
-                className="px-2 py-1.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]"
-              >
-                {field.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {assets.map((asset) => (
+          {fields.map(field => (
+            <th 
+              key={field.id} 
+              className="px-2 py-1.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]"
+            >
+              {field.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {assets.map(({asset, isParent, isVersion, versionNumber, groupId, parentId}) => {
+          const isExpanded = groupId && expandedGroups.has(groupId)
+          
+          return (
             <tr 
               key={asset.id} 
-              className="border-b border-border hover:bg-accent/10 transition-colors h-8"
+              className={cn(
+                "border-b border-border hover:bg-accent/10 transition-colors h-8",
+                isVersion && "bg-muted/20"
+              )}
             >
-              <td className="sticky left-0 bg-background z-30 border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] px-2 py-1.5 font-medium text-xs">
+              <td className={cn(
+                "sticky left-0 z-30 border-r shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] px-2 py-1.5 font-medium text-sm",
+                isVersion ? "bg-muted/20 pl-6" : "bg-background"
+              )}>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-6 w-6 rounded overflow-hidden border shrink-0">
+                  {isParent && (
+                    <button
+                      onClick={() => onToggleExpand(groupId!)}
+                      className="hover:bg-accent/50 rounded p-0.5 -ml-1"
+                    >
+                      <ChevronDown 
+                        className={cn(
+                          "h-3.5 w-3.5 text-muted-foreground transition-transform",
+                          isExpanded && "rotate-0",
+                          !isExpanded && "-rotate-90"
+                        )} 
+                      />
+                    </button>
+                  )}
+                  
+                  {isVersion && (
+                    <Badge 
+                      variant="outline" 
+                      className="h-4 px-1 text-[10px] font-mono text-muted-foreground border-muted-foreground/30"
+                    >
+                      v{versionNumber}
+                    </Badge>
+                  )}
+                  
+                  <div className={cn(
+                    "rounded overflow-hidden border shrink-0",
+                    isVersion ? "h-5 w-5" : "h-6 w-6"
+                  )}>
                     {asset.thumbnailUrl ? (
                       <NextImage 
                         src={asset.thumbnailUrl} 
                         alt={asset.name}
-                        width={24}
-                        height={24}
+                        width={isVersion ? 20 : 24}
+                        height={isVersion ? 20 : 24}
                         className="object-cover w-full h-full"
                       />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <FileImage className="h-3 w-3 text-muted-foreground" />
+                        <FileImage className={cn(
+                          "text-muted-foreground",
+                          isVersion ? "h-2.5 w-2.5" : "h-3 w-3"
+                        )} />
                       </div>
                     )}
                   </div>
-                  <span className="font-medium text-xs truncate max-w-[200px]" title={asset.name}>
+                  
+                  <span className={cn(
+                    "font-medium text-sm truncate max-w-[200px]",
+                    isVersion && "text-muted-foreground font-normal"
+                  )} title={asset.name}>
                     {asset.name}
                   </span>
                 </div>
               </td>
+              
               {fields.map(field => {
                 const value = getCellValue(asset, field.path)
                 const originalValue = getNestedValue(asset, field.path)
                 const change = getChangeForCell(asset.id, field.path)
                 
+                const isFieldEditable = isVersion 
+                  ? (field.versionEditable !== false)
+                  : field.editable
+                
+                // Show dash for inherited fields on versions OR non-inherited fields on parents
+                const showDash = (isVersion && field.inheritedFromParent) || (isParent && !field.inheritedFromParent)
+                
                 return (
-                  <td key={field.id} className="px-2 py-1.5">
-                    <EditableCell
-                      field={field}
-                      value={value}
-                      originalValue={originalValue}
-                      hasChange={!!change}
-                      error={change?.error}
-                      onChange={(newValue) => onCellChange(asset.id, field.path, newValue, originalValue)}
-                    />
+                  <td 
+                    key={field.id} 
+                    className={cn(
+                      "px-2 py-1.5",
+                      isVersion && "bg-muted/20"
+                    )}
+                  >
+                    {showDash ? (
+                      <span className="text-muted-foreground">-</span>
+                    ) : (
+                      <EditableCell
+                        field={{...field, editable: isFieldEditable}}
+                        value={value}
+                        originalValue={originalValue}
+                        hasChange={!!change}
+                        error={change?.error}
+                        onChange={(newValue) => onCellChange(asset.id, field.path, newValue, originalValue)}
+                      />
+                    )}
                   </td>
                 )
               })}
             </tr>
-          ))}
-        </tbody>
+          )
+        })}
+      </tbody>
       </table>
   )
 }

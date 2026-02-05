@@ -22,6 +22,8 @@ export interface EditableField {
   category: string
   path: string                    // Nested path like "reviewData.accessibility.score"
   editable: boolean
+  versionEditable?: boolean       // Can this be edited at version level?
+  inheritedFromParent?: boolean   // Is this inherited from parent?
   options?: { value: string; label: string; color?: string }[]  // For select/multiselect, color for badge variants
   badgeColor?: string             // Default color for badge fields (e.g., "purple", "green")
   unit?: string                   // Display unit for number fields (e.g., "MB", "USD")
@@ -43,6 +45,8 @@ export interface BulkEditChange {
   oldValue: any
   newValue: any
   error?: string
+  isVersion?: boolean           // Flag to indicate version edit
+  parentAssetId?: string        // Reference to parent for version edits
 }
 
 export interface BulkEditSession {

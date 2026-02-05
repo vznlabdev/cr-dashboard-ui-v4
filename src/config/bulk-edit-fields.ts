@@ -33,6 +33,7 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "basic",
     path: "description",
     editable: true,
+    versionEditable: true,
   },
   {
     id: "tags",
@@ -41,6 +42,8 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "basic",
     path: "tags",
     editable: true,
+    versionEditable: false,
+    inheritedFromParent: true,
     helpText: "Press Enter to add tags",
   },
   
@@ -52,6 +55,8 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "brand",
     path: "brandId",
     editable: true,
+    versionEditable: false,
+    inheritedFromParent: true,
     searchable: true,
     options: [], // Populated dynamically from brands context
   },
@@ -62,6 +67,8 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "brand",
     path: "designType",
     editable: true,
+    versionEditable: false,
+    inheritedFromParent: true,
     badgeColor: "purple",
     options: [
       { value: "digital_marketing", label: "Digital Marketing" },
@@ -382,6 +389,7 @@ export const EDITABLE_FIELDS: EditableField[] = [
     category: "approval",
     path: "approvalStatus",
     editable: true,
+    versionEditable: true,
     options: [
       { value: "draft", label: "Draft", color: "gray" },
       { value: "pending", label: "Pending", color: "yellow" },
