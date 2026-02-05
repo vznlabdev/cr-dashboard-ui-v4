@@ -293,8 +293,20 @@ function generateBasicReviewData(rng: () => number) {
           highRiskCount: copyrightScore < 60 ? 1 : 0,
           mediumRiskCount: copyrightScore >= 60 && copyrightScore < 80 ? 1 : 0,
           lowRiskCount: copyrightScore >= 80 ? 1 : 0,
+          copyrightRisk: Math.max(0, 100 - copyrightScore - 10),
+          trademarkRisk: Math.max(0, 100 - copyrightScore - 20),
+          overallRisk: 100 - copyrightScore,
         },
+        recommendations: [
+          copyrightScore >= 85 
+            ? "Asset passed copyright check with low similarity score."
+            : "Some similarities detected, review recommended.",
+          copyrightScore >= 85 
+            ? "No significant matches found in copyright databases."
+            : "Minor matches found, but likely acceptable.",
+        ],
         checkedAt: new Date(),
+        checkDuration: 4500,
         matchedSources: [],
       }
     },
@@ -302,40 +314,120 @@ function generateBasicReviewData(rng: () => number) {
       status: "completed" as const, 
       data: { 
         score: accessibilityScore,
-        wcagLevel: accessibilityScore >= 80 ? "AA" : "A",
-        issues: [],
+        issues: accessibilityScore < 90 ? [{
+          severity: "minor" as const,
+          type: "contrast" as const,
+          description: "Some text elements could use higher contrast",
+          recommendation: "Increase contrast ratio for small text",
+        }] : [],
+        wcagLevel: accessibilityScore >= 90 ? "AAA" : "AA",
+        colorContrast: {
+          passed: true,
+          ratio: accessibilityScore >= 90 ? 7.1 : 4.8,
+          recommendation: accessibilityScore >= 90 
+            ? "Excellent contrast ratio" 
+            : "Meets WCAG AA standards",
+        },
+        altText: {
+          present: true,
+          quality: accessibilityScore >= 90 ? "good" : "fair",
+        },
+        recommendations: [
+          accessibilityScore >= 90 
+            ? "Excellent accessibility overall"
+            : "Good accessibility with room for improvement",
+          "Alt text is present and descriptive",
+        ],
         passedChecks: Math.floor(rng() * 5) + 10,
-        totalChecks: 15
+        totalChecks: 15,
+        checkedAt: new Date(),
+        checkDuration: 1200,
       } 
     },
     seo: { 
       status: "completed" as const, 
       data: { 
-        score: seoScore, 
-        sizeRating: seoScore >= 80 ? "good" : "large" as const,
-        hasAltText: rng() > 0.3,
-        hasMetadata: rng() > 0.2,
-        keywords: []
+        score: seoScore,
+        imageOptimization: {
+          format: seoScore >= 80 ? "optimal" : "acceptable",
+          sizeRating: seoScore >= 80 ? "good" : "large" as const,
+          compressionPotential: Math.floor((100 - seoScore) / 2),
+        },
+        metadata: {
+          filenameQuality: seoScore >= 80 ? "descriptive" : "generic",
+          altTextPresent: true,
+          dimensionsOptimal: seoScore >= 75,
+        },
+        recommendations: [
+          seoScore >= 80 
+            ? "Good SEO optimization"
+            : "SEO could be improved",
+          "Consider further optimization opportunities",
+        ],
+        checkedAt: new Date(),
+        checkDuration: 1500,
       } 
     },
     performance: { 
       status: "completed" as const, 
       data: { 
         score: performanceScore,
-        loadTime: Math.floor(rng() * 2000) + 500,
-        fileSize: Math.floor(rng() * 1000000) + 100000,
-        optimized: performanceScore >= 70
+        fileSize: {
+          current: 2400000,
+          optimal: 2040000,
+          savings: Math.floor((100 - performanceScore) * 10000),
+        },
+        loadTimeEstimate: Math.floor(1500 - (performanceScore * 5)),
+        compressionScore: performanceScore,
+        formatRecommendation: performanceScore < 80 
+          ? "Consider WebP format for better compression"
+          : undefined,
+        recommendations: [
+          performanceScore >= 80 
+            ? "Good performance optimization"
+            : "Performance could be improved",
+          performanceScore < 80 
+            ? "Consider file size optimization"
+            : "File size is acceptable",
+        ],
+        checkedAt: new Date(),
+        checkDuration: 900,
       } 
     },
     security: { 
       status: "completed" as const, 
       data: { 
         score: securityScore,
-        vulnerabilities: [],
-        encrypted: true,
-        secure: securityScore >= 80
+        threats: [],
+        safe: true,
+        recommendations: [
+          "No security threats detected",
+          "File is safe to use",
+        ],
+        checkedAt: new Date(),
+        checkDuration: 2200,
       } 
     },
-    brandCompliance: { status: "completed" as const },
+    brandCompliance: { 
+      status: "completed" as const,
+      data: {
+        score: Math.floor(rng() * 20) + 80,
+        colorCompliance: {
+          passed: true,
+          brandColorsUsed: [],
+          offBrandColors: [],
+        },
+        logoUsage: {
+          passed: true,
+          issues: [],
+        },
+        styleGuideAdherence: Math.floor(rng() * 20) + 80,
+        recommendations: ["Brand guidelines followed"],
+        checkedAt: new Date(),
+        checkDuration: 1100,
+      }
+    },
+    lastReviewedAt: new Date(),
+    reviewedBy: "system",
   }
 }
