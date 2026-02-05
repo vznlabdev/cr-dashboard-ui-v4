@@ -244,9 +244,98 @@ export function generateMockAssets(count: number = 75, seed: number = 12345): As
         const rand = rng()
         return rand < 0.7 ? "pending" : rand < 0.9 ? "approved" : "rejected"
       })(),
-      // Skip promptHistory, copyrightCheck fields for generated assets
     })
+    
+    // Add manually approved assets and reviewData based on approval status
+    const lastAsset = assets[assets.length - 1]
+    if (lastAsset.approvalStatus === "approved") {
+      // 30% of approved assets are manually approved (no reviewData)
+      if (rng() < 0.3) {
+        lastAsset.approvedBy = "admin-123"
+        lastAsset.approvedByName = random(teamMembers, rng).name
+        lastAsset.approvedAt = new Date(Date.now() - Math.floor(rng() * 30) * 24 * 60 * 60 * 1000)
+        lastAsset.approvalReason = "Approved for campaign urgency"
+        // Don't add reviewData - this is a manual approval
+      } else {
+        // 70% of approved assets have been checked
+        lastAsset.reviewData = generateBasicReviewData(rng)
+      }
+    } else if (lastAsset.approvalStatus === "pending") {
+      // 40% of pending assets have been checked
+      if (rng() < 0.4) {
+        lastAsset.reviewData = generateBasicReviewData(rng)
+      }
+      // Rest have no reviewData - needs check
+    }
   }
   
   return assets
+}
+
+// Helper function to generate basic review data
+function generateBasicReviewData(rng: () => number) {
+  const copyrightScore = Math.floor(rng() * 30) + 70 // 70-100
+  const accessibilityScore = Math.floor(rng() * 25) + 75 // 75-100
+  const seoScore = Math.floor(rng() * 30) + 65 // 65-95
+  const performanceScore = Math.floor(rng() * 35) + 60 // 60-95
+  const securityScore = Math.floor(rng() * 20) + 80 // 80-100
+  
+  return {
+    overallScore: Math.floor((copyrightScore + accessibilityScore + seoScore + performanceScore + securityScore) / 5),
+    checksCompleted: 5,
+    totalChecks: 5,
+    copyright: {
+      status: "completed" as const,
+      data: {
+        similarityScore: 100 - copyrightScore,
+        riskBreakdown: {
+          riskLevel: copyrightScore >= 80 ? "low" : copyrightScore >= 60 ? "medium" : "high" as const,
+          highRiskCount: copyrightScore < 60 ? 1 : 0,
+          mediumRiskCount: copyrightScore >= 60 && copyrightScore < 80 ? 1 : 0,
+          lowRiskCount: copyrightScore >= 80 ? 1 : 0,
+        },
+        checkedAt: new Date(),
+        matchedSources: [],
+      }
+    },
+    accessibility: { 
+      status: "completed" as const, 
+      data: { 
+        score: accessibilityScore,
+        wcagLevel: accessibilityScore >= 80 ? "AA" : "A",
+        issues: [],
+        passedChecks: Math.floor(rng() * 5) + 10,
+        totalChecks: 15
+      } 
+    },
+    seo: { 
+      status: "completed" as const, 
+      data: { 
+        score: seoScore, 
+        sizeRating: seoScore >= 80 ? "good" : "large" as const,
+        hasAltText: rng() > 0.3,
+        hasMetadata: rng() > 0.2,
+        keywords: []
+      } 
+    },
+    performance: { 
+      status: "completed" as const, 
+      data: { 
+        score: performanceScore,
+        loadTime: Math.floor(rng() * 2000) + 500,
+        fileSize: Math.floor(rng() * 1000000) + 100000,
+        optimized: performanceScore >= 70
+      } 
+    },
+    security: { 
+      status: "completed" as const, 
+      data: { 
+        score: securityScore,
+        vulnerabilities: [],
+        encrypted: true,
+        secure: securityScore >= 80
+      } 
+    },
+    brandCompliance: { status: "completed" as const },
+  }
 }

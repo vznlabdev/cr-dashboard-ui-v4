@@ -1050,10 +1050,12 @@ export default function AssetsPage() {
                                 <Sparkles className="h-3 w-3 text-purple-500 shrink-0" />
                               </div>
                             )}
-                            <ApprovalStatusIcon status={asset.approvalStatus} />
-                            {asset.reviewData?.overallScore && (
-                              <QualityScoreBadge score={asset.reviewData.overallScore} />
-                            )}
+                            <ApprovalStatusIcon asset={asset} />
+                            {asset.reviewData ? (
+                              <QualityScoreBadge asset={asset} />
+                            ) : asset.approvalStatus === "approved" && !asset.reviewData ? (
+                              <Badge variant="outline" className="text-[10px]">Manual</Badge>
+                            ) : null}
                             {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
                               <Badge variant="outline" className="text-[10px] font-mono px-1 py-0">
                                 v{(asset as any).versionGroup.currentVersionNumber}
@@ -1199,9 +1201,9 @@ export default function AssetsPage() {
                         {asset.contentType === "ai_generated" && (
                           <Sparkles className="h-3 w-3 text-purple-500" />
                         )}
-                        <ApprovalStatusIcon status={asset.approvalStatus} />
-                        {asset.reviewData?.overallScore && (
-                          <QualityScoreBadge score={asset.reviewData.overallScore} />
+                        <ApprovalStatusIcon asset={asset} showLabel />
+                        {asset.reviewData && (
+                          <QualityScoreBadge asset={asset} />
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">

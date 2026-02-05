@@ -42,6 +42,7 @@ import {
   Loader2,
   ChevronDown,
   CheckSquare,
+  User,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -360,11 +361,24 @@ export default function AssetApprovalsPage() {
 
   // Selection handlers
   // Approval handlers
-  const handleApprove = async (assetId: string) => {
+  const handleApprove = async (assetId: string, reason?: string) => {
     setIsProcessing(true)
     try {
       // INTEGRATION POINT: Call API to approve asset
       await new Promise((resolve) => setTimeout(resolve, 500))
+      
+      // Find the asset and update it with manual approval info
+      const assetIndex = mockAssets.findIndex(a => a.id === assetId)
+      if (assetIndex !== -1) {
+        mockAssets[assetIndex] = {
+          ...mockAssets[assetIndex],
+          approvalStatus: "approved",
+          approvedBy: "current-user-id",
+          approvedByName: "jgordon",
+          approvedAt: new Date(),
+          approvalReason: reason
+        }
+      }
       
       // Mark asset as approved
       setApprovedAssets(prev => new Set(prev).add(assetId))
@@ -375,6 +389,7 @@ export default function AssetApprovalsPage() {
         newSet.delete(assetId)
         return newSet
       })
+      forceUpdate({}) // Trigger re-render
     } catch (error) {
       toast.error("Failed to approve asset")
       console.error(error)
@@ -945,18 +960,8 @@ export default function AssetApprovalsPage() {
                             {asset.name}
                           </Link>
                           
-                          {/* Status badge / Quality scores */}
-                          {needsCheck ? (
-                            <Badge variant="outline" className="text-xs border-amber-500 text-amber-600 shrink-0">
-                              <Shield className="h-3 w-3 mr-1" />
-                              Needs Check
-                            </Badge>
-                          ) : checkingAssets.has(asset.id) ? (
-                            <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 shrink-0">
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              Checking...
-                            </Badge>
-                          ) : (
+                          {/* Status badge / Quality scores / Manual Approval */}
+                          {asset.reviewData ? (
                             <div className="flex items-center gap-1">
                               <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined} size="sm" />
                               <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
@@ -964,6 +969,26 @@ export default function AssetApprovalsPage() {
                               <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
                               <ScoreBadge icon={ShieldCheck} score={asset.reviewData?.security?.data?.score} size="sm" />
                             </div>
+                          ) : asset.approvalStatus === "approved" ? (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <User className="h-3.5 w-3.5" />
+                              <span>Manually approved by {asset.approvedByName || "Admin"}</span>
+                              {asset.approvedAt && (
+                                <span className="text-muted-foreground/60">
+                                  · {format(asset.approvedAt, "MMM d, yyyy")}
+                                </span>
+                              )}
+                            </div>
+                          ) : checkingAssets.has(asset.id) ? (
+                            <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 shrink-0">
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Checking...
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs border-amber-500 text-amber-600 shrink-0">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Needs Check
+                            </Badge>
                           )}
                         </div>
 

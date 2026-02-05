@@ -1,40 +1,102 @@
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, XCircle, FileEdit } from "lucide-react"
+import { CheckCircle, Clock, XCircle, ShieldCheck, ShieldAlert, User } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Asset } from "@/types/creative"
 
-// ApprovalStatusIcon component
+// Enhanced ApprovalStatusIcon with 3 states
 interface ApprovalStatusIconProps {
-  status?: "draft" | "pending" | "approved" | "rejected"
+  asset: Asset
   className?: string
+  showLabel?: boolean
 }
 
-export function ApprovalStatusIcon({ status, className }: ApprovalStatusIconProps) {
-  if (!status || status === "draft") return null
-  
-  const icons = {
-    approved: <CheckCircle className={cn("h-3.5 w-3.5 text-green-600 dark:text-green-400", className)} />,
-    pending: <Clock className={cn("h-3.5 w-3.5 text-amber-600 dark:text-amber-400", className)} />,
-    rejected: <XCircle className={cn("h-3.5 w-3.5 text-red-600 dark:text-red-400", className)} />
+export function ApprovalStatusIcon({ asset, className, showLabel = false }: ApprovalStatusIconProps) {
+  // State 1: Checked (has reviewData)
+  if (asset.reviewData) {
+    const Icon = ShieldCheck
+    return (
+      <div className="flex items-center gap-1.5" title="Quality checked">
+        <Icon className={cn("h-3.5 w-3.5 text-blue-600 dark:text-blue-400", className)} />
+        {showLabel && <span className="text-xs text-muted-foreground">Checked</span>}
+      </div>
+    )
   }
   
-  return (
-    <div title={`${status.charAt(0).toUpperCase() + status.slice(1)}`}>
-      {icons[status]}
-    </div>
-  )
+  // State 3: Manually Approved (approved without checks)
+  if (asset.approvalStatus === "approved" && !asset.reviewData) {
+    const approverName = asset.approvedByName || "Admin"
+    return (
+      <div className="flex items-center gap-1.5" title={`Manually approved by ${approverName}`}>
+        <User className={cn("h-3.5 w-3.5 text-green-600 dark:text-green-400", className)} />
+        {showLabel && (
+          <span className="text-xs text-muted-foreground">
+            Approved by {approverName}
+          </span>
+        )}
+      </div>
+    )
+  }
+  
+  // State 2: Needs Check (pending, no data)
+  if (!asset.reviewData && asset.approvalStatus === "pending") {
+    return (
+      <div className="flex items-center gap-1.5" title="Needs quality check">
+        <ShieldAlert className={cn("h-3.5 w-3.5 text-amber-600 dark:text-amber-400", className)} />
+        {showLabel && <span className="text-xs text-muted-foreground">Needs Check</span>}
+      </div>
+    )
+  }
+  
+  // Rejected state
+  if (asset.approvalStatus === "rejected") {
+    return (
+      <div className="flex items-center gap-1.5" title="Rejected">
+        <XCircle className={cn("h-3.5 w-3.5 text-red-600 dark:text-red-400", className)} />
+        {showLabel && <span className="text-xs text-muted-foreground">Rejected</span>}
+      </div>
+    )
+  }
+  
+  return null
 }
 
-// QualityScoreBadge component
+// QualityScoreBadge - only shown for checked assets
 interface QualityScoreBadgeProps {
-  score: number
+  asset?: Asset
+  score?: number
   className?: string
 }
 
-export function QualityScoreBadge({ score, className }: QualityScoreBadgeProps) {
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-    if (score >= 75) return "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
-    if (score >= 60) return "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+export function QualityScoreBadge({ asset, score, className }: QualityScoreBadgeProps) {
+  // Support both asset object and direct score prop for backwards compatibility
+  let displayScore: number | undefined
+  
+  if (asset) {
+    // Only show for checked assets
+    if (!asset.reviewData) {
+      return (
+        <span className={cn("text-xs text-muted-foreground", className)}>
+          —
+        </span>
+      )
+    }
+    displayScore = asset.reviewData.overallScore
+  } else if (score !== undefined) {
+    // Direct score prop (for task averages, etc.)
+    displayScore = score
+  }
+  
+  if (displayScore === undefined) {
+    return (
+      <span className={cn("text-xs text-muted-foreground", className)}>
+        —
+      </span>
+    )
+  }
+  const getScoreColor = (scoreValue: number) => {
+    if (scoreValue >= 90) return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+    if (scoreValue >= 75) return "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
+    if (scoreValue >= 60) return "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
     return "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400"
   }
   
@@ -43,12 +105,12 @@ export function QualityScoreBadge({ score, className }: QualityScoreBadgeProps) 
       variant="outline" 
       className={cn(
         "h-5 px-1.5 py-0 text-[10px] font-medium border-0",
-        getScoreColor(score),
+        getScoreColor(displayScore),
         className
       )}
-      title={`Quality Score: ${score}/100`}
+      title={`Quality Score: ${displayScore}/100`}
     >
-      {score}
+      {displayScore}
     </Badge>
   )
 }

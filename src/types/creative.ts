@@ -129,7 +129,9 @@ export interface AssetVersion {
   copyrightCheckData?: any
   approvalStatus?: "pending" | "approved" | "rejected"
   approvedBy?: string
+  approvedByName?: string // display name of approver
   approvedAt?: Date
+  approvalReason?: string // reason for manual approval
   
   // Comprehensive review data
   reviewData?: AssetReviewData
@@ -501,7 +503,9 @@ export interface Asset {
   copyrightCheckData?: CopyrightCheckData
   approvalStatus?: ApprovalStatus
   approvedBy?: string // admin user ID
+  approvedByName?: string // display name of approver
   approvedAt?: Date
+  approvalReason?: string // reason for manual approval
   rejectionReason?: string
   // Comprehensive review data
   reviewData?: AssetReviewData

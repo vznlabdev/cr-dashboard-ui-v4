@@ -35,6 +35,7 @@ import {
   Eye,
   Zap,
   ShieldCheck,
+  ShieldAlert,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -44,7 +45,7 @@ import { useCreators } from "@/contexts/creators-context"
 import { CreatorAvatarBadge } from "@/components/creators"
 import { ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, format } from "date-fns"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
