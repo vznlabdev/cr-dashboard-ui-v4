@@ -395,7 +395,16 @@ export default function AssetsPage() {
         setContentTypeFilter(view.filters.contentTypeFilter || 'all')
         setSortBy(view.filters.sortBy || 'date-desc')
       } else {
-        // Apply default view filters (existing logic)
+        // Reset all filters to defaults first for default views
+        if (viewId !== 'all') {
+          setBrandFilter('all')
+          setFileTypeFilter('all')
+          setDesignTypeFilter('all')
+          setContentTypeFilter('all')
+          setSortBy('date-desc')
+        }
+        
+        // Then apply specific filter for this view
         if ('fileType' in view && view.fileType) {
           setFileTypeFilter(view.fileType)
         }
@@ -527,9 +536,8 @@ export default function AssetsPage() {
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
-      <div ref={topRef} />
       {/* Page Header - Linear Style */}
-      <div className="flex items-center justify-between">
+      <div ref={topRef} className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Assets</h1>
           <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">

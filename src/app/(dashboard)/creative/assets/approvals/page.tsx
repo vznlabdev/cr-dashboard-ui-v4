@@ -60,6 +60,7 @@ export default function AssetApprovalsPage() {
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null)
   const [bulkRejectionReason, setBulkRejectionReason] = useState("")
   const [individualRejectionReason, setIndividualRejectionReason] = useState("")
+  const [bulkRejectAssetIds, setBulkRejectAssetIds] = useState<string[]>([])
   const [approvedAssets, setApprovedAssets] = useState<Set<string>>(new Set())
   const [rejectedAssets, setRejectedAssets] = useState<Set<string>>(new Set())
   const [showProcessed, setShowProcessed] = useState(false)
@@ -445,6 +446,9 @@ export default function AssetApprovalsPage() {
       return
     }
 
+    // Capture the current selection state
+    setBulkRejectAssetIds(selectedIds)
+    
     // Show inline reject reason input instead of prompt
     setShowRejectInput("bulk")
   }
@@ -823,7 +827,8 @@ export default function AssetApprovalsPage() {
                     toast.error("Please provide a rejection reason")
                     return
                   }
-                  const selectedIds = getSelectedAssetIds()
+                  // Use the stored selection from when the form opened
+                  const selectedIds = bulkRejectAssetIds
                   setIsProcessing(true)
                   try {
                     // INTEGRATION POINT: Call API to bulk reject assets
@@ -840,6 +845,7 @@ export default function AssetApprovalsPage() {
                     handleClearSelection()
                     setShowRejectInput(null)
                     setBulkRejectionReason("")
+                    setBulkRejectAssetIds([])
                   } catch (error) {
                     toast.error("Failed to reject assets")
                     console.error(error)
@@ -857,6 +863,7 @@ export default function AssetApprovalsPage() {
                 onClick={() => {
                   setShowRejectInput(null)
                   setBulkRejectionReason("")
+                  setBulkRejectAssetIds([])
                 }}
                 disabled={isProcessing}
               >
