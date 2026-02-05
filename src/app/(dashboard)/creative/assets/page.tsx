@@ -63,7 +63,7 @@ import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creat
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { UploadAssetDialog } from "@/components/creative"
+import { UploadAssetDialog, ApprovalStatusIcon, QualityScoreBadge } from "@/components/creative"
 import { AssetFileType, AssetContentType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG, AssetVersionGroup } from "@/types/creative"
 import { VersionStatusBadge } from "@/components/assets"
 import { SimplePagination } from "@/components/ui/simple-pagination"
@@ -1020,6 +1020,10 @@ export default function AssetsPage() {
                                 <Sparkles className="h-3 w-3 text-purple-500 shrink-0" />
                               </div>
                             )}
+                            <ApprovalStatusIcon status={asset.approvalStatus} />
+                            {asset.reviewData?.overallScore && (
+                              <QualityScoreBadge score={asset.reviewData.overallScore} />
+                            )}
                             {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (
                               <Badge variant="outline" className="text-[10px] font-mono px-1 py-0">
                                 v{(asset as any).versionGroup.currentVersionNumber}
@@ -1161,6 +1165,15 @@ export default function AssetsPage() {
                   <CardContent className="p-3 space-y-2">
                     <div>
                       <p className="text-sm font-medium truncate">{asset.name}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        {asset.contentType === "ai_generated" && (
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                        )}
+                        <ApprovalStatusIcon status={asset.approvalStatus} />
+                        {asset.reviewData?.overallScore && (
+                          <QualityScoreBadge score={asset.reviewData.overallScore} />
+                        )}
+                      </div>
                       <div className="flex items-center gap-1.5 mt-1">
                         {asset.brandColor && (
                           <div

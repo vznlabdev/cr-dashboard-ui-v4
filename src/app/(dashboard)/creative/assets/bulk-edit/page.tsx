@@ -72,7 +72,7 @@ function BulkEditPageContent() {
   
   // State
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
-    "brandId", "designType", "tags", "approvalStatus"
+    "brandId", "designType", "tags", "approvalStatus", "qualityScore"
   ])
   const [changes, setChanges] = useState<BulkEditChange[]>([])
   const [saving, setSaving] = useState(false)

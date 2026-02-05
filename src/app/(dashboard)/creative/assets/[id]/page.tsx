@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
-import type { AssetVersion, MatchedSource } from "@/types/creative"
+import type { AssetVersion, MatchedSource, AssetReviewData } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 
 export default function AssetDetailPage() {
@@ -74,6 +74,168 @@ export default function AssetDetailPage() {
   // Local asset state for optimistic updates
   const [localAsset, setLocalAsset] = useState<any>(null)
   
+  // Generate mock review data with realistic scores
+  const generateMockReviewData = (): AssetReviewData => {
+    const copyrightScore = Math.floor(Math.random() * 30) + 70 // 70-100
+    const accessibilityScore = Math.floor(Math.random() * 25) + 75 // 75-100
+    const seoScore = Math.floor(Math.random() * 30) + 65 // 65-95
+    const performanceScore = Math.floor(Math.random() * 35) + 60 // 60-95
+    const securityScore = Math.floor(Math.random() * 20) + 80 // 80-100
+    
+    const overallScore = Math.round(
+      (copyrightScore * 0.3 + accessibilityScore * 0.2 + seoScore * 0.15 + 
+       performanceScore * 0.2 + securityScore * 0.15)
+    )
+
+    const now = new Date()
+
+    return {
+      overallScore,
+      checksCompleted: 6,
+      totalChecks: 6,
+      copyright: {
+        status: "completed",
+        data: {
+          similarityScore: 100 - copyrightScore,
+          matchedSources: [],
+          riskBreakdown: {
+            copyrightRisk: Math.max(0, 100 - copyrightScore - 10),
+            trademarkRisk: Math.max(0, 100 - copyrightScore - 20),
+            overallRisk: 100 - copyrightScore,
+            riskLevel: copyrightScore >= 85 ? "low" : copyrightScore >= 70 ? "medium" : "high",
+          },
+          recommendations: [
+            copyrightScore >= 85 
+              ? "Asset passed copyright check with low similarity score."
+              : "Some similarities detected, review recommended.",
+            copyrightScore >= 85 
+              ? "No significant matches found in copyright databases."
+              : "Minor matches found, but likely acceptable.",
+          ],
+          checkedAt: now,
+          checkDuration: 4500,
+        },
+      },
+      accessibility: {
+        status: "completed",
+        data: {
+          score: accessibilityScore,
+          issues: accessibilityScore < 90 ? [{
+            severity: "minor" as const,
+            type: "contrast" as const,
+            description: "Some text elements could use higher contrast",
+            recommendation: "Increase contrast ratio for small text",
+          }] : [],
+          wcagLevel: accessibilityScore >= 90 ? "AAA" : "AA",
+          colorContrast: {
+            passed: true,
+            ratio: accessibilityScore >= 90 ? 7.1 : 4.8,
+            recommendation: accessibilityScore >= 90 
+              ? "Excellent contrast ratio" 
+              : "Meets WCAG AA standards",
+          },
+          altText: {
+            present: true,
+            quality: accessibilityScore >= 90 ? "good" : "fair",
+          },
+          recommendations: [
+            accessibilityScore >= 90 
+              ? "Excellent accessibility overall"
+              : "Good accessibility with room for improvement",
+            "Alt text is present and descriptive",
+          ],
+          checkedAt: now,
+          checkDuration: 1200,
+        },
+      },
+      seo: {
+        status: "completed",
+        data: {
+          score: seoScore,
+          imageOptimization: {
+            format: seoScore >= 80 ? "optimal" : "acceptable",
+            sizeRating: seoScore >= 80 ? "good" : "acceptable",
+            compressionPotential: Math.floor((100 - seoScore) / 2),
+          },
+          metadata: {
+            filenameQuality: seoScore >= 80 ? "descriptive" : "generic",
+            altTextPresent: true,
+            dimensionsOptimal: seoScore >= 75,
+          },
+          recommendations: [
+            seoScore >= 80 
+              ? "Good SEO optimization"
+              : "SEO could be improved",
+            "Consider further optimization opportunities",
+          ],
+          checkedAt: now,
+          checkDuration: 1500,
+        },
+      },
+      brandCompliance: {
+        status: "completed",
+        data: {
+          score: Math.floor(Math.random() * 20) + 80,
+          colorCompliance: {
+            passed: true,
+            brandColorsUsed: [],
+            offBrandColors: [],
+          },
+          logoUsage: {
+            passed: true,
+            issues: [],
+          },
+          styleGuideAdherence: Math.floor(Math.random() * 20) + 80,
+          recommendations: ["Brand guidelines followed"],
+          checkedAt: now,
+          checkDuration: 1100,
+        },
+      },
+      performance: {
+        status: "completed",
+        data: {
+          score: performanceScore,
+          fileSize: {
+            current: 2400000,
+            optimal: 2040000,
+            savings: Math.floor((100 - performanceScore) * 10000),
+          },
+          loadTimeEstimate: Math.floor(1500 - (performanceScore * 5)),
+          compressionScore: performanceScore,
+          formatRecommendation: performanceScore < 80 
+            ? "Consider WebP format for better compression"
+            : undefined,
+          recommendations: [
+            performanceScore >= 80 
+              ? "Good performance optimization"
+              : "Performance could be improved",
+            performanceScore < 80 
+              ? "Consider file size optimization"
+              : "File size is acceptable",
+          ],
+          checkedAt: now,
+          checkDuration: 900,
+        },
+      },
+      security: {
+        status: "completed",
+        data: {
+          score: securityScore,
+          threats: [],
+          safe: true,
+          recommendations: [
+            "No security threats detected",
+            "File is safe to use",
+          ],
+          checkedAt: now,
+          checkDuration: 2200,
+        },
+      },
+      lastReviewedAt: now,
+      reviewedBy: "system",
+    }
+  }
+  
   // Copyright check handlers
   const handleRunCheck = async () => {
     if (!canRunCheck()) {
@@ -84,9 +246,39 @@ export default function AssetDetailPage() {
     try {
       await useCredit()
       await new Promise(resolve => setTimeout(resolve, 2000))
-      toast.success("Copyright check completed")
+      
+      // Generate and apply review data
+      const reviewData = generateMockReviewData()
+      
+      // Update local state
+      setLocalAsset((prev: any) => ({
+        ...prev,
+        reviewData,
+        copyrightCheckStatus: "completed",
+        copyrightCheckData: reviewData.copyright.data
+      }))
+      
+      // Persist to mockAssets for cross-page navigation
+      const assetIndex = mockAssets.findIndex(a => a.id === assetId)
+      if (assetIndex !== -1) {
+        mockAssets[assetIndex].reviewData = reviewData
+        mockAssets[assetIndex].copyrightCheckStatus = "completed"
+        mockAssets[assetIndex].copyrightCheckData = reviewData.copyright.data
+      }
+      
+      // If version group, update the version
+      if (versionGroup && selectedVersionId) {
+        const versionIndex = versionGroup.versions.findIndex(v => v.id === selectedVersionId)
+        if (versionIndex !== -1) {
+          versionGroup.versions[versionIndex].reviewData = reviewData
+          versionGroup.versions[versionIndex].copyrightCheckStatus = "completed"
+          versionGroup.versions[versionIndex].copyrightCheckData = reviewData.copyright.data
+        }
+      }
+      
+      toast.success("Quality check completed - all scores updated")
     } catch (error) {
-      toast.error("Failed to run copyright check")
+      toast.error("Failed to run quality check")
     } finally {
       setIsRunningCheck(false)
     }
@@ -101,9 +293,39 @@ export default function AssetDetailPage() {
     try {
       await useCredit()
       await new Promise(resolve => setTimeout(resolve, 2000))
-      toast.success("Copyright check re-run completed")
+      
+      // Generate fresh review data
+      const reviewData = generateMockReviewData()
+      
+      // Update local state
+      setLocalAsset((prev: any) => ({
+        ...prev,
+        reviewData,
+        copyrightCheckStatus: "completed",
+        copyrightCheckData: reviewData.copyright.data
+      }))
+      
+      // Persist to mockAssets for cross-page navigation
+      const assetIndex = mockAssets.findIndex(a => a.id === assetId)
+      if (assetIndex !== -1) {
+        mockAssets[assetIndex].reviewData = reviewData
+        mockAssets[assetIndex].copyrightCheckStatus = "completed"
+        mockAssets[assetIndex].copyrightCheckData = reviewData.copyright.data
+      }
+      
+      // If version group, update the version
+      if (versionGroup && selectedVersionId) {
+        const versionIndex = versionGroup.versions.findIndex(v => v.id === selectedVersionId)
+        if (versionIndex !== -1) {
+          versionGroup.versions[versionIndex].reviewData = reviewData
+          versionGroup.versions[versionIndex].copyrightCheckStatus = "completed"
+          versionGroup.versions[versionIndex].copyrightCheckData = reviewData.copyright.data
+        }
+      }
+      
+      toast.success("Quality check re-run completed - all scores updated")
     } catch (error) {
-      toast.error("Failed to re-run copyright check")
+      toast.error("Failed to re-run quality check")
     } finally {
       setIsRunningCheck(false)
     }
@@ -845,32 +1067,32 @@ export default function AssetDetailPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <ScoreBadge 
                       icon={Shield} 
-                      score={asset.copyrightCheckData?.overallScore} 
+                      score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
                       label="Copyright"
                       lastChecked={asset.copyrightCheckData?.checkedAt}
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Eye} 
-                      score={asset.reviewData?.accessibility?.score} 
+                      score={asset.reviewData?.accessibility?.data?.score} 
                       label="Accessibility"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Zap} 
-                      score={asset.reviewData?.performance?.score} 
+                      score={asset.reviewData?.performance?.data?.score} 
                       label="Performance"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Palette} 
-                      score={asset.reviewData?.seo?.score} 
+                      score={asset.reviewData?.seo?.data?.score} 
                       label="SEO"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={ShieldCheck} 
-                      score={asset.reviewData?.security?.score} 
+                      score={asset.reviewData?.security?.data?.score} 
                       label="Security"
                       size="sm"
                     />
@@ -957,69 +1179,6 @@ export default function AssetDetailPage() {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Review Breakdown by Category */}
-              {asset.reviewData && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Quality Breakdown</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5">
-                    {asset.reviewData.accessibility && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Accessibility</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Eye} 
-                          score={asset.reviewData.accessibility.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.performance && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Performance</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Zap} 
-                          score={asset.reviewData.performance.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.seo && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>SEO</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Palette} 
-                          score={asset.reviewData.seo.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.security && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Security</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={ShieldCheck} 
-                          score={asset.reviewData.security.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               )}
@@ -1551,32 +1710,32 @@ export default function AssetDetailPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <ScoreBadge 
                       icon={Shield} 
-                      score={asset.copyrightCheckData?.overallScore} 
+                      score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
                       label="Copyright"
                       lastChecked={asset.copyrightCheckData?.checkedAt}
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Eye} 
-                      score={asset.reviewData?.accessibility?.score} 
+                      score={asset.reviewData?.accessibility?.data?.score} 
                       label="Accessibility"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Zap} 
-                      score={asset.reviewData?.performance?.score} 
+                      score={asset.reviewData?.performance?.data?.score} 
                       label="Performance"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={Palette} 
-                      score={asset.reviewData?.seo?.score} 
+                      score={asset.reviewData?.seo?.data?.score} 
                       label="SEO"
                       size="sm"
                     />
                     <ScoreBadge 
                       icon={ShieldCheck} 
-                      score={asset.reviewData?.security?.score} 
+                      score={asset.reviewData?.security?.data?.score} 
                       label="Security"
                       size="sm"
                     />
@@ -1663,69 +1822,6 @@ export default function AssetDetailPage() {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Review Breakdown by Category */}
-              {asset.reviewData && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Quality Breakdown</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5">
-                    {asset.reviewData.accessibility && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Accessibility</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Eye} 
-                          score={asset.reviewData.accessibility.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.performance && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Performance</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Zap} 
-                          score={asset.reviewData.performance.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.seo && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>SEO</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={Palette} 
-                          score={asset.reviewData.seo.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
-                    {asset.reviewData.security && (
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Security</span>
-                        </div>
-                        <ScoreBadge 
-                          icon={ShieldCheck} 
-                          score={asset.reviewData.security.score} 
-                          size="sm"
-                        />
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               )}

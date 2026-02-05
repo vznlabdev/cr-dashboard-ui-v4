@@ -48,17 +48,24 @@ export default function AssetApprovalsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [expandedAsset, setExpandedAsset] = useState<string | null>(null)
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null)
-  const [rejectionReason, setRejectionReason] = useState("")
+  const [bulkRejectionReason, setBulkRejectionReason] = useState("")
+  const [individualRejectionReason, setIndividualRejectionReason] = useState("")
   const [showManualApproveConfirm, setShowManualApproveConfirm] = useState(false)
   const [manualApproveReason, setManualApproveReason] = useState("")
+  const [approvedAssets, setApprovedAssets] = useState<Set<string>>(new Set())
+  const [rejectedAssets, setRejectedAssets] = useState<Set<string>>(new Set())
+  const [showProcessed, setShowProcessed] = useState(false)
   const { credits, getTotalAvailable } = useCopyrightCredits()
 
   // Get pending approval assets (including unchecked)
   const pendingAssets = useMemo(() => {
     return mockAssets.filter(
-      (asset) => asset.approvalStatus === "pending"
+      (asset) => 
+        asset.approvalStatus === "pending" && 
+        !approvedAssets.has(asset.id) &&
+        !rejectedAssets.has(asset.id)
     )
-  }, [])
+  }, [approvedAssets, rejectedAssets])
 
   // Categorize assets by check status
   const assetsByStatus = useMemo(() => {
@@ -71,7 +78,14 @@ export default function AssetApprovalsPage() {
 
   // Filter and sort assets
   const filteredAssets = useMemo(() => {
-    let filtered = pendingAssets.filter((asset) => {
+    // Include processed assets when showProcessed is true
+    let baseAssets = showProcessed 
+      ? [...pendingAssets, ...mockAssets.filter(a => 
+          approvedAssets.has(a.id) || rejectedAssets.has(a.id)
+        )]
+      : pendingAssets
+    
+    let filtered = baseAssets.filter((asset) => {
       const matchesSearch =
         asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asset.brandName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -103,7 +117,7 @@ export default function AssetApprovalsPage() {
     }
 
     return filtered
-  }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets])
+  }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets])
 
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
@@ -130,6 +144,10 @@ export default function AssetApprovalsPage() {
     try {
       // INTEGRATION POINT: Call API to approve asset
       await new Promise((resolve) => setTimeout(resolve, 500))
+      
+      // Mark asset as approved
+      setApprovedAssets(prev => new Set(prev).add(assetId))
+      
       toast.success("Asset approved successfully")
       setSelectedAssets((prev) => {
         const newSet = new Set(prev)
@@ -149,6 +167,10 @@ export default function AssetApprovalsPage() {
     try {
       // INTEGRATION POINT: Call API to reject asset
       await new Promise((resolve) => setTimeout(resolve, 500))
+      
+      // Mark asset as rejected
+      setRejectedAssets(prev => new Set(prev).add(assetId))
+      
       toast.success("Asset rejected")
       setSelectedAssets((prev) => {
         const newSet = new Set(prev)
@@ -173,6 +195,14 @@ export default function AssetApprovalsPage() {
     try {
       // INTEGRATION POINT: Call API to bulk approve assets
       await new Promise((resolve) => setTimeout(resolve, 1000))
+      
+      // Mark assets as approved in local state
+      setApprovedAssets(prev => {
+        const updated = new Set(prev)
+        selectedAssets.forEach(id => updated.add(id))
+        return updated
+      })
+      
       toast.success(`Approved ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
       setSelectedAssets(new Set())
     } catch (error) {
@@ -208,6 +238,14 @@ export default function AssetApprovalsPage() {
     try {
       // INTEGRATION POINT: Call API to manually approve assets with override
       await new Promise((resolve) => setTimeout(resolve, 1000))
+      
+      // Mark assets as approved
+      setApprovedAssets(prev => {
+        const updated = new Set(prev)
+        selectedAssets.forEach(id => updated.add(id))
+        return updated
+      })
+      
       toast.success(`Manually approved ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""} with override`)
       setSelectedAssets(new Set())
       setShowManualApproveConfirm(false)
@@ -261,12 +299,32 @@ export default function AssetApprovalsPage() {
             <Badge variant="secondary" className="text-xs">
               {pendingAssets.length} pending
             </Badge>
+            {(approvedAssets.size > 0 || rejectedAssets.size > 0) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowProcessed(!showProcessed)}
+                className="h-6 px-2 text-xs"
+              >
+                {showProcessed ? "Hide" : "Show"} Processed ({approvedAssets.size + rejectedAssets.size})
+              </Button>
+            )}
             {credits && (
               <Badge variant="outline" className="text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />
                 {getTotalAvailable()} credits
               </Badge>
             )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleBulkRunChecks}
+              disabled={selectedAssets.size === 0 || isProcessing || getTotalAvailable() < selectedAssets.size}
+              className="h-7 bg-blue-600 hover:bg-blue-700"
+            >
+              <Shield className="h-3.5 w-3.5 mr-1.5" />
+              Run Checks ({selectedAssets.size})
+            </Button>
           </div>
           <Link href="/creative/assets">
             <Button variant="outline" size="sm">
@@ -363,16 +421,6 @@ export default function AssetApprovalsPage() {
               <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
               Manual Approve
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkRunChecks}
-              disabled={selectedAssets.size === 0 || isProcessing || getTotalAvailable() < selectedAssets.size}
-              className="h-8"
-            >
-              <Shield className="h-3.5 w-3.5 mr-1.5" />
-              Run Checks ({selectedAssets.size})
-            </Button>
           </div>
         </div>
 
@@ -429,8 +477,8 @@ export default function AssetApprovalsPage() {
             <div className="space-y-2">
               <Label className="text-xs">Rejection Reason <span className="text-destructive">*</span></Label>
               <Textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                value={bulkRejectionReason}
+                onChange={(e) => setBulkRejectionReason(e.target.value)}
                 placeholder="Explain why these assets are being rejected..."
                 className="h-20 text-sm"
                 disabled={isProcessing}
@@ -441,7 +489,7 @@ export default function AssetApprovalsPage() {
                 size="sm"
                 variant="destructive"
                 onClick={async () => {
-                  if (!rejectionReason.trim()) {
+                  if (!bulkRejectionReason.trim()) {
                     toast.error("Please provide a rejection reason")
                     return
                   }
@@ -449,10 +497,18 @@ export default function AssetApprovalsPage() {
                   try {
                     // INTEGRATION POINT: Call API to bulk reject assets
                     await new Promise((resolve) => setTimeout(resolve, 1000))
+                    
+                    // Mark assets as rejected
+                    setRejectedAssets(prev => {
+                      const updated = new Set(prev)
+                      selectedAssets.forEach(id => updated.add(id))
+                      return updated
+                    })
+                    
                     toast.success(`Rejected ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
                     setSelectedAssets(new Set())
                     setShowRejectInput(null)
-                    setRejectionReason("")
+                    setBulkRejectionReason("")
                   } catch (error) {
                     toast.error("Failed to reject assets")
                     console.error(error)
@@ -460,7 +516,7 @@ export default function AssetApprovalsPage() {
                     setIsProcessing(false)
                   }
                 }}
-                disabled={!rejectionReason.trim() || isProcessing}
+                disabled={!bulkRejectionReason.trim() || isProcessing}
               >
                 {isProcessing ? "Processing..." : "Confirm Reject"}
               </Button>
@@ -469,7 +525,7 @@ export default function AssetApprovalsPage() {
                 variant="ghost"
                 onClick={() => {
                   setShowRejectInput(null)
-                  setRejectionReason("")
+                  setBulkRejectionReason("")
                 }}
                 disabled={isProcessing}
               >
@@ -513,9 +569,10 @@ export default function AssetApprovalsPage() {
               const needsCheck = !asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending"
               const isChecking = asset.copyrightCheckStatus === "checking"
               const isChecked = asset.copyrightCheckStatus === "completed"
+              const isProcessed = approvedAssets.has(asset.id) || rejectedAssets.has(asset.id)
 
               return (
-                <div key={asset.id} className="group">
+                <div key={asset.id} className={cn("group", isProcessed && "opacity-60 bg-muted/20")}>
                   {/* Main row */}
                   <div
                     className={cn(
@@ -697,8 +754,8 @@ export default function AssetApprovalsPage() {
                             <div className="space-y-2 pt-3 border-t">
                               <Label className="text-xs">Rejection Reason</Label>
                               <Textarea
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
+                                value={individualRejectionReason}
+                                onChange={(e) => setIndividualRejectionReason(e.target.value)}
                                 placeholder="Explain why this asset is being rejected..."
                                 className="h-20 text-sm"
                                 disabled={isProcessing}
@@ -707,8 +764,8 @@ export default function AssetApprovalsPage() {
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => handleReject(asset.id, rejectionReason)}
-                                  disabled={!rejectionReason.trim() || isProcessing}
+                                  onClick={() => handleReject(asset.id, individualRejectionReason)}
+                                  disabled={!individualRejectionReason.trim() || isProcessing}
                                 >
                                   {isProcessing ? "Processing..." : "Confirm Reject"}
                                 </Button>
@@ -717,7 +774,7 @@ export default function AssetApprovalsPage() {
                                   variant="ghost"
                                   onClick={() => {
                                     setShowRejectInput(null)
-                                    setRejectionReason("")
+                                    setIndividualRejectionReason("")
                                   }}
                                   disabled={isProcessing}
                                 >

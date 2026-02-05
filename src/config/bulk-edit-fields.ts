@@ -413,6 +413,15 @@ export const EDITABLE_FIELDS: EditableField[] = [
     path: "approvedAt",
     editable: false,
   },
+  {
+    id: "qualityScore",
+    label: "Quality",
+    type: "number",
+    category: "approval",
+    path: "reviewData.overallScore",
+    editable: false,
+    helpText: "Overall quality review score (0-100)",
+  },
   
   // VERSION MANAGEMENT
   {

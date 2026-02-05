@@ -43,6 +43,7 @@ import { validateAllTabs, countMediaItems, hasMediaContent } from "@/utils/media
 import { clearMediaDataFromStorage } from "@/contexts/MediaManagerContext"
 import { getMediaCount, getMediaSummary, getMediaWarnings, hasMediaData } from "@/utils/mediaHelpers"
 import { mockAssets } from "@/lib/mock-data/creative"
+import { QualityScoreBadge } from "@/components/creative"
 
 const STATUS_COLUMNS: { key: TaskStatus; label: string }[] = [
   { key: "submitted", label: "Submitted" },
@@ -134,6 +135,20 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
                   <span>{pendingApprovals}</span>
                 </Badge>
               )}
+              {/* Quality Score Badge - show average score of task assets */}
+              {(() => {
+                if (!task.mediaData?.assets) return null
+                const assetIds = task.mediaData.assets.map(a => a.id)
+                const assets = mockAssets.filter(a => assetIds.includes(a.id))
+                const reviewedAssets = assets.filter(a => a.reviewData?.overallScore)
+                if (reviewedAssets.length === 0) return null
+                
+                const avgScore = Math.round(
+                  reviewedAssets.reduce((sum, a) => sum + (a.reviewData?.overallScore || 0), 0) / reviewedAssets.length
+                )
+                
+                return <QualityScoreBadge score={avgScore} />
+              })()}
             </div>
             <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
           </div>
