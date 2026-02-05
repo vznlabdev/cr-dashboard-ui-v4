@@ -945,7 +945,7 @@ export default function AssetDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index) => (
+                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index: number) => (
                         <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
                           <div className="flex-1">
                             <p className="font-medium">{source.title}</p>
@@ -1651,7 +1651,7 @@ export default function AssetDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index) => (
+                      {asset.copyrightCheckData.matchedSources.map((source: MatchedSource, index: number) => (
                         <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
                           <div className="flex-1">
                             <p className="font-medium">{source.title}</p>
