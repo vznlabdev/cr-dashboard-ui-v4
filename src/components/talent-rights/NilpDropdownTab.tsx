@@ -55,7 +55,7 @@ export function NilpDropdownTab({ currentTab, onTabChange }: NilpDropdownTabProp
         <Button
           variant="ghost"
           className={cn(
-            "relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors hover:text-foreground h-auto rounded-none",
+            "relative flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium transition-colors hover:text-foreground h-auto rounded-none",
             isNilpActive
               ? "text-foreground"
               : "text-muted-foreground"
@@ -72,7 +72,7 @@ export function NilpDropdownTab({ currentTab, onTabChange }: NilpDropdownTabProp
             open && "rotate-180"
           )} />
           {isNilpActive && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-primary rounded-t-sm" />
           )}
         </Button>
       </DropdownMenuTrigger>

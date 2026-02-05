@@ -97,8 +97,7 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
             </span>
             
             {isExpiringSoon && isActive && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-orange-500 text-orange-600">
-                <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-orange-500 text-orange-600">
                 {daysUntilExpiration}d
               </Badge>
             )}
@@ -109,7 +108,7 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
             <div className="flex items-center gap-2">
               <Badge 
                 variant="outline" 
-                className={cn("text-[10px] px-1.5 py-0 h-5 border-0", statusConfig.color)}
+                className={cn("text-[9px] px-1 py-0 h-4 border-0", statusConfig.color)}
               >
                 {statusConfig.label}
               </Badge>
@@ -134,7 +133,7 @@ export function ContractCard({ contract, onSign, onRenewal, compact = false }: C
             <span className="text-muted-foreground/40">|</span>
             <div className="flex items-center gap-1.5">
               {contract.terms.exclusivity.isExclusive && (
-                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">Exclusive</Badge>
+                <Badge variant="secondary" className="text-[9px] px-0.5 py-0 h-3.5">Exclusive</Badge>
               )}
               {contract.compensation.paymentStatus === "paid" && (
                 <span className="text-green-600 flex items-center gap-1">

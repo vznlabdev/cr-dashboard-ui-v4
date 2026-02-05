@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import {
@@ -31,11 +32,14 @@ import {
   RotateCcw,
   FileBarChart,
   ChevronDown,
+  Eye,
+  Zap,
+  ShieldCheck,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { PromptContent } from "@/components/creative/PromptContent"
-import { InlineEditField } from "@/components/creative"
+import { InlineEditField, ScoreBadge } from "@/components/creative"
 import { useCreators } from "@/contexts/creators-context"
 import { CreatorAvatarBadge } from "@/components/creators"
 import { ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
@@ -62,7 +66,7 @@ export default function AssetDetailPage() {
   const versionGroup = getVersionGroupById(assetId)
   const [selectedVersionId, setSelectedVersionId] = useState(versionGroup?.currentVersionId || "")
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"overview" | "versions">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "quality" | "versions">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
@@ -298,25 +302,6 @@ export default function AssetDetailPage() {
                   New Version
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem asChild>
-                <Link href={`/creative/assets/${assetId}/review`}>
-                  <FileBarChart className="mr-2 h-4 w-4" />
-                  Full Review
-                </Link>
-              </DropdownMenuItem>
-              {(!asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending") && (
-                <DropdownMenuItem onClick={handleRunCheck} disabled={isRunningCheck}>
-                  <Shield className="mr-2 h-4 w-4" />
-                  {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
-                </DropdownMenuItem>
-              )}
-              {asset.copyrightCheckStatus === "completed" && (
-                <DropdownMenuItem onClick={handleRerunCheck} disabled={isRunningCheck}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Re-run Check (1 credit)
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => toast.success("Edit feature coming soon!")}>
                 Edit Details
               </DropdownMenuItem>
@@ -332,7 +317,7 @@ export default function AssetDetailPage() {
 
       {/* Tabs for Version Groups */}
       {versionGroup ? (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "versions")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
           {/* Tab Navigation - Linear Style */}
           <div className="border-b border-border/50">
             <TabsList className="h-auto bg-transparent p-0 gap-0">
@@ -347,6 +332,17 @@ export default function AssetDetailPage() {
                 className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
               >
                 Versions ({versionGroup.totalVersions})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quality"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+              >
+                Quality
+                {asset.copyrightCheckStatus === "completed" && (
+                  <Badge variant="secondary" className="ml-1.5 h-3.5 px-1 text-[9px]">
+                    Checked
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -418,122 +414,6 @@ export default function AssetDetailPage() {
                             key={field.id}
                             field={field}
                             value={asset[field.path as keyof typeof asset]}
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Expandable SEO Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
-                        {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={field.path.includes('.') 
-                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                              : asset[field.path as keyof typeof asset]
-                            }
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-                
-                {/* Copyright & Legal Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
-                        {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={field.path.includes('.') 
-                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                              : asset[field.path as keyof typeof asset]
-                            }
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-                
-                {/* Expandable Accessibility Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
-                        {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-                
-                {/* Performance Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
-                        {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-                
-                {/* Security Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
-                        {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
                             onSave={(newValue) => handleFieldSave(field.path, newValue)}
                           />
                         ))}
@@ -791,88 +671,32 @@ export default function AssetDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Copyright Check */}
+          {/* Copyright Check - Summary */}
           {asset.copyrightCheckStatus && asset.copyrightCheckData && (
             <Card>
-              <CardContent className="pt-4 space-y-2.5">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Copyright Check</p>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Similarity</span>
-                  <Badge
-                    variant={
-                      asset.copyrightCheckData.similarityScore < 30
-                        ? "default"
-                        : "destructive"
-                    }
-                    className={
-                      asset.copyrightCheckData.similarityScore < 30
-                        ? "bg-green-500 hover:bg-green-600"
-                        : ""
-                    }
+              <CardContent className="pt-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground">Copyright Status</p>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="h-auto p-0 text-xs"
+                    onClick={() => setActiveTab("quality")}
                   >
-                    {asset.copyrightCheckData.similarityScore}%
-                  </Badge>
+                    View Details
+                  </Button>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Risk Level</span>
-                  <Badge
-                    variant={
-                      asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
-                        ? "default"
-                        : asset.copyrightCheckData.riskBreakdown.riskLevel === "medium"
-                        ? "secondary"
-                        : "destructive"
-                    }
-                  >
-                    {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
-                  </Badge>
+                <div className="flex items-center gap-2">
+                  <ScoreBadge 
+                    icon={Shield} 
+                    score={asset.copyrightCheckData.overallScore} 
+                    size="sm"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
+                  </span>
                 </div>
-                
-                {asset.copyrightCheckData.matchedSources.length > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    {asset.copyrightCheckData.matchedSources.length} match
-                    {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
-                  </div>
-                )}
-
-                {asset.approvalStatus && (
-                  <>
-                    <Separator />
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Approval</span>
-                      <Badge
-                        variant={
-                          asset.approvalStatus === "approved"
-                            ? "default"
-                            : asset.approvalStatus === "rejected"
-                            ? "destructive"
-                            : "outline"
-                        }
-                        className={
-                          asset.approvalStatus === "approved"
-                            ? "bg-green-500 hover:bg-green-600"
-                            : asset.approvalStatus === "pending"
-                            ? "text-amber-600 border-amber-500"
-                            : ""
-                        }
-                      >
-                        {asset.approvalStatus === "approved" && (
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                        )}
-                        {asset.approvalStatus === "rejected" && (
-                          <XCircle className="h-3 w-3 mr-1" />
-                        )}
-                        {asset.approvalStatus === "pending" && (
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                        )}
-                        {asset.approvalStatus.charAt(0).toUpperCase() +
-                          asset.approvalStatus.slice(1)}
-                      </Badge>
-                    </div>
-                  </>
-                )}
               </CardContent>
             </Card>
           )}
@@ -984,11 +808,382 @@ export default function AssetDetailPage() {
               })}
             </div>
           </TabsContent>
+
+          {/* Quality Tab Content */}
+          <TabsContent value="quality" className="mt-2">
+            <div className="space-y-3">
+              {/* Quality Score Dashboard - Ultra Compact */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm">Quality Scores</CardTitle>
+                    <div className="flex items-center gap-2">
+                      {!asset.copyrightCheckStatus && (
+                        <Button size="sm" className="h-7 text-xs" onClick={handleRunCheck} disabled={isRunningCheck}>
+                          <Shield className="mr-1.5 h-3 w-3" />
+                          {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
+                        </Button>
+                      )}
+                      {asset.copyrightCheckStatus === "completed" && (
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleRerunCheck} disabled={isRunningCheck}>
+                          <RotateCcw className="mr-1.5 h-3 w-3" />
+                          {isRunningCheck ? "Checking..." : "Re-run"}
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                        <Link href={`/creative/assets/${assetId}/review`}>
+                          <FileBarChart className="mr-1.5 h-3 w-3" />
+                          Full Review
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Score Badges Row - Compact */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ScoreBadge 
+                      icon={Shield} 
+                      score={asset.copyrightCheckData?.overallScore} 
+                      label="Copyright"
+                      lastChecked={asset.copyrightCheckData?.checkedAt}
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Eye} 
+                      score={asset.reviewData?.accessibility?.score} 
+                      label="Accessibility"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Zap} 
+                      score={asset.reviewData?.performance?.score} 
+                      label="Performance"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Palette} 
+                      score={asset.reviewData?.seo?.score} 
+                      label="SEO"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={ShieldCheck} 
+                      score={asset.reviewData?.security?.score} 
+                      label="Security"
+                      size="sm"
+                    />
+                  </div>
+
+                  {/* Copyright Check Details */}
+                  {asset.copyrightCheckData && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Similarity</span>
+                          <Badge
+                            variant={asset.copyrightCheckData.similarityScore < 30 ? "default" : "destructive"}
+                            className={cn(
+                              "h-5 px-2 text-xs",
+                              asset.copyrightCheckData.similarityScore < 30 && "bg-green-500 hover:bg-green-600"
+                            )}
+                          >
+                            {asset.copyrightCheckData.similarityScore}%
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Risk Level</span>
+                          <Badge
+                            variant={
+                              asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
+                                ? "default"
+                                : asset.copyrightCheckData.riskBreakdown.riskLevel === "medium"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            className="h-5 px-2 text-xs"
+                          >
+                            {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
+                          </Badge>
+                        </div>
+                        
+                        {asset.copyrightCheckData.matchedSources.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {asset.copyrightCheckData.matchedSources.length} potential {asset.copyrightCheckData.matchedSources.length === 1 ? 'match' : 'matches'} found
+                          </div>
+                        )}
+                        
+                        {asset.copyrightCheckData.checkedAt && (
+                          <div className="text-xs text-muted-foreground">
+                            Last checked {formatDateLong(asset.copyrightCheckData.checkedAt)}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* No Check Yet State */}
+                  {!asset.copyrightCheckStatus && (
+                    <Alert className="bg-muted/30 border-muted">
+                      <Shield className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        No copyright check has been run yet. Run a check to analyze this asset for potential copyright issues.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Matched Sources (if any) */}
+              {asset.copyrightCheckData?.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Potential Matches</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {asset.copyrightCheckData.matchedSources.map((source, index) => (
+                        <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
+                          <div className="flex-1">
+                            <p className="font-medium">{source.title}</p>
+                            <p className="text-muted-foreground mt-0.5">{source.source}</p>
+                          </div>
+                          <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                            {source.similarity}%
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Review Breakdown by Category */}
+              {asset.reviewData && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Quality Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2.5">
+                    {asset.reviewData.accessibility && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Accessibility</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Eye} 
+                          score={asset.reviewData.accessibility.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.performance && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Performance</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Zap} 
+                          score={asset.reviewData.performance.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.seo && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>SEO</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Palette} 
+                          score={asset.reviewData.seo.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.security && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Security</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={ShieldCheck} 
+                          score={asset.reviewData.security.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Detailed Quality Review Modules */}
+              <div className="space-y-3 mt-6">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Detailed Review</h3>
+                
+                {/* Expandable SEO Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Copyright & Legal Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Expandable Accessibility Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Performance Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Security Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       ) : (
-        <>
-        {/* Regular Asset - Two Column Grid */}
-        <div className="grid lg:grid-cols-3 gap-3">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
+          {/* Tab Navigation - Linear Style */}
+          <div className="border-b border-border/50">
+            <TabsList className="h-auto bg-transparent p-0 gap-0">
+              <TabsTrigger 
+                value="overview"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quality"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
+              >
+                Quality
+                {asset.copyrightCheckStatus === "completed" && (
+                  <Badge variant="secondary" className="ml-1.5 h-3.5 px-1 text-[9px]">
+                    Checked
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Overview Tab Content */}
+          <TabsContent value="overview" className="mt-2">
+            {/* Regular Asset - Two Column Grid */}
+            <div className="grid lg:grid-cols-3 gap-3">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-3">
             {/* Basic Information Card - Inline Editable */}
@@ -1053,122 +1248,6 @@ export default function AssetDetailPage() {
                         key={field.id}
                         field={field}
                         value={asset[field.path as keyof typeof asset]}
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            {/* Expandable SEO Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
-                    {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={field.path.includes('.') 
-                          ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                          : asset[field.path as keyof typeof asset]
-                        }
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            {/* Copyright & Legal Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
-                    {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={field.path.includes('.') 
-                          ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                          : asset[field.path as keyof typeof asset]
-                        }
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            {/* Expandable Accessibility Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
-                    {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            {/* Performance Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
-                    {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            {/* Security Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
-                    {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)}
                         onSave={(newValue) => handleFieldSave(field.path, newValue)}
                       />
                     ))}
@@ -1402,95 +1481,386 @@ export default function AssetDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Copyright Check */}
+            {/* Copyright Check - Summary */}
             {asset.copyrightCheckStatus && asset.copyrightCheckData && (
               <Card>
-                <CardContent className="pt-4 space-y-2.5">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Copyright Check</p>
-                  
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Similarity</span>
-                    <Badge
-                      variant={
-                        asset.copyrightCheckData.similarityScore < 30
-                          ? "default"
-                          : "destructive"
-                      }
-                      className={
-                        asset.copyrightCheckData.similarityScore < 30
-                          ? "bg-green-500 hover:bg-green-600"
-                          : ""
-                      }
+                <CardContent className="pt-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-muted-foreground">Copyright Status</p>
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="h-auto p-0 text-xs"
+                      onClick={() => setActiveTab("quality")}
                     >
-                      {asset.copyrightCheckData.similarityScore}%
-                    </Badge>
+                      View Details
+                    </Button>
                   </div>
                   
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Risk Level</span>
-                    <Badge
-                      variant={
-                        asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
-                          ? "default"
-                          : asset.copyrightCheckData.riskBreakdown.riskLevel === "medium"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
-                    </Badge>
+                  <div className="flex items-center gap-2">
+                    <ScoreBadge 
+                      icon={Shield} 
+                      score={asset.copyrightCheckData.overallScore} 
+                      size="sm"
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
+                    </span>
                   </div>
-                  
-                  {asset.copyrightCheckData.matchedSources.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      {asset.copyrightCheckData.matchedSources.length} match
-                      {asset.copyrightCheckData.matchedSources.length !== 1 ? "es" : ""} found
-                    </div>
-                  )}
-
-                  {asset.approvalStatus && (
-                    <>
-                      <Separator />
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Approval</span>
-                        <Badge
-                          variant={
-                            asset.approvalStatus === "approved"
-                              ? "default"
-                              : asset.approvalStatus === "rejected"
-                              ? "destructive"
-                              : "outline"
-                          }
-                          className={
-                            asset.approvalStatus === "approved"
-                              ? "bg-green-500 hover:bg-green-600"
-                              : asset.approvalStatus === "pending"
-                              ? "text-amber-600 border-amber-500"
-                              : ""
-                          }
-                        >
-                          {asset.approvalStatus === "approved" && (
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                          )}
-                          {asset.approvalStatus === "rejected" && (
-                            <XCircle className="h-3 w-3 mr-1" />
-                          )}
-                          {asset.approvalStatus === "pending" && (
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                          )}
-                          {asset.approvalStatus.charAt(0).toUpperCase() +
-                            asset.approvalStatus.slice(1)}
-                        </Badge>
-                      </div>
-                    </>
-                  )}
                 </CardContent>
               </Card>
             )}
 
           </div>
         </div>
-        </>
+          </TabsContent>
+
+          {/* Quality Tab Content */}
+          <TabsContent value="quality" className="mt-2">
+            <div className="space-y-3">
+              {/* Quality Score Dashboard - Ultra Compact */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm">Quality Scores</CardTitle>
+                    <div className="flex items-center gap-2">
+                      {!asset.copyrightCheckStatus && (
+                        <Button size="sm" className="h-7 text-xs" onClick={handleRunCheck} disabled={isRunningCheck}>
+                          <Shield className="mr-1.5 h-3 w-3" />
+                          {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
+                        </Button>
+                      )}
+                      {asset.copyrightCheckStatus === "completed" && (
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleRerunCheck} disabled={isRunningCheck}>
+                          <RotateCcw className="mr-1.5 h-3 w-3" />
+                          {isRunningCheck ? "Checking..." : "Re-run"}
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                        <Link href={`/creative/assets/${assetId}/review`}>
+                          <FileBarChart className="mr-1.5 h-3 w-3" />
+                          Full Review
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Score Badges Row - Compact */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ScoreBadge 
+                      icon={Shield} 
+                      score={asset.copyrightCheckData?.overallScore} 
+                      label="Copyright"
+                      lastChecked={asset.copyrightCheckData?.checkedAt}
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Eye} 
+                      score={asset.reviewData?.accessibility?.score} 
+                      label="Accessibility"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Zap} 
+                      score={asset.reviewData?.performance?.score} 
+                      label="Performance"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={Palette} 
+                      score={asset.reviewData?.seo?.score} 
+                      label="SEO"
+                      size="sm"
+                    />
+                    <ScoreBadge 
+                      icon={ShieldCheck} 
+                      score={asset.reviewData?.security?.score} 
+                      label="Security"
+                      size="sm"
+                    />
+                  </div>
+
+                  {/* Copyright Check Details */}
+                  {asset.copyrightCheckData && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Similarity</span>
+                          <Badge
+                            variant={asset.copyrightCheckData.similarityScore < 30 ? "default" : "destructive"}
+                            className={cn(
+                              "h-5 px-2 text-xs",
+                              asset.copyrightCheckData.similarityScore < 30 && "bg-green-500 hover:bg-green-600"
+                            )}
+                          >
+                            {asset.copyrightCheckData.similarityScore}%
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Risk Level</span>
+                          <Badge
+                            variant={
+                              asset.copyrightCheckData.riskBreakdown.riskLevel === "low"
+                                ? "default"
+                                : asset.copyrightCheckData.riskBreakdown.riskLevel === "medium"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            className="h-5 px-2 text-xs"
+                          >
+                            {asset.copyrightCheckData.riskBreakdown.riskLevel.toUpperCase()}
+                          </Badge>
+                        </div>
+                        
+                        {asset.copyrightCheckData.matchedSources.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {asset.copyrightCheckData.matchedSources.length} potential {asset.copyrightCheckData.matchedSources.length === 1 ? 'match' : 'matches'} found
+                          </div>
+                        )}
+                        
+                        {asset.copyrightCheckData.checkedAt && (
+                          <div className="text-xs text-muted-foreground">
+                            Last checked {formatDateLong(asset.copyrightCheckData.checkedAt)}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* No Check Yet State */}
+                  {!asset.copyrightCheckStatus && (
+                    <Alert className="bg-muted/30 border-muted">
+                      <Shield className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        No copyright check has been run yet. Run a check to analyze this asset for potential copyright issues.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Matched Sources (if any) */}
+              {asset.copyrightCheckData?.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Potential Matches</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {asset.copyrightCheckData.matchedSources.map((source, index) => (
+                        <div key={index} className="flex items-start justify-between p-2 rounded-lg border bg-muted/20 text-xs">
+                          <div className="flex-1">
+                            <p className="font-medium">{source.title}</p>
+                            <p className="text-muted-foreground mt-0.5">{source.source}</p>
+                          </div>
+                          <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                            {source.similarity}%
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Review Breakdown by Category */}
+              {asset.reviewData && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Quality Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2.5">
+                    {asset.reviewData.accessibility && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Accessibility</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Eye} 
+                          score={asset.reviewData.accessibility.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.performance && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Performance</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Zap} 
+                          score={asset.reviewData.performance.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.seo && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>SEO</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={Palette} 
+                          score={asset.reviewData.seo.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    {asset.reviewData.security && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Security</span>
+                        </div>
+                        <ScoreBadge 
+                          icon={ShieldCheck} 
+                          score={asset.reviewData.security.score} 
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Detailed Quality Review Modules */}
+              <div className="space-y-3 mt-6">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Detailed Review</h3>
+                
+                {/* Expandable SEO Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">SEO & Metadata</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "seo").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Copyright & Legal Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Copyright & Legal</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "copyright").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Expandable Accessibility Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessibility</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "accessibility").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Performance Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Performance</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "performance").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                {/* Security Section */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <Card className="mt-2 border-l-2 border-l-accent">
+                      <CardContent className="pt-4 space-y-3">
+                        {EDITABLE_FIELDS.filter(f => f.category === "security").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={field.path.includes('.') 
+                              ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                              : asset[field.path as keyof typeof asset]
+                            }
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Submit Version Dialog */}

@@ -243,7 +243,7 @@ export default function TalentRightsDetailPage() {
               <TabsTrigger value="contracts" className="whitespace-nowrap rounded-none">
                 Contracts
                 {contractsForTalent.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-4 px-1.5 text-[10px]">
+                  <Badge variant="secondary" className="ml-1.5 h-3.5 px-1 text-[9px]">
                     {contractsForTalent.length}
                   </Badge>
                 )}

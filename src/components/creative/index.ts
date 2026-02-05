@@ -14,6 +14,7 @@ export { AssetPreviewModal } from "./AssetPreviewModal"
 export { UploadAssetDialog } from "./upload-asset-dialog"
 export { CopyrightCheckReview } from "./copyright-check-review"
 export { PromptHistory } from "./PromptHistory"
+export { ScoreBadge } from "./ScoreBadge"
 
 // Bulk Edit Components
 export { BulkEditorSheet } from "./BulkEditorSheet"
