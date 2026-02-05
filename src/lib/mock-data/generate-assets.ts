@@ -289,7 +289,7 @@ function generateBasicReviewData(rng: () => number) {
       data: {
         similarityScore: 100 - copyrightScore,
         riskBreakdown: {
-          riskLevel: copyrightScore >= 80 ? "low" : copyrightScore >= 60 ? "medium" : "high" as const,
+          riskLevel: (copyrightScore >= 80 ? "low" : copyrightScore >= 60 ? "medium" : "high") as "low" | "medium" | "high",
           highRiskCount: copyrightScore < 60 ? 1 : 0,
           mediumRiskCount: copyrightScore >= 60 && copyrightScore < 80 ? 1 : 0,
           lowRiskCount: copyrightScore >= 80 ? 1 : 0,
