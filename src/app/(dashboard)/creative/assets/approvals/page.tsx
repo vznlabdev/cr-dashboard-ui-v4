@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
-import { Asset } from "@/types/creative"
+import { Asset, AssetReviewData } from "@/types/creative"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -55,7 +55,8 @@ export default function AssetApprovalsPage() {
   const [approvedAssets, setApprovedAssets] = useState<Set<string>>(new Set())
   const [rejectedAssets, setRejectedAssets] = useState<Set<string>>(new Set())
   const [showProcessed, setShowProcessed] = useState(false)
-  const { credits, getTotalAvailable } = useCopyrightCredits()
+  const [checkingAssets, setCheckingAssets] = useState<Set<string>>(new Set())
+  const { credits, getTotalAvailable, useCredit } = useCopyrightCredits()
 
   // Get pending approval assets (including unchecked)
   const pendingAssets = useMemo(() => {
@@ -119,6 +120,168 @@ export default function AssetApprovalsPage() {
     return filtered
   }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets])
 
+  // Generate mock review data for quality checks
+  const generateMockReviewData = (): AssetReviewData => {
+    const copyrightScore = Math.floor(Math.random() * 30) + 70 // 70-100
+    const accessibilityScore = Math.floor(Math.random() * 25) + 75 // 75-100
+    const seoScore = Math.floor(Math.random() * 30) + 65 // 65-95
+    const performanceScore = Math.floor(Math.random() * 35) + 60 // 60-95
+    const securityScore = Math.floor(Math.random() * 20) + 80 // 80-100
+    
+    const overallScore = Math.round(
+      (copyrightScore * 0.3 + accessibilityScore * 0.2 + seoScore * 0.15 + 
+       performanceScore * 0.2 + securityScore * 0.15)
+    )
+
+    const now = new Date()
+
+    return {
+      overallScore,
+      checksCompleted: 6,
+      totalChecks: 6,
+      copyright: {
+        status: "completed",
+        data: {
+          similarityScore: 100 - copyrightScore,
+          matchedSources: [],
+          riskBreakdown: {
+            copyrightRisk: Math.max(0, 100 - copyrightScore - 10),
+            trademarkRisk: Math.max(0, 100 - copyrightScore - 20),
+            overallRisk: 100 - copyrightScore,
+            riskLevel: copyrightScore >= 85 ? "low" : copyrightScore >= 70 ? "medium" : "high",
+          },
+          recommendations: [
+            copyrightScore >= 85 
+              ? "Asset passed copyright check with low similarity score."
+              : "Some similarities detected, review recommended.",
+            copyrightScore >= 85 
+              ? "No significant matches found in copyright databases."
+              : "Minor matches found, but likely acceptable.",
+          ],
+          checkedAt: now,
+          checkDuration: 4500,
+        },
+      },
+      accessibility: {
+        status: "completed",
+        data: {
+          score: accessibilityScore,
+          issues: accessibilityScore < 90 ? [{
+            severity: "minor" as const,
+            type: "contrast" as const,
+            description: "Some text elements could use higher contrast",
+            recommendation: "Increase contrast ratio for small text",
+          }] : [],
+          wcagLevel: accessibilityScore >= 90 ? "AAA" : "AA",
+          colorContrast: {
+            passed: true,
+            ratio: accessibilityScore >= 90 ? 7.1 : 4.8,
+            recommendation: accessibilityScore >= 90 
+              ? "Excellent contrast ratio" 
+              : "Meets WCAG AA standards",
+          },
+          altText: {
+            present: true,
+            quality: accessibilityScore >= 90 ? "good" : "fair",
+          },
+          recommendations: [
+            accessibilityScore >= 90 
+              ? "Excellent accessibility overall"
+              : "Good accessibility with room for improvement",
+            "Alt text is present and descriptive",
+          ],
+          checkedAt: now,
+          checkDuration: 1200,
+        },
+      },
+      seo: {
+        status: "completed",
+        data: {
+          score: seoScore,
+          imageOptimization: {
+            format: seoScore >= 80 ? "optimal" : "acceptable",
+            sizeRating: seoScore >= 80 ? "good" : "large",
+            compressionPotential: Math.floor((100 - seoScore) / 2),
+          },
+          metadata: {
+            filenameQuality: seoScore >= 80 ? "descriptive" : "generic",
+            altTextPresent: true,
+            dimensionsOptimal: seoScore >= 75,
+          },
+          recommendations: [
+            seoScore >= 80 
+              ? "Good SEO optimization"
+              : "SEO could be improved",
+            "Consider further optimization opportunities",
+          ],
+          checkedAt: now,
+          checkDuration: 1500,
+        },
+      },
+      brandCompliance: {
+        status: "completed",
+        data: {
+          score: Math.floor(Math.random() * 20) + 80,
+          colorCompliance: {
+            passed: true,
+            brandColorsUsed: [],
+            offBrandColors: [],
+          },
+          logoUsage: {
+            passed: true,
+            issues: [],
+          },
+          styleGuideAdherence: Math.floor(Math.random() * 20) + 80,
+          recommendations: ["Brand guidelines followed"],
+          checkedAt: now,
+          checkDuration: 1100,
+        },
+      },
+      performance: {
+        status: "completed",
+        data: {
+          score: performanceScore,
+          fileSize: {
+            current: 2400000,
+            optimal: 2040000,
+            savings: Math.floor((100 - performanceScore) * 10000),
+          },
+          loadTimeEstimate: Math.floor(1500 - (performanceScore * 5)),
+          compressionScore: performanceScore,
+          formatRecommendation: performanceScore < 80 
+            ? "Consider WebP format for better compression"
+            : undefined,
+          recommendations: [
+            performanceScore >= 80 
+              ? "Good performance optimization"
+              : "Performance could be improved",
+            performanceScore < 80 
+              ? "Consider file size optimization"
+              : "File size is acceptable",
+          ],
+          checkedAt: now,
+          checkDuration: 900,
+        },
+      },
+      security: {
+        status: "completed",
+        data: {
+          score: securityScore,
+          threats: [],
+          safe: true,
+          recommendations: [
+            "No security threats detected",
+            "File is safe to use",
+          ],
+          checkedAt: now,
+          checkDuration: 2200,
+        },
+      },
+      lastReviewedAt: now,
+      reviewedBy: "system",
+    }
+  }
+
   // Selection handlers
   const handleSelect = (id: string, selected: boolean) => {
     const newSelected = new Set(selectedAssets)
@@ -177,6 +340,10 @@ export default function AssetApprovalsPage() {
         newSet.delete(assetId)
         return newSet
       })
+      
+      // Reset rejection form state
+      setShowRejectInput(null)
+      setIndividualRejectionReason("")
     } catch (error) {
       toast.error("Failed to reject asset")
       console.error(error)
@@ -264,7 +431,30 @@ export default function AssetApprovalsPage() {
       return
     }
 
-    const creditsNeeded = selectedAssets.size
+    // Separate assets that need checks vs already have scores
+    const assetsToCheck: string[] = []
+    const alreadyChecked: string[] = []
+    
+    selectedAssets.forEach(id => {
+      const asset = mockAssets.find(a => a.id === id)
+      if (asset?.reviewData) {
+        alreadyChecked.push(id)
+      } else {
+        assetsToCheck.push(id)
+      }
+    })
+
+    // Show skip notification if applicable
+    if (alreadyChecked.length > 0) {
+      toast.info(`Skipped ${alreadyChecked.length} already checked asset${alreadyChecked.length !== 1 ? 's' : ''}`)
+    }
+
+    if (assetsToCheck.length === 0) {
+      toast.error("All selected assets already have quality scores")
+      return
+    }
+
+    const creditsNeeded = assetsToCheck.length
     const creditsAvailable = getTotalAvailable()
 
     if (creditsNeeded > creditsAvailable) {
@@ -273,18 +463,39 @@ export default function AssetApprovalsPage() {
     }
 
     setIsProcessing(true)
-    try {
-      // INTEGRATION POINT: Call API to run copyright checks on multiple assets
-      // This should update copyrightCheckStatus to "checking" then "completed"
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      toast.success(`Running checks on ${selectedAssets.size} asset${selectedAssets.size !== 1 ? "s" : ""}`)
-      // Don't clear selection - let user see results and approve
-    } catch (error) {
-      toast.error("Failed to run checks")
-      console.error(error)
-    } finally {
-      setIsProcessing(false)
+    
+    // Process each asset sequentially with visual feedback
+    for (const assetId of assetsToCheck) {
+      setCheckingAssets(prev => new Set(prev).add(assetId))
+      
+      try {
+        // Consume credit before running check
+        await useCredit()
+        
+        // INTEGRATION POINT: Call API to run checks and generate reviewData
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // Generate mock review data and update asset
+        const mockReviewData = generateMockReviewData()
+        const assetIndex = mockAssets.findIndex(a => a.id === assetId)
+        if (assetIndex !== -1) {
+          mockAssets[assetIndex].reviewData = mockReviewData
+          mockAssets[assetIndex].copyrightCheckStatus = "completed"
+        }
+      } catch (error) {
+        console.error(`Failed to check asset ${assetId}:`, error)
+        toast.error(`Failed to check asset: ${error}`)
+      } finally {
+        setCheckingAssets(prev => {
+          const next = new Set(prev)
+          next.delete(assetId)
+          return next
+        })
+      }
     }
+    
+    setIsProcessing(false)
+    toast.success(`Completed checks on ${assetsToCheck.length} asset${assetsToCheck.length !== 1 ? 's' : ''}`)
   }
 
   const allSelected = filteredAssets.length > 0 && selectedAssets.size === filteredAssets.length
@@ -600,30 +811,25 @@ export default function AssetApprovalsPage() {
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="text-sm font-medium truncate">{asset.name}</span>
                           
-                          {/* Status badge */}
+                          {/* Status badge / Quality scores */}
                           {needsCheck ? (
                             <Badge variant="outline" className="text-xs border-amber-500 text-amber-600 shrink-0">
                               <Shield className="h-3 w-3 mr-1" />
                               Needs Check
                             </Badge>
-                          ) : isChecking ? (
+                          ) : checkingAssets.has(asset.id) ? (
                             <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 shrink-0">
                               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                               Checking...
                             </Badge>
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs shrink-0",
-                                riskLevel === "high" && "border-red-500 text-red-600",
-                                riskLevel === "medium" && "border-amber-500 text-amber-600",
-                                riskLevel === "low" && "border-green-500 text-green-600"
-                              )}
-                            >
-                              {riskLevel === "high" && <AlertTriangle className="h-3 w-3 mr-1" />}
-                              {riskLevel.toUpperCase()}
-                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined} size="sm" />
+                              <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
+                              <ScoreBadge icon={Zap} score={asset.reviewData?.performance?.data?.score} size="sm" />
+                              <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
+                              <ScoreBadge icon={ShieldCheck} score={asset.reviewData?.security?.data?.score} size="sm" />
+                            </div>
                           )}
                         </div>
 
@@ -678,44 +884,91 @@ export default function AssetApprovalsPage() {
                           <Button
                             size="sm"
                             onClick={async () => {
-                              setIsProcessing(true)
+                              if (asset.reviewData) {
+                                toast.info("Asset already has quality scores. Use 'Re-run Check' if needed.")
+                                return
+                              }
+                              
+                              setCheckingAssets(prev => new Set(prev).add(asset.id))
                               try {
-                                await new Promise((resolve) => setTimeout(resolve, 2000))
-                                toast.success("Check completed")
+                                // Consume credit before running check
+                                await useCredit()
+                                
+                                await new Promise((resolve) => setTimeout(resolve, 1500))
+                                
+                                const mockReviewData = generateMockReviewData()
+                                const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
+                                if (assetIndex !== -1) {
+                                  mockAssets[assetIndex].reviewData = mockReviewData
+                                  mockAssets[assetIndex].copyrightCheckStatus = "completed"
+                                }
+                                
+                                toast.success("Quality check completed")
                               } catch (error) {
                                 toast.error("Failed to run check")
+                                console.error(error)
                               } finally {
-                                setIsProcessing(false)
+                                setCheckingAssets(prev => {
+                                  const next = new Set(prev)
+                                  next.delete(asset.id)
+                                  return next
+                                })
                               }
                             }}
-                            disabled={isProcessing || getTotalAvailable() < 1}
+                            disabled={checkingAssets.has(asset.id) || getTotalAvailable() < 1}
                           >
                             <Shield className="h-3.5 w-3.5 mr-1.5" />
                             Run Check (1 credit)
                           </Button>
                         </div>
-                      ) : isChecking ? (
+                      ) : checkingAssets.has(asset.id) ? (
                         <div className="text-center py-4">
                           <Loader2 className="h-8 w-8 text-blue-500 mx-auto mb-2 animate-spin" />
-                          <p className="text-sm text-muted-foreground">Running copyright check...</p>
+                          <p className="text-sm text-muted-foreground">Running quality checks...</p>
                         </div>
                       ) : (
-                        <>
-                          {/* Copyright check results */}
-                          <div className="grid grid-cols-3 gap-3 text-xs">
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Similarity</span>
-                              <div className="font-semibold">{similarityScore}%</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Risk Level</span>
-                              <div className="font-semibold capitalize">{riskLevel}</div>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-muted-foreground">Matches</span>
-                              <div className="font-semibold">{matchCount}</div>
-                            </div>
+                        <div className="space-y-3">
+                          {/* Full quality scores */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <ScoreBadge 
+                              icon={Shield} 
+                              score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
+                              label="Copyright"
+                              lastChecked={asset.reviewData?.copyright?.data?.checkedAt}
+                              size="md"
+                            />
+                            <ScoreBadge 
+                              icon={Eye} 
+                              score={asset.reviewData?.accessibility?.data?.score}
+                              label="Accessibility"
+                              size="md"
+                            />
+                            <ScoreBadge 
+                              icon={Zap} 
+                              score={asset.reviewData?.performance?.data?.score}
+                              label="Performance"
+                              size="md"
+                            />
+                            <ScoreBadge 
+                              icon={Palette} 
+                              score={asset.reviewData?.seo?.data?.score}
+                              label="SEO"
+                              size="md"
+                            />
+                            <ScoreBadge 
+                              icon={ShieldCheck} 
+                              score={asset.reviewData?.security?.data?.score}
+                              label="Security"
+                              size="md"
+                            />
                           </div>
+
+                          {/* Last checked info */}
+                          {asset.reviewData?.lastReviewedAt && (
+                            <div className="text-xs text-muted-foreground">
+                              Last checked: {format(asset.reviewData.lastReviewedAt, 'MMM d, yyyy h:mm a')}
+                            </div>
+                          )}
 
                           {/* Quick actions */}
                           <div className="flex gap-2 pt-2 border-t">
@@ -783,7 +1036,7 @@ export default function AssetApprovalsPage() {
                               </div>
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   )}
