@@ -517,6 +517,8 @@ export interface Asset {
     accessibility: number
     seo: number
   }
+  commentsCount?: number
+  comments?: VersionComment[]
 }
 
 export interface AssetFilterConfig {

@@ -1125,6 +1125,27 @@ export const mockAssets: Asset[] = [
       lastReviewedAt: new Date("2025-11-28T10:15:00"),
       reviewedBy: "admin-1",
     },
+    commentsCount: 2,
+    comments: [
+      {
+        id: "ac1-1",
+        versionId: "asset-1",
+        content: "Looks great! Can we get a version with the sale end date more prominent?",
+        authorId: "client-1",
+        authorName: "Sarah Client",
+        authorRole: "Company Admin",
+        createdAt: new Date("2025-11-28T14:00:00"),
+      },
+      {
+        id: "ac1-2",
+        versionId: "asset-1",
+        content: "Will do. I'll bump up the date size and add a subtle background so it stands out.",
+        authorId: "tm-2",
+        authorName: "Mike Johnson",
+        authorRole: "Content Creator",
+        createdAt: new Date("2025-11-28T14:30:00"),
+      },
+    ],
   },
   {
     id: "asset-2",
@@ -1339,6 +1360,18 @@ export const mockAssets: Asset[] = [
       lastReviewedAt: new Date("2025-12-02T14:07:00"),
       reviewedBy: "admin-1",
     },
+    commentsCount: 1,
+    comments: [
+      {
+        id: "ac2-1",
+        versionId: "asset-2",
+        content: "Templates look good. Please add a README with usage instructions.",
+        authorId: "client-2",
+        authorName: "Chris Taylor",
+        authorRole: "Company Admin",
+        createdAt: new Date("2025-12-02T16:00:00"),
+      },
+    ],
   },
   {
     id: "asset-3",

@@ -62,11 +62,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
-import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge, AIComplianceWorkflow } from "@/components/assets"
+import { VersionHistoryPanel, SubmitVersionDialog, VersionStatusBadge, AIComplianceWorkflow } from "@/components/assets"
 import { VersionSelector } from "@/components/assets/VersionSelector"
-import type { AssetVersion, MatchedSource, AssetReviewData } from "@/types/creative"
+import { TaskComments, type TaskComment, type TeamMember as TaskTeamMember } from "@/components/task/TaskComments"
+import type { AssetVersion, MatchedSource, AssetReviewData, VersionComment } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
+
+// Team members for @mentions (match task page)
+const ASSET_TEAM_MEMBERS: TaskTeamMember[] = [
+  { id: "user-1", name: "Sarah Chen", initials: "SC", avatarColor: "#3b82f6" },
+  { id: "user-2", name: "Mike Johnson", initials: "MJ", avatarColor: "#8b5cf6" },
+  { id: "user-3", name: "Emma Wilson", initials: "EW", avatarColor: "#10b981" },
+  { id: "user-4", name: "Alex Kim", initials: "AK", avatarColor: "#f59e0b" },
+  { id: "user-5", name: "Jordan Lee", initials: "JL", avatarColor: "#ef4444" },
+]
 
 export default function AssetDetailPage() {
   const router = useRouter()
@@ -107,6 +117,11 @@ export default function AssetDetailPage() {
   // Local asset state for optimistic updates
   const [localAsset, setLocalAsset] = useState<any>(null)
   const topRef = useRef<HTMLDivElement>(null)
+  // Defer Radix Tabs (and other client-only UI) until after mount to avoid server/client ID hydration mismatch
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Scroll main content to top when entering page or changing asset (fixes load/back scroll position)
   useEffect(() => {
@@ -472,6 +487,46 @@ export default function AssetDetailPage() {
     }
   }, [isAIGenerated, activeTab])
   
+  // Reusable Activity (comments) section — same style as task page, bottom of every tab
+  const assetCommentsRaw = ('comments' in asset && Array.isArray(asset.comments)) ? asset.comments : []
+  const activityComments: TaskComment[] = useMemo(() => {
+    const getInitials = (name: string) =>
+      name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    return assetCommentsRaw.map((c: VersionComment) => ({
+      id: c.id,
+      content: c.content,
+      authorId: c.authorId,
+      authorName: c.authorName,
+      authorInitials: getInitials(c.authorName),
+      createdAt: c.createdAt,
+      reactions: [],
+    }))
+  }, [assetCommentsRaw])
+  const currentUserId = "user-1"
+  const currentUserInitials = "SC"
+  const handleActivityAddComment = useCallback((content: string, _mentions: string[]) => {
+    toast.success("Comment added")
+  }, [])
+  const handleActivityAddReaction = useCallback((_commentId: string, _emoji: string) => {
+    toast.info("Reaction added")
+  }, [])
+  const handleActivityRemoveReaction = useCallback((_commentId: string, _emoji: string) => {}, [])
+  const commentsSection = (
+    <Card className="border-0 shadow-none mt-3">
+      <CardContent className="p-6">
+        <TaskComments
+          comments={activityComments}
+          currentUserId={currentUserId}
+          currentUserInitials={currentUserInitials}
+          teamMembers={ASSET_TEAM_MEMBERS}
+          onAddComment={handleActivityAddComment}
+          onAddReaction={handleActivityAddReaction}
+          onRemoveReaction={handleActivityRemoveReaction}
+        />
+      </CardContent>
+    </Card>
+  )
+  
   // Get editable field configurations
   const nameField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "name"), [])
   const descriptionField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "description"), [])
@@ -500,6 +555,17 @@ export default function AssetDetailPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  // After all hooks: defer full UI until client mount to avoid Radix ID hydration mismatch
+  if (!mounted) {
+    return (
+      <PageContainer className="space-y-0">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </PageContainer>
+    )
+  }
 
   return (
     <PageContainer className="space-y-0 animate-fade-in">
@@ -802,35 +868,6 @@ export default function AssetDetailPage() {
                   </CollapsibleContent>
                 </Collapsible>
                 
-                {/* Version Comments Section (version groups only) */}
-                {versionGroup && asset && 'comments' in asset && (
-                  <Collapsible defaultOpen={false}>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          Comments & Feedback
-                        </h3>
-                        <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                          {asset.commentsCount || 0}
-                        </Badge>
-                      </div>
-                      <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <Card className="mt-2 border-l-2 border-l-blue-500">
-                        <CardContent className="pt-4">
-                          <VersionComments
-                            comments={asset.comments}
-                            onAddComment={async (content) => {
-                              toast.success("Comment added")
-                            }}
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-                
                 {/* Version Management Section (version groups only) */}
                 {versionGroup && (
                   <Collapsible>
@@ -854,6 +891,9 @@ export default function AssetDetailPage() {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+
+                {/* Activity (comments) - left column to match other boxes */}
+                {commentsSection}
               </div>
 
               {/* Right Column - Metadata Sidebar */}
@@ -1080,7 +1120,8 @@ export default function AssetDetailPage() {
 
           {/* Quality Tab Content */}
           <TabsContent value="quality" className="mt-2">
-            <div className="space-y-3">
+            <div className="grid lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2 space-y-3">
               {/* Quality Score Dashboard - Ultra Compact */}
               <Card>
                 <CardHeader className="pb-3">
@@ -1357,14 +1398,18 @@ export default function AssetDetailPage() {
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
+                {commentsSection}
               </div>
+              </div>
+              <div className="space-y-4 sticky top-4" aria-hidden="true" />
             </div>
           </TabsContent>
 
           {/* AI Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="space-y-3">
+              <div className="grid lg:grid-cols-3 gap-3">
+                <div className="lg:col-span-2 space-y-3">
                 {/* Generation Details - Compact Grid */}
                 <div className="grid md:grid-cols-2 gap-3">
                   {/* Prompt Card */}
@@ -1443,6 +1488,9 @@ export default function AssetDetailPage() {
                     </CardContent>
                   </Card>
                 )}
+                {commentsSection}
+                </div>
+                <div className="space-y-4 sticky top-4" aria-hidden="true" />
               </div>
             </TabsContent>
           )}
@@ -1546,6 +1594,9 @@ export default function AssetDetailPage() {
                 </Card>
               </CollapsibleContent>
             </Collapsible>
+
+            {/* Activity (comments) - left column to match other boxes */}
+            {commentsSection}
           </div>
 
           {/* Right Column - Metadata Sidebar */}
@@ -1741,7 +1792,8 @@ export default function AssetDetailPage() {
 
           {/* Quality Tab Content */}
           <TabsContent value="quality" className="mt-2">
-            <div className="space-y-3">
+            <div className="grid lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2 space-y-3">
               {/* Quality Score Dashboard - Ultra Compact */}
               <Card>
                 <CardHeader className="pb-3">
@@ -2018,14 +2070,18 @@ export default function AssetDetailPage() {
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
+                {commentsSection}
               </div>
+              </div>
+              <div className="space-y-4 sticky top-4" aria-hidden="true" />
             </div>
           </TabsContent>
 
           {/* AI Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="space-y-3">
+              <div className="grid lg:grid-cols-3 gap-3">
+                <div className="lg:col-span-2 space-y-3">
                 {/* Generation Details - Compact Grid */}
                 <div className="grid md:grid-cols-2 gap-3">
                   {/* Prompt Card */}
@@ -2104,6 +2160,9 @@ export default function AssetDetailPage() {
                     </CardContent>
                   </Card>
                 )}
+                {commentsSection}
+                </div>
+                <div className="space-y-4 sticky top-4" aria-hidden="true" />
               </div>
             </TabsContent>
           )}
