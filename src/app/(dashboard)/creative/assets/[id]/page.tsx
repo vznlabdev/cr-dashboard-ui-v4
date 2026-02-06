@@ -484,7 +484,7 @@ export default function AssetDetailPage() {
             <h1 className="text-xl font-semibold">{asset.name}</h1>
             {/* Status badge - color-coded at top for quick scan */}
             {(() => {
-              const status = asset.approvalStatus ?? "draft"
+              const status: "draft" | "pending" | "approved" | "rejected" = (asset.approvalStatus ?? "draft") as "draft" | "pending" | "approved" | "rejected"
               const statusConfig = {
                 draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted-foreground/30" },
                 pending: { label: "Pending", className: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800" },
@@ -515,7 +515,7 @@ export default function AssetDetailPage() {
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             {/* Status dot (color-coded) */}
             {(() => {
-              const status = asset.approvalStatus ?? "draft"
+              const status: "draft" | "pending" | "approved" | "rejected" = (asset.approvalStatus ?? "draft") as "draft" | "pending" | "approved" | "rejected"
               const dotClass = {
                 draft: "bg-muted-foreground/60",
                 pending: "bg-amber-500",
