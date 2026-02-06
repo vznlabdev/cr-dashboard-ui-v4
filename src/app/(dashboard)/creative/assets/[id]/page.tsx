@@ -7,7 +7,7 @@ import { formatFileSize, formatDateLong } from "@/lib/format-utils"
 import { useAssetAutoSave } from "@/lib/asset-auto-save"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -38,6 +38,11 @@ import {
   Zap,
   ShieldCheck,
   ShieldAlert,
+  Database,
+  FileText,
+  Settings,
+  ChevronRight,
+  Check,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -57,7 +62,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
-import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
+import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge, AIComplianceWorkflow } from "@/components/assets"
 import { VersionSelector } from "@/components/assets/VersionSelector"
 import type { AssetVersion, MatchedSource, AssetReviewData } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
@@ -95,7 +100,7 @@ export default function AssetDetailPage() {
     : versionGroup?.currentVersionId || ""
   
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"overview" | "quality">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "ai-workflow" | "quality">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
@@ -460,6 +465,13 @@ export default function AssetDetailPage() {
   const designTypeConfig = displayDesignType ? DESIGN_TYPE_CONFIG[displayDesignType as keyof typeof DESIGN_TYPE_CONFIG] : null
   const isAIGenerated = asset && 'contentType' in asset && asset.contentType === "ai_generated"
   
+  // When contentType is edited away from ai_generated, leave AI Workflow tab to avoid blank pane
+  useEffect(() => {
+    if (!isAIGenerated && activeTab === "ai-workflow") {
+      setActiveTab("overview")
+    }
+  }, [isAIGenerated, activeTab])
+  
   // Get editable field configurations
   const nameField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "name"), [])
   const descriptionField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "description"), [])
@@ -693,7 +705,7 @@ export default function AssetDetailPage() {
       {/* Tabs - tight under properties bar so image is above fold */}
       {versionGroup ? (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "ai-workflow" | "quality")}>
             {/* Tab strip - compact Linear style */}
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
@@ -714,6 +726,14 @@ export default function AssetDetailPage() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                {isAIGenerated && (
+                  <TabsTrigger 
+                    value="ai-workflow"
+                    className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                  >
+                    AI Workflow
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -781,41 +801,6 @@ export default function AssetDetailPage() {
                     </Card>
                   </CollapsibleContent>
                 </Collapsible>
-                
-                {/* AI Generation Section (for AI-generated assets) */}
-                {isAIGenerated && (
-                  <Collapsible defaultOpen={true}>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
-                      <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI Generation</h3>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <Card className="mt-2 border-l-2 border-l-purple-500">
-                        <CardContent className="pt-4 space-y-3">
-                          {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
-                            <InlineEditField
-                              key={field.id}
-                              field={field}
-                              value={field.path.includes('.') 
-                                ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                                : asset[field.path as keyof typeof asset]
-                              }
-                              onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                            />
-                          ))}
-                          
-                          {/* Keep original PromptContent for full history */}
-                          {asset.promptHistory && (
-                            <>
-                              <Separator />
-                              <PromptContent history={asset.promptHistory} />
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
                 
                 {/* Version Comments Section (version groups only) */}
                 {versionGroup && asset && 'comments' in asset && (
@@ -1375,11 +1360,98 @@ export default function AssetDetailPage() {
               </div>
             </div>
           </TabsContent>
+
+          {/* AI Workflow Tab Content */}
+          {isAIGenerated && (
+            <TabsContent value="ai-workflow" className="mt-2">
+              <div className="space-y-3">
+                {/* Generation Details - Compact Grid */}
+                <div className="grid md:grid-cols-2 gap-3">
+                  {/* Prompt Card */}
+                  {asset.promptHistory?.messages && (
+                    <PromptContent history={asset.promptHistory} />
+                  )}
+
+                  {/* Technical Details Card */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Technical Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                        <InlineEditField
+                          key={field.id}
+                          field={field}
+                          value={field.path.includes('.') 
+                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                            : asset[field.path as keyof typeof asset]
+                          }
+                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                        />
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Compliance Workflow - Linear Progress */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Compliance Workflow</CardTitle>
+                    <CardDescription>7-step AI asset compliance tracking</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AIComplianceWorkflow 
+                      assetId={asset.id}
+                      copyrightCheckStatus={asset.copyrightCheckStatus}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Copyright & Legal Status */}
+                {asset.copyrightCheckData && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Copyright & Legal</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {/* Compact status indicators */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Risk Level</span>
+                        <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"}>
+                          {asset.copyrightCheckData.riskBreakdown.riskLevel}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Similarity</span>
+                        <span className="text-sm font-medium">{asset.copyrightCheckData.similarityScore}%</span>
+                      </div>
+                      {asset.copyrightCheckData.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
+                        <div className="pt-2">
+                          <Link 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setActiveTab("quality")
+                            }}
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            View full copyright report
+                            <ChevronRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
           </Tabs>
         </div>
       ) : (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "ai-workflow" | "quality")}>
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
                 <TabsTrigger 
@@ -1399,6 +1471,14 @@ export default function AssetDetailPage() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                {isAIGenerated && (
+                  <TabsTrigger 
+                    value="ai-workflow"
+                    className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                  >
+                    AI Workflow
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -1466,41 +1546,6 @@ export default function AssetDetailPage() {
                 </Card>
               </CollapsibleContent>
             </Collapsible>
-
-            {/* AI Generation Section (for AI-generated assets) */}
-            {isAIGenerated && (
-              <Collapsible defaultOpen={true}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
-                  <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI Generation</h3>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-2">
-                  <Card className="mt-2 border-l-2 border-l-purple-500">
-                    <CardContent className="pt-4 space-y-3">
-                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
-                        <InlineEditField
-                          key={field.id}
-                          field={field}
-                          value={field.path.includes('.') 
-                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                            : asset[field.path as keyof typeof asset]
-                          }
-                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                        />
-                      ))}
-                      
-                      {/* Keep original PromptContent for full history */}
-                      {asset.promptHistory && (
-                        <>
-                          <Separator />
-                          <PromptContent history={asset.promptHistory} />
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
           </div>
 
           {/* Right Column - Metadata Sidebar */}
@@ -1976,6 +2021,93 @@ export default function AssetDetailPage() {
               </div>
             </div>
           </TabsContent>
+
+          {/* AI Workflow Tab Content */}
+          {isAIGenerated && (
+            <TabsContent value="ai-workflow" className="mt-2">
+              <div className="space-y-3">
+                {/* Generation Details - Compact Grid */}
+                <div className="grid md:grid-cols-2 gap-3">
+                  {/* Prompt Card */}
+                  {asset.promptHistory?.messages && (
+                    <PromptContent history={asset.promptHistory} />
+                  )}
+
+                  {/* Technical Details Card */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Technical Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                        <InlineEditField
+                          key={field.id}
+                          field={field}
+                          value={field.path.includes('.') 
+                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
+                            : asset[field.path as keyof typeof asset]
+                          }
+                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                        />
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Compliance Workflow - Linear Progress */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Compliance Workflow</CardTitle>
+                    <CardDescription>7-step AI asset compliance tracking</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AIComplianceWorkflow 
+                      assetId={asset.id}
+                      copyrightCheckStatus={asset.copyrightCheckStatus}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Copyright & Legal Status */}
+                {asset.copyrightCheckData && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">Copyright & Legal</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {/* Compact status indicators */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Risk Level</span>
+                        <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"}>
+                          {asset.copyrightCheckData.riskBreakdown.riskLevel}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Similarity</span>
+                        <span className="text-sm font-medium">{asset.copyrightCheckData.similarityScore}%</span>
+                      </div>
+                      {asset.copyrightCheckData.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
+                        <div className="pt-2">
+                          <Link 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setActiveTab("quality")
+                            }}
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            View full copyright report
+                            <ChevronRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
         </Tabs>
         </div>
       )}
