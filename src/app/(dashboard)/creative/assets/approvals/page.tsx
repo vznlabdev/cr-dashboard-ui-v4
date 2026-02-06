@@ -54,8 +54,7 @@ export default function AssetApprovalsPage() {
   const topRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [brandFilter, setBrandFilter] = useState<string>("all")
-  const [riskFilter, setRiskFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<string>("risk")
+  const [sortBy, setSortBy] = useState<string>("date")
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set())
   const [isProcessing, setIsProcessing] = useState(false)
   const [expandedAsset, setExpandedAsset] = useState<string | null>(null)
@@ -72,6 +71,7 @@ export default function AssetApprovalsPage() {
   const [showProcessed, setShowProcessed] = useState(false)
   const [checkingAssets, setCheckingAssets] = useState<Set<string>>(new Set())
   const [checksVersion, setChecksVersion] = useState(0) // Increment when checks complete to trigger recalculation
+  const [dataVersion, setDataVersion] = useState(0) // Increment when mockAssets mutated so memos recalculate
   const [, forceUpdate] = useState({}) // Force re-render when mockAssets mutated
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(50)
@@ -87,7 +87,7 @@ export default function AssetApprovalsPage() {
         !approvedAssets.has(asset.id) &&
         !rejectedAssets.has(asset.id)
     )
-  }, [approvedAssets, rejectedAssets])
+  }, [approvedAssets, rejectedAssets, dataVersion])
 
   // Categorize assets by check status
   const assetsByStatus = useMemo(() => {
@@ -112,35 +112,36 @@ export default function AssetApprovalsPage() {
         asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asset.brandName.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesBrand = brandFilter === "all" || asset.brandId === brandFilter
-      const matchesRisk =
-        riskFilter === "all" ||
-        !asset.copyrightCheckData || // Show unchecked assets regardless of risk filter
-        (riskFilter === "low" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "low") ||
-        (riskFilter === "medium" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "medium") ||
-        (riskFilter === "high" && asset.copyrightCheckData?.riskBreakdown.riskLevel === "high")
-      return matchesSearch && matchesBrand && matchesRisk
+      return matchesSearch && matchesBrand
     })
 
     // Sort assets
-    if (sortBy === "risk") {
-      const riskOrder = { high: 0, medium: 1, low: 2 }
+    if (sortBy === "needs_check") {
+      // Sort unchecked assets first, then by date
       filtered.sort((a, b) => {
-        const aRisk = a.copyrightCheckData?.riskBreakdown.riskLevel || "low"
-        const bRisk = b.copyrightCheckData?.riskBreakdown.riskLevel || "low"
-        return riskOrder[aRisk as keyof typeof riskOrder] - riskOrder[bRisk as keyof typeof riskOrder]
+        const aHasReview = !!a.reviewData
+        const bHasReview = !!b.reviewData
+        if (aHasReview === bHasReview) {
+          return b.createdAt.getTime() - a.createdAt.getTime() // Same status, sort by date
+        }
+        return aHasReview ? 1 : -1 // Unchecked first
       })
-    } else if (sortBy === "similarity") {
+    } else if (sortBy === "quality") {
+      // Sort by overall quality score (checked assets first, then by score)
       filtered.sort((a, b) => {
-        const aScore = a.copyrightCheckData?.similarityScore || 0
-        const bScore = b.copyrightCheckData?.similarityScore || 0
-        return bScore - aScore
+        const aScore = a.reviewData?.overallScore ?? -1
+        const bScore = b.reviewData?.overallScore ?? -1
+        if (aScore === -1 && bScore === -1) {
+          return b.createdAt.getTime() - a.createdAt.getTime() // Both unchecked, sort by date
+        }
+        return bScore - aScore // Higher quality first
       })
     } else if (sortBy === "date") {
-      filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // Newest first
     }
 
     return filtered
-  }, [searchQuery, brandFilter, riskFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets, checksVersion])
+  }, [searchQuery, brandFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets, checksVersion, dataVersion])
 
   // Calculate how many selected assets actually need checks
   const assetsNeedingChecks = useMemo(() => {
@@ -175,7 +176,7 @@ export default function AssetApprovalsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, brandFilter, riskFilter, sortBy, showProcessed])
+  }, [searchQuery, brandFilter, sortBy, showProcessed])
 
   // Scroll to top when page changes - use scrollIntoView approach
   useEffect(() => {
@@ -402,6 +403,7 @@ export default function AssetApprovalsPage() {
         newSet.delete(assetId)
         return newSet
       })
+      setDataVersion((v) => v + 1)
       forceUpdate({}) // Trigger re-render
     } catch (error) {
       toast.error("Failed to approve asset")
@@ -472,6 +474,7 @@ export default function AssetApprovalsPage() {
         return updated
       })
       
+      setDataVersion((v) => v + 1)
       forceUpdate({}) // Trigger re-render
       toast.success(`Approved ${selectedIds.length} asset${selectedIds.length !== 1 ? "s" : ""}`)
       handleClearSelection()
@@ -555,6 +558,7 @@ export default function AssetApprovalsPage() {
           mockAssets[assetIndex].reviewData = mockReviewData
           mockAssets[assetIndex].copyrightCheckStatus = "completed"
           mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+          setDataVersion((v) => v + 1)
           forceUpdate({}) // Trigger re-render after mutation
         }
       } catch (error) {
@@ -726,28 +730,15 @@ export default function AssetApprovalsPage() {
             </SelectContent>
           </Select>
 
-          {/* Risk Filter */}
-          <Select value={riskFilter} onValueChange={setRiskFilter}>
-            <SelectTrigger className="w-[110px] h-8 text-sm">
-              <SelectValue placeholder="All Risk" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Risk</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Sort */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[130px] h-8 text-sm">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="risk">Sort: Risk</SelectItem>
-              <SelectItem value="similarity">Sort: Similarity</SelectItem>
               <SelectItem value="date">Sort: Date</SelectItem>
+              <SelectItem value="needs_check">Sort: Needs Check</SelectItem>
+              <SelectItem value="quality">Sort: Quality Score</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1048,8 +1039,30 @@ export default function AssetApprovalsPage() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Line 1: Asset name + Status Badge */}
+                        {/* Line 1: AI indicator + Version + Asset name + Status Badge */}
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          {/* AI indicator */}
+                          {asset.contentType === "ai_generated" && (
+                            <Badge variant="outline" className="h-5 px-1.5 bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-950 dark:border-purple-800">
+                              <Sparkles className="h-3 w-3" />
+                            </Badge>
+                          )}
+                          
+                          {/* Version badge - extract from asset name or ID if it's a version */}
+                          {(() => {
+                            // Check if asset ID starts with "v" followed by number (e.g., v1-1, v1-2)
+                            const versionMatch = asset.id.match(/^v\d+-(\d+)$/) || asset.name.match(/[vV](\d+)/);
+                            const versionNumber = versionMatch?.[1];
+                            if (versionNumber) {
+                              return (
+                                <Badge variant="outline" className="h-5 px-1.5 text-xs text-muted-foreground">
+                                  V{versionNumber}
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
+                          
                           <Link 
                             href={`/creative/assets/${asset.id}`}
                             className="text-sm font-medium truncate hover:text-blue-600 hover:underline transition-colors"
@@ -1160,6 +1173,7 @@ export default function AssetApprovalsPage() {
                                     mockAssets[assetIndex].reviewData = mockReviewData
                                     mockAssets[assetIndex].copyrightCheckStatus = "completed"
                                     mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+                                    setDataVersion((v) => v + 1)
                                     forceUpdate({}) // Trigger re-render after mutation
                                   }
                                   
@@ -1381,6 +1395,7 @@ export default function AssetApprovalsPage() {
                                       mockAssets[assetIndex].reviewData = mockReviewData
                                       mockAssets[assetIndex].copyrightCheckStatus = "completed"
                                       mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+                                      setDataVersion((v) => v + 1)
                                       forceUpdate({})
                                     }
                                     

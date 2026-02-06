@@ -11,6 +11,16 @@ interface ApprovalStatusIconProps {
 }
 
 export function ApprovalStatusIcon({ asset, className, showLabel = false }: ApprovalStatusIconProps) {
+  // Rejected first - takes precedence over review data
+  if (asset.approvalStatus === "rejected") {
+    return (
+      <div className="flex items-center gap-1.5" title="Rejected">
+        <XCircle className={cn("h-3.5 w-3.5 text-red-600 dark:text-red-400", className)} />
+        {showLabel && <span className="text-xs text-muted-foreground">Rejected</span>}
+      </div>
+    )
+  }
+
   // State 1: Checked (has reviewData)
   if (asset.reviewData) {
     const Icon = ShieldCheck
@@ -23,7 +33,7 @@ export function ApprovalStatusIcon({ asset, className, showLabel = false }: Appr
   }
   
   // State 3: Manually Approved (approved without checks)
-  if (asset.approvalStatus === "approved" && !asset.reviewData) {
+  if (asset.approvalStatus === "approved") {
     const approverName = asset.approvedByName || "Admin"
     return (
       <div className="flex items-center gap-1.5" title={`Manually approved by ${approverName}`}>
@@ -38,21 +48,11 @@ export function ApprovalStatusIcon({ asset, className, showLabel = false }: Appr
   }
   
   // State 2: Needs Check (pending, no data)
-  if (!asset.reviewData && asset.approvalStatus === "pending") {
+  if (asset.approvalStatus === "pending") {
     return (
       <div className="flex items-center gap-1.5" title="Needs quality check">
         <ShieldAlert className={cn("h-3.5 w-3.5 text-amber-600 dark:text-amber-400", className)} />
         {showLabel && <span className="text-xs text-muted-foreground">Needs Check</span>}
-      </div>
-    )
-  }
-  
-  // Rejected state
-  if (asset.approvalStatus === "rejected") {
-    return (
-      <div className="flex items-center gap-1.5" title="Rejected">
-        <XCircle className={cn("h-3.5 w-3.5 text-red-600 dark:text-red-400", className)} />
-        {showLabel && <span className="text-xs text-muted-foreground">Rejected</span>}
       </div>
     )
   }
