@@ -43,6 +43,7 @@ import {
   ChevronDown,
   CheckSquare,
   User,
+  RotateCcw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -62,6 +63,10 @@ export default function AssetApprovalsPage() {
   const [bulkRejectionReason, setBulkRejectionReason] = useState("")
   const [individualRejectionReason, setIndividualRejectionReason] = useState("")
   const [bulkRejectAssetIds, setBulkRejectAssetIds] = useState<string[]>([])
+  const [showManualApprovalInput, setShowManualApprovalInput] = useState<string | null>(null)
+  const [manualApprovalReason, setManualApprovalReason] = useState("")
+  const [showBulkManualApprovalDialog, setShowBulkManualApprovalDialog] = useState(false)
+  const [bulkManualApprovalReason, setBulkManualApprovalReason] = useState("")
   const [approvedAssets, setApprovedAssets] = useState<Set<string>>(new Set())
   const [rejectedAssets, setRejectedAssets] = useState<Set<string>>(new Set())
   const [showProcessed, setShowProcessed] = useState(false)
@@ -196,6 +201,14 @@ export default function AssetApprovalsPage() {
       }
     }
   }, [currentPage])
+
+  // Clear form states when expanding/collapsing assets to prevent state bleed
+  useEffect(() => {
+    setShowRejectInput(null)
+    setIndividualRejectionReason("")
+    setShowManualApprovalInput(null)
+    setManualApprovalReason("")
+  }, [expandedAsset])
 
   // Generate mock review data for quality checks
   const generateMockReviewData = (): AssetReviewData => {
@@ -425,7 +438,7 @@ export default function AssetApprovalsPage() {
     }
   }
 
-  const handleBulkApprove = async () => {
+  const handleBulkApprove = async (reason?: string) => {
     const selectedIds = getSelectedAssetIds()
     if (selectedIds.length === 0) {
       toast.error("Please select at least one asset")
@@ -437,6 +450,21 @@ export default function AssetApprovalsPage() {
       // INTEGRATION POINT: Call API to bulk approve assets
       await new Promise((resolve) => setTimeout(resolve, 1000))
       
+      // Update each asset with approval metadata
+      selectedIds.forEach(id => {
+        const assetIndex = mockAssets.findIndex(a => a.id === id)
+        if (assetIndex !== -1) {
+          mockAssets[assetIndex] = {
+            ...mockAssets[assetIndex],
+            approvalStatus: "approved",
+            approvedBy: "current-user-id",
+            approvedByName: "jgordon",
+            approvedAt: new Date(),
+            approvalReason: reason
+          }
+        }
+      })
+      
       // Mark assets as approved in local state
       setApprovedAssets(prev => {
         const updated = new Set(prev)
@@ -444,6 +472,7 @@ export default function AssetApprovalsPage() {
         return updated
       })
       
+      forceUpdate({}) // Trigger re-render
       toast.success(`Approved ${selectedIds.length} asset${selectedIds.length !== 1 ? "s" : ""}`)
       handleClearSelection()
     } catch (error) {
@@ -661,16 +690,6 @@ export default function AssetApprovalsPage() {
                 {getTotalAvailable()} credits
               </Badge>
             )}
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleBulkRunChecks}
-              disabled={selectionCount === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
-              className="h-7 bg-blue-600 hover:bg-blue-700"
-            >
-              <Shield className="h-3.5 w-3.5 mr-1.5" />
-              Run Checks ({assetsNeedingChecks})
-            </Button>
           </div>
           <Link href="/creative/assets">
             <Button variant="outline" size="sm">
@@ -759,12 +778,31 @@ export default function AssetApprovalsPage() {
               {/* Action buttons */}
               <Button
                 size="sm"
+                onClick={handleBulkRunChecks}
+                disabled={assetsNeedingChecks === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
+                className="h-8 bg-blue-600 hover:bg-blue-700"
+              >
+                <Shield className="h-3.5 w-3.5 mr-1.5" />
+                Run Checks ({assetsNeedingChecks})
+              </Button>
+              <Button
+                size="sm"
                 onClick={handleBulkApprove}
                 disabled={selectionCount === 0 || isProcessing}
                 className="h-8 bg-green-600 hover:bg-green-700"
               >
                 <Check className="h-3.5 w-3.5 mr-1.5" />
                 Approve ({selectionCount})
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowBulkManualApprovalDialog(true)}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8"
+                variant="outline"
+              >
+                <User className="h-3.5 w-3.5 mr-1.5" />
+                Manual Approve
               </Button>
               <Button
                 variant="outline"
@@ -799,12 +837,31 @@ export default function AssetApprovalsPage() {
               {/* Action buttons */}
               <Button
                 size="sm"
+                onClick={handleBulkRunChecks}
+                disabled={assetsNeedingChecks === 0 || isProcessing || getTotalAvailable() < assetsNeedingChecks}
+                className="h-8 bg-blue-600 hover:bg-blue-700"
+              >
+                <Shield className="h-3.5 w-3.5 mr-1.5" />
+                Run Checks ({assetsNeedingChecks})
+              </Button>
+              <Button
+                size="sm"
                 onClick={handleBulkApprove}
                 disabled={selectionCount === 0 || isProcessing}
                 className="h-8 bg-green-600 hover:bg-green-700"
               >
                 <Check className="h-3.5 w-3.5 mr-1.5" />
                 Approve ({selectionCount})
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowBulkManualApprovalDialog(true)}
+                disabled={selectionCount === 0 || isProcessing}
+                className="h-8"
+                variant="outline"
+              >
+                <User className="h-3.5 w-3.5 mr-1.5" />
+                Manual Approve
               </Button>
               <Button
                 variant="outline"
@@ -888,6 +945,47 @@ export default function AssetApprovalsPage() {
           </div>
         )}
 
+        {/* Inline Bulk Manual Approval Input */}
+        {showBulkManualApprovalDialog && (
+          <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs">Reason for Manual Approval (Optional)</Label>
+              <Textarea
+                value={bulkManualApprovalReason}
+                onChange={(e) => setBulkManualApprovalReason(e.target.value)}
+                placeholder="Why are you approving these assets without quality checks?"
+                className="h-20 text-sm"
+                disabled={isProcessing}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={async () => {
+                  await handleBulkApprove(bulkManualApprovalReason || "Manual bulk approval from approvals queue")
+                  setShowBulkManualApprovalDialog(false)
+                  setBulkManualApprovalReason("")
+                }}
+                disabled={isProcessing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? "Processing..." : "Confirm Manual Approve"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setShowBulkManualApprovalDialog(false)
+                  setBulkManualApprovalReason("")
+                }}
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Compact List */}
         <div className="border rounded-lg divide-y">
           {/* Select All Header */}
@@ -919,9 +1017,9 @@ export default function AssetApprovalsPage() {
               const matchCount = asset.copyrightCheckData?.matchedSources.length ?? 0
               const isSelected = isAssetSelected(asset.id)
               const isExpanded = expandedAsset === asset.id
-              const needsCheck = !asset.copyrightCheckStatus || asset.copyrightCheckStatus === "pending"
+              const needsCheck = !asset.reviewData
               const isChecking = asset.copyrightCheckStatus === "checking"
-              const isChecked = asset.copyrightCheckStatus === "completed"
+              const isChecked = !!asset.reviewData
               const isProcessed = approvedAssets.has(asset.id) || rejectedAssets.has(asset.id)
 
               return (
@@ -1035,53 +1133,151 @@ export default function AssetApprovalsPage() {
                   {isExpanded && (
                     <div className="border-t bg-muted/20 p-4 space-y-3">
                       {needsCheck ? (
-                        <div className="text-center py-4">
-                          <Shield className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-sm text-muted-foreground mb-3">
-                            This asset hasn't been checked yet. Run a copyright check to review.
-                          </p>
-                          <Button
-                            size="sm"
-                            onClick={async () => {
-                              if (asset.reviewData) {
-                                toast.info("Asset already has quality scores. Use 'Re-run Check' if needed.")
-                                return
-                              }
-                              
-                              setCheckingAssets(prev => new Set(prev).add(asset.id))
-                              try {
-                                // Consume credit before running check
-                                await useCredit()
-                                
-                                await new Promise((resolve) => setTimeout(resolve, 1500))
-                                
-                                const mockReviewData = generateMockReviewData()
-                                const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
-                                if (assetIndex !== -1) {
-                                  mockAssets[assetIndex].reviewData = mockReviewData
-                                  mockAssets[assetIndex].copyrightCheckStatus = "completed"
-                                  mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
-                                  forceUpdate({}) // Trigger re-render after mutation
+                        <div className="space-y-3">
+                          <div className="text-center py-4">
+                            <Shield className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground mb-3">
+                              This asset hasn't been checked yet. Run a copyright check to review.
+                            </p>
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                if (asset.reviewData) {
+                                  toast.info("Asset already has quality scores. Use 'Re-run Check' if needed.")
+                                  return
                                 }
                                 
-                                setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
-                                toast.success("Quality check completed")
-                              } catch (error) {
-                                toast.error("Failed to run check")
-                                console.error(error)
-                              } finally {
-                                setCheckingAssets(prev => {
-                                  const next = new Set(prev)
-                                  next.delete(asset.id)
-                                  return next
-                                })
-                              }
-                            }}
-                            disabled={checkingAssets.has(asset.id) || getTotalAvailable() < 1}
-                          >
-                            <Shield className="h-3.5 w-3.5 mr-1.5" />
-                            Run Check (1 credit)
-                          </Button>
+                                setCheckingAssets(prev => new Set(prev).add(asset.id))
+                                try {
+                                  // Consume credit before running check
+                                  await useCredit()
+                                  
+                                  await new Promise((resolve) => setTimeout(resolve, 1500))
+                                  
+                                  const mockReviewData = generateMockReviewData()
+                                  const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
+                                  if (assetIndex !== -1) {
+                                    mockAssets[assetIndex].reviewData = mockReviewData
+                                    mockAssets[assetIndex].copyrightCheckStatus = "completed"
+                                    mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+                                    forceUpdate({}) // Trigger re-render after mutation
+                                  }
+                                  
+                                  setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
+                                  toast.success("Quality check completed")
+                                } catch (error) {
+                                  toast.error("Failed to run check")
+                                  console.error(error)
+                                } finally {
+                                  setCheckingAssets(prev => {
+                                    const next = new Set(prev)
+                                    next.delete(asset.id)
+                                    return next
+                                  })
+                                }
+                              }}
+                              disabled={checkingAssets.has(asset.id) || getTotalAvailable() < 1}
+                            >
+                              <Shield className="h-3.5 w-3.5 mr-1.5" />
+                              Run Check (1 credit)
+                            </Button>
+                          </div>
+
+                          {/* Quick actions for unchecked assets */}
+                          <div className="flex gap-2 pt-2 border-t">
+                            <Button
+                              size="sm"
+                              onClick={() => setShowManualApprovalInput(asset.id)}
+                              disabled={isProcessing}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <User className="h-3.5 w-3.5 mr-1.5" />
+                              Manual Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setShowRejectInput(asset.id)}
+                              disabled={isProcessing}
+                            >
+                              <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                              Reject
+                            </Button>
+                          </div>
+
+                          {/* Manual Approval Reason Input for unchecked assets */}
+                          {showManualApprovalInput === asset.id && (
+                            <div className="space-y-2 pt-3 border-t">
+                              <Label className="text-xs">Reason for Manual Approval (Optional)</Label>
+                              <Textarea
+                                value={manualApprovalReason}
+                                onChange={(e) => setManualApprovalReason(e.target.value)}
+                                placeholder="Why are you approving this asset without quality checks?"
+                                className="h-20 text-sm"
+                                disabled={isProcessing}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={async () => {
+                                    await handleApprove(asset.id, manualApprovalReason || "Manual approval from approvals queue")
+                                    setShowManualApprovalInput(null)
+                                    setManualApprovalReason("")
+                                  }}
+                                  disabled={isProcessing}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  {isProcessing ? "Processing..." : "Confirm Manual Approve"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setShowManualApprovalInput(null)
+                                    setManualApprovalReason("")
+                                  }}
+                                  disabled={isProcessing}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Inline reject reason input for unchecked assets */}
+                          {showRejectInput === asset.id && (
+                            <div className="space-y-2 pt-3 border-t">
+                              <Label className="text-xs">Rejection Reason</Label>
+                              <Textarea
+                                value={individualRejectionReason}
+                                onChange={(e) => setIndividualRejectionReason(e.target.value)}
+                                placeholder="Explain why this asset is being rejected..."
+                                className="h-20 text-sm"
+                                disabled={isProcessing}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleReject(asset.id, individualRejectionReason)}
+                                  disabled={!individualRejectionReason.trim() || isProcessing}
+                                >
+                                  {isProcessing ? "Processing..." : "Confirm Reject"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setShowRejectInput(null)
+                                    setIndividualRejectionReason("")
+                                  }}
+                                  disabled={isProcessing}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : checkingAssets.has(asset.id) ? (
                         <div className="text-center py-4">
@@ -1164,24 +1360,80 @@ export default function AssetApprovalsPage() {
                             )}
                           </div>
 
-                          {/* Last checked info */}
+                          {/* Last checked info and Re-run Check button */}
                           {asset.reviewData?.lastReviewedAt && (
-                            <div className="text-xs text-muted-foreground">
-                              Last checked: {format(asset.reviewData.lastReviewedAt, 'MMM d, yyyy h:mm a')}
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-muted-foreground">
+                                Last checked: {format(asset.reviewData.lastReviewedAt, 'MMM d, yyyy h:mm a')}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  setCheckingAssets(prev => new Set(prev).add(asset.id))
+                                  try {
+                                    await useCredit()
+                                    await new Promise((resolve) => setTimeout(resolve, 1500))
+                                    
+                                    const mockReviewData = generateMockReviewData()
+                                    const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
+                                    if (assetIndex !== -1) {
+                                      mockAssets[assetIndex].reviewData = mockReviewData
+                                      mockAssets[assetIndex].copyrightCheckStatus = "completed"
+                                      mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
+                                      forceUpdate({})
+                                    }
+                                    
+                                    setChecksVersion(prev => prev + 1)
+                                    toast.success("Quality check re-run completed")
+                                  } catch (error) {
+                                    toast.error("Failed to re-run check")
+                                    console.error(error)
+                                  } finally {
+                                    setCheckingAssets(prev => {
+                                      const next = new Set(prev)
+                                      next.delete(asset.id)
+                                      return next
+                                    })
+                                  }
+                                }}
+                                disabled={checkingAssets.has(asset.id)}
+                                className="h-7 text-xs"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                                {checkingAssets.has(asset.id) ? "Checking..." : "Re-run Check"}
+                              </Button>
                             </div>
                           )}
 
                           {/* Quick actions */}
                           <div className="flex gap-2 pt-2 border-t">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprove(asset.id)}
-                              disabled={isProcessing}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <Check className="h-3.5 w-3.5 mr-1.5" />
-                              Approve
-                            </Button>
+                            {/* Show Manual Approve for unchecked assets */}
+                            {!asset.reviewData && (
+                              <Button
+                                size="sm"
+                                onClick={() => setShowManualApprovalInput(asset.id)}
+                                disabled={isProcessing}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <User className="h-3.5 w-3.5 mr-1.5" />
+                                Manual Approve
+                              </Button>
+                            )}
+                            
+                            {/* Regular Approve for checked assets */}
+                            {asset.reviewData && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(asset.id)}
+                                disabled={isProcessing}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Check className="h-3.5 w-3.5 mr-1.5" />
+                                Approve
+                              </Button>
+                            )}
+                            
                             <Button
                               size="sm"
                               variant="outline"
@@ -1202,6 +1454,45 @@ export default function AssetApprovalsPage() {
                               </Link>
                             </Button>
                           </div>
+
+                          {/* Manual Approval Reason Input */}
+                          {showManualApprovalInput === asset.id && (
+                            <div className="space-y-2 pt-3 border-t">
+                              <Label className="text-xs">Reason for Manual Approval (Optional)</Label>
+                              <Textarea
+                                value={manualApprovalReason}
+                                onChange={(e) => setManualApprovalReason(e.target.value)}
+                                placeholder="Why are you approving this asset without quality checks?"
+                                className="h-20 text-sm"
+                                disabled={isProcessing}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={async () => {
+                                    await handleApprove(asset.id, manualApprovalReason || "Manual approval from approvals queue")
+                                    setShowManualApprovalInput(null)
+                                    setManualApprovalReason("")
+                                  }}
+                                  disabled={isProcessing}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  {isProcessing ? "Processing..." : "Confirm Manual Approve"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setShowManualApprovalInput(null)
+                                    setManualApprovalReason("")
+                                  }}
+                                  disabled={isProcessing}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Inline reject reason input */}
                           {showRejectInput === asset.id && (
