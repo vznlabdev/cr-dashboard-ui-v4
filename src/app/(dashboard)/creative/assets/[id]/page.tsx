@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import {
   Download,
   Calendar,
@@ -39,8 +38,6 @@ import {
   Zap,
   ShieldCheck,
   ShieldAlert,
-  Maximize2,
-  X,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -80,11 +77,17 @@ export default function AssetDetailPage() {
   
   // Redirect logic: if version group and no version number in URL, redirect to latest version
   useEffect(() => {
-    if (versionGroup && !versionNumber && !isRedirecting) {
-      setIsRedirecting(true)
-      router.replace(`/creative/assets/${assetId}/v/${versionGroup.currentVersionNumber}`)
-    }
-  }, [versionGroup, versionNumber, assetId, router, isRedirecting])
+    if (!versionGroup || versionNumber) return
+
+    setIsRedirecting(true)
+    router.replace(`/creative/assets/${assetId}/v/${versionGroup.currentVersionNumber}`)
+
+    // If redirect fails or is cancelled, reset after timeout so user doesn't see a blank page
+    const fallbackTimer = setTimeout(() => {
+      setIsRedirecting(false)
+    }, 3000)
+    return () => clearTimeout(fallbackTimer)
+  }, [versionGroup, versionNumber, assetId, router])
   
   // Determine which version to display
   const selectedVersionId = versionGroup && versionNumber
@@ -92,7 +95,6 @@ export default function AssetDetailPage() {
     : versionGroup?.currentVersionId || ""
   
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [mediaLightboxOpen, setMediaLightboxOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"overview" | "quality">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
@@ -724,23 +726,12 @@ export default function AssetDetailPage() {
                 <div className="rounded-md border border-border/80 bg-muted/30 overflow-hidden">
                   <div className="relative aspect-[4/3] bg-muted">
                     {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
-                      <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                        <Image
-                          src={asset.thumbnailUrl}
-                          alt={asset.name}
-                          fill
-                          className="object-contain"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setMediaLightboxOpen(true)}
-                          className="absolute bottom-2 right-2 rounded-md bg-black/60 hover:bg-black/80 text-white p-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white z-10"
-                          aria-label="Expand image"
-                          title="View full size"
-                        >
-                          <Maximize2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <Image
+                        src={asset.thumbnailUrl}
+                        alt={asset.name}
+                        fill
+                        className="object-contain"
+                      />
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <FileImage className="h-12 w-12 text-muted-foreground/50 mb-1" />
@@ -1420,23 +1411,12 @@ export default function AssetDetailPage() {
             <div className="rounded-md border border-border/80 bg-muted/30 overflow-hidden">
               <div className="relative aspect-[4/3] bg-muted">
                 {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
-                  <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                    <Image
-                      src={asset.thumbnailUrl}
-                      alt={asset.name}
-                      fill
-                      className="object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setMediaLightboxOpen(true)}
-                      className="absolute bottom-2 right-2 rounded-md bg-black/60 hover:bg-black/80 text-white p-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white z-10"
-                      aria-label="Expand image"
-                      title="View full size"
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <Image
+                    src={asset.thumbnailUrl}
+                    alt={asset.name}
+                    fill
+                    className="object-contain"
+                  />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <FileImage className="h-12 w-12 text-muted-foreground/50 mb-1" />
@@ -1999,42 +1979,6 @@ export default function AssetDetailPage() {
         </Tabs>
         </div>
       )}
-
-      {/* Media lightbox - full-screen centered with no white space */}
-      <Dialog open={mediaLightboxOpen} onOpenChange={setMediaLightboxOpen}>
-        <DialogContent
-          showCloseButton={false}
-          className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none translate-x-0 translate-y-0 m-0 p-0 gap-0 border-0 rounded-none bg-black overflow-hidden flex items-center justify-center data-[state=open]:animate-in data-[state=closed]:animate-out"
-          style={{ margin: 0, padding: 0 }}
-        >
-          <DialogTitle className="sr-only">
-            Expand image: {asset?.name ?? "Asset preview"}
-          </DialogTitle>
-          <button
-            type="button"
-            onClick={() => setMediaLightboxOpen(false)}
-            className="absolute top-4 right-4 z-20 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-sm p-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-white/50 hover:scale-110"
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setMediaLightboxOpen(false)}
-            className="absolute inset-0 w-full h-full cursor-default z-0"
-            aria-label="Click to close"
-            tabIndex={-1}
-          />
-          {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl && (
-            <img
-              src={typeof asset.fileUrl === "string" && asset.fileUrl.startsWith("http") ? asset.fileUrl : asset.thumbnailUrl}
-              alt={asset.name}
-              className="max-h-[95vh] max-w-[95vw] w-auto h-auto object-contain relative z-10"
-              style={{ margin: 'auto' }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Submit Version Dialog */}
       {versionGroup && (

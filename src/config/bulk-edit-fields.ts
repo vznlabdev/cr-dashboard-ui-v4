@@ -44,7 +44,6 @@ export const EDITABLE_FIELDS: EditableField[] = [
     editable: true,
     versionEditable: false,
     inheritedFromParent: true,
-    helpText: "Press Enter to add tags",
   },
   {
     id: "intendedUses",
@@ -65,7 +64,6 @@ export const EDITABLE_FIELDS: EditableField[] = [
       { value: "Web", label: "Web" },
       { value: "Video", label: "Video" },
     ],
-    helpText: "Select the intended uses for this asset",
   },
   
   // BRAND & DESIGN
