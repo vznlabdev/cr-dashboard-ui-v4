@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionComments, VersionStatusBadge } from "@/components/assets"
+import { VersionSelector } from "@/components/assets/VersionSelector"
 import type { AssetVersion, MatchedSource, AssetReviewData } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
@@ -69,13 +70,26 @@ export default function AssetDetailPage() {
   const router = useRouter()
   const params = useParams()
   const assetId = params.id as string
+  const versionNumber = params.versionNumber ? parseInt(params.versionNumber as string) : null
   
   // Check if this is a version group first
   const versionGroup = getVersionGroupById(assetId)
-  const [selectedVersionId, setSelectedVersionId] = useState(versionGroup?.currentVersionId || "")
+  
+  // Redirect logic: if version group and no version number in URL, redirect to latest version
+  useEffect(() => {
+    if (versionGroup && !versionNumber) {
+      router.replace(`/creative/assets/${assetId}/v/${versionGroup.currentVersionNumber}`)
+    }
+  }, [versionGroup, versionNumber, assetId, router])
+  
+  // Determine which version to display
+  const selectedVersionId = versionGroup && versionNumber
+    ? versionGroup.versions.find(v => v.versionNumber === versionNumber)?.id || versionGroup.currentVersionId
+    : versionGroup?.currentVersionId || ""
+  
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
   const [mediaLightboxOpen, setMediaLightboxOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"overview" | "quality" | "versions">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "quality">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
@@ -103,7 +117,7 @@ export default function AssetDetailPage() {
       clearTimeout(t3)
       clearTimeout(t4)
     }
-  }, [assetId])
+  }, [assetId, versionNumber])
   
   // Generate mock review data with realistic scores
   const generateMockReviewData = (): AssetReviewData => {
@@ -439,6 +453,7 @@ export default function AssetDetailPage() {
   const nameField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "name"), [])
   const descriptionField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "description"), [])
   const tagsField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "tags"), [])
+  const intendedUsesField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "intendedUses"), [])
   const statusField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "approvalStatus"), [])
   const brandField = useMemo(() => {
     const base = EDITABLE_FIELDS.find(f => f.id === "brandId")
@@ -471,7 +486,9 @@ export default function AssetDetailPage() {
         backHref="/creative/assets"
         segments={[
           { label: "Assets", href: "/creative/assets" },
-          { label: asset.name }
+          versionGroup && versionNumber 
+            ? { label: `${versionGroup.name} (v${versionNumber})` }
+            : { label: asset.name }
         ]}
         className="mb-3"
       />
@@ -479,9 +496,22 @@ export default function AssetDetailPage() {
       {/* Header Section with Save Status */}
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
-          {/* Title */}
+          {/* Title with Version Selector */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <h1 className="text-xl font-semibold">{asset.name}</h1>
+            {versionGroup ? (
+              <VersionSelector
+                versionGroup={versionGroup}
+                currentVersionId={selectedVersionId}
+                onVersionChange={(versionId) => {
+                  const version = versionGroup.versions.find(v => v.id === versionId)
+                  if (version) {
+                    router.push(`/creative/assets/${assetId}/v/${version.versionNumber}`)
+                  }
+                }}
+              />
+            ) : (
+              <h1 className="text-xl font-semibold">{asset.name}</h1>
+            )}
             {/* Status badge - color-coded at top for quick scan */}
             {(() => {
               const status: "draft" | "pending" | "approved" | "rejected" = (asset.approvalStatus ?? "draft") as "draft" | "pending" | "approved" | "rejected"
@@ -606,7 +636,7 @@ export default function AssetDetailPage() {
         </div>
       </div>
 
-      {/* Horizontal Properties Bar */}
+      {/* Horizontal Properties Bar - Ultra Compact */}
       <div className="border rounded-lg p-3 bg-card mt-4">
         <div className="flex items-center gap-6 flex-wrap">
           {/* File Type */}
@@ -625,24 +655,20 @@ export default function AssetDetailPage() {
             </Badge>
           </div>
           
-          {/* Brand */}
-          {displayBrandId && (
+          {/* Intended Uses */}
+          {asset && 'intendedUses' in asset && asset.intendedUses && (asset.intendedUses as string[]).length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Brand:</span>
-              <Link 
-                href={`/creative/brands/${displayBrandId}`}
-                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {displayBrandName}
-              </Link>
+              <ListTodo className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Uses:</span>
+              <div className="flex items-center gap-1 flex-wrap">
+                {(asset.intendedUses as string[]).map((use) => (
+                  <Badge key={use} variant="secondary" className="text-xs px-2 py-0.5">
+                    {use}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
-          
-          {/* File Size */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Size:</span>
-            <span className="text-sm">{formatFileSize(asset.fileSize)}</span>
-          </div>
           
           {/* Uploaded */}
           <div className="flex items-center gap-2">
@@ -656,7 +682,7 @@ export default function AssetDetailPage() {
       {/* Tabs - tight under properties bar so image is above fold */}
       {versionGroup ? (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality")}>
             {/* Tab strip - compact Linear style */}
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
@@ -665,12 +691,6 @@ export default function AssetDetailPage() {
                   className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
                 >
                   Overview
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="versions"
-                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
-                >
-                  Versions ({versionGroup.totalVersions})
                 </TabsTrigger>
                 <TabsTrigger 
                   value="quality"
@@ -795,6 +815,35 @@ export default function AssetDetailPage() {
                   </Collapsible>
                 )}
                 
+                {/* Version Comments Section (version groups only) */}
+                {versionGroup && asset && 'comments' in asset && (
+                  <Collapsible defaultOpen={false}>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Comments & Feedback
+                        </h3>
+                        <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+                          {asset.commentsCount || 0}
+                        </Badge>
+                      </div>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <Card className="mt-2 border-l-2 border-l-blue-500">
+                        <CardContent className="pt-4">
+                          <VersionComments
+                            comments={asset.comments}
+                            onAddComment={async (content) => {
+                              toast.success("Comment added")
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+                
                 {/* Version Management Section (version groups only) */}
                 {versionGroup && (
                   <Collapsible>
@@ -908,6 +957,17 @@ export default function AssetDetailPage() {
                             field={tagsField}
                             value={asset.tags}
                             onSave={(newValue) => handleFieldSave("tags", newValue)}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Intended Uses */}
+                      {intendedUsesField && (
+                        <div className="space-y-1.5">
+                          <InlineEditField
+                            field={intendedUsesField}
+                            value={asset.intendedUses || []}
+                            onSave={(newValue) => handleFieldSave("intendedUses", newValue)}
                           />
                         </div>
                       )}
@@ -1030,110 +1090,6 @@ export default function AssetDetailPage() {
               </div>
         </div>
       </TabsContent>
-
-      {/* Versions Tab Content */}
-      <TabsContent value="versions" className="mt-2">
-            <div className="space-y-3">
-              {/* Full-width version history with inline comments */}
-              {versionGroup.versions.sort((a, b) => b.versionNumber - a.versionNumber).map((version, index) => {
-                const isCurrent = version.id === selectedVersionId
-                const isLast = index === versionGroup.versions.length - 1
-
-                return (
-                  <Card key={version.id} className={isCurrent ? "border-blue-500 border-2" : ""}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="font-mono">
-                              v{version.versionNumber}
-                            </Badge>
-                            {isCurrent && (
-                              <Badge className="bg-blue-500">Current</Badge>
-                            )}
-                            <VersionStatusBadge status={version.status} />
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedVersionId(version.id)}
-                          >
-                            View
-                          </Button>
-                          {!isCurrent && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => toast.success("Version comparison coming soon!")}
-                            >
-                              Compare
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Version Thumbnail */}
-                      {version.thumbnailUrl && (
-                        <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                          <Image
-                            src={version.thumbnailUrl}
-                            alt={version.name}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      )}
-
-                      {/* Version Metadata */}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>by {version.uploadedByName}</span>
-                        <span>•</span>
-                        <span>{formatDateLong(version.uploadedAt)}</span>
-                        {version.fileSize && (
-                          <>
-                            <span>•</span>
-                            <span>{formatFileSize(version.fileSize)}</span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Change Notes */}
-                      {version.changeNotes && (
-                        <div className="text-sm">
-                          <span className="font-medium">Changes: </span>
-                          <span className="text-muted-foreground">{version.changeNotes}</span>
-                        </div>
-                      )}
-
-                      {/* Rejection Reason */}
-                      {version.status === "rejected" && version.rejectionReason && (
-                        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                          <p className="text-sm font-medium text-red-900 dark:text-red-100">Rejection Reason:</p>
-                          <p className="text-sm text-red-800 dark:text-red-200 mt-1">{version.rejectionReason}</p>
-                        </div>
-                      )}
-
-                      {/* Version Comments */}
-                      {version.comments.length > 0 && (
-                        <div className="pt-4 border-t">
-                          <h4 className="text-sm font-medium mb-3">Comments ({version.commentsCount})</h4>
-                          <VersionComments
-                            comments={version.comments}
-                            onAddComment={async (content) => {
-                              toast.success("Comment added")
-                            }}
-                          />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </TabsContent>
 
           {/* Quality Tab Content */}
           <TabsContent value="quality" className="mt-2">
@@ -1421,7 +1377,7 @@ export default function AssetDetailPage() {
         </div>
       ) : (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality")}>
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
                 <TabsTrigger 
@@ -1611,6 +1567,17 @@ export default function AssetDetailPage() {
                         field={tagsField}
                         value={asset.tags}
                         onSave={(newValue) => handleFieldSave("tags", newValue)}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Intended Uses */}
+                  {intendedUsesField && (
+                    <div className="space-y-1.5">
+                      <InlineEditField
+                        field={intendedUsesField}
+                        value={asset.intendedUses || []}
+                        onSave={(newValue) => handleFieldSave("intendedUses", newValue)}
                       />
                     </div>
                   )}

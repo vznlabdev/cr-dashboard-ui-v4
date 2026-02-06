@@ -46,6 +46,27 @@ export const EDITABLE_FIELDS: EditableField[] = [
     inheritedFromParent: true,
     helpText: "Press Enter to add tags",
   },
+  {
+    id: "intendedUses",
+    label: "Intended Uses",
+    type: "badge-multiselect",
+    category: "basic",
+    path: "intendedUses",
+    editable: true,
+    versionEditable: false,
+    inheritedFromParent: true,
+    badgeColor: "blue",
+    options: [
+      { value: "Advertising/Campaigns", label: "Advertising/Campaigns" },
+      { value: "Editorial", label: "Editorial" },
+      { value: "Internal", label: "Internal" },
+      { value: "Social Media", label: "Social Media" },
+      { value: "Print", label: "Print" },
+      { value: "Web", label: "Web" },
+      { value: "Video", label: "Video" },
+    ],
+    helpText: "Select the intended uses for this asset",
+  },
   
   // BRAND & DESIGN
   {

@@ -1014,11 +1014,16 @@ export default function AssetsPage() {
                   const DesignIcon = designTypeConfig ? getDesignTypeIcon(designTypeConfig.iconName) : FileImage
                   const isSelected = isAssetSelected(asset.id)
 
+                  const isVersionGroup = 'isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup
+                  const assetHref = isVersionGroup 
+                    ? `/creative/assets/${asset.id}/v/${(asset as any).versionGroup.currentVersionNumber}`
+                    : `/creative/assets/${asset.id}`
+                  
                   return (
                     <TableRow
                       key={asset.id}
                       className="h-10 hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/creative/assets/${asset.id}`)}
+                      onClick={() => router.push(assetHref)}
                     >
                       {/* Checkbox */}
                       <TableCell className="sticky left-0 z-10 py-1.5 bg-background" onClick={(e) => e.stopPropagation()}>
@@ -1110,7 +1115,7 @@ export default function AssetsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/creative/assets/${asset.id}`}>
+                              <Link href={assetHref}>
                                 <ExternalLink className="mr-2 h-4 w-4" />
                                 View Details
                               </Link>
