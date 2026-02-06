@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { mockAssets, mockVersionGroups, getVersionGroupById } from "@/lib/mock-data/creative"
+import { mockAssets, mockVersionGroups, getVersionGroupById, mockBrands } from "@/lib/mock-data/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
 import { useAssetAutoSave } from "@/lib/asset-auto-save"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -410,7 +410,14 @@ export default function AssetDetailPage() {
   const descriptionField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "description"), [])
   const tagsField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "tags"), [])
   const statusField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "approvalStatus"), [])
-  const brandField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "brandId"), [])
+  const brandField = useMemo(() => {
+    const base = EDITABLE_FIELDS.find(f => f.id === "brandId")
+    if (!base) return undefined
+    return {
+      ...base,
+      options: mockBrands.map((brand) => ({ value: brand.id, label: brand.name })),
+    }
+  }, [])
   const designTypeField = useMemo(() => EDITABLE_FIELDS.find(f => f.id === "designType"), [])
   
   // Keyboard shortcuts
