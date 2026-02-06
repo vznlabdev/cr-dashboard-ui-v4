@@ -35,12 +35,15 @@ export function formatDateShort(date: Date | string): string {
  * @param date - Date object or date string
  * @returns Formatted date string
  */
-export function formatDateLong(date: Date | string): string {
+export function formatDateLong(date: Date | string | undefined | null): string {
+  if (date == null) return "—"
+  const d = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(d.getTime())) return "—"
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(date))
+  }).format(d)
 }
 
 /**

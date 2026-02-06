@@ -280,8 +280,13 @@ function generateBasicReviewData(rng: () => number) {
   const performanceScore = Math.floor(rng() * 35) + 60 // 60-95
   const securityScore = Math.floor(rng() * 20) + 80 // 80-100
   
+  // Weighted overall score (match generateMockReviewData: copyright 30%, accessibility 20%, performance 20%, SEO 15%, security 15%)
+  const overallScore = Math.round(
+    copyrightScore * 0.3 + accessibilityScore * 0.2 + performanceScore * 0.2 + seoScore * 0.15 + securityScore * 0.15
+  )
+
   return {
-    overallScore: Math.floor((copyrightScore + accessibilityScore + seoScore + performanceScore + securityScore) / 5),
+    overallScore,
     checksCompleted: 5,
     totalChecks: 5,
     copyright: {

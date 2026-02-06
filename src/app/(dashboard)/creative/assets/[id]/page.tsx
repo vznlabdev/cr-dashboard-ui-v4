@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import {
   Download,
   Calendar,
@@ -434,7 +436,7 @@ export default function AssetDetailPage() {
   }, [])
 
   return (
-    <PageContainer className="space-y-4 animate-fade-in">
+    <PageContainer className="space-y-0 animate-fade-in">
       {/* Breadcrumb */}
       <LinearBreadcrumb
         backHref="/creative/assets"
@@ -442,6 +444,7 @@ export default function AssetDetailPage() {
           { label: "Assets", href: "/creative/assets" },
           { label: asset.name }
         ]}
+        className="mb-3"
       />
       
       {/* Header Section with Save Status */}
@@ -513,7 +516,7 @@ export default function AssetDetailPage() {
           </div>
           
           {/* Primary action */}
-          <Button size="sm" className="h-8" asChild>
+          <Button size="sm" asChild>
             <a href={asset.fileUrl} download>
               <Download className="mr-2 h-4 w-4" />
               Download
@@ -523,7 +526,7 @@ export default function AssetDetailPage() {
           {/* Secondary actions in dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 px-3">
+              <Button variant="outline" size="sm">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -544,6 +547,53 @@ export default function AssetDetailPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Horizontal Properties Bar */}
+      <div className="border rounded-lg p-4 bg-card mt-6">
+        <div className="flex items-center gap-6 flex-wrap">
+          {/* File Type */}
+          <div className="flex items-center gap-2">
+            <FileImage className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Type:</span>
+            <Badge variant="outline">{asset.fileType.toUpperCase()}</Badge>
+          </div>
+          
+          {/* Content Type (AI/Original) */}
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Content:</span>
+            <Badge variant={asset.contentType === "ai_generated" ? "default" : "outline"}>
+              {asset.contentType === "ai_generated" ? "AI Generated" : "Original"}
+            </Badge>
+          </div>
+          
+          {/* Brand */}
+          {displayBrandId && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Brand:</span>
+              <Link 
+                href={`/creative/brands/${displayBrandId}`}
+                className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                {displayBrandName}
+              </Link>
+            </div>
+          )}
+          
+          {/* File Size */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Size:</span>
+            <span className="text-sm">{formatFileSize(asset.fileSize)}</span>
+          </div>
+          
+          {/* Uploaded */}
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Uploaded:</span>
+            <span className="text-sm">{formatDateLong(displayCreatedAt)}</span>
+          </div>
         </div>
       </div>
 
@@ -580,10 +630,10 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-2">
-            <div className="grid lg:grid-cols-3 gap-3">
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid lg:grid-cols-3 gap-6">
               {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-3">
+              <div className="lg:col-span-2 space-y-6">
                 {/* Basic Information Card - Inline Editable */}
                 {nameField && descriptionField && (
                   <Card>
@@ -715,82 +765,167 @@ export default function AssetDetailPage() {
               </div>
 
               {/* Right Column - Metadata Sidebar */}
-              <div className="space-y-3">
-                {/* Status Card - Shopify Style */}
-                {statusField && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Status</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <InlineEditField
-                        field={statusField}
-                        value={asset.approvalStatus}
-                        onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
-                        showLabel={false}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {/* Organization Card - Shopify Style */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Organization</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* Brand */}
-                    {brandField && (
-                      <InlineEditField
-                        field={brandField}
-                        value={displayBrandId}
-                        onSave={(newValue) => handleFieldSave("brandId", newValue)}
-                      />
+              <div className="space-y-4 sticky top-4">
+                {/* Single Properties Card */}
+                <div className="border rounded-lg bg-card">
+                  {/* Header */}
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <h2 className="text-sm font-semibold">Properties</h2>
+                  </div>
+                  
+                  {/* Content - all sections inside */}
+                  <div className="divide-y divide-border">
+                    {/* Status Section */}
+                    {statusField && (
+                      <div className="px-4 py-3 space-y-2">
+                        <Label className="text-xs text-muted-foreground">Status</Label>
+                        <Select 
+                          value={asset.approvalStatus} 
+                          onValueChange={(value) => handleFieldSave("approvalStatus", value)}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusField.options?.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
                     
-                    {/* Design Type */}
-                    {designTypeField && (
-                      <InlineEditField
-                        field={designTypeField}
-                        value={displayDesignType}
-                        onSave={(newValue) => handleFieldSave("designType", newValue)}
-                      />
-                    )}
+                    {/* Organization Section */}
+                    <div className="px-4 py-3 space-y-3">
+                      <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
+                      
+                      {/* Brand */}
+                      {brandField && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">{brandField.label}</Label>
+                          <Select 
+                            value={displayBrandId} 
+                            onValueChange={(value) => handleFieldSave("brandId", value)}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {brandField.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      {/* Design Type */}
+                      {designTypeField && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">{designTypeField.label}</Label>
+                          <Select 
+                            value={displayDesignType} 
+                            onValueChange={(value) => handleFieldSave("designType", value)}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {designTypeField.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      {/* Tags */}
+                      {tagsField && asset && 'tags' in asset && (
+                        <div className="space-y-1.5">
+                          <InlineEditField
+                            field={tagsField}
+                            value={asset.tags}
+                            onSave={(newValue) => handleFieldSave("tags", newValue)}
+                          />
+                        </div>
+                      )}
+                    </div>
                     
-                    {/* Tags */}
-                    {tagsField && asset && 'tags' in asset && (
-                      <InlineEditField
-                        field={tagsField}
-                        value={asset.tags}
-                        onSave={(newValue) => handleFieldSave("tags", newValue)}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Talent Rights Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {(() => {
-                      const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
-                      return creatorIdsField && (
-                        <InlineEditField
-                          field={creatorIdsField}
-                          value={asset.creatorIds || []}
-                          onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
-                          label="Assign Talent"
-                        />
-                      )
-                    })()}
+                    {/* File Info Section */}
+                    <div className="px-4 py-3 space-y-2">
+                      <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Size</span>
+                          <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Type</span>
+                          <span className="text-sm font-medium">{asset.mimeType}</span>
+                        </div>
+                        {asset.dimensions && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Dimensions</span>
+                            <span className="text-sm font-medium">
+                              {asset.dimensions.width} × {asset.dimensions.height}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     
-                    {creditedCreators.length > 0 && (
-                      <>
-                        <Separator />
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                    {/* Details Section */}
+                    <div className="px-4 py-3 space-y-3">
+                      <Label className="text-xs text-muted-foreground font-medium">Details</Label>
+                      
+                      {/* Uploaded By */}
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Uploaded By</p>
+                        <p className="text-sm font-medium">{asset.uploadedByName}</p>
+                      </div>
+
+                      {/* Date */}
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Date</p>
+                        <p className="text-sm font-medium">{formatDateLong(displayCreatedAt)}</p>
+                      </div>
+                      
+                      {/* Task */}
+                      {asset.ticketId && asset.ticketTitle && (
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">From Task</p>
+                          <Link href={`/tasks`} className="text-sm font-medium hover:underline">
+                            {asset.ticketTitle}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Talent Rights Section */}
+                    <div className="px-4 py-3 space-y-3">
+                      <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
+                      
+                      {(() => {
+                        const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                        return creatorIdsField && (
+                          <InlineEditField
+                            field={creatorIdsField}
+                            value={asset.creatorIds || []}
+                            onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                            label="Assign Talent"
+                          />
+                        )
+                      })()}
+                      
+                      {creditedCreators.length > 0 && (
+                        <div className="space-y-2 mt-3">
+                          <p className="text-xs font-medium text-muted-foreground">Credited Creators</p>
                           <div className="space-y-2">
                             {assetCreditsWithRoles.map(({ creator, role }) => (
                               <div key={creator.id} className="flex items-center justify-between">
@@ -804,136 +939,39 @@ export default function AssetDetailPage() {
                             ))}
                           </div>
                         </div>
-                      </>
+                      )}
+                    </div>
+                    
+                    {/* Copyright Status Section */}
+                    {asset.copyrightCheckStatus && asset.copyrightCheckData && (
+                      <div className="px-4 py-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="h-auto p-0 text-xs"
+                            onClick={() => setActiveTab("quality")}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <ScoreBadge 
+                            icon={Shield} 
+                            score={asset.copyrightCheckData.overallScore} 
+                            size="sm"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
+                          </span>
+                        </div>
+                      </div>
                     )}
-                  </CardContent>
-                </Card>
-          
-          {/* Metadata Card - Consolidated */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {/* Brand */}
-              {displayBrandId && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Brand</p>
-                  <Link
-                    href={`/creative/brands/${displayBrandId}`}
-                    className="flex items-center gap-1.5 hover:underline"
-                  >
-                    {displayBrandColor && (
-                      <div
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: displayBrandColor }}
-                      />
-                    )}
-                    <span className="font-medium">{displayBrandName}</span>
-                  </Link>
-                </div>
-              )}
-
-              {/* Task */}
-              {asset.ticketId && asset.ticketTitle && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">From Task</p>
-                  <Link href={`/tasks`} className="font-medium hover:underline">
-                    {asset.ticketTitle}
-                  </Link>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Design Type */}
-              {designTypeConfig && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Design Type</p>
-                  <p className="font-medium">{designTypeConfig.label}</p>
-                </div>
-              )}
-
-              {/* Content Type - Remove duplicate AI badge, just show label */}
-              {contentTypeConfig && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Content Type</p>
-                  <p className="font-medium">{contentTypeConfig.label}</p>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Uploaded By */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5">Uploaded By</p>
-                <p className="font-medium">{asset.uploadedByName}</p>
-              </div>
-
-              {/* Date */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5">Date</p>
-                <p className="font-medium">{formatDateLong(displayCreatedAt)}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* File Information */}
-          <Card>
-            <CardContent className="pt-4">
-              <p className="text-xs font-medium text-muted-foreground mb-2">File Information</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Size</span>
-                  <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium">{asset.mimeType}</span>
-                </div>
-                {asset.dimensions && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Dimensions</span>
-                    <span className="font-medium">
-                      {asset.dimensions.width} × {asset.dimensions.height}
-                    </span>
                   </div>
-                )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Copyright Check - Summary */}
-          {asset.copyrightCheckStatus && asset.copyrightCheckData && (
-            <Card>
-              <CardContent className="pt-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">Copyright Status</p>
-                  <Button 
-                    variant="link" 
-                    size="sm" 
-                    className="h-auto p-0 text-xs"
-                    onClick={() => setActiveTab("quality")}
-                  >
-                    View Details
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <ScoreBadge 
-                    icon={Shield} 
-                    score={asset.copyrightCheckData.overallScore} 
-                    size="sm"
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          </div>
         </div>
       </TabsContent>
 
@@ -1051,20 +1089,20 @@ export default function AssetDetailPage() {
                     <CardTitle className="text-sm">Quality Scores</CardTitle>
                     <div className="flex items-center gap-2">
                       {!asset.copyrightCheckStatus && (
-                        <Button size="sm" className="h-7 text-xs" onClick={handleRunCheck} disabled={isRunningCheck}>
-                          <Shield className="mr-1.5 h-3 w-3" />
+                        <Button size="sm" onClick={handleRunCheck} disabled={isRunningCheck}>
+                          <Shield className="mr-2 h-4 w-4" />
                           {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
                         </Button>
                       )}
                       {asset.copyrightCheckStatus === "completed" && (
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleRerunCheck} disabled={isRunningCheck}>
-                          <RotateCcw className="mr-1.5 h-3 w-3" />
+                        <Button variant="outline" size="sm" onClick={handleRerunCheck} disabled={isRunningCheck}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
                           {isRunningCheck ? "Checking..." : "Re-run"}
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                      <Button variant="outline" size="sm" asChild>
                         <Link href={`/creative/assets/${assetId}/review`}>
-                          <FileBarChart className="mr-1.5 h-3 w-3" />
+                          <FileBarChart className="mr-2 h-4 w-4" />
                           Full Review
                         </Link>
                       </Button>
@@ -1350,11 +1388,11 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-2">
+          <TabsContent value="overview" className="mt-6">
             {/* Regular Asset - Two Column Grid */}
-            <div className="grid lg:grid-cols-3 gap-3">
+            <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-3">
+          <div className="lg:col-span-2 space-y-6">
             {/* Basic Information Card - Inline Editable */}
             {nameField && descriptionField && (
               <Card>
@@ -1462,82 +1500,136 @@ export default function AssetDetailPage() {
           </div>
 
           {/* Right Column - Metadata Sidebar */}
-          <div className="space-y-3">
-            {/* Status Card - Shopify Style */}
-            {statusField && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <InlineEditField
-                    field={statusField}
-                    value={asset.approvalStatus}
-                    onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
-                    showLabel={false}
-                  />
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Organization Card - Shopify Style */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Organization</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Brand */}
-                {brandField && (
-                  <InlineEditField
-                    field={brandField}
-                    value={displayBrandId}
-                    onSave={(newValue) => handleFieldSave("brandId", newValue)}
-                  />
-                )}
-                
-                {/* Design Type */}
-                {designTypeField && (
-                  <InlineEditField
-                    field={designTypeField}
-                    value={displayDesignType}
-                    onSave={(newValue) => handleFieldSave("designType", newValue)}
-                  />
-                )}
-                
-                {/* Tags */}
-                {tagsField && asset && 'tags' in asset && (
-                  <InlineEditField
-                    field={tagsField}
-                    value={asset.tags}
-                    onSave={(newValue) => handleFieldSave("tags", newValue)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Talent Rights Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Talent Rights (NILP)</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {(() => {
-                  const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
-                  return creatorIdsField && (
+          <div className="space-y-4 sticky top-4">
+            {/* Single Properties Card */}
+            <div className="border rounded-lg bg-card">
+              {/* Header */}
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Properties</h2>
+              </div>
+              
+              {/* Content - all sections inside */}
+              <div className="divide-y divide-border">
+                {/* Status Section */}
+                {statusField && (
+                  <div className="px-4 py-3 space-y-2">
+                    <Label className="text-xs text-muted-foreground">Status</Label>
                     <InlineEditField
-                      field={creatorIdsField}
-                      value={asset.creatorIds || []}
-                      onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
-                      label="Assign Talent"
+                      field={statusField}
+                      value={asset.approvalStatus}
+                      onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                      showLabel={false}
                     />
-                  )
-                })()}
+                  </div>
+                )}
                 
-                {creditedCreators.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Credited Creators</p>
+                {/* Organization Section */}
+                <div className="px-4 py-3 space-y-3">
+                  <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
+                  
+                  {/* Brand */}
+                  {brandField && (
+                    <div className="space-y-1.5">
+                      <InlineEditField
+                        field={brandField}
+                        value={displayBrandId}
+                        onSave={(newValue) => handleFieldSave("brandId", newValue)}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Design Type */}
+                  {designTypeField && (
+                    <div className="space-y-1.5">
+                      <InlineEditField
+                        field={designTypeField}
+                        value={displayDesignType}
+                        onSave={(newValue) => handleFieldSave("designType", newValue)}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Tags */}
+                  {tagsField && asset && 'tags' in asset && (
+                    <div className="space-y-1.5">
+                      <InlineEditField
+                        field={tagsField}
+                        value={asset.tags}
+                        onSave={(newValue) => handleFieldSave("tags", newValue)}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                {/* File Info Section */}
+                <div className="px-4 py-3 space-y-2">
+                  <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Size</span>
+                      <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Type</span>
+                      <span className="text-sm font-medium">{asset.mimeType}</span>
+                    </div>
+                    {asset.dimensions && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Dimensions</span>
+                        <span className="text-sm font-medium">
+                          {asset.dimensions.width} × {asset.dimensions.height}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Details Section */}
+                <div className="px-4 py-3 space-y-3">
+                  <Label className="text-xs text-muted-foreground font-medium">Details</Label>
+                  
+                  {/* Uploaded By */}
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Uploaded By</p>
+                    <p className="text-sm font-medium">{asset.uploadedByName}</p>
+                  </div>
+
+                  {/* Date */}
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-sm font-medium">{formatDateLong(displayCreatedAt)}</p>
+                  </div>
+                  
+                  {/* Task */}
+                  {asset.ticketId && asset.ticketTitle && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">From Task</p>
+                      <Link href={`/tasks`} className="text-sm font-medium hover:underline">
+                        {asset.ticketTitle}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Talent Rights Section */}
+                <div className="px-4 py-3 space-y-3">
+                  <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
+                  
+                  {(() => {
+                    const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                    return creatorIdsField && (
+                      <InlineEditField
+                        field={creatorIdsField}
+                        value={asset.creatorIds || []}
+                        onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                        label="Assign Talent"
+                      />
+                    )
+                  })()}
+                  
+                  {creditedCreators.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      <p className="text-xs font-medium text-muted-foreground">Credited Creators</p>
                       <div className="space-y-2">
                         {assetCreditsWithRoles.map(({ creator, role }) => (
                           <div key={creator.id} className="flex items-center justify-between">
@@ -1551,135 +1643,38 @@ export default function AssetDetailPage() {
                         ))}
                       </div>
                     </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Metadata Card - Consolidated */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {/* Brand */}
-                {displayBrandId && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Brand</p>
-                    <Link
-                      href={`/creative/brands/${displayBrandId}`}
-                      className="flex items-center gap-1.5 hover:underline"
-                    >
-                      {displayBrandColor && (
-                        <div
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: displayBrandColor }}
-                        />
-                      )}
-                      <span className="font-medium">{displayBrandName}</span>
-                    </Link>
-                  </div>
-                )}
-
-                {/* Task */}
-                {asset.ticketId && asset.ticketTitle && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">From Task</p>
-                    <Link href={`/tasks`} className="font-medium hover:underline">
-                      {asset.ticketTitle}
-                    </Link>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Design Type */}
-                {designTypeConfig && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Design Type</p>
-                    <p className="font-medium">{designTypeConfig.label}</p>
-                  </div>
-                )}
-
-                {/* Content Type - Remove duplicate AI badge, just show label */}
-                {contentTypeConfig && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1.5">Content Type</p>
-                    <p className="font-medium">{contentTypeConfig.label}</p>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Uploaded By */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Uploaded By</p>
-                  <p className="font-medium">{asset.uploadedByName}</p>
-                </div>
-
-                {/* Date */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5">Date</p>
-                  <p className="font-medium">{formatDateLong(displayCreatedAt)}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* File Information */}
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-2">File Information</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Size</span>
-                    <span className="font-medium">{formatFileSize(asset.fileSize)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Type</span>
-                    <span className="font-medium">{asset.mimeType}</span>
-                  </div>
-                  {asset.dimensions && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Dimensions</span>
-                      <span className="font-medium">
-                        {asset.dimensions.width} × {asset.dimensions.height}
-                      </span>
-                    </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Copyright Check - Summary */}
-            {asset.copyrightCheckStatus && asset.copyrightCheckData && (
-              <Card>
-                <CardContent className="pt-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground">Copyright Status</p>
-                    <Button 
-                      variant="link" 
-                      size="sm" 
-                      className="h-auto p-0 text-xs"
-                      onClick={() => setActiveTab("quality")}
-                    >
-                      View Details
-                    </Button>
+                
+                {/* Copyright Status Section */}
+                {asset.copyrightCheckStatus && asset.copyrightCheckData && (
+                  <div className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="h-auto p-0 text-xs"
+                        onClick={() => setActiveTab("quality")}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <ScoreBadge 
+                        icon={Shield} 
+                        score={asset.copyrightCheckData.overallScore} 
+                        size="sm"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
+                      </span>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <ScoreBadge 
-                      icon={Shield} 
-                      score={asset.copyrightCheckData.overallScore} 
-                      size="sm"
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
+                )}
+              </div>
+            </div>
           </div>
         </div>
           </TabsContent>
@@ -1694,20 +1689,20 @@ export default function AssetDetailPage() {
                     <CardTitle className="text-sm">Quality Scores</CardTitle>
                     <div className="flex items-center gap-2">
                       {!asset.copyrightCheckStatus && (
-                        <Button size="sm" className="h-7 text-xs" onClick={handleRunCheck} disabled={isRunningCheck}>
-                          <Shield className="mr-1.5 h-3 w-3" />
+                        <Button size="sm" onClick={handleRunCheck} disabled={isRunningCheck}>
+                          <Shield className="mr-2 h-4 w-4" />
                           {isRunningCheck ? "Checking..." : "Run Check (1 credit)"}
                         </Button>
                       )}
                       {asset.copyrightCheckStatus === "completed" && (
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleRerunCheck} disabled={isRunningCheck}>
-                          <RotateCcw className="mr-1.5 h-3 w-3" />
+                        <Button variant="outline" size="sm" onClick={handleRerunCheck} disabled={isRunningCheck}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
                           {isRunningCheck ? "Checking..." : "Re-run"}
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                      <Button variant="outline" size="sm" asChild>
                         <Link href={`/creative/assets/${assetId}/review`}>
-                          <FileBarChart className="mr-1.5 h-3 w-3" />
+                          <FileBarChart className="mr-2 h-4 w-4" />
                           Full Review
                         </Link>
                       </Button>
