@@ -787,7 +787,7 @@ export default function AssetApprovalsPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={handleBulkApprove}
+                onClick={() => handleBulkApprove()}
                 disabled={selectionCount === 0 || isProcessing}
                 className="h-8 bg-green-600 hover:bg-green-700"
               >
@@ -846,7 +846,7 @@ export default function AssetApprovalsPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={handleBulkApprove}
+                onClick={() => handleBulkApprove()}
                 disabled={selectionCount === 0 || isProcessing}
                 className="h-8 bg-green-600 hover:bg-green-700"
               >
