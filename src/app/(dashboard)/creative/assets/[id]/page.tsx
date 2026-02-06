@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { mockAssets, mockVersionGroups, getVersionGroupById, mockBrands } from "@/lib/mock-data/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import {
   Download,
   Calendar,
@@ -38,6 +39,8 @@ import {
   Zap,
   ShieldCheck,
   ShieldAlert,
+  Maximize2,
+  X,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -71,12 +74,36 @@ export default function AssetDetailPage() {
   const versionGroup = getVersionGroupById(assetId)
   const [selectedVersionId, setSelectedVersionId] = useState(versionGroup?.currentVersionId || "")
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
+  const [mediaLightboxOpen, setMediaLightboxOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"overview" | "quality" | "versions">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
   // Local asset state for optimistic updates
   const [localAsset, setLocalAsset] = useState<any>(null)
+  const topRef = useRef<HTMLDivElement>(null)
+
+  // Scroll main content to top when entering page or changing asset (fixes load/back scroll position)
+  useEffect(() => {
+    const scrollContainer = document.getElementById("main-scroll-container")
+    const scrollToTop = () => {
+      if (scrollContainer) scrollContainer.scrollTop = 0
+      topRef.current?.scrollIntoView({ behavior: "auto", block: "start" })
+    }
+    scrollToTop()
+    const raf = requestAnimationFrame(scrollToTop)
+    const t1 = setTimeout(scrollToTop, 0)
+    const t2 = setTimeout(scrollToTop, 50)
+    const t3 = setTimeout(scrollToTop, 100)
+    const t4 = setTimeout(scrollToTop, 150)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+      clearTimeout(t4)
+    }
+  }, [assetId])
   
   // Generate mock review data with realistic scores
   const generateMockReviewData = (): AssetReviewData => {
@@ -101,6 +128,7 @@ export default function AssetDetailPage() {
         status: "completed",
         data: {
           similarityScore: 100 - copyrightScore,
+          score: copyrightScore,
           matchedSources: [],
           riskBreakdown: {
             copyrightRisk: Math.max(0, 100 - copyrightScore - 10),
@@ -437,6 +465,7 @@ export default function AssetDetailPage() {
 
   return (
     <PageContainer className="space-y-0 animate-fade-in">
+      <div ref={topRef} className="h-0 overflow-hidden pointer-events-none" aria-hidden />
       {/* Breadcrumb */}
       <LinearBreadcrumb
         backHref="/creative/assets"
@@ -451,8 +480,24 @@ export default function AssetDetailPage() {
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
           {/* Title */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <h1 className="text-xl font-semibold">{asset.name}</h1>
+            {/* Status badge - color-coded at top for quick scan */}
+            {(() => {
+              const status = asset.approvalStatus ?? "draft"
+              const statusConfig = {
+                draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted-foreground/30" },
+                pending: { label: "Pending", className: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800" },
+                approved: { label: "Approved", className: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-200 dark:border-emerald-800" },
+                rejected: { label: "Rejected", className: "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-800" },
+              } as const
+              const config = statusConfig[status] ?? statusConfig.draft
+              return (
+                <Badge variant="outline" className={cn("font-medium text-xs px-2 py-0.5 capitalize", config.className)}>
+                  {config.label}
+                </Badge>
+              )
+            })()}
             {versionGroup && (
               <Badge variant="outline" className="font-mono text-xs px-1.5 py-0">
                 v{(asset as AssetVersion).versionNumber}
@@ -466,8 +511,19 @@ export default function AssetDetailPage() {
             )}
           </div>
 
-          {/* Inline Stats */}
+          {/* Inline Stats - status dot + brand, type, size, etc. */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            {/* Status dot (color-coded) */}
+            {(() => {
+              const status = asset.approvalStatus ?? "draft"
+              const dotClass = {
+                draft: "bg-muted-foreground/60",
+                pending: "bg-amber-500",
+                approved: "bg-emerald-500",
+                rejected: "bg-red-500",
+              }[status] ?? "bg-muted-foreground/60"
+              return <div className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} title={status} aria-hidden />
+            })()}
             {displayBrandId && (
               <Link 
                 href={`/creative/brands/${displayBrandId}`}
@@ -475,7 +531,7 @@ export default function AssetDetailPage() {
               >
                 {displayBrandColor && (
                   <div
-                    className="w-1.5 h-1.5 rounded-full"
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ backgroundColor: displayBrandColor }}
                   />
                 )}
@@ -551,7 +607,7 @@ export default function AssetDetailPage() {
       </div>
 
       {/* Horizontal Properties Bar */}
-      <div className="border rounded-lg p-4 bg-card mt-6">
+      <div className="border rounded-lg p-3 bg-card mt-4">
         <div className="flex items-center gap-6 flex-wrap">
           {/* File Type */}
           <div className="flex items-center gap-2">
@@ -597,100 +653,100 @@ export default function AssetDetailPage() {
         </div>
       </div>
 
-      {/* Tabs for Version Groups */}
+      {/* Tabs - tight under properties bar so image is above fold */}
       {versionGroup ? (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
-          {/* Tab Navigation - Linear Style */}
-          <div className="border-b border-border/50">
-            <TabsList className="h-auto bg-transparent p-0 gap-0">
-              <TabsTrigger 
-                value="overview"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger 
-                value="versions"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
-              >
-                Versions ({versionGroup.totalVersions})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="quality"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
-              >
-                Quality
-                {asset.copyrightCheckStatus === "completed" && (
-                  <Badge variant="secondary" className="ml-1.5 h-3.5 px-1 text-[9px]">
-                    Checked
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <div className="mt-3">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
+            {/* Tab strip - compact Linear style */}
+            <div className="border-b border-border">
+              <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
+                <TabsTrigger 
+                  value="overview"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="versions"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Versions ({versionGroup.totalVersions})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="quality"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Quality
+                  {asset.copyrightCheckStatus === "completed" && (
+                    <Badge variant="secondary" className="ml-1 h-3 px-1 text-[9px]">
+                      Checked
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid lg:grid-cols-3 gap-6">
+          {/* Overview Tab Content - minimal gap so image above fold */}
+          <TabsContent value="overview" className="mt-1">
+            <div className="grid lg:grid-cols-3 gap-3">
               {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Basic Information Card - Inline Editable */}
-                {nameField && descriptionField && (
-                  <Card>
-                    <CardContent className="pt-4 space-y-3">
-                      <InlineEditField
-                        field={nameField}
-                        value={asset.name}
-                        onSave={(newValue) => handleFieldSave("name", newValue)}
-                        label="Title"
-                      />
-                      
-                      {descriptionField && (
-                        <InlineEditField
-                          field={descriptionField}
-                          value={asset.description}
-                          onSave={(newValue) => handleFieldSave("description", newValue)}
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {/* Media / Preview Image */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Media</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
-                      {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+              <div className="lg:col-span-2 space-y-2">
+                {/* Media first - above the fold */}
+                <div className="rounded-md border border-border/80 bg-muted/30 overflow-hidden">
+                  <div className="relative aspect-[4/3] bg-muted">
+                    {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => setMediaLightboxOpen(true)}
+                        className="absolute inset-0 w-full h-full flex items-center justify-center group cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
+                      >
                         <Image
                           src={asset.thumbnailUrl}
                           alt={asset.name}
                           fill
                           className="object-contain"
                         />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            Preview not available for this file type
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                        <span className="absolute bottom-2 right-2 rounded bg-black/50 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Expand">
+                          <Maximize2 className="h-3.5 w-3.5" />
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <FileImage className="h-12 w-12 text-muted-foreground/50 mb-1" />
+                        <p className="text-xs text-muted-foreground">Preview not available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Title & Description - below image */}
+                {nameField && descriptionField && (
+                  <div className="rounded-md border border-border/80 bg-card px-3 py-2 space-y-1.5">
+                    <InlineEditField
+                      field={nameField}
+                      value={asset.name}
+                      onSave={(newValue) => handleFieldSave("name", newValue)}
+                      label="Title"
+                    />
+                    {descriptionField && (
+                      <InlineEditField
+                        field={descriptionField}
+                        value={asset.description}
+                        onSave={(newValue) => handleFieldSave("description", newValue)}
+                      />
+                    )}
+                  </div>
+                )}
 
                 {/* File Properties Section */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">File Properties</h3>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
+                    <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">File Properties</h3>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <Card className="mt-2 border-l-2 border-l-accent">
-                      <CardContent className="pt-4 space-y-3">
+                  <CollapsibleContent className="pt-1.5">
+                    <Card className="mt-1.5 border-l-2 border-l-accent">
+                      <CardContent className="pt-3 pb-3 space-y-2">
                         {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
                           <InlineEditField
                             key={field.id}
@@ -707,8 +763,8 @@ export default function AssetDetailPage() {
                 {/* AI Generation Section (for AI-generated assets) */}
                 {isAIGenerated && (
                   <Collapsible defaultOpen={true}>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Generation</h3>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
+                      <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI Generation</h3>
                       <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-2">
@@ -767,9 +823,9 @@ export default function AssetDetailPage() {
               {/* Right Column - Metadata Sidebar */}
               <div className="space-y-4 sticky top-4">
                 {/* Single Properties Card */}
-                <div className="border rounded-lg bg-card">
+                <div className="border border-border/80 rounded-md bg-card">
                   {/* Header */}
-                  <div className="p-4 border-b border-border flex items-center justify-between">
+                  <div className="px-3 py-2 border-b border-border flex items-center justify-between">
                     <h2 className="text-sm font-semibold">Properties</h2>
                   </div>
                   
@@ -777,7 +833,7 @@ export default function AssetDetailPage() {
                   <div className="divide-y divide-border">
                     {/* Status Section */}
                     {statusField && (
-                      <div className="px-4 py-3 space-y-2">
+                      <div className="px-3 py-2 space-y-1.5">
                         <Label className="text-xs text-muted-foreground">Status</Label>
                         <Select 
                           value={asset.approvalStatus} 
@@ -798,7 +854,7 @@ export default function AssetDetailPage() {
                     )}
                     
                     {/* Organization Section */}
-                    <div className="px-4 py-3 space-y-3">
+                    <div className="px-3 py-2 space-y-2">
                       <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
                       
                       {/* Brand */}
@@ -858,7 +914,7 @@ export default function AssetDetailPage() {
                     </div>
                     
                     {/* File Info Section */}
-                    <div className="px-4 py-3 space-y-2">
+                    <div className="px-3 py-2 space-y-1.5">
                       <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
@@ -881,7 +937,7 @@ export default function AssetDetailPage() {
                     </div>
                     
                     {/* Details Section */}
-                    <div className="px-4 py-3 space-y-3">
+                    <div className="px-3 py-2 space-y-2">
                       <Label className="text-xs text-muted-foreground font-medium">Details</Label>
                       
                       {/* Uploaded By */}
@@ -908,7 +964,7 @@ export default function AssetDetailPage() {
                     </div>
                     
                     {/* Talent Rights Section */}
-                    <div className="px-4 py-3 space-y-3">
+                    <div className="px-3 py-2 space-y-2">
                       <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
                       
                       {(() => {
@@ -944,7 +1000,7 @@ export default function AssetDetailPage() {
                     
                     {/* Copyright Status Section */}
                     {asset.copyrightCheckStatus && asset.copyrightCheckData && (
-                      <div className="px-4 py-3 space-y-2">
+                      <div className="px-3 py-2 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
                           <Button 
@@ -960,7 +1016,7 @@ export default function AssetDetailPage() {
                         <div className="flex items-center gap-2">
                           <ScoreBadge 
                             icon={Shield} 
-                            score={asset.copyrightCheckData.overallScore} 
+                            score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)} 
                             size="sm"
                           />
                           <span className="text-xs text-muted-foreground">
@@ -1114,7 +1170,7 @@ export default function AssetDetailPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <ScoreBadge 
                       icon={Shield} 
-                      score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
+                      score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)}
                       label="Copyright"
                       lastChecked={asset.copyrightCheckData?.checkedAt}
                       size="sm"
@@ -1361,95 +1417,94 @@ export default function AssetDetailPage() {
               </div>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       ) : (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
-          {/* Tab Navigation - Linear Style */}
-          <div className="border-b border-border/50">
-            <TabsList className="h-auto bg-transparent p-0 gap-0">
-              <TabsTrigger 
-                value="overview"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger 
-                value="quality"
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-2 pb-1.5 text-sm"
-              >
-                Quality
-                {asset.copyrightCheckStatus === "completed" && (
-                  <Badge variant="secondary" className="ml-1.5 h-3.5 px-1 text-[9px]">
-                    Checked
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Overview Tab Content */}
-          <TabsContent value="overview" className="mt-6">
-            {/* Regular Asset - Two Column Grid */}
-            <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information Card - Inline Editable */}
-            {nameField && descriptionField && (
-              <Card>
-                <CardContent className="pt-4 space-y-3">
-                  <InlineEditField
-                    field={nameField}
-                    value={asset.name}
-                    onSave={(newValue) => handleFieldSave("name", newValue)}
-                    label="Title"
-                  />
-                  
-                  {descriptionField && (
-                    <InlineEditField
-                      field={descriptionField}
-                      value={asset.description}
-                      onSave={(newValue) => handleFieldSave("description", newValue)}
-                    />
+        <div className="mt-3">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "quality" | "versions")}>
+            <div className="border-b border-border">
+              <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
+                <TabsTrigger 
+                  value="overview"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="quality"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Quality
+                  {asset.copyrightCheckStatus === "completed" && (
+                    <Badge variant="secondary" className="ml-1 h-3 px-1 text-[9px]">
+                      Checked
+                    </Badge>
                   )}
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Media / Preview Image */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Media</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
-                  {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+          {/* Overview Tab Content - minimal gap so image above fold */}
+          <TabsContent value="overview" className="mt-1">
+            <div className="grid lg:grid-cols-3 gap-3">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 space-y-2">
+            {/* Media first - above the fold */}
+            <div className="rounded-md border border-border/80 bg-muted/30 overflow-hidden">
+              <div className="relative aspect-[4/3] bg-muted">
+                {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setMediaLightboxOpen(true)}
+                    className="absolute inset-0 w-full h-full flex items-center justify-center group cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
+                  >
                     <Image
                       src={asset.thumbnailUrl}
                       alt={asset.name}
                       fill
                       className="object-contain"
                     />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <FileImage className="h-16 w-16 text-muted-foreground/50 mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Preview not available for this file type
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
+                    <span className="absolute bottom-2 right-2 rounded bg-black/50 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity" title="Expand">
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <FileImage className="h-12 w-12 text-muted-foreground/50 mb-1" />
+                    <p className="text-xs text-muted-foreground">Preview not available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Title & Description - below image */}
+            {nameField && descriptionField && (
+              <div className="rounded-md border border-border/80 bg-card px-3 py-2 space-y-1.5">
+                <InlineEditField
+                  field={nameField}
+                  value={asset.name}
+                  onSave={(newValue) => handleFieldSave("name", newValue)}
+                  label="Title"
+                />
+                {descriptionField && (
+                  <InlineEditField
+                    field={descriptionField}
+                    value={asset.description}
+                    onSave={(newValue) => handleFieldSave("description", newValue)}
+                  />
+                )}
+              </div>
+            )}
+
             {/* File Properties Section */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">File Properties</h3>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">File Properties</h3>
+                <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="mt-2 border-l-2 border-l-accent">
-                  <CardContent className="pt-4 space-y-3">
+              <CollapsibleContent className="pt-1.5">
+                <Card className="mt-1.5 border-l-2 border-l-accent">
+                  <CardContent className="pt-3 pb-3 space-y-2">
                     {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
                       <InlineEditField
                         key={field.id}
@@ -1466,8 +1521,8 @@ export default function AssetDetailPage() {
             {/* AI Generation Section (for AI-generated assets) */}
             {isAIGenerated && (
               <Collapsible defaultOpen={true}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">AI Generation</h3>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI Generation</h3>
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-2">
@@ -1502,9 +1557,9 @@ export default function AssetDetailPage() {
           {/* Right Column - Metadata Sidebar */}
           <div className="space-y-4 sticky top-4">
             {/* Single Properties Card */}
-            <div className="border rounded-lg bg-card">
+            <div className="border border-border/80 rounded-md bg-card">
               {/* Header */}
-              <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="px-3 py-2 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Properties</h2>
               </div>
               
@@ -1512,7 +1567,7 @@ export default function AssetDetailPage() {
               <div className="divide-y divide-border">
                 {/* Status Section */}
                 {statusField && (
-                  <div className="px-4 py-3 space-y-2">
+                  <div className="px-3 py-2 space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Status</Label>
                     <InlineEditField
                       field={statusField}
@@ -1524,7 +1579,7 @@ export default function AssetDetailPage() {
                 )}
                 
                 {/* Organization Section */}
-                <div className="px-4 py-3 space-y-3">
+                <div className="px-3 py-2 space-y-2">
                   <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
                   
                   {/* Brand */}
@@ -1562,7 +1617,7 @@ export default function AssetDetailPage() {
                 </div>
                 
                 {/* File Info Section */}
-                <div className="px-4 py-3 space-y-2">
+                <div className="px-3 py-2 space-y-1.5">
                   <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between items-center">
@@ -1585,7 +1640,7 @@ export default function AssetDetailPage() {
                 </div>
                 
                 {/* Details Section */}
-                <div className="px-4 py-3 space-y-3">
+                <div className="px-3 py-2 space-y-2">
                   <Label className="text-xs text-muted-foreground font-medium">Details</Label>
                   
                   {/* Uploaded By */}
@@ -1612,7 +1667,7 @@ export default function AssetDetailPage() {
                 </div>
                 
                 {/* Talent Rights Section */}
-                <div className="px-4 py-3 space-y-3">
+                <div className="px-3 py-2 space-y-2">
                   <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
                   
                   {(() => {
@@ -1648,7 +1703,7 @@ export default function AssetDetailPage() {
                 
                 {/* Copyright Status Section */}
                 {asset.copyrightCheckStatus && asset.copyrightCheckData && (
-                  <div className="px-4 py-3 space-y-2">
+                  <div className="px-3 py-2 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
                       <Button 
@@ -1664,7 +1719,7 @@ export default function AssetDetailPage() {
                     <div className="flex items-center gap-2">
                       <ScoreBadge 
                         icon={Shield} 
-                        score={asset.copyrightCheckData.overallScore} 
+                        score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)} 
                         size="sm"
                       />
                       <span className="text-xs text-muted-foreground">
@@ -1714,7 +1769,7 @@ export default function AssetDetailPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <ScoreBadge 
                       icon={Shield} 
-                      score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined}
+                      score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)}
                       label="Copyright"
                       lastChecked={asset.copyrightCheckData?.checkedAt}
                       size="sm"
@@ -1962,7 +2017,36 @@ export default function AssetDetailPage() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       )}
+
+      {/* Media lightbox - full-bleed like Google Drive (no white space, image as big as viewport) */}
+      <Dialog open={mediaLightboxOpen} onOpenChange={setMediaLightboxOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="fixed inset-0 z-50 w-screen h-screen max-w-none max-h-none translate-x-0 translate-y-0 p-0 gap-0 border-0 rounded-none bg-black/95 overflow-hidden flex items-center justify-center"
+        >
+          <DialogTitle className="sr-only">
+            Expand image: {asset?.name ?? "Asset preview"}
+          </DialogTitle>
+          <button
+            type="button"
+            onClick={() => setMediaLightboxOpen(false)}
+            className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {asset && 'fileType' in asset && asset.fileType === "image" && asset.thumbnailUrl && (
+            <img
+              src={typeof asset.fileUrl === "string" && asset.fileUrl.startsWith("http") ? asset.fileUrl : asset.thumbnailUrl}
+              alt={asset.name}
+              className="max-h-[100vh] max-w-[100vw] w-auto h-auto object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Submit Version Dialog */}
       {versionGroup && (

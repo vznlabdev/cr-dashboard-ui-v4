@@ -293,6 +293,7 @@ function generateBasicReviewData(rng: () => number) {
       status: "completed" as const,
       data: {
         similarityScore: 100 - copyrightScore,
+        score: copyrightScore,
         riskBreakdown: {
           riskLevel: (copyrightScore >= 80 ? "low" : copyrightScore >= 60 ? "medium" : "high") as "low" | "medium" | "high",
           highRiskCount: copyrightScore < 60 ? 1 : 0,

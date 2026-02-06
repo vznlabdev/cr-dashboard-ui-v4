@@ -338,6 +338,8 @@ export interface RiskBreakdown {
 
 export interface CopyrightCheckData {
   similarityScore: number // 0-100, threshold is typically 30%
+  /** Copyright score 0-100 used in overallScore (same as 100 - similarityScore when from our generators) */
+  score?: number
   matchedSources: MatchedSource[]
   riskBreakdown: RiskBreakdown
   recommendations: string[]

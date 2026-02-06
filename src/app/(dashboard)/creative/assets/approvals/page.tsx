@@ -1074,7 +1074,7 @@ export default function AssetApprovalsPage() {
                           {/* Status badge / Quality scores / Manual Approval */}
                           {asset.reviewData ? (
                             <div className="flex items-center gap-1">
-                              <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined} size="sm" />
+                              <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)} size="sm" />
                               <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
                               <ScoreBadge icon={Zap} score={asset.reviewData?.performance?.data?.score} size="sm" />
                               <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
