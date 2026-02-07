@@ -426,10 +426,19 @@ export default function AssetDetailPage() {
     }
   }, [baseAsset, localAsset])
   
-  // When saving a version, persist to the version group so the version dropdown, brand header, and sidebar stay in sync.
-  // Update immutably (new array + new version object) so React and children see the change.
+  // When saving, merge resolved brand name/color so the brand area under the title updates (standalone and version-group).
+  // For version groups, also persist to the group and version list.
   const handleAssetUpdate = useCallback((updated: any) => {
-    setLocalAsset(updated)
+    const merged = { ...updated }
+    if (updated?.brandId !== undefined) {
+      const brand = mockBrands.find((b) => b.id === updated.brandId)
+      if (brand) {
+        merged.brandName = brand.name
+        const primaryColor = brand.colors?.find((c) => c.type === "primary") ?? brand.colors?.[0]
+        merged.brandColor = primaryColor?.hex
+      }
+    }
+    setLocalAsset(merged)
     if (!versionGroup || !updated?.id) return
     // Persist brand/design to version group so header (top-left) and Brand & Design sidebar use the same source
     if (updated.brandId !== undefined) {

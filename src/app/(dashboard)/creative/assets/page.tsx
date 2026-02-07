@@ -375,11 +375,13 @@ export default function AssetsPage() {
     return count
   }, [brandFilter, fileTypeFilter, designTypeFilter, contentTypeFilter])
 
-  // Count assets pending approval
+  // Count items in the approvals queue (matches approvals page: standalone assets + version rows, pending by status)
   const pendingApprovalCount = useMemo(() => {
-    return mockAssets.filter(
-      (asset) => isApprovalPending(asset.approvalStatus) && asset.copyrightCheckStatus === "completed"
-    ).length
+    const standalonePending = mockAssets.filter((a) => isApprovalPending(a.approvalStatus)).length
+    const versionPending = mockVersionGroups.reduce((sum, g) => {
+      return sum + g.versions.filter((v) => isApprovalPending(v.status ?? v.approvalStatus)).length
+    }, 0)
+    return standalonePending + versionPending
   }, [])
 
   // Handle view tab changes

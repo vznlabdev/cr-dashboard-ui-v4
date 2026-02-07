@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SimplePagination } from "@/components/ui/simple-pagination"
 import { PageContainer } from "@/components/layout/PageContainer"
-import { mockAssets, mockBrands } from "@/lib/mock-data/creative"
+import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creative"
 import { Asset, AssetReviewData } from "@/types/creative"
+import type { AssetVersion, AssetVersionGroup } from "@/types/creative"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -80,15 +81,106 @@ export default function AssetApprovalsPage() {
   const [deselectedAssets, setDeselectedAssets] = useState<Set<string>>(new Set())
   const { credits, getTotalAvailable, useCredit } = useCopyrightCredits()
 
-  // Get pending approval assets (including unchecked)
-  const pendingAssets = useMemo(() => {
-    return mockAssets.filter(
-      (asset) => 
-        isApprovalPending(asset.approvalStatus) && 
-        !approvedAssets.has(asset.id) &&
-        !rejectedAssets.has(asset.id)
+  // Resolve row id to mock asset or version for mutations
+  const updateRowById = useCallback((id: string, patch: { reviewData?: AssetReviewData; copyrightCheckStatus?: string; copyrightCheckData?: unknown } | { approvalStatus?: string; approvedBy?: string; approvedByName?: string; approvedAt?: Date; approvalReason?: string }) => {
+    const assetIndex = mockAssets.findIndex((a) => a.id === id)
+    if (assetIndex !== -1) {
+      Object.assign(mockAssets[assetIndex], patch)
+      return
+    }
+    for (const g of mockVersionGroups) {
+      const vi = g.versions.findIndex((v) => v.id === id)
+      if (vi !== -1) {
+        const v = g.versions[vi] as AssetVersion
+        if ("approvalStatus" in patch || "approvedBy" in patch) {
+          const p = patch as { approvalStatus?: string; approvedBy?: string; approvedByName?: string; approvedAt?: Date; approvalReason?: string }
+          if (p.approvalStatus) {
+            v.status = p.approvalStatus as AssetVersion["status"]
+            v.approvalStatus = p.approvalStatus
+          }
+          if (p.approvedBy !== undefined) v.approvedBy = p.approvedBy
+          if (p.approvedByName !== undefined) v.approvedByName = p.approvedByName
+          if (p.approvedAt !== undefined) v.approvedAt = p.approvedAt
+          if (p.approvalReason !== undefined) v.approvalReason = p.approvalReason
+        } else {
+          Object.assign(v, patch)
+        }
+        return
+      }
+    }
+  }, [])
+
+  // Normalized row for list: standalone assets + version-group versions (one row per version)
+  type ApprovalRow = {
+    id: string
+    name: string
+    brandId: string
+    brandName: string
+    brandColor?: string
+    createdAt: Date
+    reviewData?: AssetReviewData
+    approvalStatus?: string
+    copyrightCheckStatus?: string
+    copyrightCheckData?: { similarityScore?: number; riskBreakdown?: { riskLevel?: string }; matchedSources?: unknown[] }
+    approvedByName?: string
+    approvedAt?: Date
+    contentType?: string
+    versionNumber?: number
+    versionGroupId?: string
+    isCurrentVersion?: boolean
+    assetHref: string
+  }
+
+  const allApprovalRows = useMemo(() => {
+    const standalone: ApprovalRow[] = mockAssets.map((a) => ({
+      id: a.id,
+      name: a.name,
+      brandId: a.brandId ?? "",
+      brandName: a.brandName ?? "",
+      brandColor: a.brandColor,
+      createdAt: a.createdAt ?? new Date(),
+      reviewData: a.reviewData,
+      approvalStatus: a.approvalStatus,
+      copyrightCheckStatus: a.copyrightCheckStatus,
+      copyrightCheckData: a.copyrightCheckData,
+      approvedByName: a.approvedByName,
+      approvedAt: a.approvedAt,
+      contentType: a.contentType,
+      assetHref: `/creative/assets/${a.id}`,
+    }))
+    const fromVersions: ApprovalRow[] = mockVersionGroups.flatMap((g: AssetVersionGroup) =>
+      g.versions.map((v: AssetVersion) => ({
+        id: v.id,
+        name: v.name ?? g.name,
+        brandId: g.brandId,
+        brandName: g.brandName ?? "",
+        brandColor: g.brandColor,
+        createdAt: (v.uploadedAt ?? g.createdAt) as Date,
+        reviewData: v.reviewData,
+        approvalStatus: (v.status ?? v.approvalStatus) as string | undefined,
+        copyrightCheckStatus: v.copyrightCheckStatus,
+        copyrightCheckData: v.copyrightCheckData,
+        approvedByName: v.approvedByName,
+        approvedAt: v.approvedAt,
+        contentType: v.contentType,
+        versionNumber: v.versionNumber,
+        versionGroupId: g.id,
+        isCurrentVersion: g.currentVersionId === v.id,
+        assetHref: `/creative/assets/${g.id}/v/${v.versionNumber}`,
+      }))
     )
-  }, [approvedAssets, rejectedAssets, dataVersion])
+    return [...standalone, ...fromVersions]
+  }, [dataVersion])
+
+  // Get pending approval rows (standalone + version rows) not yet approved/rejected
+  const pendingAssets = useMemo(() => {
+    return allApprovalRows.filter(
+      (row) =>
+        isApprovalPending(row.approvalStatus) &&
+        !approvedAssets.has(row.id) &&
+        !rejectedAssets.has(row.id)
+    )
+  }, [allApprovalRows, approvedAssets, rejectedAssets])
 
   // Categorize assets by check status
   const assetsByStatus = useMemo(() => {
@@ -99,60 +191,54 @@ export default function AssetApprovalsPage() {
     }
   }, [pendingAssets, checksVersion])
 
-  // Filter and sort assets
+  // Filter and sort assets (rows = standalone + version rows)
   const filteredAssets = useMemo(() => {
-    // Include processed assets when showProcessed is true
-    let baseAssets = showProcessed 
-      ? [...pendingAssets, ...mockAssets.filter(a => 
-          approvedAssets.has(a.id) || rejectedAssets.has(a.id)
-        )]
+    let baseAssets: ApprovalRow[] = showProcessed
+      ? [...pendingAssets, ...allApprovalRows.filter((r) => approvedAssets.has(r.id) || rejectedAssets.has(r.id))]
       : pendingAssets
-    
-    let filtered = baseAssets.filter((asset) => {
+
+    let filtered = baseAssets.filter((row) => {
       const matchesSearch =
-        asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        asset.brandName.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesBrand = brandFilter === "all" || asset.brandId === brandFilter
+        row.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        row.brandName.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesBrand = brandFilter === "all" || row.brandId === brandFilter
       return matchesSearch && matchesBrand
     })
 
-    // Sort assets
+    // Sort rows
     if (sortBy === "needs_check") {
-      // Sort unchecked assets first, then by date
       filtered.sort((a, b) => {
         const aHasReview = !!a.reviewData
         const bHasReview = !!b.reviewData
         if (aHasReview === bHasReview) {
-          return b.createdAt.getTime() - a.createdAt.getTime() // Same status, sort by date
+          return b.createdAt.getTime() - a.createdAt.getTime()
         }
-        return aHasReview ? 1 : -1 // Unchecked first
+        return aHasReview ? 1 : -1
       })
     } else if (sortBy === "quality") {
-      // Sort by overall quality score (checked assets first, then by score)
       filtered.sort((a, b) => {
         const aScore = a.reviewData?.overallScore ?? -1
         const bScore = b.reviewData?.overallScore ?? -1
         if (aScore === -1 && bScore === -1) {
-          return b.createdAt.getTime() - a.createdAt.getTime() // Both unchecked, sort by date
+          return b.createdAt.getTime() - a.createdAt.getTime()
         }
-        return bScore - aScore // Higher quality first
+        return bScore - aScore
       })
     } else if (sortBy === "date") {
-      filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // Newest first
+      filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     }
 
     return filtered
-  }, [searchQuery, brandFilter, sortBy, pendingAssets, showProcessed, approvedAssets, rejectedAssets, checksVersion, dataVersion])
+  }, [searchQuery, brandFilter, sortBy, pendingAssets, allApprovalRows, showProcessed, approvedAssets, rejectedAssets, checksVersion, dataVersion])
 
-  // Calculate how many selected assets actually need checks
+  // Calculate how many selected rows actually need checks
   const assetsNeedingChecks = useMemo(() => {
     const selectedIds = selectAllPages
-      ? filteredAssets.filter(asset => !deselectedAssets.has(asset.id)).map(asset => asset.id)
+      ? filteredAssets.filter((row) => !deselectedAssets.has(row.id)).map((row) => row.id)
       : Array.from(selectedAssets)
-    
-    return selectedIds.filter(id => {
-      const asset = mockAssets.find(a => a.id === id)
-      return !asset?.reviewData
+    return selectedIds.filter((id) => {
+      const row = filteredAssets.find((r) => r.id === id)
+      return !row?.reviewData
     }).length
   }, [selectedAssets, checksVersion, selectAllPages, filteredAssets, deselectedAssets])
 
@@ -382,18 +468,13 @@ export default function AssetApprovalsPage() {
       // INTEGRATION POINT: Call API to approve asset
       await new Promise((resolve) => setTimeout(resolve, 500))
       
-      // Find the asset and update it with manual approval info
-      const assetIndex = mockAssets.findIndex(a => a.id === assetId)
-      if (assetIndex !== -1) {
-        mockAssets[assetIndex] = {
-          ...mockAssets[assetIndex],
-          approvalStatus: "approved",
-          approvedBy: "current-user-id",
-          approvedByName: "jgordon",
-          approvedAt: new Date(),
-          approvalReason: reason
-        }
-      }
+      updateRowById(assetId, {
+        approvalStatus: "approved",
+        approvedBy: "current-user-id",
+        approvedByName: "jgordon",
+        approvedAt: new Date(),
+        approvalReason: reason,
+      })
       
       // Mark asset as approved
       setApprovedAssets(prev => new Set(prev).add(assetId))
@@ -453,19 +534,14 @@ export default function AssetApprovalsPage() {
       // INTEGRATION POINT: Call API to bulk approve assets
       await new Promise((resolve) => setTimeout(resolve, 1000))
       
-      // Update each asset with approval metadata
-      selectedIds.forEach(id => {
-        const assetIndex = mockAssets.findIndex(a => a.id === id)
-        if (assetIndex !== -1) {
-          mockAssets[assetIndex] = {
-            ...mockAssets[assetIndex],
-            approvalStatus: "approved",
-            approvedBy: "current-user-id",
-            approvedByName: "jgordon",
-            approvedAt: new Date(),
-            approvalReason: reason
-          }
-        }
+      selectedIds.forEach((id) => {
+        updateRowById(id, {
+          approvalStatus: "approved",
+          approvedBy: "current-user-id",
+          approvedByName: "jgordon",
+          approvedAt: new Date(),
+          approvalReason: reason,
+        })
       })
       
       // Mark assets as approved in local state
@@ -508,17 +584,12 @@ export default function AssetApprovalsPage() {
       return
     }
 
-    // Separate assets that need checks vs already have scores
     const assetsToCheck: string[] = []
     const alreadyChecked: string[] = []
-    
-    selectedIds.forEach(id => {
-      const asset = mockAssets.find(a => a.id === id)
-      if (asset?.reviewData) {
-        alreadyChecked.push(id)
-      } else {
-        assetsToCheck.push(id)
-      }
+    selectedIds.forEach((id) => {
+      const row = allApprovalRows.find((r) => r.id === id)
+      if (row?.reviewData) alreadyChecked.push(id)
+      else assetsToCheck.push(id)
     })
 
     // Show skip notification if applicable
@@ -552,16 +623,14 @@ export default function AssetApprovalsPage() {
         // INTEGRATION POINT: Call API to run checks and generate reviewData
         await new Promise(resolve => setTimeout(resolve, 1500))
         
-        // Generate mock review data and update asset
         const mockReviewData = generateMockReviewData()
-        const assetIndex = mockAssets.findIndex(a => a.id === assetId)
-        if (assetIndex !== -1) {
-          mockAssets[assetIndex].reviewData = mockReviewData
-          mockAssets[assetIndex].copyrightCheckStatus = "completed"
-          mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
-          setDataVersion((v) => v + 1)
-          forceUpdate({}) // Trigger re-render after mutation
-        }
+        updateRowById(assetId, {
+          reviewData: mockReviewData,
+          copyrightCheckStatus: "completed",
+          copyrightCheckData: mockReviewData.copyright.data,
+        })
+        setDataVersion((v) => v + 1)
+        forceUpdate({})
       } catch (error) {
         console.error(`Failed to check asset ${assetId}:`, error)
         toast.error(`Failed to check asset: ${error}`)
@@ -1005,8 +1074,8 @@ export default function AssetApprovalsPage() {
           ) : (
             paginatedAssets.map((asset) => {
               const similarityScore = asset.copyrightCheckData?.similarityScore ?? 0
-              const riskLevel = asset.copyrightCheckData?.riskBreakdown.riskLevel ?? "low"
-              const matchCount = asset.copyrightCheckData?.matchedSources.length ?? 0
+              const riskLevel = asset.copyrightCheckData?.riskBreakdown?.riskLevel ?? "low"
+              const matchCount = asset.copyrightCheckData?.matchedSources?.length ?? 0
               const isSelected = isAssetSelected(asset.id)
               const isExpanded = expandedAsset === asset.id
               const needsCheck = !asset.reviewData
@@ -1016,133 +1085,92 @@ export default function AssetApprovalsPage() {
 
               return (
                 <div key={asset.id} className={cn("group", isProcessed && "opacity-60 bg-muted/20")}>
-                  {/* Main row */}
+                  {/* Main row - ultra compact linear */}
                   <div
                     className={cn(
-                      "p-3 hover:bg-muted/50 transition-colors cursor-pointer",
+                      "px-3 py-2 hover:bg-muted/50 transition-colors cursor-pointer",
                       isSelected && "bg-muted/50",
                       isExpanded && "bg-muted/30"
                     )}
                     onClick={(e) => {
-                      // Don't toggle if clicking checkbox or buttons
                       if ((e.target as HTMLElement).closest('button, a, [role="checkbox"]')) return
                       setExpandedAsset(isExpanded ? null : asset.id)
                     }}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Checkbox */}
+                    <div className="flex items-center gap-2">
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={(checked) => handleToggleAsset(asset.id, !!checked)}
                         onClick={(e) => e.stopPropagation()}
-                        className="mt-0.5"
+                        className="h-4 w-4 shrink-0"
                       />
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Line 1: AI indicator + Version + Asset name + Status Badge */}
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          {/* AI indicator */}
-                          {asset.contentType === "ai_generated" && (
-                            <Badge variant="outline" className="h-5 px-1.5 bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-950 dark:border-purple-800">
-                              <Sparkles className="h-3 w-3" />
-                            </Badge>
-                          )}
-                          
-                          {/* Version badge - extract from asset name or ID if it's a version */}
-                          {(() => {
-                            // Check if asset ID starts with "v" followed by number (e.g., v1-1, v1-2)
-                            const versionMatch = asset.id.match(/^v\d+-(\d+)$/) || asset.name.match(/[vV](\d+)/);
-                            const versionNumber = versionMatch?.[1];
-                            if (versionNumber) {
-                              return (
-                                <Badge variant="outline" className="h-5 px-1.5 text-xs text-muted-foreground">
-                                  V{versionNumber}
-                                </Badge>
-                              );
-                            }
-                            return null;
-                          })()}
-                          
-                          <Link 
-                            href={`/creative/assets/${asset.id}`}
-                            className="text-sm font-medium truncate hover:text-blue-600 hover:underline transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {asset.name}
-                          </Link>
-                          
-                          {/* Status badge / Quality scores / Manual Approval */}
-                          {asset.reviewData ? (
-                            <div className="flex items-center gap-1">
-                              <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - asset.reviewData.copyright.data.similarityScore) : undefined)} size="sm" />
-                              <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
-                              <ScoreBadge icon={Zap} score={asset.reviewData?.performance?.data?.score} size="sm" />
-                              <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
-                              <ScoreBadge icon={ShieldCheck} score={asset.reviewData?.security?.data?.score} size="sm" />
-                            </div>
-                          ) : isApprovalApproved(asset.approvalStatus) ? (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <User className="h-3.5 w-3.5" />
-                              <span>Manually approved by {asset.approvedByName || "Admin"}</span>
-                              {asset.approvedAt && (
-                                <span className="text-muted-foreground/60">
-                                  · {format(asset.approvedAt, "MMM d, yyyy")}
-                                </span>
-                              )}
-                            </div>
-                          ) : checkingAssets.has(asset.id) ? (
-                            <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 shrink-0">
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              Checking...
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs border-amber-500 text-amber-600 shrink-0">
-                              <Shield className="h-3 w-3 mr-1" />
-                              Needs Check
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Line 2: Brand • Matches • Date */}
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className="h-2 w-2 rounded-full shrink-0"
-                              style={{ backgroundColor: asset.brandColor || "#666" }}
-                            />
-                            <span>{asset.brandName}</span>
+                      {/* Single line: [AI] [v3] [Current] Name · Brand · Date · Status */}
+                      <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap text-sm">
+                        {asset.contentType === "ai_generated" && (
+                          <span className="shrink-0 text-purple-600 dark:text-purple-400" title="AI generated">
+                            <Sparkles className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+                        {asset.versionNumber != null && (
+                          <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-mono shrink-0">
+                            v{asset.versionNumber}
+                          </Badge>
+                        )}
+                        {asset.isCurrentVersion && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-[10px] shrink-0">
+                            Current
+                          </Badge>
+                        )}
+                        <Link
+                          href={asset.assetHref}
+                          className="font-medium truncate hover:text-primary hover:underline shrink-0 max-w-[200px] sm:max-w-none"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {asset.name}
+                        </Link>
+                        <span className="text-muted-foreground/60 shrink-0">·</span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground text-xs shrink-0 truncate max-w-[120px] sm:max-w-none">
+                          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: asset.brandColor || "#666" }} />
+                          {asset.brandName}
+                        </span>
+                        <span className="text-muted-foreground/60 shrink-0">·</span>
+                        <span className="text-muted-foreground text-xs shrink-0">{format(asset.createdAt, "MMM d")}</span>
+                        <span className="text-muted-foreground/60 shrink-0">·</span>
+                        {asset.reviewData ? (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - (asset.reviewData.copyright.data as { similarityScore?: number }).similarityScore) : undefined)} size="sm" />
+                            <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
+                            <ScoreBadge icon={Zap} score={asset.reviewData?.performance?.data?.score} size="sm" />
+                            <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
+                            <ScoreBadge icon={ShieldCheck} score={asset.reviewData?.security?.data?.score} size="sm" />
                           </div>
-                          {isChecked && (
-                            <>
-                              <span>•</span>
-                              <span>{matchCount} {matchCount === 1 ? "match" : "matches"}</span>
-                            </>
-                          )}
-                          <span>•</span>
-                          <span>{format(asset.createdAt, "MMM d")}</span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        {isChecked && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Link href={`/creative/assets/${asset.id}/review`}>
-                              <FileBarChart className="h-3.5 w-3.5 mr-1" />
-                              Full Review
-                            </Link>
-                          </Button>
+                        ) : isApprovalApproved(asset.approvalStatus) ? (
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            <User className="h-3 w-3 inline mr-0.5 align-middle" />
+                            {asset.approvedByName || "Admin"}
+                          </span>
+                        ) : checkingAssets.has(asset.id) ? (
+                          <Badge variant="outline" className="text-[10px] border-blue-500 text-blue-600 shrink-0 h-5">
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Checking
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-600 shrink-0 h-5">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Needs Check
+                          </Badge>
                         )}
                       </div>
+                      {isChecked && (
+                        <Button variant="ghost" size="sm" asChild className="h-6 px-2 text-xs shrink-0 opacity-0 group-hover:opacity-100">
+                          <Link href={asset.versionGroupId != null && asset.versionNumber != null ? `/creative/assets/${asset.versionGroupId}/review?version=${asset.versionNumber}` : `/creative/assets/${asset.id}/review`}>
+                            <FileBarChart className="h-3 w-3 mr-1" />
+                            Review
+                          </Link>
+                        </Button>
+                        )}
                     </div>
                   </div>
-
                   {/* Expandable inline panel */}
                   {isExpanded && (
                     <div className="border-t bg-muted/20 p-4 space-y-3">
@@ -1169,16 +1197,14 @@ export default function AssetApprovalsPage() {
                                   await new Promise((resolve) => setTimeout(resolve, 1500))
                                   
                                   const mockReviewData = generateMockReviewData()
-                                  const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
-                                  if (assetIndex !== -1) {
-                                    mockAssets[assetIndex].reviewData = mockReviewData
-                                    mockAssets[assetIndex].copyrightCheckStatus = "completed"
-                                    mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
-                                    setDataVersion((v) => v + 1)
-                                    forceUpdate({}) // Trigger re-render after mutation
-                                  }
-                                  
-                                  setChecksVersion(prev => prev + 1) // Trigger recalculation of assets needing checks
+                                  updateRowById(asset.id, {
+                                    reviewData: mockReviewData,
+                                    copyrightCheckStatus: "completed",
+                                    copyrightCheckData: mockReviewData.copyright.data,
+                                  })
+                                  setDataVersion((v) => v + 1)
+                                  forceUpdate({})
+                                  setChecksVersion((prev) => prev + 1)
                                   toast.success("Quality check completed")
                                 } catch (error) {
                                   toast.error("Failed to run check")
@@ -1391,16 +1417,14 @@ export default function AssetApprovalsPage() {
                                     await new Promise((resolve) => setTimeout(resolve, 1500))
                                     
                                     const mockReviewData = generateMockReviewData()
-                                    const assetIndex = mockAssets.findIndex(a => a.id === asset.id)
-                                    if (assetIndex !== -1) {
-                                      mockAssets[assetIndex].reviewData = mockReviewData
-                                      mockAssets[assetIndex].copyrightCheckStatus = "completed"
-                                      mockAssets[assetIndex].copyrightCheckData = mockReviewData.copyright.data
-                                      setDataVersion((v) => v + 1)
-                                      forceUpdate({})
-                                    }
-                                    
-                                    setChecksVersion(prev => prev + 1)
+                                    updateRowById(asset.id, {
+                                      reviewData: mockReviewData,
+                                      copyrightCheckStatus: "completed",
+                                      copyrightCheckData: mockReviewData.copyright.data,
+                                    })
+                                    setDataVersion((v) => v + 1)
+                                    forceUpdate({})
+                                    setChecksVersion((prev) => prev + 1)
                                     toast.success("Quality check re-run completed")
                                   } catch (error) {
                                     toast.error("Failed to re-run check")
@@ -1464,7 +1488,7 @@ export default function AssetApprovalsPage() {
                               variant="outline"
                               asChild
                             >
-                              <Link href={`/creative/assets/${asset.id}/review`}>
+                              <Link href={asset.versionGroupId != null && asset.versionNumber != null ? `/creative/assets/${asset.versionGroupId}/review?version=${asset.versionNumber}` : `/creative/assets/${asset.id}/review`}>
                                 <FileBarChart className="h-3.5 w-3.5 mr-1.5" />
                                 Full Review
                               </Link>

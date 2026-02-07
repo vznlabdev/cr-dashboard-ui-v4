@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -41,13 +41,22 @@ import type { CheckType } from '@/hooks/useAssetChecks'
 export default function AssetReviewPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const assetId = params.id as string
-  
+  const versionParam = searchParams.get('version')
+
   // Find asset - check both version groups and regular assets
   const versionGroup = getVersionGroupById(assetId)
-  const asset = versionGroup 
-    ? versionGroup.versions[versionGroup.versions.length - 1]  // Latest version
-    : mockAssets.find(a => a.id === assetId)
+  const asset = versionGroup
+    ? (() => {
+        const vNum = versionParam != null ? parseInt(versionParam, 10) : NaN
+        if (!Number.isNaN(vNum)) {
+          const version = versionGroup.versions.find((v) => v.versionNumber === vNum)
+          if (version) return version
+        }
+        return versionGroup.versions[versionGroup.versions.length - 1] // Latest version
+      })()
+    : mockAssets.find((a) => a.id === assetId)
   
   const [activeTab, setActiveTab] = useState<'all' | CheckType>('all')
   const [showExportDialog, setShowExportDialog] = useState(false)
@@ -103,7 +112,13 @@ export default function AssetReviewPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="h-7 -ml-2" asChild>
-                <Link href={`/creative/assets/${assetId}`}>
+                <Link
+                  href={
+                    versionGroup && asset && 'versionNumber' in asset && asset.versionNumber != null
+                      ? `/creative/assets/${assetId}/v/${asset.versionNumber}`
+                      : `/creative/assets/${assetId}`
+                  }
+                >
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Back
                 </Link>
