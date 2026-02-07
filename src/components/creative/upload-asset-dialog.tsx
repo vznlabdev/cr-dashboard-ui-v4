@@ -673,7 +673,7 @@ export function UploadAssetDialog({ open, onOpenChange }: UploadAssetDialogProps
                       copyrightCheckStatus: copyrightStatus,
                       copyrightCheckProgress: copyrightProgress,
                       copyrightCheckData: checkData,
-                      approvalStatus: needsApproval ? "pending" : undefined,
+                      approvalStatus: needsApproval ? "submitted" : undefined,
                     }
 
                     return (

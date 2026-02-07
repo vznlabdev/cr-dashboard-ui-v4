@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, XCircle, ShieldCheck, ShieldAlert, User } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isApprovalApproved, isApprovalRejected, isApprovalPending } from "@/lib/approval-utils"
 import type { Asset } from "@/types/creative"
 
 // Enhanced ApprovalStatusIcon with 3 states
@@ -12,7 +13,7 @@ interface ApprovalStatusIconProps {
 
 export function ApprovalStatusIcon({ asset, className, showLabel = false }: ApprovalStatusIconProps) {
   // Rejected first - takes precedence over review data
-  if (asset.approvalStatus === "rejected") {
+  if (isApprovalRejected(asset.approvalStatus)) {
     return (
       <div className="flex items-center gap-1.5" title="Rejected">
         <XCircle className={cn("h-3.5 w-3.5 text-red-600 dark:text-red-400", className)} />
@@ -32,8 +33,8 @@ export function ApprovalStatusIcon({ asset, className, showLabel = false }: Appr
     )
   }
   
-  // State 3: Manually Approved (approved without checks)
-  if (asset.approvalStatus === "approved") {
+  // State 3: Manually Approved (approved or client_approved, without checks)
+  if (isApprovalApproved(asset.approvalStatus)) {
     const approverName = asset.approvedByName || "Admin"
     return (
       <div className="flex items-center gap-1.5" title={`Manually approved by ${approverName}`}>
@@ -47,8 +48,8 @@ export function ApprovalStatusIcon({ asset, className, showLabel = false }: Appr
     )
   }
   
-  // State 2: Needs Check (pending, no data)
-  if (asset.approvalStatus === "pending") {
+  // State 2: Needs Check (pending / in-progress: draft, submitted, client_review, admin_review)
+  if (isApprovalPending(asset.approvalStatus)) {
     return (
       <div className="flex items-center gap-1.5" title="Needs quality check">
         <ShieldAlert className={cn("h-3.5 w-3.5 text-amber-600 dark:text-amber-400", className)} />

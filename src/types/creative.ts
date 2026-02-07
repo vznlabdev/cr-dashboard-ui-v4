@@ -127,7 +127,7 @@ export interface AssetVersion {
   copyrightCheckStatus?: "pending" | "in_progress" | "completed" | "failed"
   copyrightCheckProgress?: number
   copyrightCheckData?: any
-  approvalStatus?: "pending" | "approved" | "rejected"
+  approvalStatus?: ApprovalStatus
   approvedBy?: string
   approvedByName?: string // display name of approver
   approvedAt?: Date
@@ -317,7 +317,8 @@ export interface PromptHistory {
 }
 
 export type CopyrightCheckStatus = "pending" | "checking" | "completed" | "failed"
-export type ApprovalStatus = "pending" | "approved" | "rejected"
+/** Asset and version approval workflow; matches VersionStatus for consistency. */
+export type ApprovalStatus = VersionStatus
 export type CheckStatus = "not-started" | "pending" | "checking" | "completed" | "failed"
 
 export interface MatchedSource {

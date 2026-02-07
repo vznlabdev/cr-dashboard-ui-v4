@@ -62,6 +62,7 @@ import { Label } from "@/components/ui/label"
 import { mockAssets, mockBrands, mockVersionGroups } from "@/lib/mock-data/creative"
 import { getDesignTypeIcon } from "@/lib/design-icons"
 import { formatFileSize } from "@/lib/format-utils"
+import { isApprovalApproved, isApprovalPending } from "@/lib/approval-utils"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { UploadAssetDialog, ApprovalStatusIcon, QualityScoreBadge } from "@/components/creative"
 import { AssetFileType, AssetContentType, DesignType, ASSET_FILE_TYPE_CONFIG, DESIGN_TYPE_CONFIG, AssetVersionGroup } from "@/types/creative"
@@ -377,7 +378,7 @@ export default function AssetsPage() {
   // Count assets pending approval
   const pendingApprovalCount = useMemo(() => {
     return mockAssets.filter(
-      (asset) => asset.approvalStatus === "pending" && asset.copyrightCheckStatus === "completed"
+      (asset) => isApprovalPending(asset.approvalStatus) && asset.copyrightCheckStatus === "completed"
     ).length
   }, [])
 
@@ -1058,7 +1059,7 @@ export default function AssetsPage() {
                             <ApprovalStatusIcon asset={asset} />
                             {asset.reviewData ? (
                               <QualityScoreBadge asset={asset} />
-                            ) : asset.approvalStatus === "approved" && !asset.reviewData ? (
+                            ) : isApprovalApproved(asset.approvalStatus) && !asset.reviewData ? (
                               <Badge variant="outline" className="text-[10px]">Manual</Badge>
                             ) : null}
                             {('isVersionGroup' in asset && asset.isVersionGroup && 'versionGroup' in asset && asset.versionGroup) ? (

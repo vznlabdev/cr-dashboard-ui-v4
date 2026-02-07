@@ -2,6 +2,7 @@
 
 import { Asset, ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { formatFileSize, formatDateLong } from "@/lib/format-utils"
+import { isApprovalApproved, isApprovalRejected, isApprovalPending, getApprovalStatusLabel } from "@/lib/approval-utils"
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,29 @@ interface AssetPreviewModalProps {
   asset: Asset | null
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+function ApprovalStatusBadgeInModal({ status }: { status: string }) {
+  const approved = isApprovalApproved(status)
+  const rejected = isApprovalRejected(status)
+  const pending = isApprovalPending(status)
+  return (
+    <Badge
+      variant={approved ? "default" : rejected ? "destructive" : "outline"}
+      className={
+        approved
+          ? "bg-green-500 hover:bg-green-600"
+          : pending
+          ? "text-amber-600 border-amber-500"
+          : ""
+      }
+    >
+      {approved && <CheckCircle2 className="h-3 w-3 mr-1" />}
+      {rejected && <XCircle className="h-3 w-3 mr-1" />}
+      {pending && <AlertTriangle className="h-3 w-3 mr-1" />}
+      {getApprovalStatusLabel(status)}
+    </Badge>
+  )
 }
 
 export function AssetPreviewModal({
@@ -339,34 +363,7 @@ export function AssetPreviewModal({
                       <div className="pt-2 border-t">
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground text-xs">Approval Status</span>
-                          <Badge
-                            variant={
-                              asset.approvalStatus === "approved"
-                                ? "default"
-                                : asset.approvalStatus === "rejected"
-                                ? "destructive"
-                                : "outline"
-                            }
-                            className={
-                              asset.approvalStatus === "approved"
-                                ? "bg-green-500 hover:bg-green-600"
-                                : asset.approvalStatus === "pending"
-                                ? "text-amber-600 border-amber-500"
-                                : ""
-                            }
-                          >
-                            {asset.approvalStatus === "approved" && (
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                            )}
-                            {asset.approvalStatus === "rejected" && (
-                              <XCircle className="h-3 w-3 mr-1" />
-                            )}
-                            {asset.approvalStatus === "pending" && (
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                            )}
-                            {asset.approvalStatus.charAt(0).toUpperCase() +
-                              asset.approvalStatus.slice(1)}
-                          </Badge>
+                          <ApprovalStatusBadgeInModal status={asset.approvalStatus} />
                         </div>
                       </div>
                     )}

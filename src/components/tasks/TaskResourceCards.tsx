@@ -26,6 +26,7 @@ import {
   Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isApprovalApproved, isApprovalRejected, isApprovalPending } from '@/lib/approval-utils'
 import { VersionStatusBadge } from '@/components/assets'
 import { formatFileSize } from '@/lib/format-utils'
 import Link from 'next/link'
@@ -157,9 +158,9 @@ export function DeliverableVersionsCard({ taskId, versionGroups, onUpload }: Del
         {displayGroups.map((group) => {
           const latestVersion = group.versions[group.versions.length - 1]
           const approvalInfo = getAssetApprovalStatus(group.id)
-          const isPending = approvalInfo.approvalStatus === 'pending'
-          const isApproved = approvalInfo.approvalStatus === 'approved'
-          const isRejected = approvalInfo.approvalStatus === 'rejected'
+          const isPending = isApprovalPending(approvalInfo.approvalStatus)
+          const isApproved = isApprovalApproved(approvalInfo.approvalStatus)
+          const isRejected = isApprovalRejected(approvalInfo.approvalStatus)
           
           return (
             <div 

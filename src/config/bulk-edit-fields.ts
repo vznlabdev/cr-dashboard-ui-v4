@@ -411,7 +411,10 @@ export const EDITABLE_FIELDS: EditableField[] = [
     versionEditable: true,
     options: [
       { value: "draft", label: "Draft", color: "gray" },
-      { value: "pending", label: "Pending", color: "yellow" },
+      { value: "submitted", label: "Submitted", color: "blue" },
+      { value: "client_review", label: "Client Review", color: "purple" },
+      { value: "client_approved", label: "Client OK", color: "green" },
+      { value: "admin_review", label: "Admin Review", color: "yellow" },
       { value: "approved", label: "Approved", color: "green" },
       { value: "rejected", label: "Rejected", color: "red" },
     ],

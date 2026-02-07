@@ -44,6 +44,7 @@ import { validateAllTabs, countMediaItems, hasMediaContent } from "@/utils/media
 import { clearMediaDataFromStorage } from "@/contexts/MediaManagerContext"
 import { getMediaCount, getMediaSummary, getMediaWarnings, hasMediaData } from "@/utils/mediaHelpers"
 import { mockAssets } from "@/lib/mock-data/creative"
+import { isApprovalPending } from "@/lib/approval-utils"
 import { QualityScoreBadge } from "@/components/creative"
 
 const STATUS_COLUMNS: { key: TaskStatus; label: string }[] = [
@@ -96,7 +97,7 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
     
     const assetIds = task.mediaData.assets.map(a => a.id)
     const assets = mockAssets.filter(a => assetIds.includes(a.id))
-    return assets.filter(a => a.approvalStatus === 'pending').length
+    return assets.filter(a => isApprovalPending(a.approvalStatus)).length
   }
   
   const pendingApprovals = getPendingApprovals()
@@ -303,7 +304,7 @@ function FlatKanbanBoard({
       
       const assetIds = task.mediaData.assets.map(a => a.id)
       const assets = mockAssets.filter(a => assetIds.includes(a.id))
-      const pending = assets.filter(a => a.approvalStatus === 'pending').length
+      const pending = assets.filter(a => isApprovalPending(a.approvalStatus)).length
       
       return pending > 0 ? pending : null
     }

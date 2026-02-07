@@ -1438,7 +1438,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-20T16:00:00"),
       checkDuration: 6800,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
     quickScores: {
       overall: 42,
       copyright: 42,
@@ -1738,7 +1738,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-12-02T10:00:00"),
       checkDuration: 6200,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
     quickScores: {
       overall: 65,
       copyright: 55, // 100 - 45 (inverted)
@@ -1940,7 +1940,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-12-01T14:00:00"),
       checkDuration: 4500,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
     quickScores: {
       overall: 82,
       copyright: 85, // 100 - 15
@@ -2125,7 +2125,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-29T16:30:00"),
       checkDuration: 5200,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
     quickScores: {
       overall: 58,
       copyright: 62, // 100 - 38
@@ -2190,7 +2190,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-27T11:15:00"),
       checkDuration: 8900,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
     quickScores: {
       overall: 42,
       copyright: 48, // 100 - 52
@@ -2263,7 +2263,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-26T09:45:00"),
       checkDuration: 7200,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
   },
   {
     id: "asset-9",
@@ -2314,7 +2314,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-25T13:20:00"),
       checkDuration: 3800,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
   },
   {
     id: "asset-10",
@@ -2374,7 +2374,7 @@ export const mockAssets: Asset[] = [
       checkedAt: new Date("2025-11-24T15:10:00"),
       checkDuration: 6100,
     },
-    approvalStatus: "pending",
+    approvalStatus: "submitted",
   },
   {
     id: "asset-11",

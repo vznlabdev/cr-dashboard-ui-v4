@@ -422,15 +422,15 @@ export default function AssetDetailPage() {
     }
   }, [baseAsset, localAsset])
   
-  // Auto-save hook
-  const { saveField, isSaving, lastSaved } = useAssetAutoSave(assetId, asset, {
+  // Auto-save hook (use saveImmediately so inline edits like Intended Uses checkboxes save right away and stay clickable)
+  const { saveImmediately, isSaving, lastSaved } = useAssetAutoSave(assetId, asset, {
     onUpdate: setLocalAsset
   })
   
   // Handle field save
   const handleFieldSave = useCallback(async (fieldPath: string, newValue: any) => {
-    await saveField(fieldPath, newValue)
-  }, [saveField])
+    await saveImmediately(fieldPath, newValue)
+  }, [saveImmediately])
   
   const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators()
 
@@ -479,6 +479,18 @@ export default function AssetDetailPage() {
   const contentTypeConfig = asset && 'contentType' in asset && asset.contentType ? ASSET_CONTENT_TYPE_CONFIG[asset.contentType as keyof typeof ASSET_CONTENT_TYPE_CONFIG] : null
   const designTypeConfig = displayDesignType ? DESIGN_TYPE_CONFIG[displayDesignType as keyof typeof DESIGN_TYPE_CONFIG] : null
   const isAIGenerated = asset && 'contentType' in asset && asset.contentType === "ai_generated"
+
+  // Single format label from fileType + mimeType (e.g. "Image (PNG)") to avoid redundant Type / File Type / MIME Type
+  const fileFormatLabel = useMemo(() => {
+    if (!asset || !('fileType' in asset) || !('mimeType' in asset)) return '—'
+    const kind = String((asset as { fileType?: string }).fileType || '').toLowerCase()
+    const mime = String((asset as { mimeType?: string }).mimeType || '')
+    const kindLabel = kind ? kind.charAt(0).toUpperCase() + kind.slice(1) : ''
+    const rawSubtype = mime.includes('/') ? (mime.split('/')[1] ?? '') : ''
+    const subtypeLabel = rawSubtype.toUpperCase().replace(/\+XML$/i, '').replace(/^X-/, '') || ''
+    if (kind === 'pdf' || mime === 'application/pdf') return 'PDF'
+    return subtypeLabel ? `${kindLabel} (${subtypeLabel})` : kindLabel || mime || '—'
+  }, [asset])
   
   // When contentType is edited away from ai_generated, leave AI Workflow tab to avoid blank pane
   useEffect(() => {
@@ -601,15 +613,19 @@ export default function AssetDetailPage() {
             ) : (
               <h1 className="text-xl font-semibold">{asset.name}</h1>
             )}
-            {/* Status badge - color-coded at top for quick scan */}
+            {/* Status badge - matches version workflow (VersionSelector labels) */}
             {(() => {
-              const status: "draft" | "pending" | "approved" | "rejected" = (asset.approvalStatus ?? "draft") as "draft" | "pending" | "approved" | "rejected"
-              const statusConfig = {
+              const status = asset.approvalStatus ?? "draft"
+              const statusConfig: Record<string, { label: string; className: string }> = {
                 draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted-foreground/30" },
-                pending: { label: "Pending", className: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800" },
+                submitted: { label: "Submitted", className: "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-200 dark:border-blue-800" },
+                client_review: { label: "Client Review", className: "bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/50 dark:text-purple-200 dark:border-purple-800" },
+                client_approved: { label: "Client OK", className: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-200 dark:border-emerald-800" },
+                admin_review: { label: "Admin Review", className: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800" },
                 approved: { label: "Approved", className: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-200 dark:border-emerald-800" },
                 rejected: { label: "Rejected", className: "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-800" },
-              } as const
+                pending: { label: "Pending", className: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-800" },
+              }
               const config = statusConfig[status] ?? statusConfig.draft
               return (
                 <Badge variant="outline" className={cn("font-medium text-xs px-2 py-0.5 capitalize", config.className)}>
@@ -733,6 +749,15 @@ export default function AssetDetailPage() {
             </Badge>
           </div>
           
+          {/* Uploaded By */}
+          {asset.uploadedByName && (
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Uploaded By:</span>
+              <span className="text-sm">{asset.uploadedByName}</span>
+            </div>
+          )}
+          
           {/* Intended Uses */}
           {asset && 'intendedUses' in asset && asset.intendedUses && (asset.intendedUses as string[]).length > 0 && (
             <div className="flex items-center gap-2">
@@ -835,49 +860,20 @@ export default function AssetDetailPage() {
                   </div>
                 )}
 
-                {/* Version Management Section (version groups only) */}
-                {versionGroup && (
-                  <Collapsible>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 border rounded-md hover:bg-accent/30 transition-all duration-150 group">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Version Management</h3>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <Card className="mt-2 border-l-2 border-l-accent">
-                        <CardContent className="pt-4 space-y-3">
-                          {EDITABLE_FIELDS.filter(f => f.category === "version").map(field => (
-                            <InlineEditField
-                              key={field.id}
-                              field={field}
-                              value={asset[field.path as keyof typeof asset]}
-                              onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                            />
-                          ))}
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-
                 {/* Activity (comments) - left column to match other boxes */}
                 {commentsSection}
               </div>
 
               {/* Right Column - Metadata Sidebar */}
               <div className="space-y-4 sticky top-4">
-                {/* Single Properties Card */}
+                {/* Sidebar card - sections only, no "Properties" header */}
                 <div className="border border-border/80 rounded-md bg-card">
-                  {/* Header */}
-                  <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-                    <h2 className="text-sm font-semibold">Properties</h2>
-                  </div>
-                  
                   {/* Content - all sections inside */}
                   <div className="divide-y divide-border">
                     {/* Approval & Status */}
                     {statusField && (
                       <div className="px-3 py-2 space-y-1.5">
-                        <p className="text-xs font-semibold text-foreground">Approval & Status</p>
+                        <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Approval & Status</p>
                         <InlineEditField
                           field={statusField}
                           value={asset.approvalStatus}
@@ -889,7 +885,7 @@ export default function AssetDetailPage() {
                     
                     {/* Brand & Design */}
                     <div className="px-3 py-2 space-y-2">
-                      <p className="text-xs font-semibold text-foreground">Brand & Design</p>
+                      <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Brand & Design</p>
                       {brandField && (
                         <div className="space-y-1.5">
                           <Label className="text-xs text-muted-foreground">{brandField.label}</Label>
@@ -943,15 +939,15 @@ export default function AssetDetailPage() {
                     
                     {/* File Properties */}
                     <div className="px-3 py-2 space-y-2">
-                      <p className="text-xs font-semibold text-foreground">File Properties</p>
+                      <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">File Properties</p>
                       <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground">Format</span>
+                          <span className="text-sm font-medium">{fileFormatLabel}</span>
+                        </div>
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-muted-foreground">Size</span>
                           <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-muted-foreground">Type</span>
-                          <span className="text-sm font-medium">{asset.mimeType}</span>
                         </div>
                         {asset.dimensions && (
                           <div className="flex justify-between items-center">
@@ -963,7 +959,7 @@ export default function AssetDetailPage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
+                        {EDITABLE_FIELDS.filter(f => f.category === "files" && f.id === "contentType").map(field => (
                           <InlineEditField
                             key={field.id}
                             field={field}
@@ -976,13 +972,15 @@ export default function AssetDetailPage() {
                     
                     {/* Basic Information */}
                     <div className="px-3 py-2 space-y-2">
-                      <p className="text-xs font-semibold text-foreground">Basic Information</p>
+                      <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Basic Information</p>
                       
                       {/* Uploaded By */}
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Uploaded By</p>
-                        <p className="text-sm font-medium">{asset.uploadedByName}</p>
-                      </div>
+                      {asset.uploadedByName && (
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Uploaded By</p>
+                          <p className="text-sm font-medium">{asset.uploadedByName}</p>
+                        </div>
+                      )}
 
                       {/* Date */}
                       <div className="space-y-1">
@@ -1014,7 +1012,7 @@ export default function AssetDetailPage() {
                     
                     {/* Talent Rights (NILP) */}
                     <div className="px-3 py-2 space-y-2">
-                      <p className="text-xs font-semibold text-foreground">Talent Rights (NILP)</p>
+                      <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Talent Rights (NILP)</p>
                       
                       {(() => {
                         const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
@@ -1050,7 +1048,7 @@ export default function AssetDetailPage() {
                     {/* Copyright & Legal */}
                     {asset.copyrightCheckStatus && asset.copyrightCheckData && (
                       <div className="px-3 py-2 space-y-1.5">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between pb-2 border-b border-border -mx-3 px-3">
                           <p className="text-xs font-semibold text-foreground">Copyright & Legal</p>
                           <Button 
                             variant="link" 
@@ -1541,19 +1539,14 @@ export default function AssetDetailPage() {
 
           {/* Right Column - Metadata Sidebar */}
           <div className="space-y-4 sticky top-4">
-            {/* Single Properties Card */}
+            {/* Sidebar card - sections only, no "Properties" header */}
             <div className="border border-border/80 rounded-md bg-card">
-              {/* Header */}
-              <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Properties</h2>
-              </div>
-              
               {/* Content - all sections inside */}
               <div className="divide-y divide-border">
                 {/* Approval & Status */}
                 {statusField && (
                   <div className="px-3 py-2 space-y-1.5">
-                    <p className="text-xs font-semibold text-foreground">Approval & Status</p>
+                    <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Approval & Status</p>
                     <InlineEditField
                       field={statusField}
                       value={asset.approvalStatus}
@@ -1565,7 +1558,7 @@ export default function AssetDetailPage() {
                 
                 {/* Brand & Design */}
                 <div className="px-3 py-2 space-y-2">
-                  <p className="text-xs font-semibold text-foreground">Brand & Design</p>
+                  <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Brand & Design</p>
                   {brandField && (
                     <div className="space-y-1.5">
                       <InlineEditField
@@ -1597,15 +1590,15 @@ export default function AssetDetailPage() {
                 
                 {/* File Properties */}
                 <div className="px-3 py-2 space-y-2">
-                  <p className="text-xs font-semibold text-foreground">File Properties</p>
+                  <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">File Properties</p>
                   <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Format</span>
+                      <span className="text-sm font-medium">{fileFormatLabel}</span>
+                    </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-muted-foreground">Size</span>
                       <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">Type</span>
-                      <span className="text-sm font-medium">{asset.mimeType}</span>
                     </div>
                     {asset.dimensions && (
                       <div className="flex justify-between items-center">
@@ -1617,7 +1610,7 @@ export default function AssetDetailPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
+                    {EDITABLE_FIELDS.filter(f => f.category === "files" && f.id === "contentType").map(field => (
                       <InlineEditField
                         key={field.id}
                         field={field}
@@ -1630,13 +1623,15 @@ export default function AssetDetailPage() {
                 
                 {/* Basic Information */}
                 <div className="px-3 py-2 space-y-2">
-                  <p className="text-xs font-semibold text-foreground">Basic Information</p>
+                  <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Basic Information</p>
                   
                   {/* Uploaded By */}
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Uploaded By</p>
-                    <p className="text-sm font-medium">{asset.uploadedByName}</p>
-                  </div>
+                  {asset.uploadedByName && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Uploaded By</p>
+                      <p className="text-sm font-medium">{asset.uploadedByName}</p>
+                    </div>
+                  )}
 
                   {/* Date */}
                   <div className="space-y-1">
@@ -1668,7 +1663,7 @@ export default function AssetDetailPage() {
                 
                 {/* Talent Rights (NILP) */}
                 <div className="px-3 py-2 space-y-2">
-                  <p className="text-xs font-semibold text-foreground">Talent Rights (NILP)</p>
+                  <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Talent Rights (NILP)</p>
                   
                   {(() => {
                     const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
@@ -1704,7 +1699,7 @@ export default function AssetDetailPage() {
                 {/* Copyright & Legal */}
                 {asset.copyrightCheckStatus && asset.copyrightCheckData && (
                   <div className="px-3 py-2 space-y-1.5">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pb-2 border-b border-border -mx-3 px-3">
                       <p className="text-xs font-semibold text-foreground">Copyright & Legal</p>
                       <Button 
                         variant="link" 

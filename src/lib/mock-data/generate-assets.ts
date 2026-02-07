@@ -239,10 +239,10 @@ export function generateMockAssets(count: number = 75, seed: number = 12345): As
       uploadedByName: teamMember.name,
       createdAt,
       updatedAt: createdAt,
-      // Add approval status - 70% pending, 20% approved, 10% rejected
+      // Add approval status - 70% submitted, 20% approved, 10% rejected
       approvalStatus: (() => {
         const rand = rng()
-        return rand < 0.7 ? "pending" : rand < 0.9 ? "approved" : "rejected"
+        return rand < 0.7 ? "submitted" : rand < 0.9 ? "approved" : "rejected"
       })(),
     })
     
@@ -260,8 +260,8 @@ export function generateMockAssets(count: number = 75, seed: number = 12345): As
         // 70% of approved assets have been checked
         lastAsset.reviewData = generateBasicReviewData(rng)
       }
-    } else if (lastAsset.approvalStatus === "pending") {
-      // 40% of pending assets have been checked
+    } else if (lastAsset.approvalStatus === "submitted") {
+      // 40% of submitted assets have been checked
       if (rng() < 0.4) {
         lastAsset.reviewData = generateBasicReviewData(rng)
       }

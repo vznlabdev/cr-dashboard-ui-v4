@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { isApprovalApproved, isApprovalRejected, isApprovalPending } from "@/lib/approval-utils"
 import { formatFileSize } from "@/lib/format-utils"
 import { format } from "date-fns"
 import {
@@ -36,10 +37,9 @@ export function AssetCard({
   const designTypeConfig = DESIGN_TYPE_CONFIG[asset.designType]
   const isAIGenerated = asset.contentType === "ai_generated"
   const copyrightStatus = asset.copyrightCheckStatus
-  const approvalStatus = asset.approvalStatus
-  const needsApproval = approvalStatus === "pending"
-  const isApproved = approvalStatus === "approved"
-  const isRejected = approvalStatus === "rejected"
+  const needsApproval = isApprovalPending(asset.approvalStatus)
+  const isApproved = isApprovalApproved(asset.approvalStatus)
+  const isRejected = isApprovalRejected(asset.approvalStatus)
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger onClick if clicking on checkbox

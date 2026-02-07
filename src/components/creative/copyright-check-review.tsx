@@ -28,6 +28,7 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { Asset, CopyrightCheckData } from "@/types/creative"
+import { isApprovalPending } from "@/lib/approval-utils"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
@@ -406,7 +407,7 @@ export function CopyrightCheckReview({
           >
             Close
           </Button>
-          {!passed && asset.approvalStatus === "pending" && (
+          {!passed && isApprovalPending(asset.approvalStatus) && (
             <>
               {showApprovalReason ? (
                 <Button

@@ -124,7 +124,7 @@ function BulkEditPageContent() {
             dimensions: latestVersion.dimensions,
             createdAt: versionGroup.createdAt,
             updatedAt: versionGroup.updatedAt,
-            approvalStatus: 'pending',
+            approvalStatus: 'submitted',
             uploadedById: latestVersion.uploadedById,
             uploadedByName: latestVersion.uploadedByName,
           } as Asset,

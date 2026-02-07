@@ -46,6 +46,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isApprovalApproved, isApprovalPending } from "@/lib/approval-utils"
 import Link from "next/link"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
 import { ScoreBadge } from "@/components/creative/ScoreBadge"
@@ -83,7 +84,7 @@ export default function AssetApprovalsPage() {
   const pendingAssets = useMemo(() => {
     return mockAssets.filter(
       (asset) => 
-        asset.approvalStatus === "pending" && 
+        isApprovalPending(asset.approvalStatus) && 
         !approvedAssets.has(asset.id) &&
         !rejectedAssets.has(asset.id)
     )
@@ -1080,7 +1081,7 @@ export default function AssetApprovalsPage() {
                               <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
                               <ScoreBadge icon={ShieldCheck} score={asset.reviewData?.security?.data?.score} size="sm" />
                             </div>
-                          ) : asset.approvalStatus === "approved" ? (
+                          ) : isApprovalApproved(asset.approvalStatus) ? (
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <User className="h-3.5 w-3.5" />
                               <span>Manually approved by {asset.approvedByName || "Admin"}</span>

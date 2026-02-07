@@ -300,12 +300,15 @@ export function InlineEditField({
                   <label key={opt.value} className="flex items-center gap-2 p-1.5 hover:bg-accent rounded cursor-pointer">
                     <Checkbox
                       checked={selectedBadges.includes(opt.value)}
-                      onCheckedChange={async (checked) => {
+                      onCheckedChange={(checked) => {
                         const newValue = checked
                           ? [...selectedBadges, opt.value]
                           : selectedBadges.filter((v: string) => v !== opt.value)
                         setLocalValue(newValue)
-                        await handleAsyncSave(newValue)
+                        // Save in background so UI stays smooth (no saving state / no re-render flicker)
+                        const same = Array.isArray(value) && Array.isArray(newValue) && value.length === newValue.length && newValue.every((v: string, i: number) => v === value[i])
+                        if (same) return
+                        onSave(newValue).catch(() => setLocalValue(value))
                       }}
                       className="h-4 w-4"
                     />
@@ -367,15 +370,20 @@ export function InlineEditField({
     }
   }
   
+  // Don't block or shift layout for multiselect so checkboxes stay smooth and clickable
+  const isMultiselect = field.type === "badge-multiselect"
+  const showSavingState = saving && !isMultiselect
+  const blockInteraction = saving && !isMultiselect
+
   return (
     <div className={cn("space-y-1.5", className)}>
       {showLabel && (
         <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
           {label || field.label}
-          {saving && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
+          {showSavingState && <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>}
         </label>
       )}
-      <div className={cn(saving && "opacity-60 pointer-events-none")}>
+      <div className={cn(blockInteraction && "opacity-60 pointer-events-none")}>
         {renderField()}
       </div>
       {field.helpText && (
