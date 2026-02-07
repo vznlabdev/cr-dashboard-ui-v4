@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils"
 import {
   Scale,
   Shield,
-  ClipboardCheck,
+  ShieldCheck,
   Settings,
   ChevronLeft,
+  ChevronDown,
   Ticket,
   Palette,
   Users,
@@ -21,6 +22,11 @@ import {
   FileText,
   FileSearch,
   LayoutDashboard,
+  BookOpen,
+  ScanSearch,
+  Calculator,
+  Archive,
+  MapPin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -102,7 +108,16 @@ const baseNavSections: NavSection[] = [
       {
         title: "Compliance",
         href: "/compliance",
-        icon: ClipboardCheck,
+        icon: ShieldCheck,
+        badge: 7,
+        children: [
+          { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+          { title: "ALCAR Registry", href: "/compliance/alcar", icon: BookOpen },
+          { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+          { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
+          { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+          { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+        ],
       },
       {
         title: "Legal",
@@ -139,7 +154,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
   const [mounted, setMounted] = useState(false)
-  const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
   const { unreadCount } = useInbox()
@@ -151,15 +166,22 @@ export function Sidebar() {
     setMounted(true)
   }, [])
 
-  // Auto-expand Analytics when on a child route so current page is visible
+  // Auto-expand sections when on a child route so current page is visible
   useEffect(() => {
+    const updates: Record<string, boolean> = {}
     if (pathname === "/reports" || pathname.startsWith("/analytics/")) {
-      setAnalyticsExpanded(true)
+      updates["/reports"] = true
+    }
+    if (pathname.startsWith("/compliance")) {
+      updates["/compliance"] = true
+    }
+    if (Object.keys(updates).length > 0) {
+      setExpandedSections((prev) => ({ ...prev, ...updates }))
     }
   }, [pathname])
 
   // Conditionally add setup item above Inbox (only after client mount to avoid hydration issues)
-  const navSections = useMemo(() => {
+  const navSections = useMemo((): NavSection[] => {
     // Don't show setup during SSR to avoid hydration mismatch
     if (!mounted) {
       return baseNavSections
@@ -185,17 +207,18 @@ export function Sidebar() {
     }
     
     // Add setup item at the beginning
+    const setupSection: NavSection = {
+      items: [
+        {
+          title: "Setup",
+          href: "/setup",
+          icon: CheckCircle2,
+          badge: progress,
+        },
+      ],
+    }
     return [
-      {
-        items: [
-          {
-            title: "Setup",
-            href: "/setup",
-            icon: CheckCircle2,
-            badge: progress,
-          },
-        ],
-      },
+      setupSection,
       ...sectionsWithInboxBadge,
     ]
   }, [mounted, isSetupComplete, isDismissed, progress, unreadCount])
@@ -325,11 +348,12 @@ export function Sidebar() {
                         const isParentActive = item.children!.some(
                           (c) => pathname === c.href || (c.href !== "/" && pathname.startsWith(c.href))
                         )
+                        const isExpanded = !!expandedSections[item.href]
                         return (
                           <div key={item.href}>
                             <button
                               type="button"
-                              onClick={() => setAnalyticsExpanded((prev) => !prev)}
+                              onClick={() => setExpandedSections((prev) => ({ ...prev, [item.href]: !prev[item.href] }))}
                               className={cn(
                                 "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 relative group w-full text-left",
                                 isParentActive
@@ -340,8 +364,17 @@ export function Sidebar() {
                             >
                               <Icon className="h-[18px] w-[18px] shrink-0" />
                               <span className="flex-1">{item.title}</span>
+                              {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
+                                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-medium rounded-md bg-orange-600 text-white">
+                                  {item.badge}
+                                </span>
+                              )}
+                              <ChevronDown className={cn(
+                                "h-3.5 w-3.5 shrink-0 transition-transform duration-150",
+                                isExpanded ? "rotate-0" : "-rotate-90"
+                              )} />
                             </button>
-                            {analyticsExpanded && item.children!.map((child) => {
+                            {isExpanded && item.children!.map((child) => {
                               const isActive = pathname === child.href || (child.href !== "/" && pathname.startsWith(child.href))
                               return (
                                 <Link

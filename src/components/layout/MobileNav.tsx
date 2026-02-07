@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import {
   Scale,
   Shield,
-  ClipboardCheck,
+  ShieldCheck,
   Settings,
   Ticket,
   Palette,
@@ -21,6 +21,12 @@ import {
   FileText,
   FileSearch,
   LayoutDashboard,
+  ChevronDown,
+  BookOpen,
+  ScanSearch,
+  Calculator,
+  Archive,
+  MapPin,
 } from "lucide-react"
 import {
   Sheet,
@@ -39,6 +45,7 @@ import { useSetup } from "@/lib/contexts/setup-context"
 import { useInbox } from "@/lib/contexts/inbox-context"
 import { getAllMenuItems } from "@/lib/settings-menu"
 import { ChevronLeft } from "lucide-react"
+
 
 interface NavItem {
   title: string
@@ -109,7 +116,16 @@ const baseNavSections: NavSection[] = [
       {
         title: "Compliance",
         href: "/compliance",
-        icon: ClipboardCheck,
+        icon: ShieldCheck,
+        badge: 7,
+        children: [
+          { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+          { title: "ALCAR Registry", href: "/compliance/alcar", icon: BookOpen },
+          { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+          { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
+          { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+          { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+        ],
       },
       {
         title: "Legal",
@@ -146,7 +162,7 @@ export function MobileNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
   const { unreadCount } = useInbox()
@@ -158,10 +174,17 @@ export function MobileNav() {
     setMounted(true)
   }, [])
 
-  // Auto-expand Analytics when on a child route so current page is visible
+  // Auto-expand sections when on a child route so current page is visible
   useEffect(() => {
+    const updates: Record<string, boolean> = {}
     if (pathname === "/reports" || pathname.startsWith("/analytics/")) {
-      setAnalyticsExpanded(true)
+      updates["/reports"] = true
+    }
+    if (pathname.startsWith("/compliance")) {
+      updates["/compliance"] = true
+    }
+    if (Object.keys(updates).length > 0) {
+      setExpandedSections((prev) => ({ ...prev, ...updates }))
     }
   }, [pathname])
 
@@ -308,11 +331,12 @@ export function MobileNav() {
                         const isParentActive = item.children!.some(
                           (c) => pathname === c.href || (c.href !== "/" && pathname.startsWith(c.href))
                         )
+                        const isExpanded = !!expandedSections[item.href]
                         return (
                           <div key={item.href}>
                             <button
                               type="button"
-                              onClick={() => setAnalyticsExpanded((prev) => !prev)}
+                              onClick={() => setExpandedSections((prev) => ({ ...prev, [item.href]: !prev[item.href] }))}
                               className={cn(
                                 "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150 w-full text-left",
                                 isParentActive
@@ -322,8 +346,17 @@ export function MobileNav() {
                             >
                               <Icon className="h-[18px] w-[18px] shrink-0" />
                               <span className="flex-1">{item.title}</span>
+                              {item.badge !== undefined && (typeof item.badge === 'number' ? item.badge > 0 : true) && (
+                                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-medium rounded-md bg-orange-600 text-white">
+                                  {item.badge}
+                                </span>
+                              )}
+                              <ChevronDown className={cn(
+                                "h-3.5 w-3.5 shrink-0 transition-transform duration-150",
+                                isExpanded ? "rotate-0" : "-rotate-90"
+                              )} />
                             </button>
-                            {analyticsExpanded && item.children!.map((child) => {
+                            {isExpanded && item.children!.map((child) => {
                               const isActive = pathname === child.href || (child.href !== "/" && pathname.startsWith(child.href))
                               return (
                                 <Link
