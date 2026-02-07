@@ -67,6 +67,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionStatusBadge, AIComplianceWorkflow } from "@/components/assets"
+import { AssetTimeline } from "@/components/assets/AssetTimeline"
 import { VersionSelector } from "@/components/assets/VersionSelector"
 import { TaskComments, type TaskComment, type TeamMember as TaskTeamMember } from "@/components/task/TaskComments"
 import type { AssetVersion, MatchedSource, AssetReviewData, VersionComment } from "@/types/creative"
@@ -114,7 +115,7 @@ export default function AssetDetailPage() {
     : versionGroup?.currentVersionId || ""
   
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"overview" | "ai-workflow" | "quality" | "talent-rights">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "ai-workflow" | "quality" | "talent-rights" | "timeline">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
@@ -588,7 +589,7 @@ export default function AssetDetailPage() {
   }, [assetCommentsRaw])
   const currentUserId = "user-1"
   const currentUserInitials = "SC"
-  const handleActivityAddComment = useCallback((content: string, _mentions: string[]) => {
+  const handleActivityAddComment = useCallback((content: string, _mentions: string[], _visibility: "internal" | "client") => {
     toast.success("Comment added")
   }, [])
   const handleActivityAddReaction = useCallback((_commentId: string, _emoji: string) => {
@@ -896,6 +897,12 @@ export default function AssetDetailPage() {
                       {creditedCreators.length}
                     </Badge>
                   )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="timeline"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Timeline
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -1680,6 +1687,13 @@ export default function AssetDetailPage() {
             </div>
           </TabsContent>
 
+          {/* Timeline Tab Content */}
+          <TabsContent value="timeline" className="mt-3">
+            <AssetTimeline asset={asset} versionGroup={versionGroup}>
+              {commentsSection}
+            </AssetTimeline>
+          </TabsContent>
+
           </Tabs>
         </div>
       ) : (
@@ -1722,6 +1736,12 @@ export default function AssetDetailPage() {
                       {creditedCreators.length}
                     </Badge>
                   )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="timeline"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Timeline
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -2482,6 +2502,13 @@ export default function AssetDetailPage() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Timeline Tab Content */}
+          <TabsContent value="timeline" className="mt-3">
+            <AssetTimeline asset={asset}>
+              {commentsSection}
+            </AssetTimeline>
           </TabsContent>
 
         </Tabs>

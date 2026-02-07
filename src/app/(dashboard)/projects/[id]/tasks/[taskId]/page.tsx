@@ -345,7 +345,7 @@ export default function TaskDetailPage() {
   }, [taskId])
 
   // Handle add comment with mentions
-  const handleAddComment = (content: string, mentions: string[]) => {
+  const handleAddComment = (content: string, mentions: string[], visibility: "internal" | "client" = "internal") => {
     if (!content.trim() || !task) return
 
     const comment: TaskComment = {
@@ -357,6 +357,7 @@ export default function TaskDetailPage() {
       createdAt: new Date(),
       mentions,
       reactions: [],
+      visibility,
     }
 
     setComments([...comments, comment])

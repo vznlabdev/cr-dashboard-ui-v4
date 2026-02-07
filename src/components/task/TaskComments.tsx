@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { MessageSquare, Send, Smile, X } from "lucide-react"
+import { MessageSquare, Send, Smile, X, Lock, Globe } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -18,6 +18,7 @@ export interface TaskComment {
   createdAt: Date
   mentions?: string[] // Array of mentioned user IDs
   reactions?: CommentReaction[]
+  visibility?: "internal" | "client" // Whether comment is internal-only or client-facing
   // Clearance system comment fields
   isSystemComment?: boolean
   clearanceType?: 'admin' | 'legal' | 'qa'
@@ -44,7 +45,7 @@ interface TaskCommentsProps {
   currentUserId: string
   currentUserInitials: string
   teamMembers: TeamMember[]
-  onAddComment: (content: string, mentions: string[]) => void
+  onAddComment: (content: string, mentions: string[], visibility: "internal" | "client") => void
   onAddReaction: (commentId: string, emoji: string) => void
   onRemoveReaction: (commentId: string, emoji: string) => void
 }
@@ -68,6 +69,7 @@ export function TaskComments({
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0)
   const [selectedMentions, setSelectedMentions] = useState<string[]>([])
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
+  const [commentVisibility, setCommentVisibility] = useState<"internal" | "client">("internal")
   
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const mentionDropdownRef = useRef<HTMLDivElement>(null)
@@ -173,10 +175,10 @@ export function TaskComments({
   const handleAddComment = () => {
     if (!newComment.trim()) return
     
-    onAddComment(newComment, selectedMentions)
+    onAddComment(newComment, selectedMentions, commentVisibility)
     setNewComment("")
     setSelectedMentions([])
-    toast.success("Comment added")
+    toast.success(commentVisibility === "client" ? "Client-facing comment added" : "Internal comment added")
   }
 
   // Handle reaction toggle
@@ -251,6 +253,15 @@ export function TaskComments({
                     <span className="text-xs text-muted-foreground">
                       {formatDateTime(comment.createdAt)}
                     </span>
+                    {comment.visibility === "client" ? (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 dark:text-blue-400" title="Client-facing">
+                        <Globe className="h-3 w-3" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground" title="Internal only">
+                        <Lock className="h-3 w-3" />
+                      </span>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -367,9 +378,42 @@ export function TaskComments({
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-2">
-            <div className="text-xs text-muted-foreground">
-              Tip: Type <kbd className="px-1 py-0.5 rounded bg-accent text-xs">@</kbd> to mention someone
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <div className="flex items-center gap-2">
+              {/* Visibility toggle */}
+              <div className="inline-flex items-center rounded-md border border-border text-xs">
+                <button
+                  onClick={() => setCommentVisibility("internal")}
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-1 rounded-l-md transition-colors",
+                    commentVisibility === "internal"
+                      ? "bg-accent text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Lock className="h-3 w-3" />
+                  Internal
+                </button>
+                <button
+                  onClick={() => setCommentVisibility("client")}
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-1 rounded-r-md border-l border-border transition-colors",
+                    commentVisibility === "client"
+                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Globe className="h-3 w-3" />
+                  Client
+                </button>
+              </div>
+              <span className="text-xs text-muted-foreground hidden sm:inline flex items-center gap-1">
+                <span className="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded bg-accent text-xs font-mono font-medium">@</span>
+                <span>mention</span>
+                <span className="text-muted-foreground/60">·</span>
+                <span className="inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded bg-accent text-xs font-mono font-medium">#</span>
+                <span>tag</span>
+              </span>
             </div>
             <Button
               size="sm"
