@@ -630,19 +630,8 @@ export default function AssetDetailPage() {
             )}
           </div>
 
-          {/* Inline Stats - status dot + brand, type, size, etc. */}
+          {/* Inline Stats - brand, type, size, etc. (single brand dot only) */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-            {/* Status dot (color-coded) */}
-            {(() => {
-              const status: "draft" | "pending" | "approved" | "rejected" = (asset.approvalStatus ?? "draft") as "draft" | "pending" | "approved" | "rejected"
-              const dotClass = {
-                draft: "bg-muted-foreground/60",
-                pending: "bg-amber-500",
-                approved: "bg-emerald-500",
-                rejected: "bg-red-500",
-              }[status] ?? "bg-muted-foreground/60"
-              return <div className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} title={status} aria-hidden />
-            })()}
             {displayBrandId && (
               <Link 
                 href={`/creative/brands/${displayBrandId}`}
@@ -846,28 +835,6 @@ export default function AssetDetailPage() {
                   </div>
                 )}
 
-                {/* File Properties Section */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
-                    <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">File Properties</h3>
-                    <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-1.5">
-                    <Card className="mt-1.5 border-l-2 border-l-accent">
-                      <CardContent className="pt-3 pb-3 space-y-2">
-                        {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
-                          <InlineEditField
-                            key={field.id}
-                            field={field}
-                            value={asset[field.path as keyof typeof asset]}
-                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </CollapsibleContent>
-                </Collapsible>
-                
                 {/* Version Management Section (version groups only) */}
                 {versionGroup && (
                   <Collapsible>
@@ -907,33 +874,22 @@ export default function AssetDetailPage() {
                   
                   {/* Content - all sections inside */}
                   <div className="divide-y divide-border">
-                    {/* Status Section */}
+                    {/* Approval & Status */}
                     {statusField && (
                       <div className="px-3 py-2 space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Status</Label>
-                        <Select 
-                          value={asset.approvalStatus} 
-                          onValueChange={(value) => handleFieldSave("approvalStatus", value)}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusField.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <p className="text-xs font-semibold text-foreground">Approval & Status</p>
+                        <InlineEditField
+                          field={statusField}
+                          value={asset.approvalStatus}
+                          onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                          showLabel={false}
+                        />
                       </div>
                     )}
                     
-                    {/* Organization Section */}
+                    {/* Brand & Design */}
                     <div className="px-3 py-2 space-y-2">
-                      <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
-                      
-                      {/* Brand */}
+                      <p className="text-xs font-semibold text-foreground">Brand & Design</p>
                       {brandField && (
                         <div className="space-y-1.5">
                           <Label className="text-xs text-muted-foreground">{brandField.label}</Label>
@@ -954,8 +910,6 @@ export default function AssetDetailPage() {
                           </Select>
                         </div>
                       )}
-                      
-                      {/* Design Type */}
                       {designTypeField && (
                         <div className="space-y-1.5">
                           <Label className="text-xs text-muted-foreground">{designTypeField.label}</Label>
@@ -976,19 +930,6 @@ export default function AssetDetailPage() {
                           </Select>
                         </div>
                       )}
-                      
-                      {/* Tags */}
-                      {tagsField && asset && 'tags' in asset && (
-                        <div className="space-y-1.5">
-                          <InlineEditField
-                            field={tagsField}
-                            value={asset.tags}
-                            onSave={(newValue) => handleFieldSave("tags", newValue)}
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Intended Uses */}
                       {intendedUsesField && (
                         <div className="space-y-1.5">
                           <InlineEditField
@@ -1000,32 +941,42 @@ export default function AssetDetailPage() {
                       )}
                     </div>
                     
-                    {/* File Info Section */}
-                    <div className="px-3 py-2 space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
+                    {/* File Properties */}
+                    <div className="px-3 py-2 space-y-2">
+                      <p className="text-xs font-semibold text-foreground">File Properties</p>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Size</span>
+                          <span className="text-xs text-muted-foreground">Size</span>
                           <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Type</span>
+                          <span className="text-xs text-muted-foreground">Type</span>
                           <span className="text-sm font-medium">{asset.mimeType}</span>
                         </div>
                         {asset.dimensions && (
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Dimensions</span>
+                            <span className="text-xs text-muted-foreground">Dimensions</span>
                             <span className="text-sm font-medium">
                               {asset.dimensions.width} × {asset.dimensions.height}
                             </span>
                           </div>
                         )}
                       </div>
+                      <div className="space-y-2">
+                        {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
+                          <InlineEditField
+                            key={field.id}
+                            field={field}
+                            value={asset[field.path as keyof typeof asset]}
+                            onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                          />
+                        ))}
+                      </div>
                     </div>
                     
-                    {/* Details Section */}
+                    {/* Basic Information */}
                     <div className="px-3 py-2 space-y-2">
-                      <Label className="text-xs text-muted-foreground font-medium">Details</Label>
+                      <p className="text-xs font-semibold text-foreground">Basic Information</p>
                       
                       {/* Uploaded By */}
                       <div className="space-y-1">
@@ -1048,11 +999,22 @@ export default function AssetDetailPage() {
                           </Link>
                         </div>
                       )}
+
+                      {/* Tags */}
+                      {tagsField && asset && 'tags' in asset && (
+                        <div className="space-y-1.5">
+                          <InlineEditField
+                            field={tagsField}
+                            value={asset.tags}
+                            onSave={(newValue) => handleFieldSave("tags", newValue)}
+                          />
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Talent Rights Section */}
+                    {/* Talent Rights (NILP) */}
                     <div className="px-3 py-2 space-y-2">
-                      <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
+                      <p className="text-xs font-semibold text-foreground">Talent Rights (NILP)</p>
                       
                       {(() => {
                         const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
@@ -1085,11 +1047,11 @@ export default function AssetDetailPage() {
                       )}
                     </div>
                     
-                    {/* Copyright Status Section */}
+                    {/* Copyright & Legal */}
                     {asset.copyrightCheckStatus && asset.copyrightCheckData && (
                       <div className="px-3 py-2 space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
+                          <p className="text-xs font-semibold text-foreground">Copyright & Legal</p>
                           <Button 
                             variant="link" 
                             size="sm" 
@@ -1573,28 +1535,6 @@ export default function AssetDetailPage() {
               </div>
             )}
 
-            {/* File Properties Section */}
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-2.5 py-2 border border-border/80 rounded-md hover:bg-accent/30 transition-colors group">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">File Properties</h3>
-                <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-1.5">
-                <Card className="mt-1.5 border-l-2 border-l-accent">
-                  <CardContent className="pt-3 pb-3 space-y-2">
-                    {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
-                      <InlineEditField
-                        key={field.id}
-                        field={field}
-                        value={asset[field.path as keyof typeof asset]}
-                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                      />
-                    ))}
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
-
             {/* Activity (comments) - left column to match other boxes */}
             {commentsSection}
           </div>
@@ -1610,10 +1550,10 @@ export default function AssetDetailPage() {
               
               {/* Content - all sections inside */}
               <div className="divide-y divide-border">
-                {/* Status Section */}
+                {/* Approval & Status */}
                 {statusField && (
                   <div className="px-3 py-2 space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Status</Label>
+                    <p className="text-xs font-semibold text-foreground">Approval & Status</p>
                     <InlineEditField
                       field={statusField}
                       value={asset.approvalStatus}
@@ -1623,11 +1563,9 @@ export default function AssetDetailPage() {
                   </div>
                 )}
                 
-                {/* Organization Section */}
+                {/* Brand & Design */}
                 <div className="px-3 py-2 space-y-2">
-                  <Label className="text-xs text-muted-foreground font-medium">Organization</Label>
-                  
-                  {/* Brand */}
+                  <p className="text-xs font-semibold text-foreground">Brand & Design</p>
                   {brandField && (
                     <div className="space-y-1.5">
                       <InlineEditField
@@ -1637,8 +1575,6 @@ export default function AssetDetailPage() {
                       />
                     </div>
                   )}
-                  
-                  {/* Design Type */}
                   {designTypeField && (
                     <div className="space-y-1.5">
                       <InlineEditField
@@ -1648,19 +1584,6 @@ export default function AssetDetailPage() {
                       />
                     </div>
                   )}
-                  
-                  {/* Tags */}
-                  {tagsField && asset && 'tags' in asset && (
-                    <div className="space-y-1.5">
-                      <InlineEditField
-                        field={tagsField}
-                        value={asset.tags}
-                        onSave={(newValue) => handleFieldSave("tags", newValue)}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Intended Uses */}
                   {intendedUsesField && (
                     <div className="space-y-1.5">
                       <InlineEditField
@@ -1672,32 +1595,42 @@ export default function AssetDetailPage() {
                   )}
                 </div>
                 
-                {/* File Info Section */}
-                <div className="px-3 py-2 space-y-1.5">
-                  <Label className="text-xs text-muted-foreground font-medium">File Information</Label>
+                {/* File Properties */}
+                <div className="px-3 py-2 space-y-2">
+                  <p className="text-xs font-semibold text-foreground">File Properties</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Size</span>
+                      <span className="text-xs text-muted-foreground">Size</span>
                       <span className="text-sm font-medium">{formatFileSize(asset.fileSize)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Type</span>
+                      <span className="text-xs text-muted-foreground">Type</span>
                       <span className="text-sm font-medium">{asset.mimeType}</span>
                     </div>
                     {asset.dimensions && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Dimensions</span>
+                        <span className="text-xs text-muted-foreground">Dimensions</span>
                         <span className="text-sm font-medium">
                           {asset.dimensions.width} × {asset.dimensions.height}
                         </span>
                       </div>
                     )}
                   </div>
+                  <div className="space-y-2">
+                    {EDITABLE_FIELDS.filter(f => f.category === "files").map(field => (
+                      <InlineEditField
+                        key={field.id}
+                        field={field}
+                        value={asset[field.path as keyof typeof asset]}
+                        onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                      />
+                    ))}
+                  </div>
                 </div>
                 
-                {/* Details Section */}
+                {/* Basic Information */}
                 <div className="px-3 py-2 space-y-2">
-                  <Label className="text-xs text-muted-foreground font-medium">Details</Label>
+                  <p className="text-xs font-semibold text-foreground">Basic Information</p>
                   
                   {/* Uploaded By */}
                   <div className="space-y-1">
@@ -1720,11 +1653,22 @@ export default function AssetDetailPage() {
                       </Link>
                     </div>
                   )}
+
+                  {/* Tags */}
+                  {tagsField && asset && 'tags' in asset && (
+                    <div className="space-y-1.5">
+                      <InlineEditField
+                        field={tagsField}
+                        value={asset.tags}
+                        onSave={(newValue) => handleFieldSave("tags", newValue)}
+                      />
+                    </div>
+                  )}
                 </div>
                 
-                {/* Talent Rights Section */}
+                {/* Talent Rights (NILP) */}
                 <div className="px-3 py-2 space-y-2">
-                  <Label className="text-xs text-muted-foreground font-medium">Talent Rights (NILP)</Label>
+                  <p className="text-xs font-semibold text-foreground">Talent Rights (NILP)</p>
                   
                   {(() => {
                     const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
@@ -1757,11 +1701,11 @@ export default function AssetDetailPage() {
                   )}
                 </div>
                 
-                {/* Copyright Status Section */}
+                {/* Copyright & Legal */}
                 {asset.copyrightCheckStatus && asset.copyrightCheckData && (
                   <div className="px-3 py-2 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground font-medium">Copyright Status</Label>
+                      <p className="text-xs font-semibold text-foreground">Copyright & Legal</p>
                       <Button 
                         variant="link" 
                         size="sm" 
