@@ -115,6 +115,8 @@ export interface Task {
     feedback: string;  // Feedback from reviewer
     rejectedAt: string;  // ISO timestamp
   };
+  // Talent Rights - credited talent IDs (same pattern as Asset.creatorIds)
+  creatorIds?: string[];  // Creators/talent credited on this task
   // Media Manager data - assets, Creator DNA, training data, references
   mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
   // Asset approval aggregation status

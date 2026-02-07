@@ -68,10 +68,12 @@ import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 import { MediaManager } from "@/components/media-manager/media-manager"
 import { 
   DeliverableVersionsCard, 
-  CreatorDNACard, 
   TrainingDataCard, 
   ReferencesCard 
 } from "@/components/tasks/TaskResourceCards"
+import { TalentPicker } from "@/components/creative/TalentPicker"
+import { useTalentRights } from "@/contexts/talent-rights-context"
+import { CreatorAvatarBadge } from "@/components/creators"
 import { aiToolsWhitelist, getAvailableToolsForProject, type AITool } from "@/lib/ai-tools-data"
 import {
   DropdownMenu,
@@ -138,6 +140,7 @@ export default function TaskDetailPage() {
   
   const { getProjectById } = useData()
   const project = getProjectById(projectId)
+  const { getTalentById, getAllCreditsByTalent } = useTalentRights()
   
   const [task, setTask] = useState<Task | null>(null)
   const [taskGroup, setTaskGroup] = useState<any>(null)
@@ -172,6 +175,27 @@ export default function TaskDetailPage() {
     getVersionGroupsByTask(taskId), 
     [taskId]
   )
+
+  // Talent Rights - credited talent for this task
+  const creditedCreators = useMemo(() => {
+    if (!task?.creatorIds?.length) return []
+    return task.creatorIds.map(id => getTalentById(id)).filter(Boolean) as NonNullable<ReturnType<typeof getTalentById>>[]
+  }, [task?.creatorIds, getTalentById])
+
+  const taskCreditsWithRoles = useMemo(() => {
+    return creditedCreators.map((creator) => {
+      const credits = getAllCreditsByTalent(creator.id)
+      const taskCredit = credits.find((c) => c.assetId === taskId || c.projectId === projectId)
+      return { creator, role: taskCredit?.role }
+    })
+  }, [creditedCreators, getAllCreditsByTalent, taskId, projectId])
+
+  const handleTalentChange = (newCreatorIds: string[]) => {
+    if (task) {
+      setTask({ ...task, creatorIds: newCreatorIds })
+      toast.success("Talent rights updated")
+    }
+  }
   
   // Upload state
   const [uploadedAssets, setUploadedAssets] = useState<Array<{
@@ -1283,7 +1307,7 @@ export default function TaskDetailPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                Workflow Actions
+                Task Actions
               </div>
               <DropdownMenuSeparator />
               
@@ -1342,6 +1366,11 @@ export default function TaskDetailPage() {
               <DropdownMenuItem onClick={() => toast.info("Edit task details coming soon")}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Task Details
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => toast.info("Duplicate task")}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate task
               </DropdownMenuItem>
               
               <DropdownMenuItem onClick={handleChangeAssignee}>
@@ -2625,16 +2654,74 @@ export default function TaskDetailPage() {
               />
             )}
             
-            {/* Show Creator DNA card if assigned or AI generative task */}
-            {((task.mediaData?.creatorDNA && task.mediaData.creatorDNA.length > 0) || task.mode === 'generative') && (
-              <CreatorDNACard
-                creators={task.mediaData?.creatorDNA || []}
-                onManage={() => {
-                  setMediaManagerInitialTab('creator-dna')
-                  setMediaManagerOpen(true)
-                }}
-              />
-            )}
+            {/* Talent Rights */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Talent Rights</CardTitle>
+                  {creditedCreators.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">{creditedCreators.length}</Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="px-4 pb-3">
+                  <TalentPicker
+                    value={task.creatorIds || []}
+                    onChange={handleTalentChange}
+                  />
+                </div>
+                {creditedCreators.length > 0 && (
+                  <div className="divide-y divide-border border-t">
+                    {taskCreditsWithRoles.map(({ creator, role }) => {
+                      const nilpParts: string[] = []
+                      if (creator.nilpCategories?.name) nilpParts.push("N")
+                      if (creator.nilpCategories?.image) nilpParts.push("I")
+                      if (creator.nilpCategories?.likeness) nilpParts.push("L")
+                      if (creator.nilpCategories?.persona) nilpParts.push("P")
+                      const nilpIndicator = nilpParts.join(" ")
+                      const expirationDate = creator.validThrough ? new Date(creator.validThrough).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
+                      const statusColor = creator.rightsStatus === "Authorized" 
+                        ? "text-green-600 bg-green-50 dark:bg-green-900/20" 
+                        : creator.rightsStatus === "Expiring Soon" 
+                        ? "text-orange-600 bg-orange-50 dark:bg-orange-900/20" 
+                        : "text-red-600 bg-red-50 dark:bg-red-900/20"
+
+                      return (
+                        <div key={creator.id} className="py-3 px-4 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <CreatorAvatarBadge creator={creator} size="sm" />
+                              <div className="min-w-0">
+                                <span className="text-sm font-medium">{creator.fullName}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{creator.talentType}</Badge>
+                                  {role && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">{role}</Badge>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              {nilpIndicator && (
+                                <span className="font-mono text-xs text-muted-foreground tracking-wider">{nilpIndicator}</span>
+                              )}
+                              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 border-0", statusColor)}>
+                                {creator.rightsStatus}
+                              </Badge>
+                              {expirationDate && (
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">{expirationDate}</span>
+                              )}
+                              <Link href={`/creative/talent-rights/${creator.id}`} className="text-muted-foreground hover:text-foreground transition-colors">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             
             {/* Show Training Data card if linked or AI task */}
             {((task.mediaData?.training && task.mediaData.training.length > 0) || task.mode === 'generative') && (
@@ -2694,10 +2781,9 @@ export default function TaskDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Task Details & Actions - Unified */}
-          <Card>
-            <CardHeader className="pb-3">
+          <Card className="py-3 gap-0">
+            <CardHeader className="pb-1 px-4 pt-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Details & Actions</CardTitle>
                 {/* Mode Badge */}
                 {task.mode && task.mode !== "manual" && (
                   <Badge 
@@ -2715,7 +2801,7 @@ export default function TaskDetailPage() {
               </div>
               
               {/* Workflow Step - Compact */}
-              {task.mode !== "manual" && (
+              {task.mode && task.mode !== "manual" && (
                 <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                   <span>Step {task.aiWorkflowStep || 1} / 7</span>
                   {task.aiTool && (
@@ -2728,76 +2814,21 @@ export default function TaskDetailPage() {
               )}
             </CardHeader>
             
-            <CardContent className="space-y-2">
-              {/* Primary Action - Dynamic based on workflow step */}
-              {task.mode !== "manual" ? (
-                // AI Workflow Actions
-                <>
-                  {/* Primary action changes based on step */}
-                  {(!task.aiWorkflowStep || task.aiWorkflowStep === 1) && (
-                    <Button className="w-full" asChild>
-                      <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
-                        <Rocket className="mr-2 h-4 w-4" />
-                        Start AI Workflow
-                      </Link>
-                    </Button>
-                  )}
-                  
-                  {task.aiWorkflowStep && task.aiWorkflowStep > 1 && task.aiWorkflowStep < 7 && (
-                    <Button className="w-full" asChild>
-                      <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
-                        <Rocket className="mr-2 h-4 w-4" />
-                        Continue Workflow
-                      </Link>
-                    </Button>
-                  )}
-                  
-                  {task.aiWorkflowStep === 7 && (
-                    <Button className="w-full" onClick={() => toast.info("Submit for clearance")}>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Submit for Clearance
-                    </Button>
-                  )}
-                </>
+            <CardContent className="space-y-2 px-4 pt-0 pb-4">
+              {/* Primary Action - Single button per task type */}
+              {task.mode && task.mode !== "manual" ? (
+                <Button className="w-full" asChild>
+                  <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
+                    <Rocket className="mr-2 h-4 w-4" />
+                    Start AI Workflow
+                  </Link>
+                </Button>
               ) : (
-                // Manual Task Actions
-                <>
-                  <Button className="w-full" onClick={() => toast.info("Upload asset")}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Asset
-                  </Button>
-                  <Button className="w-full" variant="outline" onClick={() => toast.info("Link asset")}>
-                    <Link2 className="mr-2 h-4 w-4" />
-                    Link Existing Asset
-                  </Button>
-                </>
+                <Button className="w-full" onClick={() => toast.info("Upload asset")}>
+                  <Rocket className="mr-2 h-4 w-4" />
+                  Start Workflow
+                </Button>
               )}
-              
-              {/* More Actions Dropdown */}
-              <Separator className="my-2" />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <MoreHorizontal className="mr-2 h-4 w-4" />
-                    More Actions
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => toast.info("Edit task")}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Task
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toast.info("Duplicate")}>
-                    <Copy className="mr-2 h-4 w-4" />
-                    Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => toast.info("Archive")}>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Archive
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </CardContent>
           </Card>
 

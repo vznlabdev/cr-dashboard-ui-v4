@@ -352,7 +352,7 @@ export function CreatorDNACard({ creators, onManage }: CreatorDNACardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Creator DNA</CardTitle>
+              <CardTitle className="text-base">Talent Rights</CardTitle>
             </div>
             <Button variant="outline" size="sm" onClick={onManage}>
               <Plus className="mr-2 h-4 w-4" />
@@ -363,7 +363,7 @@ export function CreatorDNACard({ creators, onManage }: CreatorDNACardProps) {
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg">
             <Users className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No Creator DNA assigned</p>
+            <p className="text-sm text-muted-foreground">No Talent Rights assigned</p>
             <p className="text-xs text-muted-foreground mt-1">
               Assign talent rights for AI generation
             </p>
@@ -405,7 +405,7 @@ export function CreatorDNACard({ creators, onManage }: CreatorDNACardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Creator DNA</CardTitle>
+            <CardTitle className="text-base">Talent Rights</CardTitle>
             <Badge variant="secondary" className="text-xs">
               {creators.length}
             </Badge>

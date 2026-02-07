@@ -379,6 +379,7 @@ export const mockTasks: Task[] = [
     targetAudience: 'Business professionals attending tech conferences',
     estimatedHours: 6,
     isBillable: true,
+    creatorIds: ['creator-1', 'creator-3'],
   },
   {
     id: 'task-13',
@@ -400,6 +401,7 @@ export const mockTasks: Task[] = [
     targetAudience: 'Commuters and general public in urban areas',
     estimatedHours: 10,
     isBillable: true,
+    creatorIds: ['creator-2'],
     clearanceRejection: {
       rejectedBy: 'legal',
       rejectedAsset: 'hero_image_v1.png',
