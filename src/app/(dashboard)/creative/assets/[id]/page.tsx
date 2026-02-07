@@ -43,13 +43,17 @@ import {
   Settings,
   ChevronRight,
   Check,
+  ExternalLink,
+  Users,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { PromptContent } from "@/components/creative/PromptContent"
 import { InlineEditField, ScoreBadge } from "@/components/creative"
 import { useCreators } from "@/contexts/creators-context"
+import { useContracts } from "@/contexts/contracts-context"
 import { CreatorAvatarBadge } from "@/components/creators"
+import { ContractCard } from "@/components/talent-rights"
 import { ASSET_CONTENT_TYPE_CONFIG, DESIGN_TYPE_CONFIG } from "@/types/creative"
 import { EDITABLE_FIELDS } from "@/config/bulk-edit-fields"
 import { formatDistanceToNow, format } from "date-fns"
@@ -110,7 +114,7 @@ export default function AssetDetailPage() {
     : versionGroup?.currentVersionId || ""
   
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"overview" | "ai-workflow" | "quality">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "ai-workflow" | "quality" | "talent-rights">("overview")
   const [isRunningCheck, setIsRunningCheck] = useState(false)
   const { canRunCheck, useCredit, getTotalAvailable } = useCopyrightCredits()
   
@@ -422,9 +426,50 @@ export default function AssetDetailPage() {
     }
   }, [baseAsset, localAsset])
   
+  // When saving a version, persist to the version group so the version dropdown, brand header, and sidebar stay in sync.
+  // Update immutably (new array + new version object) so React and children see the change.
+  const handleAssetUpdate = useCallback((updated: any) => {
+    setLocalAsset(updated)
+    if (!versionGroup || !updated?.id) return
+    // Persist brand/design to version group so header (top-left) and Brand & Design sidebar use the same source
+    if (updated.brandId !== undefined) {
+      const brand = mockBrands.find((b) => b.id === updated.brandId)
+      if (brand) {
+        versionGroup.brandId = brand.id
+        versionGroup.brandName = brand.name
+        const primaryColor = brand.colors?.find((c) => c.type === "primary") ?? brand.colors?.[0]
+        versionGroup.brandColor = primaryColor?.hex
+      }
+    }
+    if (updated.designType !== undefined) {
+      versionGroup.designType = updated.designType
+    }
+    const versionIndex = versionGroup.versions.findIndex(v => v.id === updated.id)
+    if (versionIndex === -1) return
+    const prev = versionGroup.versions[versionIndex]
+    const brandForVersion = updated.brandId !== undefined ? mockBrands.find((b) => b.id === updated.brandId) : null
+    const primaryForVersion = brandForVersion?.colors?.find((c) => c.type === "primary") ?? brandForVersion?.colors?.[0]
+    const nextVersion = {
+      ...prev,
+      ...(updated.status !== undefined && { status: updated.status }),
+      ...(updated.approvalStatus !== undefined && { approvalStatus: updated.approvalStatus }),
+      ...(updated.brandId !== undefined && {
+        brandId: updated.brandId,
+        brandName: brandForVersion?.name ?? prev.brandName,
+        brandColor: primaryForVersion?.hex ?? prev.brandColor,
+      }),
+      ...(updated.designType !== undefined && { designType: updated.designType }),
+    }
+    versionGroup.versions = [
+      ...versionGroup.versions.slice(0, versionIndex),
+      nextVersion,
+      ...versionGroup.versions.slice(versionIndex + 1),
+    ]
+  }, [versionGroup])
+  
   // Auto-save hook (use saveImmediately so inline edits like Intended Uses checkboxes save right away and stay clickable)
   const { saveImmediately, isSaving, lastSaved } = useAssetAutoSave(assetId, asset, {
-    onUpdate: setLocalAsset
+    onUpdate: handleAssetUpdate
   })
   
   // Handle field save
@@ -433,6 +478,7 @@ export default function AssetDetailPage() {
   }, [saveImmediately])
   
   const { getCreatorsByAsset, getAllCreditsByCreator } = useCreators()
+  const { getContractsByTalent } = useContracts()
 
   // Don't render during redirect to prevent hydration mismatch
   if (isRedirecting) {
@@ -469,12 +515,29 @@ export default function AssetDetailPage() {
     })
   }, [creditedCreators, asset, getAllCreditsByCreator])
 
+  // Get contracts for all credited talent on this asset
+  const talentContracts = useMemo(() => {
+    return creditedCreators.flatMap(creator => getContractsByTalent(creator.id))
+  }, [creditedCreators, getContractsByTalent])
+
+  // Rights summary counts
+  const rightsSummary = useMemo(() => {
+    const authorized = creditedCreators.filter(c => c.rightsStatus === "Authorized").length
+    const expiringSoon = creditedCreators.filter(c => c.rightsStatus === "Expiring Soon").length
+    const expired = creditedCreators.filter(c => c.rightsStatus === "Expired").length
+    return { authorized, expiringSoon, expired, total: creditedCreators.length }
+  }, [creditedCreators])
+
   // Get display properties (from asset or version group)
   const displayBrandId = versionGroup ? versionGroup.brandId : (asset && 'brandId' in asset ? asset.brandId : undefined)
   const displayBrandName = versionGroup ? versionGroup.brandName : (asset && 'brandName' in asset ? asset.brandName : undefined)
   const displayBrandColor = versionGroup ? versionGroup.brandColor : (asset && 'brandColor' in asset ? asset.brandColor : undefined)
   const displayDesignType = versionGroup ? versionGroup.designType : (asset && 'designType' in asset ? asset.designType : undefined)
   const displayCreatedAt = (asset && 'createdAt' in asset && asset.createdAt) ? asset.createdAt : (asset && 'uploadedAt' in asset ? asset.uploadedAt : new Date())
+  // For version groups, use version.status so header/sidebar match the version dropdown; otherwise use approvalStatus
+  const displayApprovalStatus = (versionGroup && asset && 'status' in asset && asset.status)
+    ? asset.status
+    : (asset?.approvalStatus ?? "draft")
   
   const contentTypeConfig = asset && 'contentType' in asset && asset.contentType ? ASSET_CONTENT_TYPE_CONFIG[asset.contentType as keyof typeof ASSET_CONTENT_TYPE_CONFIG] : null
   const designTypeConfig = displayDesignType ? DESIGN_TYPE_CONFIG[displayDesignType as keyof typeof DESIGN_TYPE_CONFIG] : null
@@ -615,7 +678,7 @@ export default function AssetDetailPage() {
             )}
             {/* Status badge - matches version workflow (VersionSelector labels) */}
             {(() => {
-              const status = asset.approvalStatus ?? "draft"
+              const status = displayApprovalStatus
               const statusConfig: Record<string, { label: string; className: string }> = {
                 draft: { label: "Draft", className: "bg-muted text-muted-foreground border-muted-foreground/30" },
                 submitted: { label: "Submitted", className: "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-200 dark:border-blue-800" },
@@ -633,9 +696,9 @@ export default function AssetDetailPage() {
                 </Badge>
               )
             })()}
-            {versionGroup && (
-              <Badge variant="outline" className="font-mono text-xs px-1.5 py-0">
-                v{(asset as AssetVersion).versionNumber}
+            {versionGroup && selectedVersionId === versionGroup.currentVersionId && (
+              <Badge variant="secondary" className="text-xs font-normal text-muted-foreground">
+                Current Version
               </Badge>
             )}
             {isAIGenerated && (
@@ -785,7 +848,7 @@ export default function AssetDetailPage() {
       {/* Tabs - tight under properties bar so image is above fold */}
       {versionGroup ? (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "ai-workflow" | "quality")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
             {/* Tab strip - compact Linear style */}
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
@@ -814,6 +877,17 @@ export default function AssetDetailPage() {
                     AI Workflow
                   </TabsTrigger>
                 )}
+                <TabsTrigger 
+                  value="talent-rights"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Talent Rights
+                  {creditedCreators.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-3 px-1 text-[9px]">
+                      {creditedCreators.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -876,8 +950,8 @@ export default function AssetDetailPage() {
                         <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Approval & Status</p>
                         <InlineEditField
                           field={statusField}
-                          value={asset.approvalStatus}
-                          onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                          value={displayApprovalStatus}
+                          onSave={(newValue) => handleFieldSave(versionGroup ? "status" : "approvalStatus", newValue)}
                           showLabel={false}
                         />
                       </div>
@@ -1006,41 +1080,6 @@ export default function AssetDetailPage() {
                             value={asset.tags}
                             onSave={(newValue) => handleFieldSave("tags", newValue)}
                           />
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Talent Rights (NILP) */}
-                    <div className="px-3 py-2 space-y-2">
-                      <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Talent Rights (NILP)</p>
-                      
-                      {(() => {
-                        const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
-                        return creatorIdsField && (
-                          <InlineEditField
-                            field={creatorIdsField}
-                            value={asset.creatorIds || []}
-                            onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
-                            label="Assign Talent"
-                          />
-                        )
-                      })()}
-                      
-                      {creditedCreators.length > 0 && (
-                        <div className="space-y-2 mt-3">
-                          <p className="text-xs font-medium text-muted-foreground">Credited Creators</p>
-                          <div className="space-y-2">
-                            {assetCreditsWithRoles.map(({ creator, role }) => (
-                              <div key={creator.id} className="flex items-center justify-between">
-                                <CreatorAvatarBadge creator={creator} size="sm" />
-                                {role && (
-                                  <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                                    {role}
-                                  </Badge>
-                                )}
-                              </div>
-                            ))}
-                          </div>
                         </div>
                       )}
                     </div>
@@ -1455,11 +1494,188 @@ export default function AssetDetailPage() {
             </TabsContent>
           )}
 
+          {/* Talent Rights Tab Content */}
+          <TabsContent value="talent-rights" className="mt-2">
+            <div className="grid lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2 space-y-3">
+
+                {/* Assign Talent */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Assign Talent</CardTitle>
+                    <CardDescription>Select talent credited in this asset</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                      return creatorIdsField && (
+                        <InlineEditField
+                          field={creatorIdsField}
+                          value={asset.creatorIds || []}
+                          onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                          label="Assign Talent"
+                          showLabel={false}
+                        />
+                      )
+                    })()}
+                  </CardContent>
+                </Card>
+
+                {/* Credited Talent */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Credited Talent</CardTitle>
+                      {creditedCreators.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{creditedCreators.length}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {creditedCreators.length === 0 ? (
+                      <div className="px-4 pb-4 text-center py-6">
+                        <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                        <p className="text-sm text-muted-foreground">No talent credited yet</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Use the picker above to assign talent to this asset</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {assetCreditsWithRoles.map(({ creator, role }) => {
+                          const nilpParts: string[] = []
+                          if (creator.nilpCategories?.name) nilpParts.push("N")
+                          if (creator.nilpCategories?.image) nilpParts.push("I")
+                          if (creator.nilpCategories?.likeness) nilpParts.push("L")
+                          if (creator.nilpCategories?.persona) nilpParts.push("P")
+                          const nilpIndicator = nilpParts.join(" ")
+                          const expirationDate = creator.validThrough ? new Date(creator.validThrough).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
+                          const statusColor = creator.rightsStatus === "Authorized" 
+                            ? "text-green-600 bg-green-50 dark:bg-green-900/20" 
+                            : creator.rightsStatus === "Expiring Soon" 
+                            ? "text-orange-600 bg-orange-50 dark:bg-orange-900/20" 
+                            : "text-red-600 bg-red-50 dark:bg-red-900/20"
+
+                          return (
+                            <div key={creator.id} className="py-3 px-4 hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <CreatorAvatarBadge creator={creator} size="sm" />
+                                  <div className="min-w-0">
+                                    <span className="text-sm font-medium">{creator.fullName}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{creator.talentType}</Badge>
+                                      {role && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">{role}</Badge>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  {nilpIndicator && (
+                                    <span className="font-mono text-xs text-muted-foreground tracking-wider">{nilpIndicator}</span>
+                                  )}
+                                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 border-0", statusColor)}>
+                                    {creator.rightsStatus}
+                                  </Badge>
+                                  {expirationDate && (
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">{expirationDate}</span>
+                                  )}
+                                  <Link href={`/creative/talent-rights/${creator.id}`} className="text-muted-foreground hover:text-foreground transition-colors">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Agreements */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Agreements</CardTitle>
+                      {talentContracts.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{talentContracts.length}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {talentContracts.length === 0 ? (
+                      <div className="px-4 pb-4 text-center py-6">
+                        <FileText className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                        <p className="text-sm text-muted-foreground">No agreements found</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Contracts linked to credited talent will appear here</p>
+                      </div>
+                    ) : (
+                      <div>
+                        {talentContracts.map(contract => (
+                          <ContractCard key={contract.id} contract={contract} compact />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+              </div>
+
+              {/* Rights Summary Sidebar */}
+              <div className="space-y-4 sticky top-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Rights Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Credited</span>
+                      <span className="text-sm font-medium">{rightsSummary.total}</span>
+                    </div>
+                    {rightsSummary.authorized > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Authorized</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-green-600 bg-green-50 dark:bg-green-900/20">{rightsSummary.authorized}</Badge>
+                      </div>
+                    )}
+                    {rightsSummary.expiringSoon > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Expiring Soon</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-orange-600 bg-orange-50 dark:bg-orange-900/20">{rightsSummary.expiringSoon}</Badge>
+                      </div>
+                    )}
+                    {rightsSummary.expired > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Expired</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-red-600 bg-red-50 dark:bg-red-900/20">{rightsSummary.expired}</Badge>
+                      </div>
+                    )}
+                    {(rightsSummary.expiringSoon > 0 || rightsSummary.expired > 0) && (
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center gap-1.5 text-xs text-amber-600">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Rights attention needed</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="pt-2 border-t">
+                      <Link 
+                        href="/creative/talent-rights"
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        Manage all talent rights
+                        <ChevronRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
           </Tabs>
         </div>
       ) : (
         <div className="mt-3">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "ai-workflow" | "quality")}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
             <div className="border-b border-border">
               <TabsList className="h-auto bg-transparent p-0 gap-0 border-0">
                 <TabsTrigger 
@@ -1487,6 +1703,17 @@ export default function AssetDetailPage() {
                     AI Workflow
                   </TabsTrigger>
                 )}
+                <TabsTrigger 
+                  value="talent-rights"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
+                >
+                  Talent Rights
+                  {creditedCreators.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-3 px-1 text-[9px]">
+                      {creditedCreators.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1549,8 +1776,8 @@ export default function AssetDetailPage() {
                     <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Approval & Status</p>
                     <InlineEditField
                       field={statusField}
-                      value={asset.approvalStatus}
-                      onSave={(newValue) => handleFieldSave("approvalStatus", newValue)}
+                      value={displayApprovalStatus}
+                      onSave={(newValue) => handleFieldSave(versionGroup ? "status" : "approvalStatus", newValue)}
                       showLabel={false}
                     />
                   </div>
@@ -1657,41 +1884,6 @@ export default function AssetDetailPage() {
                         value={asset.tags}
                         onSave={(newValue) => handleFieldSave("tags", newValue)}
                       />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Talent Rights (NILP) */}
-                <div className="px-3 py-2 space-y-2">
-                  <p className="text-xs font-semibold text-foreground pb-2 border-b border-border -mx-3 px-3">Talent Rights (NILP)</p>
-                  
-                  {(() => {
-                    const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
-                    return creatorIdsField && (
-                      <InlineEditField
-                        field={creatorIdsField}
-                        value={asset.creatorIds || []}
-                        onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
-                        label="Assign Talent"
-                      />
-                    )
-                  })()}
-                  
-                  {creditedCreators.length > 0 && (
-                    <div className="space-y-2 mt-3">
-                      <p className="text-xs font-medium text-muted-foreground">Credited Creators</p>
-                      <div className="space-y-2">
-                        {assetCreditsWithRoles.map(({ creator, role }) => (
-                          <div key={creator.id} className="flex items-center justify-between">
-                            <CreatorAvatarBadge creator={creator} size="sm" />
-                            {role && (
-                              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                                {role}
-                              </Badge>
-                            )}
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </div>
@@ -2105,6 +2297,183 @@ export default function AssetDetailPage() {
               </div>
             </TabsContent>
           )}
+
+          {/* Talent Rights Tab Content */}
+          <TabsContent value="talent-rights" className="mt-2">
+            <div className="grid lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2 space-y-3">
+
+                {/* Assign Talent */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Assign Talent</CardTitle>
+                    <CardDescription>Select talent credited in this asset</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const creatorIdsField = EDITABLE_FIELDS.find(f => f.id === "creatorIds")
+                      return creatorIdsField && (
+                        <InlineEditField
+                          field={creatorIdsField}
+                          value={asset.creatorIds || []}
+                          onSave={(newValue) => handleFieldSave("creatorIds", newValue)}
+                          label="Assign Talent"
+                          showLabel={false}
+                        />
+                      )
+                    })()}
+                  </CardContent>
+                </Card>
+
+                {/* Credited Talent */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Credited Talent</CardTitle>
+                      {creditedCreators.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{creditedCreators.length}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {creditedCreators.length === 0 ? (
+                      <div className="px-4 pb-4 text-center py-6">
+                        <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                        <p className="text-sm text-muted-foreground">No talent credited yet</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Use the picker above to assign talent to this asset</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {assetCreditsWithRoles.map(({ creator, role }) => {
+                          const nilpParts: string[] = []
+                          if (creator.nilpCategories?.name) nilpParts.push("N")
+                          if (creator.nilpCategories?.image) nilpParts.push("I")
+                          if (creator.nilpCategories?.likeness) nilpParts.push("L")
+                          if (creator.nilpCategories?.persona) nilpParts.push("P")
+                          const nilpIndicator = nilpParts.join(" ")
+                          const expirationDate = creator.validThrough ? new Date(creator.validThrough).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null
+                          const statusColor = creator.rightsStatus === "Authorized" 
+                            ? "text-green-600 bg-green-50 dark:bg-green-900/20" 
+                            : creator.rightsStatus === "Expiring Soon" 
+                            ? "text-orange-600 bg-orange-50 dark:bg-orange-900/20" 
+                            : "text-red-600 bg-red-50 dark:bg-red-900/20"
+
+                          return (
+                            <div key={creator.id} className="py-3 px-4 hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <CreatorAvatarBadge creator={creator} size="sm" />
+                                  <div className="min-w-0">
+                                    <span className="text-sm font-medium">{creator.fullName}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{creator.talentType}</Badge>
+                                      {role && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">{role}</Badge>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  {nilpIndicator && (
+                                    <span className="font-mono text-xs text-muted-foreground tracking-wider">{nilpIndicator}</span>
+                                  )}
+                                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 border-0", statusColor)}>
+                                    {creator.rightsStatus}
+                                  </Badge>
+                                  {expirationDate && (
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">{expirationDate}</span>
+                                  )}
+                                  <Link href={`/creative/talent-rights/${creator.id}`} className="text-muted-foreground hover:text-foreground transition-colors">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Agreements */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Agreements</CardTitle>
+                      {talentContracts.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">{talentContracts.length}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {talentContracts.length === 0 ? (
+                      <div className="px-4 pb-4 text-center py-6">
+                        <FileText className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                        <p className="text-sm text-muted-foreground">No agreements found</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Contracts linked to credited talent will appear here</p>
+                      </div>
+                    ) : (
+                      <div>
+                        {talentContracts.map(contract => (
+                          <ContractCard key={contract.id} contract={contract} compact />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+              </div>
+
+              {/* Rights Summary Sidebar */}
+              <div className="space-y-4 sticky top-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Rights Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Credited</span>
+                      <span className="text-sm font-medium">{rightsSummary.total}</span>
+                    </div>
+                    {rightsSummary.authorized > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Authorized</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-green-600 bg-green-50 dark:bg-green-900/20">{rightsSummary.authorized}</Badge>
+                      </div>
+                    )}
+                    {rightsSummary.expiringSoon > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Expiring Soon</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-orange-600 bg-orange-50 dark:bg-orange-900/20">{rightsSummary.expiringSoon}</Badge>
+                      </div>
+                    )}
+                    {rightsSummary.expired > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Expired</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-0 text-red-600 bg-red-50 dark:bg-red-900/20">{rightsSummary.expired}</Badge>
+                      </div>
+                    )}
+                    {(rightsSummary.expiringSoon > 0 || rightsSummary.expired > 0) && (
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center gap-1.5 text-xs text-amber-600">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Rights attention needed</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="pt-2 border-t">
+                      <Link 
+                        href="/creative/talent-rights"
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        Manage all talent rights
+                        <ChevronRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
         </Tabs>
         </div>
