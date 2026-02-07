@@ -30,7 +30,7 @@ export function isApprovalRejected(status: ApprovalStatus | string | undefined):
 }
 
 export function isApprovalPending(status: ApprovalStatus | string | undefined): boolean {
-  if (!status) return true
+  if (!status) return false
   if (LEGACY_PENDING.includes(status as "pending")) return true
   return PENDING_STATUSES.includes(status as ApprovalStatus)
 }

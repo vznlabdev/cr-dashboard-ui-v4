@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import {
   Scale,
   Shield,
+  ClipboardCheck,
   Settings,
   ChevronLeft,
   Ticket,
@@ -19,6 +20,7 @@ import {
   BarChart3,
   FileText,
   FileSearch,
+  LayoutDashboard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -36,6 +38,7 @@ interface NavItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   badge?: number | string
+  children?: NavItem[]
 }
 
 interface NavSection {
@@ -97,6 +100,11 @@ const baseNavSections: NavSection[] = [
     label: "Compliance",
     items: [
       {
+        title: "Compliance",
+        href: "/compliance",
+        icon: ClipboardCheck,
+      },
+      {
         title: "Legal",
         href: "/legal",
         icon: Scale,
@@ -108,24 +116,20 @@ const baseNavSections: NavSection[] = [
       },
     ]
   },
-  // Reporting section
+  // Analytics section
   {
-    label: "Reporting",
+    label: "Analytics",
     items: [
       {
         title: "Analytics",
-        href: "/analytics",
+        href: "/reports",
         icon: BarChart3,
-      },
-      {
-        title: "Usage Reports",
-        href: "/reporting/usage",
-        icon: FileText,
-      },
-      {
-        title: "Audit Logs",
-        href: "/reporting/audit",
-        icon: FileSearch,
+        children: [
+          { title: "Dashboards", href: "/analytics/dashboards", icon: LayoutDashboard },
+          { title: "Reports", href: "/reports", icon: BarChart3 },
+          { title: "Usage", href: "/analytics/usage", icon: FileText },
+          { title: "Audit Logs", href: "/analytics/audit", icon: FileSearch },
+        ],
       },
     ]
   },
@@ -135,6 +139,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
   const [mounted, setMounted] = useState(false)
+  const [analyticsExpanded, setAnalyticsExpanded] = useState(false)
   const { theme, resolvedTheme } = useTheme()
   const { isSetupComplete, isDismissed, progress } = useSetup()
   const { unreadCount } = useInbox()
@@ -145,7 +150,14 @@ export function Sidebar() {
   useEffect(() => {
     setMounted(true)
   }, [])
-  
+
+  // Auto-expand Analytics when on a child route so current page is visible
+  useEffect(() => {
+    if (pathname === "/reports" || pathname.startsWith("/analytics/")) {
+      setAnalyticsExpanded(true)
+    }
+  }, [pathname])
+
   // Conditionally add setup item above Inbox (only after client mount to avoid hydration issues)
   const navSections = useMemo(() => {
     // Don't show setup during SSR to avoid hydration mismatch
@@ -307,11 +319,52 @@ export function Sidebar() {
                   {/* Section Items */}
                   <div className="space-y-px">
                     {section.items.map((item) => {
+                      const hasChildren = item.children && item.children.length > 0
+                      if (hasChildren && !collapsed) {
+                        const Icon = item.icon
+                        const isParentActive = item.children!.some(
+                          (c) => pathname === c.href || (c.href !== "/" && pathname.startsWith(c.href))
+                        )
+                        return (
+                          <div key={item.href}>
+                            <button
+                              type="button"
+                              onClick={() => setAnalyticsExpanded((prev) => !prev)}
+                              className={cn(
+                                "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 relative group w-full text-left",
+                                isParentActive
+                                  ? "bg-accent text-foreground"
+                                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                              )}
+                              title={item.title}
+                            >
+                              <Icon className="h-[18px] w-[18px] shrink-0" />
+                              <span className="flex-1">{item.title}</span>
+                            </button>
+                            {analyticsExpanded && item.children!.map((child) => {
+                              const isActive = pathname === child.href || (child.href !== "/" && pathname.startsWith(child.href))
+                              return (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  className={cn(
+                                    "flex items-center gap-2 rounded-md py-1.5 pl-6 pr-2 text-[13px] font-normal transition-all duration-150",
+                                    isActive
+                                      ? "bg-accent text-foreground"
+                                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                  )}
+                                >
+                                  <span className="flex-1">{child.title}</span>
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        )
+                      }
                       const Icon = item.icon
-                      const isActive = item.href === "/" 
-                        ? pathname === item.href 
+                      const isActive = item.href === "/"
+                        ? pathname === item.href
                         : pathname.startsWith(item.href)
-                      
                       return (
                         <Link
                           key={item.href}

@@ -22,10 +22,12 @@ import type { NextRequest } from "next/server";
 const dashboardProtectedRoutes = [
   "/",
   "/projects",
+  "/compliance",
   "/legal",
   "/insurance",
   "/integrations",
   "/settings",
+  "/reports",
   "/analytics",
   "/creative",
 ];
