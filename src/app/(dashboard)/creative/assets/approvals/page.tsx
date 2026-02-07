@@ -96,7 +96,7 @@ export default function AssetApprovalsPage() {
           const p = patch as { approvalStatus?: string; approvedBy?: string; approvedByName?: string; approvedAt?: Date; approvalReason?: string }
           if (p.approvalStatus) {
             v.status = p.approvalStatus as AssetVersion["status"]
-            v.approvalStatus = p.approvalStatus
+            v.approvalStatus = p.approvalStatus as AssetVersion["approvalStatus"]
           }
           if (p.approvedBy !== undefined) v.approvedBy = p.approvedBy
           if (p.approvedByName !== undefined) v.approvedByName = p.approvedByName
@@ -1138,7 +1138,18 @@ export default function AssetApprovalsPage() {
                         <span className="text-muted-foreground/60 shrink-0">·</span>
                         {asset.reviewData ? (
                           <div className="flex items-center gap-1 shrink-0">
-                            <ScoreBadge icon={Shield} score={asset.reviewData?.copyright?.data?.score ?? (asset.reviewData?.copyright?.data ? (100 - (asset.reviewData.copyright.data as { similarityScore?: number }).similarityScore) : undefined)} size="sm" />
+                            <ScoreBadge
+                              icon={Shield}
+                              score={
+                                asset.reviewData?.copyright?.data?.score ??
+                                (asset.reviewData?.copyright?.data != null
+                                  ? 100 -
+                                    ((asset.reviewData.copyright!.data as { similarityScore?: number }).similarityScore ??
+                                      0)
+                                  : undefined)
+                              }
+                              size="sm"
+                            />
                             <ScoreBadge icon={Eye} score={asset.reviewData?.accessibility?.data?.score} size="sm" />
                             <ScoreBadge icon={Zap} score={asset.reviewData?.performance?.data?.score} size="sm" />
                             <ScoreBadge icon={Palette} score={asset.reviewData?.seo?.data?.score} size="sm" />
