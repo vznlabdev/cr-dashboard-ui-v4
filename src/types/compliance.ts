@@ -280,6 +280,36 @@ export interface ComplianceOverview {
   trendData: { month: string; score: number; mrs: number }[]
 }
 
+// --- Country / Global Jurisdictions ---
+
+export interface CountryJurisdictionProfile {
+  countryCode: string // ISO 3166-1 alpha-2 (e.g. "DE", "JP")
+  countryName: string
+  region: "Europe" | "Asia-Pacific" | "Middle East" | "Americas" | "Africa"
+  lawCategories: LawCategory[]
+  aiAdPenalty: string
+  nilPenalty: string
+  deepfakePenalty: string
+  enforcementIntensity: EnforcementIntensity
+  multiplier: number
+  legislationStatus: LegislationStatus
+  effectiveDate?: string
+  statuteReference?: string
+  summary?: string
+}
+
+export interface GlobalLegislationNewsItem {
+  id: string
+  headline: string
+  countryName: string
+  countryCode: string
+  region: CountryJurisdictionProfile["region"]
+  date: string
+  category: LegislationNewsCategory
+  summary: string
+  sourceUrl: string
+}
+
 // --- Filters ---
 
 export interface ComplianceFilters {

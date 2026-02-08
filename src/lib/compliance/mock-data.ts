@@ -17,6 +17,8 @@ import type {
   EvidenceCategoryData,
   EvidenceTimelineEvent,
   AuditTrailEntry,
+  CountryJurisdictionProfile,
+  GlobalLegislationNewsItem,
 } from "@/types/compliance"
 
 // ==============================================
@@ -613,3 +615,360 @@ export const complianceOverview: ComplianceOverview = {
     { month: "Feb", score: 79, mrs: 73 },
   ],
 }
+
+// ==============================================
+// Country Jurisdiction Profiles (Global)
+// ==============================================
+
+export const countryJurisdictionProfiles: CountryJurisdictionProfile[] = [
+  // ---- EUROPE ----
+  {
+    countryCode: "EU", countryName: "European Union", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "Up to €35M or 7% global turnover",
+    nilPenalty: "Member-state dependent",
+    deepfakePenalty: "Up to €15M or 3% global turnover",
+    enforcementIntensity: "Very High", multiplier: 2.2,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act (Regulation 2024/1689)",
+    summary: "World's first comprehensive AI law. Risk-based framework banning unacceptable-risk AI, strict transparency obligations for generative AI and deepfakes, mandatory disclosure for AI-generated content."
+  },
+  {
+    countryCode: "GB", countryName: "United Kingdom", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to £18M or 10% turnover (Ofcom)",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to 2 years imprisonment (Online Safety Act)",
+    enforcementIntensity: "High", multiplier: 1.6,
+    legislationStatus: "ENACTED", effectiveDate: "2023-10-26",
+    statuteReference: "Online Safety Act 2023 / AI Regulation White Paper",
+    summary: "Online Safety Act criminalizes sharing AI deepfakes. Pro-innovation AI regulatory framework with sector-specific oversight. DSIT leading AI safety standards."
+  },
+  {
+    countryCode: "DE", countryName: "Germany", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "BIOMETRIC_LIKENESS", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to €300,000 (UWG)",
+    nilPenalty: "Civil damages under personality rights",
+    deepfakePenalty: "Criminal penalties under personal rights law",
+    enforcementIntensity: "High", multiplier: 1.5,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + BGB §823 / KUG",
+    summary: "Strong personality rights tradition protecting likeness. EU AI Act directly applicable. Federal data protection authority enforces AI transparency requirements."
+  },
+  {
+    countryCode: "FR", countryName: "France", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to €300,000 / 6% digital ad revenue",
+    nilPenalty: "Civil damages (Code civil Art. 9)",
+    deepfakePenalty: "Up to 2 years / €60,000 (identity usurpation)",
+    enforcementIntensity: "High", multiplier: 1.5,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + Loi n° 2024-449 (SREN Act)",
+    summary: "SREN Act adds AI-specific deepfake penalties. Strong image rights under Code civil. CNIL actively regulates AI training data and GDPR intersections."
+  },
+  {
+    countryCode: "IT", countryName: "Italy", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY", "DEEPFAKE"],
+    aiAdPenalty: "Up to €250,000",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to €100,000",
+    enforcementIntensity: "Medium", multiplier: 1.3,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + Italian AI Act (DDL 1146)",
+    summary: "Italy passed a national AI Act complementing EU regulation. Early mover — temporarily banned ChatGPT in 2023. Garante actively enforces data protection in AI context."
+  },
+  {
+    countryCode: "ES", countryName: "Spain", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Up to €200,000",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "EU AI Act provisions",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + AESIA (Spanish AI Supervisory Agency)",
+    summary: "First EU country to create a dedicated AI supervisory agency (AESIA). EU AI Act directly applicable. AESIA piloting regulatory sandbox for AI compliance."
+  },
+  {
+    countryCode: "NL", countryName: "Netherlands", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "EU AI Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "EU AI Act provisions",
+    enforcementIntensity: "High", multiplier: 1.4,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + Algoritmeregister",
+    summary: "Pioneer in algorithmic transparency — mandatory Algorithm Register for government AI. Dutch DPA aggressively enforces AI/GDPR intersection."
+  },
+  {
+    countryCode: "SE", countryName: "Sweden", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "EU AI Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "EU AI Act provisions",
+    enforcementIntensity: "Medium", multiplier: 1.1,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act",
+    summary: "EU AI Act directly applicable. IMY (data protection authority) overseeing AI compliance. Relatively permissive approach emphasizing innovation."
+  },
+  {
+    countryCode: "NO", countryName: "Norway", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "EEA-aligned penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "EEA-aligned provisions",
+    enforcementIntensity: "Medium", multiplier: 1.15,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "EEA AI Act adoption (pending)",
+    summary: "Norway will adopt the EU AI Act through the EEA agreement. Datatilsynet (DPA) actively involved in AI policy. Marketing Control Act covers AI advertising."
+  },
+  {
+    countryCode: "CH", countryName: "Switzerland", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Sector-specific",
+    nilPenalty: "Civil damages (ZGB Art. 28)",
+    deepfakePenalty: "Criminal law provisions",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Federal Council AI Guidelines / New AI regulation proposal",
+    summary: "Sector-specific approach under consideration. Strong personality rights under Swiss Civil Code. Federal Council evaluating EU AI Act alignment."
+  },
+  {
+    countryCode: "IE", countryName: "Ireland", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "EU AI Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "EU AI Act provisions",
+    enforcementIntensity: "High", multiplier: 1.4,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "EU AI Act + DPC oversight",
+    summary: "Irish DPC is lead supervisory authority for many Big Tech AI systems under EU AI Act due to corporate headquarters. Critical enforcement jurisdiction."
+  },
+
+  // ---- ASIA-PACIFIC ----
+  {
+    countryCode: "CN", countryName: "China", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "NIL_RIGHTS", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "Up to ¥100,000 + service suspension",
+    nilPenalty: "Civil liability + administrative penalties",
+    deepfakePenalty: "Up to 3 years imprisonment",
+    enforcementIntensity: "Very High", multiplier: 1.8,
+    legislationStatus: "ENACTED", effectiveDate: "2023-01-10",
+    statuteReference: "Deep Synthesis Provisions / Generative AI Measures (2023)",
+    summary: "Comprehensive regulations on deep synthesis and generative AI. Mandatory labeling of all AI-generated content. Algorithm registration with CAC. Real-name verification for users."
+  },
+  {
+    countryCode: "KR", countryName: "South Korea", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to ₩30M",
+    nilPenalty: "Civil damages + criminal penalties",
+    deepfakePenalty: "Up to 5 years / ₩50M (deepfake sex crimes)",
+    enforcementIntensity: "Very High", multiplier: 1.7,
+    legislationStatus: "ENACTED", effectiveDate: "2024-01-01",
+    statuteReference: "AI Basic Act / Deepfake Prevention Act (2024)",
+    summary: "AI Basic Act enacted in 2024 — risk-based framework similar to EU AI Act. Severe penalties for deepfake crimes. PIPC enforces AI data protections."
+  },
+  {
+    countryCode: "JP", countryName: "Japan", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Administrative guidance",
+    nilPenalty: "Civil damages (publicity rights)",
+    deepfakePenalty: "Defamation and portrait rights claims",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "AI Guidelines (2024) / Proposed AI Basic Law",
+    summary: "Voluntary AI guidelines emphasizing innovation. Proposed AI Basic Law under development. Relatively permissive approach — no explicit copyright protection for AI training data."
+  },
+  {
+    countryCode: "SG", countryName: "Singapore", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "PDPA penalties up to SGD 1M",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "POFMA provisions (online falsehoods)",
+    enforcementIntensity: "Medium", multiplier: 1.15,
+    legislationStatus: "ENACTED", effectiveDate: "2024-05-30",
+    statuteReference: "AI Governance Framework / Model AI Governance (2024)",
+    summary: "Voluntary but influential AI governance framework. IMDA Model AI Governance expanded in 2024. POFMA covers AI-generated falsehoods. Innovation-friendly sandbox approach."
+  },
+  {
+    countryCode: "IN", countryName: "India", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "IT Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to 3 years imprisonment (IT Act amendments)",
+    enforcementIntensity: "Medium", multiplier: 1.3,
+    legislationStatus: "ENACTED", effectiveDate: "2024-03-15",
+    statuteReference: "IT Act Deepfake Rules (2024) / Digital India Act (proposed)",
+    summary: "IT Act amended to address AI deepfakes with criminal penalties. MeitY advisory on AI labeling. Comprehensive Digital India Act in development to replace IT Act."
+  },
+  {
+    countryCode: "AU", countryName: "Australia", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "Up to AUD 50M (AI in advertising)",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to 7 years (non-consensual deepfakes)",
+    enforcementIntensity: "High", multiplier: 1.5,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-15",
+    statuteReference: "Online Safety Act (AI amendments) / Criminal Code deepfake offences",
+    summary: "Criminal Code amended for non-consensual deepfakes. eSafety Commissioner expanded powers for AI content. Mandatory AI transparency for government use. Voluntary guardrails for industry."
+  },
+  {
+    countryCode: "NZ", countryName: "New Zealand", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Fair Trading Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Harmful Digital Communications Act",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "AI Strategy 2024 / Proposed AI Framework",
+    summary: "Principles-based AI strategy. Harmful Digital Communications Act covers some AI misuse. No dedicated AI legislation yet — relying on existing consumer protection and privacy law."
+  },
+  {
+    countryCode: "TW", countryName: "Taiwan", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "Administrative penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Criminal penalties proposed",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "AI Basic Act (draft 2024)",
+    summary: "Draft AI Basic Act under legislative review. Taiwan's NSTC leading AI governance. Proposed deepfake regulation and AI labeling requirements for elections."
+  },
+
+  // ---- MIDDLE EAST ----
+  {
+    countryCode: "AE", countryName: "United Arab Emirates", region: "Middle East",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "CBUAE / ADGM regulatory penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Cybercrime Law penalties",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "ENACTED", effectiveDate: "2023-01-01",
+    statuteReference: "UAE AI Strategy 2031 / ADGM AI framework",
+    summary: "First country to appoint a Minister of AI. ADGM financial free zone has AI-specific governance. Dubai AI Campus regulatory sandbox. Cybercrime law covers AI misuse."
+  },
+  {
+    countryCode: "SA", countryName: "Saudi Arabia", region: "Middle East",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "SDAIA regulatory penalties",
+    nilPenalty: "N/A",
+    deepfakePenalty: "Cybercrime provisions",
+    enforcementIntensity: "Medium", multiplier: 1.15,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "SDAIA AI Ethics Principles / National AI Strategy",
+    summary: "Saudi Data & AI Authority (SDAIA) leading regulation. Voluntary AI ethics principles published. Comprehensive AI governance framework in development aligned with Vision 2030."
+  },
+  {
+    countryCode: "IL", countryName: "Israel", region: "Middle East",
+    lawCategories: ["AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Consumer protection penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Privacy Protection Law provisions",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Israel Innovation Authority AI Policy (2024)",
+    summary: "Innovation-friendly approach with proposed AI regulation. Privacy Protection Authority expanding to cover AI. Strong deeptech AI sector with light-touch governance philosophy."
+  },
+
+  // ---- AMERICAS (non-US) ----
+  {
+    countryCode: "CA", countryName: "Canada", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "Up to CAD 10M or 3% global revenue",
+    nilPenalty: "Civil damages (personality rights)",
+    deepfakePenalty: "Criminal Code provisions + AIDA penalties",
+    enforcementIntensity: "High", multiplier: 1.5,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "AIDA (Bill C-27, Part 3) / Proposed Online Harms Act",
+    summary: "Artificial Intelligence and Data Act (AIDA) proposed as part of Bill C-27. Would create mandatory AI risk assessments, transparency obligations, and penalties for AI harms. Died on order paper — expected to be reintroduced."
+  },
+  {
+    countryCode: "BR", countryName: "Brazil", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to 2% of revenue (LGPD)",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to BRL 50M per violation",
+    enforcementIntensity: "High", multiplier: 1.4,
+    legislationStatus: "ENACTED", effectiveDate: "2025-01-01",
+    statuteReference: "Marco Legal da IA (PL 2338/2023)",
+    summary: "Brazil's AI regulatory framework (Marco Legal da IA) enacted. Risk-based approach inspired by EU AI Act. Mandatory impact assessments for high-risk AI. LGPD data protection applies to AI training."
+  },
+  {
+    countryCode: "MX", countryName: "Mexico", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Federal consumer protection penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Proposed",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Proposed Federal AI Regulation (2024)",
+    summary: "Multiple AI regulation bills introduced in Congress. No comprehensive law yet. Data protection law (LFPDPPP) applies to AI processing of personal data."
+  },
+  {
+    countryCode: "CL", countryName: "Chile", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Administrative penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "N/A",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "National AI Policy 2024 / Proposed AI Bill",
+    summary: "Updated national AI policy in 2024. AI regulation bill under development. First Latin American country to publish a national AI policy (2021)."
+  },
+
+  // ---- AFRICA ----
+  {
+    countryCode: "ZA", countryName: "South Africa", region: "Africa",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "POPIA penalties up to ZAR 10M",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Cybercrimes Act provisions",
+    enforcementIntensity: "Low", multiplier: 1.1,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "POPIA + AI Policy Framework (draft)",
+    summary: "POPIA (data protection) applies to AI processing. Draft National AI Policy Framework published. Cybercrimes Act covers some AI-generated content misuse."
+  },
+  {
+    countryCode: "NG", countryName: "Nigeria", region: "Africa",
+    lawCategories: [],
+    aiAdPenalty: "N/A",
+    nilPenalty: "N/A",
+    deepfakePenalty: "N/A",
+    enforcementIntensity: "None", multiplier: 1.0,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "NITDA AI Strategy (2024)",
+    summary: "National AI Strategy published by NITDA. No dedicated AI legislation yet. NDPR (data protection) provides limited coverage for AI data processing."
+  },
+  {
+    countryCode: "KE", countryName: "Kenya", region: "Africa",
+    lawCategories: [],
+    aiAdPenalty: "N/A",
+    nilPenalty: "N/A",
+    deepfakePenalty: "N/A",
+    enforcementIntensity: "None", multiplier: 1.0,
+    legislationStatus: "NONE", effectiveDate: undefined,
+    statuteReference: "Proposed AI Policy Framework",
+    summary: "AI policy under development. Data Protection Act 2019 provides limited coverage. No dedicated AI content or deepfake legislation."
+  },
+]
+
+// ==============================================
+// Global Legislation News
+// ==============================================
+
+export const globalLegislationNews: GlobalLegislationNewsItem[] = [
+  { id: "gln-1", headline: "EU AI Act enters into force — phased enforcement begins", countryName: "European Union", countryCode: "EU", region: "Europe", date: "2025-02-01", category: "NEW_LAW", summary: "EU AI Act Article 5 (prohibited AI) now enforceable. High-risk AI system obligations take effect August 2025. Transparency requirements for generative AI models apply from August 2025.", sourceUrl: "#" },
+  { id: "gln-2", headline: "China mandates watermarking for all AI-generated content", countryName: "China", countryCode: "CN", region: "Asia-Pacific", date: "2025-01-20", category: "ENFORCEMENT_ACTION", summary: "CAC begins enforcing mandatory AI content watermarking across all platforms. Non-compliant services face suspension and fines.", sourceUrl: "#" },
+  { id: "gln-3", headline: "UK Online Safety Act: Ofcom issues AI deepfake enforcement guidance", countryName: "United Kingdom", countryCode: "GB", region: "Europe", date: "2025-01-15", category: "ENFORCEMENT_ACTION", summary: "Ofcom publishes codes of practice for platforms on AI-generated intimate imagery and deepfakes under the Online Safety Act.", sourceUrl: "#" },
+  { id: "gln-4", headline: "South Korea enacts comprehensive AI Basic Act", countryName: "South Korea", countryCode: "KR", region: "Asia-Pacific", date: "2025-01-10", category: "NEW_LAW", summary: "Korea's AI Basic Act creates risk classification system, mandatory impact assessments, and AI transparency obligations for public-facing systems.", sourceUrl: "#" },
+  { id: "gln-5", headline: "Brazil's AI regulatory framework signed into law", countryName: "Brazil", countryCode: "BR", region: "Americas", date: "2025-01-05", category: "NEW_LAW", summary: "Marco Legal da IA enacted after 2+ years of debate. Risk-based approach with mandatory impact assessments for high-risk AI. Effective January 2025.", sourceUrl: "#" },
+  { id: "gln-6", headline: "Australia criminalizes non-consensual AI deepfakes", countryName: "Australia", countryCode: "AU", region: "Asia-Pacific", date: "2025-01-22", category: "NEW_LAW", summary: "Criminal Code amendments take effect — creation or distribution of non-consensual AI deepfakes carries up to 7 years imprisonment.", sourceUrl: "#" },
+  { id: "gln-7", headline: "India mandates AI content labeling for elections", countryName: "India", countryCode: "IN", region: "Asia-Pacific", date: "2025-02-03", category: "ENFORCEMENT_ACTION", summary: "MeitY issues binding advisory requiring all platforms to label AI-generated political content ahead of state elections.", sourceUrl: "#" },
+  { id: "gln-8", headline: "Canada reintroduces AIDA — Artificial Intelligence and Data Act", countryName: "Canada", countryCode: "CA", region: "Americas", date: "2025-01-28", category: "PROPOSED", summary: "Revised AIDA tabled in Parliament with stronger enforcement mechanisms and alignment with EU AI Act risk categories.", sourceUrl: "#" },
+  { id: "gln-9", headline: "France CNIL fines AI company €10M for training data violations", countryName: "France", countryCode: "FR", region: "Europe", date: "2025-01-18", category: "ENFORCEMENT_ACTION", summary: "CNIL issues first major fine for GDPR violations in AI model training — unauthorized use of personal data from web scraping.", sourceUrl: "#" },
+  { id: "gln-10", headline: "Singapore updates Model AI Governance Framework for GenAI", countryName: "Singapore", countryCode: "SG", region: "Asia-Pacific", date: "2025-02-05", category: "AMENDMENT", summary: "IMDA releases Model AI Governance Framework 2.0 with specific guidance on generative AI transparency and content provenance.", sourceUrl: "#" },
+  { id: "gln-11", headline: "UAE launches AI regulatory sandbox in ADGM", countryName: "United Arab Emirates", countryCode: "AE", region: "Middle East", date: "2025-01-12", category: "NEW_LAW", summary: "Abu Dhabi Global Market launches dedicated AI regulatory sandbox allowing companies to test AI products under supervised compliance.", sourceUrl: "#" },
+  { id: "gln-12", headline: "Germany's BfDI issues AI transparency guidelines", countryName: "Germany", countryCode: "DE", region: "Europe", date: "2025-01-25", category: "AMENDMENT", summary: "Federal Commissioner for Data Protection publishes binding guidelines on AI content disclosure requirements under EU AI Act implementation.", sourceUrl: "#" },
+  { id: "gln-13", headline: "Japan proposes AI Basic Law with focus on innovation", countryName: "Japan", countryCode: "JP", region: "Asia-Pacific", date: "2025-02-01", category: "PROPOSED", summary: "Cabinet office proposes AI Basic Law emphasizing responsible innovation, voluntary compliance for most uses, and limited mandatory obligations for high-risk applications.", sourceUrl: "#" },
+  { id: "gln-14", headline: "Italy's Garante blocks AI tool for GDPR violations", countryName: "Italy", countryCode: "IT", region: "Europe", date: "2025-01-30", category: "ENFORCEMENT_ACTION", summary: "Italian data protection authority temporarily blocks an AI content generation service for failing to implement age verification and content labeling.", sourceUrl: "#" },
+  { id: "gln-15", headline: "Ireland's DPC opens EU AI Act enforcement office", countryName: "Ireland", countryCode: "IE", region: "Europe", date: "2025-02-04", category: "NEW_LAW", summary: "Irish DPC establishes dedicated AI compliance division — expected to become primary enforcer for many Big Tech AI systems under EU AI Act.", sourceUrl: "#" },
+]

@@ -4,18 +4,19 @@ import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
 import { USLegislationMap } from "@/components/compliance/USLegislationMap"
+import { WorldComplianceMap } from "@/components/compliance/WorldComplianceMap"
 import { MetricStrip } from "@/components/compliance/MetricStrip"
 import { ContextFilterBar } from "@/components/compliance/ContextFilterBar"
 import { cn } from "@/lib/utils"
-import { Eye, ArrowRight, XCircle, AlertTriangle, ChevronRight } from "lucide-react"
+import { Eye, ArrowRight, XCircle, AlertTriangle, ChevronRight, Globe, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts"
-import { getComplianceOverview, getJurisdictions, getLegislationNews } from "@/lib/compliance/api"
-import type { ComplianceOverview, JurisdictionProfile, LegislationNewsItem, ComplianceAlert } from "@/types/compliance"
+import { getComplianceOverview, getJurisdictions, getLegislationNews, getCountryJurisdictions, getGlobalLegislationNews } from "@/lib/compliance/api"
+import type { ComplianceOverview, JurisdictionProfile, LegislationNewsItem, ComplianceAlert, CountryJurisdictionProfile, GlobalLegislationNewsItem } from "@/types/compliance"
 
 const riskClassColors: Record<string, string> = {
   Low: "#10b981",
@@ -43,19 +44,28 @@ const alertTypeBadgeColors: Record<string, string> = {
   legislation_change: "text-blue-600 bg-blue-500/10",
 }
 
+type MapView = "world" | "us"
+
 export default function ComplianceDashboardPage() {
   const [overview, setOverview] = useState<ComplianceOverview | null>(null)
   const [jurisdictions, setJurisdictions] = useState<JurisdictionProfile[]>([])
+  const [countryJurisdictions, setCountryJurisdictions] = useState<CountryJurisdictionProfile[]>([])
   const [news, setNews] = useState<LegislationNewsItem[]>([])
+  const [globalNews, setGlobalNews] = useState<GlobalLegislationNewsItem[]>([])
+  const [mapView, setMapView] = useState<MapView>("world")
   const [selectedState, setSelectedState] = useState<string | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [stateDetailOpen, setStateDetailOpen] = useState(false)
+  const [countryDetailOpen, setCountryDetailOpen] = useState(false)
   const [alertPage, setAlertPage] = useState(0)
   const alertsPerPage = 20
 
   useEffect(() => {
     getComplianceOverview().then(setOverview)
     getJurisdictions().then(setJurisdictions)
+    getCountryJurisdictions().then(setCountryJurisdictions)
     getLegislationNews({ limit: 10 }).then(setNews)
+    getGlobalLegislationNews({ limit: 10 }).then(setGlobalNews)
   }, [])
 
   const selectedProfile = useMemo(
@@ -63,9 +73,27 @@ export default function ComplianceDashboardPage() {
     [jurisdictions, selectedState]
   )
 
+  const selectedCountryProfile = useMemo(
+    () => countryJurisdictions.find((j) => j.countryCode === selectedCountry),
+    [countryJurisdictions, selectedCountry]
+  )
+
   function handleStateClick(code: string) {
     setSelectedState(code)
     setStateDetailOpen(true)
+  }
+
+  function handleCountryClick(code: string) {
+    setSelectedCountry(code)
+    setCountryDetailOpen(true)
+  }
+
+  function setMapViewAndCloseSheets(view: MapView) {
+    setMapView(view)
+    setStateDetailOpen(false)
+    setCountryDetailOpen(false)
+    setSelectedState(null)
+    setSelectedCountry(null)
   }
 
   if (!overview) {
@@ -88,28 +116,80 @@ export default function ComplianceDashboardPage() {
       {/* Context Filter Bar */}
       <ContextFilterBar />
 
+      {/* Map View Toggle */}
+      <div className="flex items-center gap-1 rounded-lg border border-border/40 bg-muted/30 p-0.5 w-fit">
+        <button
+          type="button"
+          onClick={() => setMapViewAndCloseSheets("world")}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-all",
+            mapView === "world"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Globe className="h-3.5 w-3.5" />
+          World
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapViewAndCloseSheets("us")}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-all",
+            mapView === "us"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Flag className="h-3.5 w-3.5" />
+          United States
+        </button>
+      </div>
+
       {/* AI Content Legislation Map — Hero Element */}
-      <USLegislationMap
-        jurisdictions={jurisdictions}
-        onStateClick={handleStateClick}
-        selectedState={selectedState}
-        height={420}
-      />
+      {mapView === "world" ? (
+        <WorldComplianceMap
+          jurisdictions={countryJurisdictions}
+          onCountryClick={handleCountryClick}
+          selectedCountry={selectedCountry}
+          height={420}
+        />
+      ) : (
+        <USLegislationMap
+          jurisdictions={jurisdictions}
+          onStateClick={handleStateClick}
+          selectedState={selectedState}
+          height={420}
+        />
+      )}
 
       {/* Legislation ticker */}
       <div className="w-full overflow-hidden rounded-md border border-border/40 bg-muted/30">
         <div className="flex animate-marquee whitespace-nowrap py-1.5 px-3">
-          {news.concat(news).map((item, i) => (
-            <Link
-              key={`${item.id}-${i}`}
-              href="/compliance/jurisdictions"
-              className="inline-flex items-center gap-2 mr-8 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span className="font-mono font-medium text-foreground/80">{item.stateCode}</span>
-              <span className="truncate max-w-[300px]">{item.headline}</span>
-              <span className="text-muted-foreground/60">{item.date}</span>
-            </Link>
-          ))}
+          {mapView === "world"
+            ? globalNews.concat(globalNews).map((item, i) => (
+              <Link
+                key={`${item.id}-${i}`}
+                href="/compliance/jurisdictions"
+                className="inline-flex items-center gap-2 mr-8 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span className="font-mono font-medium text-foreground/80">{item.countryCode}</span>
+                <span className="truncate max-w-[300px]">{item.headline}</span>
+                <span className="text-muted-foreground/60">{item.date}</span>
+              </Link>
+            ))
+            : news.concat(news).map((item, i) => (
+              <Link
+                key={`${item.id}-${i}`}
+                href="/compliance/jurisdictions"
+                className="inline-flex items-center gap-2 mr-8 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span className="font-mono font-medium text-foreground/80">{item.stateCode}</span>
+                <span className="truncate max-w-[300px]">{item.headline}</span>
+                <span className="text-muted-foreground/60">{item.date}</span>
+              </Link>
+            ))
+          }
         </div>
       </div>
 
@@ -338,6 +418,105 @@ export default function ComplianceDashboardPage() {
                 <div>
                   <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Summary</div>
                   <p className="text-[12px] text-muted-foreground leading-relaxed">{selectedProfile.summary}</p>
+                </div>
+              )}
+
+              <Link
+                href="/compliance/jurisdictions"
+                className="inline-flex items-center gap-1 text-[12px] text-foreground hover:underline mt-2"
+              >
+                View full details on Jurisdictions page
+                <ChevronRight className="h-3 w-3" />
+              </Link>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Country Detail Sheet */}
+      <Sheet open={countryDetailOpen} onOpenChange={setCountryDetailOpen}>
+        <SheetContent side="right" className="w-[400px] sm:w-[400px] p-0">
+          <SheetHeader className="px-4 py-3 border-b border-border/40">
+            <SheetTitle className="text-base font-semibold">
+              {selectedCountryProfile?.countryName} ({selectedCountryProfile?.countryCode})
+            </SheetTitle>
+          </SheetHeader>
+          {selectedCountryProfile && (
+            <div className="px-4 py-3 space-y-4 overflow-y-auto h-[calc(100vh-60px)]">
+              {/* Region */}
+              <div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Region</div>
+                <span className="text-[12px] font-medium">{selectedCountryProfile.region}</span>
+              </div>
+
+              {/* Legislation status */}
+              <div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Status</div>
+                <span className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  selectedCountryProfile.legislationStatus === "ENACTED" ? "text-orange-600 bg-orange-500/10" :
+                    selectedCountryProfile.legislationStatus === "PROPOSED" ? "text-yellow-600 bg-yellow-500/10" :
+                      "text-slate-500 bg-slate-500/10"
+                )}>
+                  {selectedCountryProfile.legislationStatus}
+                </span>
+                {selectedCountryProfile.effectiveDate && (
+                  <span className="ml-2 text-[11px] text-muted-foreground">
+                    Effective: {selectedCountryProfile.effectiveDate}
+                  </span>
+                )}
+              </div>
+
+              {/* Law categories */}
+              <div>
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Law Categories</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCountryProfile.lawCategories.map((cat) => (
+                    <span key={cat} className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground">
+                      {cat.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                  {selectedCountryProfile.lawCategories.length === 0 && (
+                    <span className="text-[11px] text-muted-foreground">No AI content-specific legislation</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Penalties */}
+              <div className="space-y-2">
+                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Penalties</div>
+                <div className="space-y-1.5 text-[12px]">
+                  <div className="flex justify-between"><span className="text-muted-foreground">AI Ad Disclosure</span><span className="font-mono text-right max-w-[200px]">{selectedCountryProfile.aiAdPenalty}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">NIL</span><span className="font-mono text-right max-w-[200px]">{selectedCountryProfile.nilPenalty}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Deepfake</span><span className="font-mono text-right max-w-[200px]">{selectedCountryProfile.deepfakePenalty}</span></div>
+                </div>
+              </div>
+
+              {/* Enforcement & Multiplier */}
+              <div className="flex gap-4">
+                <div>
+                  <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Enforcement</div>
+                  <span className="text-[12px] font-medium">{selectedCountryProfile.enforcementIntensity}</span>
+                </div>
+                <div>
+                  <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Multiplier</div>
+                  <span className="text-lg font-mono font-semibold">{selectedCountryProfile.multiplier}x</span>
+                </div>
+              </div>
+
+              {/* Statute reference */}
+              {selectedCountryProfile.statuteReference && (
+                <div>
+                  <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Statute</div>
+                  <span className="text-[12px] font-mono">{selectedCountryProfile.statuteReference}</span>
+                </div>
+              )}
+
+              {/* Summary */}
+              {selectedCountryProfile.summary && (
+                <div>
+                  <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Summary</div>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">{selectedCountryProfile.summary}</p>
                 </div>
               )}
 

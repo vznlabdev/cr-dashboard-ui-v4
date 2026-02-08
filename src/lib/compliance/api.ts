@@ -11,6 +11,9 @@ import type {
   PremiumCalculation,
   RemediationItem,
   RiskClass,
+  CountryJurisdictionProfile,
+  GlobalLegislationNewsItem,
+  LegislationNewsCategory,
 } from "@/types/compliance"
 
 import {
@@ -23,6 +26,8 @@ import {
   jurisdictionProfiles,
   legislationNews,
   getMRSMapping,
+  countryJurisdictionProfiles,
+  globalLegislationNews,
 } from "./mock-data"
 
 // Simulated network delay
@@ -230,6 +235,40 @@ export async function getLegislationNews(filters?: {
 
   if (filters?.stateCode) {
     results = results.filter((n) => n.stateCode === filters.stateCode)
+  }
+  if (filters?.category) {
+    results = results.filter((n) => n.category === filters.category)
+  }
+  if (filters?.limit) {
+    results = results.slice(0, filters.limit)
+  }
+  return results
+}
+
+// ==============================================
+// Country / Global Jurisdictions
+// ==============================================
+
+export async function getCountryJurisdictions(): Promise<CountryJurisdictionProfile[]> {
+  await delay()
+  return countryJurisdictionProfiles
+}
+
+export async function getCountryJurisdiction(countryCode: string): Promise<CountryJurisdictionProfile | undefined> {
+  await delay(100)
+  return countryJurisdictionProfiles.find((j) => j.countryCode === countryCode)
+}
+
+export async function getGlobalLegislationNews(filters?: {
+  countryCode?: string
+  category?: LegislationNewsCategory
+  limit?: number
+}): Promise<GlobalLegislationNewsItem[]> {
+  await delay()
+  let results = [...globalLegislationNews]
+
+  if (filters?.countryCode) {
+    results = results.filter((n) => n.countryCode === filters.countryCode)
   }
   if (filters?.category) {
     results = results.filter((n) => n.category === filters.category)
