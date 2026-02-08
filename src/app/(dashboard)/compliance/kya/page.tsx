@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Fragment } from "react"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -190,9 +190,8 @@ export default function KYAProfilerPage() {
                   <tr key={i}><td colSpan={9} className="px-3 py-2"><div className="h-4 bg-muted/50 rounded animate-pulse" /></td></tr>
                 ))
               ) : paginatedProfiles.map((profile) => (
-                <>
+                <Fragment key={profile.id}>
                   <tr
-                    key={profile.id}
                     className={cn("border-b border-border/10 hover:bg-muted/30 transition-colors cursor-pointer h-8", expandedRow === profile.id && "bg-muted/20")}
                     onClick={() => setExpandedRow(expandedRow === profile.id ? null : profile.id)}
                   >
@@ -230,7 +229,7 @@ export default function KYAProfilerPage() {
                   </tr>
                   {/* Expanded detail */}
                   {expandedRow === profile.id && (
-                    <tr key={`${profile.id}-detail`} className="bg-muted/10">
+                    <tr className="bg-muted/10">
                       <td colSpan={9} className="px-6 py-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
                           <div>
@@ -285,7 +284,7 @@ export default function KYAProfilerPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

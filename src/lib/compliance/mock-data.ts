@@ -711,6 +711,17 @@ export const countryJurisdictionProfiles: CountryJurisdictionProfile[] = [
     summary: "EU AI Act directly applicable. IMY (data protection authority) overseeing AI compliance. Relatively permissive approach emphasizing innovation."
   },
   {
+    countryCode: "DK", countryName: "Denmark", region: "Europe",
+    lawCategories: ["AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY", "DEEPFAKE", "BIOMETRIC_LIKENESS"],
+    aiAdPenalty: "EU AI Act penalties",
+    nilPenalty: "Copyright Act damages (likeness as IP)",
+    deepfakePenalty: "EU AI Act provisions + Copyright Act",
+    enforcementIntensity: "High", multiplier: 1.5,
+    legislationStatus: "ENACTED", effectiveDate: "2025-01-01",
+    statuteReference: "EU AI Act + Copyright Act Amendment (likeness protection)",
+    summary: "Landmark copyright law amendment treats a person's likeness (face, voice, body) as intellectual property. 50-year post-death protection. Prohibits AI-generated reproductions shared without consent. Exceptions for parody and satire. EU AI Act directly applicable."
+  },
+  {
     countryCode: "NO", countryName: "Norway", region: "Europe",
     lawCategories: ["AI_AD_DISCLOSURE"],
     aiAdPenalty: "EEA-aligned penalties",
@@ -833,6 +844,61 @@ export const countryJurisdictionProfiles: CountryJurisdictionProfile[] = [
     statuteReference: "AI Basic Act (draft 2024)",
     summary: "Draft AI Basic Act under legislative review. Taiwan's NSTC leading AI governance. Proposed deepfake regulation and AI labeling requirements for elections."
   },
+  {
+    countryCode: "PH", countryName: "Philippines", region: "Asia-Pacific",
+    lawCategories: ["DEEPFAKE", "AI_AD_DISCLOSURE", "RIGHT_OF_PUBLICITY"],
+    aiAdPenalty: "Up to ₱5M (HB 10567)",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Up to 12–20 years imprisonment (HB 807)",
+    enforcementIntensity: "Very High", multiplier: 1.6,
+    legislationStatus: "ENACTED", effectiveDate: "2025-06-01",
+    statuteReference: "Take It Down Act (HB 807) / Deepfake Accountability Act (HB 10567)",
+    summary: "Comprehensive anti-deepfake legislation. HB 807 imposes up to 12 years (20 for minors) for AI-generated sexually explicit content, with a DICT-managed Take It Down Portal. HB 10567 mandates AI content disclosure for elections with ₱5M penalties."
+  },
+  {
+    countryCode: "TH", countryName: "Thailand", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "ETDA regulatory penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Proposed criminal penalties for prohibited-risk AI",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Draft AI Law Principles / ETDA AI Governance Center",
+    summary: "Risk-based draft AI law modeled on EU AI Act. Prohibited-risk and high-risk AI tiers proposed. ETDA's AI Governance Center (AIGC) providing standards. National AI Strategy targets 2027 implementation."
+  },
+  {
+    countryCode: "ID", countryName: "Indonesia", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "Electronic Transactions Law penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Cyberlaw provisions + proposed AI rules",
+    enforcementIntensity: "Medium", multiplier: 1.15,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Electronic Information and Transactions Law / PDPL / Draft AI Ethics Rules",
+    summary: "Deepfake content surged 550% in 5 years. Government drafting ethical AI rules after election deepfakes. Personal Data Protection Law (PDPL) covers AI processing. Three-principle AI framework: support humans, protect privacy, ensure supervision."
+  },
+  {
+    countryCode: "MY", countryName: "Malaysia", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE", "DEEPFAKE"],
+    aiAdPenalty: "Communications and Multimedia Act penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Online Safety Act 2024 + proposed AI Bill",
+    enforcementIntensity: "High", multiplier: 1.3,
+    legislationStatus: "ENACTED", effectiveDate: "2024-08-01",
+    statuteReference: "Online Safety Act 2024 / Proposed AI Labeling Law / AI Bill (mid-2026)",
+    summary: "Online Safety Act 2024 addresses deepfakes, scams, and cyberbullying. Mandatory 'AI generated' labeling law expected by end 2025. Comprehensive AI Bill pending by mid-2026. Spurred by deepfake blackmail targeting lawmakers."
+  },
+  {
+    countryCode: "VN", countryName: "Vietnam", region: "Asia-Pacific",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Cybersecurity Law penalties",
+    nilPenalty: "N/A",
+    deepfakePenalty: "Cybersecurity Law provisions",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Cybersecurity Law / Draft AI Development Strategy",
+    summary: "Cybersecurity Law covers some AI misuse. National AI Research and Development Strategy published. Dedicated AI regulation under development with focus on responsible AI deployment."
+  },
 
   // ---- MIDDLE EAST ----
   {
@@ -867,6 +933,17 @@ export const countryJurisdictionProfiles: CountryJurisdictionProfile[] = [
     legislationStatus: "PROPOSED", effectiveDate: undefined,
     statuteReference: "Israel Innovation Authority AI Policy (2024)",
     summary: "Innovation-friendly approach with proposed AI regulation. Privacy Protection Authority expanding to cover AI. Strong deeptech AI sector with light-touch governance philosophy."
+  },
+  {
+    countryCode: "TR", countryName: "Turkey", region: "Middle East",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "KVKK data protection penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Turkish Penal Code provisions",
+    enforcementIntensity: "Medium", multiplier: 1.15,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "National AI Strategy 2025 / KVKK (Personal Data Protection Law)",
+    summary: "National AI Strategy published with 2025 targets. KVKK (data protection authority) applying existing law to AI processing. Comprehensive AI regulation proposal under development. Active deepfake enforcement under Penal Code."
   },
 
   // ---- AMERICAS (non-US) ----
@@ -913,6 +990,39 @@ export const countryJurisdictionProfiles: CountryJurisdictionProfile[] = [
     legislationStatus: "PROPOSED", effectiveDate: undefined,
     statuteReference: "National AI Policy 2024 / Proposed AI Bill",
     summary: "Updated national AI policy in 2024. AI regulation bill under development. First Latin American country to publish a national AI policy (2021)."
+  },
+  {
+    countryCode: "CO", countryName: "Colombia", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "SIC consumer protection penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Penal Code provisions",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Proposed AI Regulatory Framework / Ley 1581 (Data Protection)",
+    summary: "AI regulatory framework proposal under congressional review. Ley 1581 data protection law applies to AI personal data processing. SIC (consumer protection agency) has enforcement authority over AI in commerce."
+  },
+  {
+    countryCode: "AR", countryName: "Argentina", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Data protection penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "Penal Code provisions",
+    enforcementIntensity: "Low", multiplier: 1.05,
+    legislationStatus: "PROPOSED", effectiveDate: undefined,
+    statuteReference: "Proposed AI Regulation Bills / Ley 25.326 (Personal Data Protection)",
+    summary: "Multiple AI regulation bills introduced in Congress. Strong personal data protection law (Ley 25.326) applies to AI. National AI Plan published. Active civil society engagement on AI governance."
+  },
+  {
+    countryCode: "PE", countryName: "Peru", region: "Americas",
+    lawCategories: ["AI_AD_DISCLOSURE"],
+    aiAdPenalty: "Administrative penalties",
+    nilPenalty: "Civil damages",
+    deepfakePenalty: "N/A",
+    enforcementIntensity: "Medium", multiplier: 1.2,
+    legislationStatus: "ENACTED", effectiveDate: "2023-07-24",
+    statuteReference: "Law No. 31814 (AI Promotion Framework)",
+    summary: "First Latin American country with a dedicated AI law. Law No. 31814 promotes responsible AI use with transparency requirements. Establishes ethical framework for AI deployment in public and private sectors."
   },
 
   // ---- AFRICA ----
@@ -971,4 +1081,9 @@ export const globalLegislationNews: GlobalLegislationNewsItem[] = [
   { id: "gln-13", headline: "Japan proposes AI Basic Law with focus on innovation", countryName: "Japan", countryCode: "JP", region: "Asia-Pacific", date: "2025-02-01", category: "PROPOSED", summary: "Cabinet office proposes AI Basic Law emphasizing responsible innovation, voluntary compliance for most uses, and limited mandatory obligations for high-risk applications.", sourceUrl: "#" },
   { id: "gln-14", headline: "Italy's Garante blocks AI tool for GDPR violations", countryName: "Italy", countryCode: "IT", region: "Europe", date: "2025-01-30", category: "ENFORCEMENT_ACTION", summary: "Italian data protection authority temporarily blocks an AI content generation service for failing to implement age verification and content labeling.", sourceUrl: "#" },
   { id: "gln-15", headline: "Ireland's DPC opens EU AI Act enforcement office", countryName: "Ireland", countryCode: "IE", region: "Europe", date: "2025-02-04", category: "NEW_LAW", summary: "Irish DPC establishes dedicated AI compliance division — expected to become primary enforcer for many Big Tech AI systems under EU AI Act.", sourceUrl: "#" },
+  { id: "gln-16", headline: "Philippines enacts Take It Down Act — up to 20 years for deepfake crimes", countryName: "Philippines", countryCode: "PH", region: "Asia-Pacific", date: "2025-06-15", category: "NEW_LAW", summary: "HB 807 signed into law imposing 12–20 year sentences for AI-generated sexually explicit deepfakes. DICT launches Take It Down Portal for 48-hour content removal. Platforms face ₱1M fines per violation.", sourceUrl: "#" },
+  { id: "gln-17", headline: "Denmark amends copyright law — likeness now intellectual property", countryName: "Denmark", countryCode: "DK", region: "Europe", date: "2025-03-10", category: "NEW_LAW", summary: "Landmark amendment treats a person's face, voice, and body as IP. AI-generated reproductions require consent. Protection extends 50 years after death. Exceptions for parody and satire.", sourceUrl: "#" },
+  { id: "gln-18", headline: "Malaysia mandates AI-generated content labeling", countryName: "Malaysia", countryCode: "MY", region: "Asia-Pacific", date: "2025-07-13", category: "NEW_LAW", summary: "Communications Minister announces mandatory 'AI generated' labeling to curb scams, defamation, and deepfakes. Law expected by end 2025, with comprehensive AI Bill targeting mid-2026.", sourceUrl: "#" },
+  { id: "gln-19", headline: "Peru's AI law marks first dedicated legislation in Latin America", countryName: "Peru", countryCode: "PE", region: "Americas", date: "2025-01-08", category: "NEW_LAW", summary: "Law No. 31814 (2023) establishing ethical AI promotion framework continues implementation. Peru becomes a regional reference for AI governance with transparency and accountability requirements.", sourceUrl: "#" },
+  { id: "gln-20", headline: "Thailand unveils draft AI law based on EU AI Act risk framework", countryName: "Thailand", countryCode: "TH", region: "Asia-Pacific", date: "2025-04-20", category: "PROPOSED", summary: "ETDA's AI Governance Center publishes Draft AI Law Principles with prohibited-risk and high-risk tiers. National AI Strategy targets 2027 full implementation. Focus on deepfakes and disinformation.", sourceUrl: "#" },
 ]

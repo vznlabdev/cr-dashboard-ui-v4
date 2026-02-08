@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps"
-import { cn } from "@/lib/utils"
 import type { JurisdictionProfile } from "@/types/compliance"
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"
@@ -18,6 +17,16 @@ const fipsToState: Record<string, string> = {
   "54": "WV", "55": "WI", "56": "WY",
 }
 
+// 5-tier color palette aligned with the app's design system (matches WorldComplianceMap)
+const MAP_COLORS = {
+  enactedVeryHigh: "oklch(0.58 0.22 25)",   // red — matches --destructive
+  enactedHigh:     "oklch(0.62 0.20 25)",    // warm red-orange
+  enactedMedium:   "oklch(0.70 0.16 55)",    // amber — matches warning badges
+  enactedLow:      "oklch(0.75 0.14 85)",    // soft gold
+  proposed:        "oklch(0.65 0.16 240)",    // cyan-blue — matches --chart-3
+  none:            "var(--color-muted, #f1f5f9)",
+}
+
 interface USLegislationMapProps {
   jurisdictions: JurisdictionProfile[]
   onStateClick?: (stateCode: string) => void
@@ -28,13 +37,15 @@ interface USLegislationMapProps {
 }
 
 function getStateColor(profile: JurisdictionProfile | undefined): string {
-  if (!profile || profile.legislationStatus === "NONE") return "var(--color-muted, #f1f5f9)"
+  if (!profile || profile.legislationStatus === "NONE") return MAP_COLORS.none
   if (profile.legislationStatus === "ENACTED") {
-    if (profile.enforcementIntensity === "Very High" || profile.enforcementIntensity === "High") return "#ea580c"
-    return "#f97316"
+    if (profile.enforcementIntensity === "Very High") return MAP_COLORS.enactedVeryHigh
+    if (profile.enforcementIntensity === "High") return MAP_COLORS.enactedHigh
+    if (profile.enforcementIntensity === "Medium") return MAP_COLORS.enactedMedium
+    return MAP_COLORS.enactedLow
   }
-  if (profile.legislationStatus === "PROPOSED" || profile.legislationStatus === "IN_COMMITTEE") return "#eab308"
-  return "var(--color-muted, #f1f5f9)"
+  if (profile.legislationStatus === "PROPOSED" || profile.legislationStatus === "IN_COMMITTEE") return MAP_COLORS.proposed
+  return MAP_COLORS.none
 }
 
 export function USLegislationMap({
@@ -67,10 +78,10 @@ export function USLegislationMap({
       {/* Counter badges */}
       {showCounters && (
         <div className="absolute top-3 right-3 z-10 flex gap-2">
-          <span className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-[11px] font-medium text-orange-600">
+          <span className="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-600 dark:text-red-400">
             {counts.enacted} enacted
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-yellow-500/10 px-2 py-0.5 text-[11px] font-medium text-yellow-600">
+          <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium text-sky-600 dark:text-sky-400">
             {counts.pending} pending
           </span>
           <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
@@ -87,6 +98,9 @@ export function USLegislationMap({
             {hoveredProfile.lawCategories.length} active law{hoveredProfile.lawCategories.length !== 1 ? "s" : ""}
           </div>
           <div className="text-[11px] text-muted-foreground">
+            Enforcement: <span className="font-medium text-foreground">{hoveredProfile.enforcementIntensity}</span>
+          </div>
+          <div className="text-[11px] text-muted-foreground">
             Multiplier: <span className="font-mono font-medium text-foreground">{hoveredProfile.multiplier}x</span>
           </div>
         </div>
@@ -96,48 +110,53 @@ export function USLegislationMap({
       <ComposableMap
         projection="geoAlbersUsa"
         width={960}
-        height={height - 10}
+        height={height}
+        projectionConfig={{ scale: 1000 }}
         style={{ width: "100%", height: "100%" }}
       >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => {
-              const fips = geo.id as string
-              const stateCode = fipsToState[fips]
-              const profile = stateCode ? profileMap.get(stateCode) : undefined
-              const fill = getStateColor(profile)
-              const isHovered = stateCode === hoveredState
-              const isSelected = stateCode === selectedState
+        <ZoomableGroup center={[-96, 38]} zoom={1}>
+          <Geographies geography={GEO_URL}>
+            {({ geographies }) =>
+              geographies.map((geo, geoIndex) => {
+                const fips = geo.id as string
+                const stateCode = fipsToState[fips]
+                const profile = stateCode ? profileMap.get(stateCode) : undefined
+                const fill = getStateColor(profile)
+                const isHovered = stateCode === hoveredState
+                const isSelected = stateCode === selectedState
 
-              return (
-                <Geography
-                  key={geo.rpiKey}
-                  geography={geo}
-                  fill={fill}
-                  stroke="var(--color-border, #e2e8f0)"
-                  strokeWidth={isHovered || isSelected ? 1.5 : 0.5}
-                  style={{
-                    default: { outline: "none", opacity: isSelected ? 1 : 0.9 },
-                    hover: { outline: "none", opacity: 1, cursor: "pointer" },
-                    pressed: { outline: "none" },
-                  }}
-                  onMouseEnter={() => stateCode && setHoveredState(stateCode)}
-                  onMouseLeave={() => setHoveredState(null)}
-                  onClick={() => stateCode && onStateClick?.(stateCode)}
-                />
-              )
-            })
-          }
-        </Geographies>
+                return (
+                  <Geography
+                    key={`${fips}-${geoIndex}`}
+                    geography={geo}
+                    fill={fill}
+                    stroke="var(--color-border, #e2e8f0)"
+                    strokeWidth={isHovered || isSelected ? 1.5 : 0.5}
+                    style={{
+                      default: { outline: "none", opacity: isSelected ? 1 : 0.9 },
+                      hover: { outline: "none", opacity: 1, cursor: "pointer" },
+                      pressed: { outline: "none" },
+                    }}
+                    onMouseEnter={() => stateCode && setHoveredState(stateCode)}
+                    onMouseLeave={() => setHoveredState(null)}
+                    onClick={() => stateCode && onStateClick?.(stateCode)}
+                  />
+                )
+              })
+            }
+          </Geographies>
+        </ZoomableGroup>
       </ComposableMap>
 
       {/* Legend */}
       {showLegend && (
-        <div className="absolute bottom-3 left-3 z-10 flex items-center gap-3 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#ea580c" }} /> Enacted (high enforcement)</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#f97316" }} /> Enacted (moderate)</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#eab308" }} /> Proposed/Pending</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted border border-border/40" /> No legislation</span>
+        <div className="absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MAP_COLORS.enactedVeryHigh }} /> Very High</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MAP_COLORS.enactedHigh }} /> High</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MAP_COLORS.enactedMedium }} /> Medium</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MAP_COLORS.enactedLow }} /> Low</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MAP_COLORS.proposed }} /> Proposed</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted border border-border/40" /> None</span>
         </div>
       )}
     </div>

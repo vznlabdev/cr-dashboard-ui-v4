@@ -6,7 +6,6 @@ import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
 import { USLegislationMap } from "@/components/compliance/USLegislationMap"
 import { WorldComplianceMap } from "@/components/compliance/WorldComplianceMap"
 import { MetricStrip } from "@/components/compliance/MetricStrip"
-import { ContextFilterBar } from "@/components/compliance/ContextFilterBar"
 import { cn } from "@/lib/utils"
 import { Eye, ArrowRight, XCircle, AlertTriangle, ChevronRight, Globe, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -113,8 +112,6 @@ export default function ComplianceDashboardPage() {
 
   return (
     <ComplianceLayout title="Compliance Dashboards">
-      {/* Context Filter Bar */}
-      <ContextFilterBar />
 
       {/* Map View Toggle */}
       <div className="flex items-center gap-1 rounded-lg border border-border/40 bg-muted/30 p-0.5 w-fit">

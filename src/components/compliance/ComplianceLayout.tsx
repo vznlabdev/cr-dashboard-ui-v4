@@ -1,10 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Download, Play, ChevronRight } from "lucide-react"
-import { toast } from "sonner"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { LinearBreadcrumb, type BreadcrumbSegment } from "@/components/navigation/LinearBreadcrumb"
 
 interface ComplianceLayoutProps {
   title: string
@@ -21,63 +19,44 @@ const breadcrumbMap: Record<string, string> = {
   "/compliance/jurisdictions": "Jurisdictions",
 }
 
+function buildSegments(pathname: string): BreadcrumbSegment[] {
+  const segments: BreadcrumbSegment[] = [
+    { label: "Compliance", href: "/compliance" },
+  ]
+  const currentLabel = breadcrumbMap[pathname]
+  if (currentLabel && pathname !== "/compliance") {
+    segments.push({ label: currentLabel })
+  }
+  return segments
+}
+
 export function ComplianceLayout({ title, children, actions }: ComplianceLayoutProps) {
   const pathname = usePathname()
-  const currentSection = breadcrumbMap[pathname] || title
+  const isSubPage = pathname !== "/compliance"
+  const segments = buildSegments(pathname)
 
   return (
-    <div className="w-full min-h-full">
-      {/* Compact header bar */}
-      <div className="flex items-center justify-between px-4 py-2 md:px-6 border-b border-border/40">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-          <ChevronRight className="h-3 w-3" />
-          <Link href="/compliance" className="hover:text-foreground transition-colors">Compliance</Link>
-          {currentSection !== "Dashboards" && (
-            <>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground">{currentSection}</span>
-            </>
-          )}
-        </div>
+    <PageContainer className="space-y-6 animate-fade-in">
+      {/* Breadcrumb — only on sub-pages */}
+      {isSubPage && (
+        <LinearBreadcrumb
+          backHref="/compliance"
+          segments={segments}
+        />
+      )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {actions || (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-xs"
-                onClick={() => toast.info("Export initiated")}
-              >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Export
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2.5 text-xs"
-                onClick={() => toast.info("Audit scan started")}
-              >
-                <Play className="h-3.5 w-3.5 mr-1.5" />
-                Run Audit
-              </Button>
-            </>
-          )}
+      {/* Header row — matches app-wide pattern */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">{title}</h1>
         </div>
-      </div>
-
-      {/* Page title */}
-      <div className="px-4 pt-3 pb-2 md:px-6">
-        <h1 className="text-base font-semibold tracking-tight">{title}</h1>
+        {actions && (
+          <div className="flex items-center gap-2">{actions}</div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-6 md:px-6 space-y-4">
-        {children}
-      </div>
-    </div>
+      {children}
+    </PageContainer>
   )
 }
