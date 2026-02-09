@@ -334,6 +334,7 @@ export const mockTasks: Task[] = [
         }
       ]
     },
+    workflowTemplateId: 'wf-social-images',
   },
   {
     id: 'task-10',

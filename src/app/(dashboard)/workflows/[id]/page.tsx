@@ -90,12 +90,11 @@ export default function WorkflowTemplatePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={() => toast.success("Template ready to assign")}
-          >
-            <Rocket className="mr-2 h-4 w-4" />
-            Use Template
+          <Button size="sm" asChild>
+            <Link href={`/tasks?create=1&workflow=${template.id}`}>
+              <Rocket className="mr-2 h-4 w-4" />
+              Create Task
+            </Link>
           </Button>
           <Button
             size="sm"

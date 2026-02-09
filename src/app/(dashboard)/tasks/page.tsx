@@ -15,12 +15,12 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
-import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { getWorkflowTemplateById, getWorkflowTemplates } from "@/lib/mock-data/workflows"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task } from "@/types"
 import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -77,6 +77,7 @@ const PropertyPill = ({ icon, label, value, onClick }: {
 
 export default function UnifiedTasksPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { projects, getProjectById } = useData()
   
   // Mock current user - in real app, get from auth context
@@ -109,6 +110,7 @@ export default function UnifiedTasksPage() {
     estimatedHours: null as number | null,
     billable: false,
     mediaData: null as MediaManagerData | null,
+    workflowTemplateId: '' as string,
   })
   const [taskFormError, setTaskFormError] = useState('')
   
@@ -121,6 +123,7 @@ export default function UnifiedTasksPage() {
   const [showModePicker, setShowModePicker] = useState(false)
   const [showIntendedUsesPicker, setShowIntendedUsesPicker] = useState(false)
   const [showAssigneePicker, setShowAssigneePicker] = useState(false)
+  const [showWorkflowPicker, setShowWorkflowPicker] = useState(false)
   
   // Media Manager state
   const [showMediaManager, setShowMediaManager] = useState(false)
@@ -162,6 +165,7 @@ export default function UnifiedTasksPage() {
       estimatedHours: null,
       billable: false,
       mediaData: null,
+      workflowTemplateId: '',
     })
     setTaskFormError('')
     setShowMediaManager(false)
@@ -195,11 +199,23 @@ export default function UnifiedTasksPage() {
       estimatedHours: null,
       billable: false,
       mediaData: null,
+      workflowTemplateId: '',
     })
     setTaskFormError('')
     setShowMediaManager(false)
     setCreateMore(false)
   }
+
+  // Open task modal from URL when navigating from workflows (e.g. /tasks?create=1&workflow=wf-xxx)
+  useEffect(() => {
+    const create = searchParams.get('create')
+    const workflowId = searchParams.get('workflow')
+    if (create === '1' && workflowId) {
+      setTaskFormData((prev) => ({ ...prev, workflowTemplateId: workflowId }))
+      setIsTaskModalOpen(true)
+      router.replace('/tasks', { scroll: false })
+    }
+  }, [searchParams, router])
 
   const handleCreateTask = () => {
     // Validate title
@@ -214,8 +230,13 @@ export default function UnifiedTasksPage() {
       return
     }
 
+    // Build task payload (for API or state when wired)
+    const taskPayload = {
+      ...taskFormData,
+      workflowTemplateId: taskFormData.workflowTemplateId || undefined,
+    }
     // TODO: Create task via API
-    console.log('Creating task:', taskFormData)
+    console.log('Creating task:', taskPayload)
     
     toast.success('✓ Task created successfully')
     
@@ -241,6 +262,7 @@ export default function UnifiedTasksPage() {
         estimatedHours: null,
         billable: taskFormData.billable, // Keep billable setting
         mediaData: null, // Clear media data for new task
+        workflowTemplateId: taskFormData.workflowTemplateId, // Keep workflow template
       })
       setTaskFormError('')
       // Clear media data from localStorage for the next task
@@ -1438,6 +1460,59 @@ export default function UnifiedTasksPage() {
                               </div>
                               <span className="text-xs font-medium">{member.fullName}</span>
                               {taskFormData.assignee === member.fullName && <Check className="w-3 h-3 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Workflow template - With Dropdown Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<GitBranch className="w-3.5 h-3.5" />}
+                    label="Workflow"
+                    value={taskFormData.workflowTemplateId ? (getWorkflowTemplateById(taskFormData.workflowTemplateId)?.name ?? taskFormData.workflowTemplateId) : 'None'}
+                    onClick={() => setShowWorkflowPicker(!showWorkflowPicker)}
+                  />
+                  {showWorkflowPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowWorkflowPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-60 overflow-auto">
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, workflowTemplateId: '' })
+                              setShowWorkflowPicker(false)
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                          </button>
+                          {getWorkflowTemplates().map((tmpl) => (
+                            <button
+                              key={tmpl.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.workflowTemplateId === tmpl.id 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, workflowTemplateId: tmpl.id })
+                                setShowWorkflowPicker(false)
+                              }}
+                            >
+                              <GitBranch className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="text-xs font-medium">{tmpl.name}</span>
+                              {taskFormData.workflowTemplateId === tmpl.id && <Check className="w-3 h-3 ml-auto" />}
                             </button>
                           ))}
                         </div>

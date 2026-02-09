@@ -14,21 +14,15 @@ import type { WorkflowTemplate } from "@/types/workflows"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
-const CATEGORY_OPTIONS = ["all", "video", "image", "audio", "mixed"] as const
-const SOURCE_OPTIONS = ["all", "system", "custom"] as const
+const CATEGORY_OPTIONS = ["all", "video", "image", "audio", "mixed", "custom"] as const
 
 function categoryLabel(value: string): string {
   return value === "all" ? "All" : value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function sourceLabel(value: string): string {
-  return value === "all" ? "All" : value === "system" ? "System" : "Custom"
-}
-
 export default function WorkflowsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [sourceFilter, setSourceFilter] = useState("all")
 
   const templates = getWorkflowTemplates()
 
@@ -41,12 +35,13 @@ export default function WorkflowsPage() {
         const tagMatch = template.tags?.some((t) => t.toLowerCase().includes(q))
         if (!nameMatch && !descMatch && !tagMatch) return false
       }
+      if (categoryFilter === "custom") {
+        return !template.isSystem
+      }
       if (categoryFilter !== "all" && template.category !== categoryFilter) return false
-      if (sourceFilter === "system" && !template.isSystem) return false
-      if (sourceFilter === "custom" && template.isSystem) return false
       return true
     })
-  }, [templates, searchQuery, categoryFilter, sourceFilter])
+  }, [templates, searchQuery, categoryFilter])
 
   return (
     <PageContainer>
@@ -91,24 +86,6 @@ export default function WorkflowsPage() {
               )}
             >
               {categoryLabel(value)}
-            </button>
-          ))}
-        </div>
-        <div className="h-4 w-px bg-border" />
-        <div className="flex items-center gap-1">
-          {SOURCE_OPTIONS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSourceFilter(value)}
-              className={cn(
-                "text-xs px-2.5 py-1 rounded-md transition-colors",
-                sourceFilter === value
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {sourceLabel(value)}
             </button>
           ))}
         </div>
@@ -179,14 +156,10 @@ export default function WorkflowsPage() {
                   <Button variant="outline" size="sm" className="flex-1 text-xs h-7" asChild>
                     <Link href={`/workflows/${template.id}`}>View Details</Link>
                   </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 text-xs h-7"
-                    onClick={() =>
-                      toast.success(`"${template.name}" ready to assign to a task`)
-                    }
-                  >
-                    Use Template
+                  <Button size="sm" className="flex-1 text-xs h-7" asChild>
+                    <Link href={`/tasks?create=1&workflow=${template.id}`}>
+                      Create Task
+                    </Link>
                   </Button>
                 </div>
               </CardContent>

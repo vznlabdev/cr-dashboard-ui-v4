@@ -30,7 +30,7 @@ import {
   getTasksByTaskGroup,
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
-import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { getWorkflowTemplateById, getWorkflowTemplates } from "@/lib/mock-data/workflows"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task, TaskGroup, Project } from "@/types"
 import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow, Shield, GitBranch } from "lucide-react"
@@ -1194,6 +1194,7 @@ export default function ProjectTasksPage() {
     estimatedHours: null as number | null,
     billable: false,
     mediaData: null as MediaManagerData | null,
+    workflowTemplateId: '' as string,
   })
   const [taskFormError, setTaskFormError] = useState('')
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null)
@@ -1227,6 +1228,7 @@ export default function ProjectTasksPage() {
   
   // Assignee picker state
   const [showAssigneePicker, setShowAssigneePicker] = useState(false)
+  const [showWorkflowPicker, setShowWorkflowPicker] = useState(false)
   
   // Modal display state
   const [createMore, setCreateMore] = useState(false)
@@ -1516,6 +1518,7 @@ export default function ProjectTasksPage() {
       estimatedHours: null,
       billable: false,
       mediaData: null,
+      workflowTemplateId: '',
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1552,6 +1555,7 @@ export default function ProjectTasksPage() {
       estimatedHours: null,
       billable: false,
       mediaData: null,
+      workflowTemplateId: '',
     })
     setTaskFormError('')
     setTaskGroupQuery('')
@@ -1702,6 +1706,7 @@ export default function ProjectTasksPage() {
       status: 'submitted', // Always defaults to "Submitted"
       assignee: taskFormData.assignee || undefined,
       dueDate: taskFormData.dueDate || undefined,
+      workflowTemplateId: taskFormData.workflowTemplateId || undefined,
       createdDate: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -1747,6 +1752,7 @@ export default function ProjectTasksPage() {
         estimatedHours: null,
         billable: taskFormData.billable, // Keep billable setting
         mediaData: null, // Reset media data for next task
+        workflowTemplateId: taskFormData.workflowTemplateId, // Keep workflow template
       })
       setTaskGroupQuery(taskGroups.find(g => g.id === taskFormData.taskGroupId)?.name || '')
       setSelectedAssets([]) // Clear attachments
@@ -2746,6 +2752,59 @@ export default function ProjectTasksPage() {
                               </div>
                               <span className="text-xs font-medium">{member.fullName}</span>
                               {taskFormData.assignee === member.fullName && <Check className="w-3 h-3 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Workflow template - With Dropdown Picker */}
+                <div className="relative">
+                  <PropertyPill
+                    icon={<GitBranch className="w-3.5 h-3.5" />}
+                    label="Workflow"
+                    value={taskFormData.workflowTemplateId ? (getWorkflowTemplateById(taskFormData.workflowTemplateId)?.name ?? taskFormData.workflowTemplateId) : 'None'}
+                    onClick={() => setShowWorkflowPicker(!showWorkflowPicker)}
+                  />
+                  {showWorkflowPicker && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowWorkflowPicker(false)}
+                      />
+                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                        <div className="p-1 max-h-60 overflow-auto">
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded"
+                            onClick={() => {
+                              setTaskFormData({ ...taskFormData, workflowTemplateId: '' })
+                              setShowWorkflowPicker(false)
+                            }}
+                          >
+                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-600 dark:text-gray-400">None</span>
+                          </button>
+                          {getWorkflowTemplates().map((tmpl) => (
+                            <button
+                              key={tmpl.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 rounded",
+                                taskFormData.workflowTemplateId === tmpl.id 
+                                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" 
+                                  : "text-gray-900 dark:text-white"
+                              )}
+                              onClick={() => {
+                                setTaskFormData({ ...taskFormData, workflowTemplateId: tmpl.id })
+                                setShowWorkflowPicker(false)
+                              }}
+                            >
+                              <GitBranch className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="text-xs font-medium">{tmpl.name}</span>
+                              {taskFormData.workflowTemplateId === tmpl.id && <Check className="w-3 h-3 ml-auto" />}
                             </button>
                           ))}
                         </div>

@@ -2827,7 +2827,7 @@ export default function TaskDetailPage() {
                       href={`/projects/${projectId}/tasks/${taskId}/workflow`}
                     >
                       <Rocket className="mr-2 h-3.5 w-3.5" />
-                      Open Workflow
+                      {workflowTemplate.name}
                     </Link>
                   </Button>
                   <Link
@@ -2848,7 +2848,7 @@ export default function TaskDetailPage() {
                       href={`/projects/${projectId}/tasks/${taskId}/workflow`}
                     >
                       <Rocket className="mr-2 h-3.5 w-3.5" />
-                      Start simple workflow
+                      Start Workflow
                     </Link>
                   </Button>
                   <Button className="w-full" size="sm" variant="outline" asChild>
