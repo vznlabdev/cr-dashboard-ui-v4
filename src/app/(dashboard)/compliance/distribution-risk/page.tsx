@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
@@ -67,7 +67,7 @@ function getStateRiskLevel(marketIssuesByState: Map<string, { count: number; has
   return "yellow"
 }
 
-export default function DistributionRiskPage() {
+function DistributionRiskContent() {
   const searchParams = useSearchParams()
   const projectIdFromUrl = searchParams.get("project") ?? undefined
   const { projects, getProjectById, getProjectAssets } = useData()
@@ -442,5 +442,19 @@ export default function DistributionRiskPage() {
         </Card>
       </div>
     </ComplianceLayout>
+  )
+}
+
+export default function DistributionRiskPage() {
+  return (
+    <Suspense
+      fallback={
+        <ComplianceLayout title="Distribution Risk">
+          <div className="flex items-center justify-center py-12 text-muted-foreground">Loading...</div>
+        </ComplianceLayout>
+      }
+    >
+      <DistributionRiskContent />
+    </Suspense>
   )
 }
