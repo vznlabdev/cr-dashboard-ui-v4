@@ -593,7 +593,7 @@ export default function AssetDetailPage() {
     return subtypeLabel ? `${kindLabel} (${subtypeLabel})` : kindLabel || mime || '—'
   }, [asset])
   
-  // When contentType is edited away from ai_generated, leave AI Workflow tab to avoid blank pane
+  // When contentType is edited away from ai_generated, leave Workflow tab to avoid blank pane
   useEffect(() => {
     if (!isAIGenerated && activeTab === "ai-workflow") {
       setActiveTab("overview")
@@ -912,7 +912,7 @@ export default function AssetDetailPage() {
                     value="ai-workflow"
                     className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
                   >
-                    AI Workflow
+                    Workflow
                   </TabsTrigger>
                 )}
                 <TabsTrigger 
@@ -1448,159 +1448,193 @@ export default function AssetDetailPage() {
             </div>
           </TabsContent>
 
-          {/* AI Workflow Tab Content */}
+          {/* Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="grid lg:grid-cols-3 gap-3">
-                <div className="lg:col-span-2 space-y-3">
-                {workflowContext && (
-                  <Card className="mb-4">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <GitBranch className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Workflow Origin</span>
-                      </div>
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{workflowContext.template.icon}</span>
-                            <div>
-                              <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-semibold hover:underline">
-                                {workflowContext.template.name}
-                              </Link>
-                              <p className="text-[10px] text-muted-foreground">
-                                Step {workflowContext.stepIndex + 1}: {workflowContext.step.name}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Link href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                              {workflowContext.taskTitle}
-                            </Link>
-                            <span className="text-xs text-muted-foreground">in {workflowContext.projectName}</span>
-                          </div>
-                        </div>
-                        {(() => {
-                          const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
-                          const Icon = config.icon
-                          return (
-                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border", config.lightBg, config.borderColor)}>
-                              <Icon className={cn("h-5 w-5", config.textColor)} />
-                            </div>
-                          )
-                        })()}
-                      </div>
-                      <Separator className="my-3" />
-                      <div className="grid grid-cols-4 gap-3">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Tool</p>
-                          <p className="text-xs font-medium">🎨 {workflowContext.toolUsed}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Prompts</p>
-                          <p className="text-xs font-medium">{workflowContext.promptsCount} captured</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Generations</p>
-                          <p className="text-xs font-medium">{workflowContext.generationsCount} tracked</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Session</p>
-                          <p className="text-xs font-mono font-medium">{workflowContext.sessionId}</p>
-                        </div>
-                      </div>
-                      {workflowContext.step.promptTemplate && (
-                        <div className="mt-3">
-                          <p className="text-[10px] text-muted-foreground mb-1">Prompt Template Used</p>
-                          <div className="bg-muted/50 rounded-md p-2.5 text-xs font-mono text-muted-foreground">
-                            {workflowContext.step.promptTemplate}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                {/* Generation Details - Compact Grid */}
-                <div className="grid md:grid-cols-2 gap-3">
-                  {/* Prompt Card */}
-                  {asset.promptHistory?.messages && (
-                    <PromptContent history={asset.promptHistory} />
-                  )}
-
-                  {/* Technical Details Card */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Technical Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
-                        <InlineEditField
-                          key={field.id}
-                          field={field}
-                          value={field.path.includes('.') 
-                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                            : asset[field.path as keyof typeof asset]
-                          }
-                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                        />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Compliance Workflow - Linear Progress */}
+              <div className="space-y-4">
+                {/* SECTION 1: PROVENANCE */}
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Compliance Workflow</CardTitle>
-                    <CardDescription>7-step AI asset compliance tracking</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AIComplianceWorkflow 
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <GitBranch className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold">Provenance</h3>
+                        <p className="text-[10px] text-muted-foreground">How this asset was created</p>
+                      </div>
+                    </div>
+                    {workflowContext ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <span className="text-2xl">{workflowContext.template.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-medium hover:underline">
+                              {workflowContext.template.name}
+                            </Link>
+                            <p className="text-[10px] text-muted-foreground">
+                              Step {workflowContext.stepIndex + 1} of {workflowContext.template.steps.length}: {workflowContext.step.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Link
+                                href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`}
+                                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {workflowContext.taskTitle}
+                              </Link>
+                              <span className="text-[10px] text-muted-foreground">in {workflowContext.projectName}</span>
+                            </div>
+                          </div>
+                          {(() => {
+                            const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
+                            const StepIcon = config.icon
+                            return (
+                              <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border shrink-0", config.lightBg, config.borderColor)}>
+                                <StepIcon className={cn("h-5 w-5", config.textColor)} />
+                              </div>
+                            )
+                          })()}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">AI Tool</p>
+                            <p className="text-sm font-medium">🎨 {workflowContext.toolUsed}</p>
+                            <p className="text-[10px] text-muted-foreground">Full Tracking</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Model</p>
+                            <p className="text-sm font-medium">Midjourney v6</p>
+                            <p className="text-[10px] text-muted-foreground">Latest version</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Generated</p>
+                            <p className="text-sm font-medium">{format(new Date(workflowContext.capturedAt), "MMM d, yyyy")}</p>
+                            <p className="text-[10px] text-muted-foreground">{format(new Date(workflowContext.capturedAt), "h:mm a")}</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Session</p>
+                            <p className="text-sm font-mono font-medium">{workflowContext.sessionId.slice(0, 12)}</p>
+                            <p className="text-[10px] text-muted-foreground">Browser Extension</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 py-2">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <FileText className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> prompts captured</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> generations tracked</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Download className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> downloads recorded</span>
+                          </div>
+                        </div>
+                        {workflowContext.step.promptTemplate && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
+                            <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                              <p className="text-xs font-mono leading-relaxed text-foreground/80">{workflowContext.step.promptTemplate}</p>
+                            </div>
+                          </div>
+                        )}
+                        {asset.promptHistory?.messages && asset.promptHistory.messages.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Prompt Conversation</p>
+                            <PromptContent history={asset.promptHistory} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {asset.promptHistory?.messages && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
+                            <PromptContent history={asset.promptHistory} />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Technical Details</p>
+                          <div className="grid md:grid-cols-2 gap-x-6 gap-y-2">
+                            {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                              <InlineEditField
+                                key={field.id}
+                                field={field}
+                                value={field.path.includes(".")
+                                  ? field.path.split(".").reduce((obj: any, key) => obj?.[key], asset)
+                                  : asset[field.path as keyof typeof asset]}
+                                onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {/* SECTION 2: COMPLIANCE PROVENANCE */}
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                          <Shield className="h-4 w-4 text-emerald-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold">Compliance Chain</h3>
+                          <p className="text-[10px] text-muted-foreground">7-point provenance verification for insurance</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">
+                        {asset.copyrightCheckStatus === "completed" ? "7/7 Complete" : "6/7 Complete"}
+                      </Badge>
+                    </div>
+                    <AIComplianceWorkflow
                       assetId={asset.id}
                       copyrightCheckStatus={asset.copyrightCheckStatus}
                     />
-                  </CardContent>
-                </Card>
-
-                {/* Copyright & Legal Status */}
-                {asset.copyrightCheckData && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Copyright & Legal</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {/* Compact status indicators */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Risk Level</span>
-                        <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"}>
-                          {asset.copyrightCheckData.riskBreakdown.riskLevel}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Similarity</span>
-                        <span className="text-sm font-medium">{asset.copyrightCheckData.similarityScore}%</span>
-                      </div>
-                      {asset.copyrightCheckData.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
-                        <div className="pt-2">
-                          <Link 
+                    {asset.copyrightCheckData ? (
+                      <div className="mt-4 p-3 rounded-lg border bg-muted/20">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">Risk Level:</span>
+                              <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"} className="text-[10px]">
+                                {asset.copyrightCheckData.riskBreakdown.riskLevel}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">Similarity:</span>
+                              <span className="text-xs font-medium">{asset.copyrightCheckData.similarityScore}%</span>
+                            </div>
+                          </div>
+                          <Link
                             href="#"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setActiveTab("quality")
-                            }}
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => { e.preventDefault(); setActiveTab("quality") }}
+                            className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                           >
-                            View full copyright report
-                            <ChevronRight className="h-3 w-3" />
+                            Full report <ChevronRight className="h-3 w-3" />
                           </Link>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 p-3 rounded-lg border border-dashed bg-muted/10 text-center">
+                        <p className="text-xs text-muted-foreground">Copyright check not yet run</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 text-xs h-7"
+                          onClick={() => setActiveTab("quality")}
+                        >
+                          Run Copyright Check
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {/* SECTION 3: ACTIVITY */}
                 {commentsSection}
-                </div>
-                <div className="space-y-4 sticky top-4" aria-hidden="true" />
               </div>
             </TabsContent>
           )}
@@ -1818,7 +1852,7 @@ export default function AssetDetailPage() {
                     value="ai-workflow"
                     className="rounded-none border-0 border-b-2 border-transparent bg-transparent shadow-none px-2.5 py-1.5 text-xs text-muted-foreground data-[state=active]:border-0 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:font-medium"
                   >
-                    AI Workflow
+                    Workflow
                   </TabsTrigger>
                 )}
                 <TabsTrigger 
@@ -2332,159 +2366,193 @@ export default function AssetDetailPage() {
             </div>
           </TabsContent>
 
-          {/* AI Workflow Tab Content */}
+          {/* Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="grid lg:grid-cols-3 gap-3">
-                <div className="lg:col-span-2 space-y-3">
-                {workflowContext && (
-                  <Card className="mb-4">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <GitBranch className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Workflow Origin</span>
-                      </div>
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{workflowContext.template.icon}</span>
-                            <div>
-                              <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-semibold hover:underline">
-                                {workflowContext.template.name}
-                              </Link>
-                              <p className="text-[10px] text-muted-foreground">
-                                Step {workflowContext.stepIndex + 1}: {workflowContext.step.name}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Link href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                              {workflowContext.taskTitle}
-                            </Link>
-                            <span className="text-xs text-muted-foreground">in {workflowContext.projectName}</span>
-                          </div>
-                        </div>
-                        {(() => {
-                          const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
-                          const Icon = config.icon
-                          return (
-                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border", config.lightBg, config.borderColor)}>
-                              <Icon className={cn("h-5 w-5", config.textColor)} />
-                            </div>
-                          )
-                        })()}
-                      </div>
-                      <Separator className="my-3" />
-                      <div className="grid grid-cols-4 gap-3">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Tool</p>
-                          <p className="text-xs font-medium">🎨 {workflowContext.toolUsed}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Prompts</p>
-                          <p className="text-xs font-medium">{workflowContext.promptsCount} captured</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Generations</p>
-                          <p className="text-xs font-medium">{workflowContext.generationsCount} tracked</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Session</p>
-                          <p className="text-xs font-mono font-medium">{workflowContext.sessionId}</p>
-                        </div>
-                      </div>
-                      {workflowContext.step.promptTemplate && (
-                        <div className="mt-3">
-                          <p className="text-[10px] text-muted-foreground mb-1">Prompt Template Used</p>
-                          <div className="bg-muted/50 rounded-md p-2.5 text-xs font-mono text-muted-foreground">
-                            {workflowContext.step.promptTemplate}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                {/* Generation Details - Compact Grid */}
-                <div className="grid md:grid-cols-2 gap-3">
-                  {/* Prompt Card */}
-                  {asset.promptHistory?.messages && (
-                    <PromptContent history={asset.promptHistory} />
-                  )}
-
-                  {/* Technical Details Card */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Technical Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
-                        <InlineEditField
-                          key={field.id}
-                          field={field}
-                          value={field.path.includes('.') 
-                            ? field.path.split('.').reduce((obj: any, key) => obj?.[key], asset)
-                            : asset[field.path as keyof typeof asset]
-                          }
-                          onSave={(newValue) => handleFieldSave(field.path, newValue)}
-                        />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Compliance Workflow - Linear Progress */}
+              <div className="space-y-4">
+                {/* SECTION 1: PROVENANCE */}
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Compliance Workflow</CardTitle>
-                    <CardDescription>7-step AI asset compliance tracking</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AIComplianceWorkflow 
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <GitBranch className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold">Provenance</h3>
+                        <p className="text-[10px] text-muted-foreground">How this asset was created</p>
+                      </div>
+                    </div>
+                    {workflowContext ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <span className="text-2xl">{workflowContext.template.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-medium hover:underline">
+                              {workflowContext.template.name}
+                            </Link>
+                            <p className="text-[10px] text-muted-foreground">
+                              Step {workflowContext.stepIndex + 1} of {workflowContext.template.steps.length}: {workflowContext.step.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Link
+                                href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`}
+                                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {workflowContext.taskTitle}
+                              </Link>
+                              <span className="text-[10px] text-muted-foreground">in {workflowContext.projectName}</span>
+                            </div>
+                          </div>
+                          {(() => {
+                            const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
+                            const StepIcon = config.icon
+                            return (
+                              <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border shrink-0", config.lightBg, config.borderColor)}>
+                                <StepIcon className={cn("h-5 w-5", config.textColor)} />
+                              </div>
+                            )
+                          })()}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">AI Tool</p>
+                            <p className="text-sm font-medium">🎨 {workflowContext.toolUsed}</p>
+                            <p className="text-[10px] text-muted-foreground">Full Tracking</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Model</p>
+                            <p className="text-sm font-medium">Midjourney v6</p>
+                            <p className="text-[10px] text-muted-foreground">Latest version</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Generated</p>
+                            <p className="text-sm font-medium">{format(new Date(workflowContext.capturedAt), "MMM d, yyyy")}</p>
+                            <p className="text-[10px] text-muted-foreground">{format(new Date(workflowContext.capturedAt), "h:mm a")}</p>
+                          </div>
+                          <div className="p-3 rounded-lg border bg-card">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Session</p>
+                            <p className="text-sm font-mono font-medium">{workflowContext.sessionId.slice(0, 12)}</p>
+                            <p className="text-[10px] text-muted-foreground">Browser Extension</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 py-2">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <FileText className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> prompts captured</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> generations tracked</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Download className="h-3.5 w-3.5" />
+                            <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> downloads recorded</span>
+                          </div>
+                        </div>
+                        {workflowContext.step.promptTemplate && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
+                            <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                              <p className="text-xs font-mono leading-relaxed text-foreground/80">{workflowContext.step.promptTemplate}</p>
+                            </div>
+                          </div>
+                        )}
+                        {asset.promptHistory?.messages && asset.promptHistory.messages.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Prompt Conversation</p>
+                            <PromptContent history={asset.promptHistory} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {asset.promptHistory?.messages && (
+                          <div>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
+                            <PromptContent history={asset.promptHistory} />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Technical Details</p>
+                          <div className="grid md:grid-cols-2 gap-x-6 gap-y-2">
+                            {EDITABLE_FIELDS.filter(f => f.category === "ai").map(field => (
+                              <InlineEditField
+                                key={field.id}
+                                field={field}
+                                value={field.path.includes(".")
+                                  ? field.path.split(".").reduce((obj: any, key) => obj?.[key], asset)
+                                  : asset[field.path as keyof typeof asset]}
+                                onSave={(newValue) => handleFieldSave(field.path, newValue)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {/* SECTION 2: COMPLIANCE PROVENANCE */}
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                          <Shield className="h-4 w-4 text-emerald-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold">Compliance Chain</h3>
+                          <p className="text-[10px] text-muted-foreground">7-point provenance verification for insurance</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">
+                        {asset.copyrightCheckStatus === "completed" ? "7/7 Complete" : "6/7 Complete"}
+                      </Badge>
+                    </div>
+                    <AIComplianceWorkflow
                       assetId={asset.id}
                       copyrightCheckStatus={asset.copyrightCheckStatus}
                     />
-                  </CardContent>
-                </Card>
-
-                {/* Copyright & Legal Status */}
-                {asset.copyrightCheckData && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Copyright & Legal</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {/* Compact status indicators */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Risk Level</span>
-                        <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"}>
-                          {asset.copyrightCheckData.riskBreakdown.riskLevel}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Similarity</span>
-                        <span className="text-sm font-medium">{asset.copyrightCheckData.similarityScore}%</span>
-                      </div>
-                      {asset.copyrightCheckData.matchedSources && asset.copyrightCheckData.matchedSources.length > 0 && (
-                        <div className="pt-2">
-                          <Link 
+                    {asset.copyrightCheckData ? (
+                      <div className="mt-4 p-3 rounded-lg border bg-muted/20">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">Risk Level:</span>
+                              <Badge variant={asset.copyrightCheckData.riskBreakdown.riskLevel === "low" ? "default" : "destructive"} className="text-[10px]">
+                                {asset.copyrightCheckData.riskBreakdown.riskLevel}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">Similarity:</span>
+                              <span className="text-xs font-medium">{asset.copyrightCheckData.similarityScore}%</span>
+                            </div>
+                          </div>
+                          <Link
                             href="#"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setActiveTab("quality")
-                            }}
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => { e.preventDefault(); setActiveTab("quality") }}
+                            className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                           >
-                            View full copyright report
-                            <ChevronRight className="h-3 w-3" />
+                            Full report <ChevronRight className="h-3 w-3" />
                           </Link>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 p-3 rounded-lg border border-dashed bg-muted/10 text-center">
+                        <p className="text-xs text-muted-foreground">Copyright check not yet run</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 text-xs h-7"
+                          onClick={() => setActiveTab("quality")}
+                        >
+                          Run Copyright Check
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                {/* SECTION 3: ACTIVITY */}
                 {commentsSection}
-                </div>
-                <div className="space-y-4 sticky top-4" aria-hidden="true" />
               </div>
             </TabsContent>
           )}
