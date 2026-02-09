@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, ChevronRight, Zap } from "lucide-react"
 import { getTaskById } from "@/lib/mock-data/projects-tasks"
 import {
   getWorkflowTemplateById,
@@ -209,6 +209,28 @@ export default function TaskWorkflowPage() {
                 {template?.name} workflow
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Context Banner — tells the user what to do */}
+      <div className="border-b bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <Zap className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Creative Workflow Active</p>
+              <p className="text-xs text-muted-foreground">
+                Launch your AI tool, create your content, then come back here to upload and complete each step.
+                The browser extension captures everything automatically.
+              </p>
+            </div>
+            <Badge variant="outline" className="shrink-0 gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Extension Connected
+            </Badge>
           </div>
         </div>
       </div>

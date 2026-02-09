@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, Fragment, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,7 @@ import {
 import {
   Check,
   ChevronDown,
+  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
@@ -23,6 +25,9 @@ import {
   ArrowLeft,
   Eye,
   Download,
+  Upload,
+  FileText,
+  Sparkles,
 } from "lucide-react"
 import type {
   WorkflowTemplate,
@@ -33,6 +38,16 @@ import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import { aiToolsWhitelist } from "@/lib/ai-tools-data"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+
+export interface StepOutput {
+  thumbnailUrl?: string
+  fileName?: string
+  assetId?: string
+  toolUsed?: string
+  capturedPrompts?: number
+  capturedGenerations?: number
+  capturedDownloads?: number
+}
 
 export interface WorkflowExecutorProps {
   template: WorkflowTemplate
@@ -59,6 +74,7 @@ export function WorkflowExecutor({
   const [localInstance, setLocalInstance] = useState<WorkflowInstance>(instance)
   const [viewingStepIndex, setViewingStepIndex] = useState<number | null>(null)
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
+  const [stepOutputs, setStepOutputs] = useState<Record<string, StepOutput>>({})
 
   const currentStepIndex = localInstance.currentStepIndex
   const currentStep = template.steps[currentStepIndex]
@@ -82,12 +98,36 @@ export function WorkflowExecutor({
     setCheckedItems({})
   }, [displayIndex])
 
+  function handleMockUpload(stepId: string) {
+    const step = template.steps.find((s) => s.id === stepId)
+    if (!step) return
+    const tools = (step.recommendedToolIds ?? [])
+      .map((id) => aiToolsWhitelist.find((t) => t.id === id))
+      .filter((t): t is NonNullable<typeof t> => Boolean(t))
+    const toolName = tools[0]?.name ?? "Midjourney"
+    const seed = Math.floor(Math.random() * 1000)
+    setStepOutputs((prev) => ({
+      ...prev,
+      [stepId]: {
+        thumbnailUrl: `https://picsum.photos/seed/${seed}/800/500`,
+        fileName: `${step.name.toLowerCase().replace(/\s+/g, "-")}-output.png`,
+        toolUsed: toolName,
+        capturedPrompts: 3,
+        capturedGenerations: 8,
+        capturedDownloads: 2,
+      },
+    }))
+    toast.success("Asset uploaded and linked to this step")
+  }
+
   function handleCompleteStep() {
     const next = { ...localInstance }
     const stepStatus = next.stepStatuses[currentStepIndex]
     if (!stepStatus) return
     stepStatus.status = "completed"
     stepStatus.completedAt = new Date().toISOString()
+    const output = currentStep ? stepOutputs[currentStep.id] : undefined
+    if (output?.toolUsed) stepStatus.toolUsed = output.toolUsed
 
     if (currentStepIndex < totalSteps - 1) {
       next.currentStepIndex = currentStepIndex + 1
@@ -385,7 +425,7 @@ export function WorkflowExecutor({
                             key={tool.id}
                             className="hover:border-blue-400 transition-colors"
                           >
-                            <CardContent className="p-3">
+                            <CardContent className="p-3 flex flex-col">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-xl">{tool.icon}</span>
                                 <div>
@@ -397,27 +437,26 @@ export function WorkflowExecutor({
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="text-[9px]"
-                                >
-                                  {tool.trackingLevel}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  className="ml-auto h-6 text-[10px]"
-                                  onClick={() => {
-                                    window.open(tool.baseUrl, "_blank")
-                                    toast.success(
-                                      `Launched ${tool.name} — extension will track your session`
-                                    )
-                                  }}
-                                >
-                                  <ExternalLink className="mr-1 h-3 w-3" />{" "}
-                                  Launch
-                                </Button>
-                              </div>
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] w-fit mb-3"
+                              >
+                                {tool.trackingLevel}
+                              </Badge>
+                              <Button
+                                size="default"
+                                variant="default"
+                                className="w-full mt-auto"
+                                onClick={() => {
+                                  window.open(tool.baseUrl, "_blank")
+                                  toast.success(
+                                    `Launched ${tool.name} — extension will track your session`
+                                  )
+                                }}
+                              >
+                                <ExternalLink className="mr-1.5 h-4 w-4" />
+                                Launch {tool.name} ↗
+                              </Button>
                             </CardContent>
                           </Card>
                         ))}
@@ -429,6 +468,29 @@ export function WorkflowExecutor({
                           generations, and downloads
                         </span>
                       </div>
+                      {!isViewingCompletedStep && (
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50 mt-4">
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold">1</span>
+                            Launch tool
+                          </div>
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span className="h-5 w-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-bold">2</span>
+                            Create content
+                          </div>
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">3</span>
+                            Upload output
+                          </div>
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span className="h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold">4</span>
+                            Complete step
+                          </div>
+                        </div>
+                      )}
                     </CollapsibleContent>
                   </Collapsible>
                 )}
@@ -528,6 +590,135 @@ export function WorkflowExecutor({
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+
+                {/* Output & Evidence — for active step (editable) or completed step (read-only) */}
+                {(() => {
+                  const output = stepOutputs[step.id]
+                  const toolNameForStep =
+                    (step.recommendedToolIds ?? [])
+                      .map((id) => aiToolsWhitelist.find((t) => t.id === id))
+                      .find((t): t is NonNullable<typeof t> => Boolean(t))
+                      ?.name ?? "Midjourney"
+                  const prompts = output?.capturedPrompts ?? 3
+                  const generations = output?.capturedGenerations ?? 8
+                  const downloads = output?.capturedDownloads ?? 2
+                  return (
+                    <div className="mt-6 space-y-3">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Output & Evidence
+                      </p>
+                      {/* Extension Capture Status */}
+                      <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium">
+                            Browser Extension Active
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Tracking {toolNameForStep} session • {prompts}{" "}
+                            prompts • {generations} generations • {downloads}{" "}
+                            downloads captured
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[9px]">
+                          Live
+                        </Badge>
+                      </div>
+                      {/* Upload area or preview */}
+                      {!output?.thumbnailUrl ? (
+                        !isViewingCompletedStep ? (
+                          <button
+                            type="button"
+                            onClick={() => handleMockUpload(step.id)}
+                            className="w-full border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group"
+                          >
+                            <Upload className="h-8 w-8 mx-auto text-muted-foreground group-hover:text-blue-500 transition-colors" />
+                            <p className="text-sm font-medium mt-2">
+                              Upload Output
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Drop your generated asset here or click to browse
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-2">
+                              PNG, JPG, MP4, MP3, WAV up to 50MB
+                            </p>
+                          </button>
+                        ) : null
+                      ) : (
+                        <div className="border rounded-xl overflow-hidden">
+                          <div className="relative bg-muted h-40 flex items-center justify-center">
+                            <img
+                              src={output.thumbnailUrl}
+                              alt="Output"
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+                              <span className="text-xs text-white font-medium">
+                                {output.fileName}
+                              </span>
+                              {!isViewingCompletedStep && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-6 text-[10px]"
+                                    onClick={() => toast.info("Replace file")}
+                                  >
+                                    Replace
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-6 text-[10px]"
+                                    onClick={() => {
+                                      const newOutputs = { ...stepOutputs }
+                                      delete newOutputs[step.id]
+                                      setStepOutputs(newOutputs)
+                                    }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-3 space-y-2">
+                            <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <FileText className="h-3 w-3" />{" "}
+                                {output.capturedPrompts ?? 3} prompts captured
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" />{" "}
+                                {output.capturedGenerations ?? 8} generations
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Download className="h-3 w-3" />{" "}
+                                {output.capturedDownloads ?? 2} downloads
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[9px]">
+                                {output.toolUsed ? `🎨 ${output.toolUsed}` : "🎨 Midjourney"}
+                              </Badge>
+                              <Badge variant="outline" className="text-[9px]">
+                                Session: ext-sid-a8f3
+                              </Badge>
+                            </div>
+                            <Link
+                              href="/creative/assets/vg-1/v/3"
+                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              View in Asset Library{" "}
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Action buttons — only for active step */}
                 {!isViewingCompletedStep && (

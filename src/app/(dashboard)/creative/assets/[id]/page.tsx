@@ -45,7 +45,10 @@ import {
   Check,
   ExternalLink,
   Users,
+  GitBranch,
 } from "lucide-react"
+import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import Image from "next/image"
 import Link from "next/link"
 import { PromptContent } from "@/components/creative/PromptContent"
@@ -419,7 +422,32 @@ export default function AssetDetailPage() {
   
   // Use local asset state or base asset
   const asset = localAsset || baseAsset
-  
+
+  // Mock: which workflow step produced this asset
+  const workflowContext = useMemo(() => {
+    if (assetId === "vg-1" || (versionGroup && versionGroup.id === "vg-1")) {
+      const template = getWorkflowTemplateById("wf-social-images")
+      if (template) {
+        return {
+          template,
+          stepIndex: 0,
+          step: template.steps[0],
+          taskId: "task-1",
+          taskTitle: "Design hero image",
+          projectId: "1",
+          projectName: "Summer Campaign 2024",
+          toolUsed: "Midjourney",
+          sessionId: "ext-sid-a8f3c2",
+          capturedAt: new Date().toISOString(),
+          promptsCount: 3,
+          generationsCount: 8,
+          downloadsCount: 2,
+        }
+      }
+    }
+    return null
+  }, [assetId, versionGroup])
+
   // Initialize local asset on mount
   useEffect(() => {
     if (baseAsset && !localAsset) {
@@ -1425,6 +1453,73 @@ export default function AssetDetailPage() {
             <TabsContent value="ai-workflow" className="mt-2">
               <div className="grid lg:grid-cols-3 gap-3">
                 <div className="lg:col-span-2 space-y-3">
+                {workflowContext && (
+                  <Card className="mb-4">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <GitBranch className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Workflow Origin</span>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{workflowContext.template.icon}</span>
+                            <div>
+                              <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-semibold hover:underline">
+                                {workflowContext.template.name}
+                              </Link>
+                              <p className="text-[10px] text-muted-foreground">
+                                Step {workflowContext.stepIndex + 1}: {workflowContext.step.name}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 mt-2">
+                            <Link href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                              {workflowContext.taskTitle}
+                            </Link>
+                            <span className="text-xs text-muted-foreground">in {workflowContext.projectName}</span>
+                          </div>
+                        </div>
+                        {(() => {
+                          const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
+                          const Icon = config.icon
+                          return (
+                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border", config.lightBg, config.borderColor)}>
+                              <Icon className={cn("h-5 w-5", config.textColor)} />
+                            </div>
+                          )
+                        })()}
+                      </div>
+                      <Separator className="my-3" />
+                      <div className="grid grid-cols-4 gap-3">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Tool</p>
+                          <p className="text-xs font-medium">🎨 {workflowContext.toolUsed}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Prompts</p>
+                          <p className="text-xs font-medium">{workflowContext.promptsCount} captured</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Generations</p>
+                          <p className="text-xs font-medium">{workflowContext.generationsCount} tracked</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Session</p>
+                          <p className="text-xs font-mono font-medium">{workflowContext.sessionId}</p>
+                        </div>
+                      </div>
+                      {workflowContext.step.promptTemplate && (
+                        <div className="mt-3">
+                          <p className="text-[10px] text-muted-foreground mb-1">Prompt Template Used</p>
+                          <div className="bg-muted/50 rounded-md p-2.5 text-xs font-mono text-muted-foreground">
+                            {workflowContext.step.promptTemplate}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
                 {/* Generation Details - Compact Grid */}
                 <div className="grid md:grid-cols-2 gap-3">
                   {/* Prompt Card */}
@@ -2242,6 +2337,73 @@ export default function AssetDetailPage() {
             <TabsContent value="ai-workflow" className="mt-2">
               <div className="grid lg:grid-cols-3 gap-3">
                 <div className="lg:col-span-2 space-y-3">
+                {workflowContext && (
+                  <Card className="mb-4">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <GitBranch className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Workflow Origin</span>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{workflowContext.template.icon}</span>
+                            <div>
+                              <Link href={`/workflows/${workflowContext.template.id}`} className="text-sm font-semibold hover:underline">
+                                {workflowContext.template.name}
+                              </Link>
+                              <p className="text-[10px] text-muted-foreground">
+                                Step {workflowContext.stepIndex + 1}: {workflowContext.step.name}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 mt-2">
+                            <Link href={`/projects/${workflowContext.projectId}/tasks/${workflowContext.taskId}`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                              {workflowContext.taskTitle}
+                            </Link>
+                            <span className="text-xs text-muted-foreground">in {workflowContext.projectName}</span>
+                          </div>
+                        </div>
+                        {(() => {
+                          const config = STEP_TYPE_CONFIG[workflowContext.step.stepType]
+                          const Icon = config.icon
+                          return (
+                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border", config.lightBg, config.borderColor)}>
+                              <Icon className={cn("h-5 w-5", config.textColor)} />
+                            </div>
+                          )
+                        })()}
+                      </div>
+                      <Separator className="my-3" />
+                      <div className="grid grid-cols-4 gap-3">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Tool</p>
+                          <p className="text-xs font-medium">🎨 {workflowContext.toolUsed}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Prompts</p>
+                          <p className="text-xs font-medium">{workflowContext.promptsCount} captured</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Generations</p>
+                          <p className="text-xs font-medium">{workflowContext.generationsCount} tracked</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Session</p>
+                          <p className="text-xs font-mono font-medium">{workflowContext.sessionId}</p>
+                        </div>
+                      </div>
+                      {workflowContext.step.promptTemplate && (
+                        <div className="mt-3">
+                          <p className="text-[10px] text-muted-foreground mb-1">Prompt Template Used</p>
+                          <div className="bg-muted/50 rounded-md p-2.5 text-xs font-mono text-muted-foreground">
+                            {workflowContext.step.promptTemplate}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
                 {/* Generation Details - Compact Grid */}
                 <div className="grid md:grid-cols-2 gap-3">
                   {/* Prompt Card */}
