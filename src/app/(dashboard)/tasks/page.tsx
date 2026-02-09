@@ -19,7 +19,7 @@ import { getWorkflowTemplateById, getWorkflowTemplates } from "@/lib/mock-data/w
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task } from "@/types"
 import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch } from "lucide-react"
-import { useState, useMemo, useRef, useEffect } from "react"
+import { useState, useMemo, useRef, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -75,7 +75,7 @@ const PropertyPill = ({ icon, label, value, onClick }: {
   </button>
 )
 
-export default function UnifiedTasksPage() {
+function UnifiedTasksPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { projects, getProjectById } = useData()
@@ -1778,5 +1778,19 @@ export default function UnifiedTasksPage() {
         }}
       />
     </PageContainer>
+  )
+}
+
+export default function UnifiedTasksPage() {
+  return (
+    <Suspense fallback={
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[40vh] text-gray-500 dark:text-gray-400">
+          Loading…
+        </div>
+      </PageContainer>
+    }>
+      <UnifiedTasksPageContent />
+    </Suspense>
   )
 }
