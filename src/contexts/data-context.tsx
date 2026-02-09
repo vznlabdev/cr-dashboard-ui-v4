@@ -75,8 +75,8 @@ const initialProjects: Project[] = [
       us_states: ["ALL"],
       countries: ["EU", "UK"],
       platforms: ["Meta", "TikTok"],
-      start_date: "2024-06-01",
-      end_date: "2024-08-31",
+      start_date: new Date("2024-06-01"),
+      end_date: new Date("2024-08-31"),
     },
   },
   {

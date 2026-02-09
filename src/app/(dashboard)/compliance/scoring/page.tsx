@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useEffect, useMemo } from "react"
+import { Suspense, useState, useEffect, useMemo, Fragment } from "react"
 import { useSearchParams } from "next/navigation"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
 import { cn } from "@/lib/utils"
@@ -210,9 +210,8 @@ function ScoringPageContent() {
                         const StatusIcon = statusIcons[factor.status]
                         const isExpanded = expandedFactor === factor.id
                         return (
-                          <>
+                          <Fragment key={factor.id}>
                             <tr
-                              key={factor.id}
                               className="border-b border-border/10 hover:bg-muted/30 transition-colors cursor-pointer h-8"
                               onClick={() => setExpandedFactor(isExpanded ? null : factor.id)}
                             >
@@ -234,7 +233,7 @@ function ScoringPageContent() {
                               <td className="px-3 py-1 text-muted-foreground truncate max-w-[200px]">{factor.detail}</td>
                             </tr>
                             {isExpanded && (
-                              <tr key={`${factor.id}-detail`} className="bg-muted/10">
+                              <tr className="bg-muted/10">
                                 <td colSpan={6} className="px-6 py-2 text-[11px]">
                                   <div className="space-y-1">
                                     <div><span className="text-muted-foreground">Remediation:</span> {factor.remediationAction}</div>
@@ -243,7 +242,7 @@ function ScoringPageContent() {
                                 </td>
                               </tr>
                             )}
-                          </>
+                          </Fragment>
                         )
                       })}
                     </tbody>
