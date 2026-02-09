@@ -1664,10 +1664,73 @@ export default function AssetDetailPage() {
                                 { label: "Tool verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 1000), method: "Tool capture", meta: workflowContext.toolUsed },
                                 { label: "Model verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 2000), method: "Model reported", meta: "Midjourney v6" },
                                 { label: "Training verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 3000), method: "Training data disclosure", meta: "Vendor documentation" },
-                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 4000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
-                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
                               ].map((item, i) => (
-                                <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                                <div key={i} className="relative flex gap-3 pb-4">
+                                  <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 pt-0.5">
+                                    <p className="text-xs font-medium text-foreground">{item.label}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(item.time), "MMM d, yyyy 'at' h:mm a")}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> {item.method}</p>
+                                    {item.meta && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> {item.meta}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                              {/* Talent step (optional) - after Training, before Prompt */}
+                              {(() => {
+                                const hasIdentifiableTalent = (asset.creatorIds?.length ?? 0) > 0
+                                const talentRightsVerified = (asset as { talentRightsVerified?: boolean }).talentRightsVerified === true
+                                const talentTime = new Date(new Date(workflowContext.capturedAt).getTime() + 4000)
+                                if (!hasIdentifiableTalent) {
+                                  return (
+                                    <div className="relative flex gap-3 pb-4">
+                                      <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-muted flex items-center justify-center border-2 border-background shrink-0">
+                                        <Check className="h-3 w-3 text-muted-foreground" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pt-0.5">
+                                        <p className="text-xs font-medium text-foreground">Talent (N/A)</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> No identifiable individuals detected</p>
+                                        <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Optional step — skipped</p>
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                if (talentRightsVerified) {
+                                  return (
+                                    <div className="relative flex gap-3 pb-4">
+                                      <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                        <Check className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pt-0.5">
+                                        <p className="text-xs font-medium text-foreground">Talent verified</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> NILP rights confirmed</p>
+                                        <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Name, image, likeness, personality</p>
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                return (
+                                  <div className="relative flex gap-3 pb-4">
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Talent pending verification</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> —</p>
+                                      <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Identifiable individuals detected — verify NILP rights</p>
+                                    </div>
+                                  </div>
+                                )
+                              })()}
+                              {[
+                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
+                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 6000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
+                              ].map((item, i) => (
+                                <div key={i} className="relative flex gap-3 pb-4">
                                   <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
                                     <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                                   </div>
@@ -1833,31 +1896,53 @@ export default function AssetDetailPage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold">Compliance Chain</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">7-point provenance verification for insurance</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">8-point provenance verification for insurance (1 optional)</p>
                       </div>
                     </div>
-                    <AIComplianceWorkflow
-                      assetId={asset.id}
-                      copyrightCheckStatus={asset.copyrightCheckStatus}
-                    />
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            asset.copyrightCheckStatus === "completed"
-                              ? "bg-emerald-500"
-                              : "bg-amber-500"
-                          )}
-                          style={{
-                            width: asset.copyrightCheckStatus === "completed" ? "100%" : "85%",
-                          }}
-                        />
-                      </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">
-                        Risk Level: Medium
-                      </Badge>
-                    </div>
+                    {(() => {
+                      const copyrightComplete = asset.copyrightCheckStatus === "completed"
+                      const hasIdentifiableTalent = (asset.creatorIds?.length ?? 0) > 0
+                      const talentRightsVerified = (asset as { talentRightsVerified?: boolean }).talentRightsVerified === true
+                      const talentStepStatus: "not_applicable" | "pending" | "verified" =
+                        !hasIdentifiableTalent ? "not_applicable" : talentRightsVerified ? "verified" : "pending"
+                      const talentComplete = talentStepStatus === "not_applicable" || talentStepStatus === "verified"
+                      const completedRequired = 6 + (copyrightComplete ? 1 : 0)
+                      const completedOptional = talentComplete ? 1 : 0
+                      const completedTotal = completedRequired + completedOptional
+                      const totalSteps = 8
+                      const optionalPending = hasIdentifiableTalent && !talentRightsVerified && copyrightComplete
+                      const progressPct = (completedTotal / totalSteps) * 100
+                      return (
+                        <>
+                          <AIComplianceWorkflow
+                            assetId={asset.id}
+                            copyrightCheckStatus={asset.copyrightCheckStatus}
+                            talentStepStatus={talentStepStatus}
+                          />
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
+                              <div
+                                className={cn(
+                                  "h-full rounded-full transition-all",
+                                  completedTotal === totalSteps ? "bg-emerald-500" : optionalPending ? "bg-amber-500" : "bg-amber-500"
+                                )}
+                                style={{ width: `${progressPct}%` }}
+                              />
+                            </div>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              {optionalPending
+                                ? "7/8 Complete (1 optional pending)"
+                                : copyrightComplete
+                                  ? "7/7 Complete"
+                                  : "6/7 Complete"}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              Risk Level: Medium
+                            </Badge>
+                          </div>
+                        </>
+                      )
+                    })()}
                     {asset.copyrightCheckData ? (
                       <div className="mt-4 p-3 rounded-lg border bg-muted/20">
                         <div className="flex items-center justify-between">
@@ -2835,10 +2920,73 @@ export default function AssetDetailPage() {
                                 { label: "Tool verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 1000), method: "Tool capture", meta: workflowContext.toolUsed },
                                 { label: "Model verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 2000), method: "Model reported", meta: "Midjourney v6" },
                                 { label: "Training verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 3000), method: "Training data disclosure", meta: "Vendor documentation" },
-                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 4000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
-                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
                               ].map((item, i) => (
-                                <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                                <div key={i} className="relative flex gap-3 pb-4">
+                                  <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 pt-0.5">
+                                    <p className="text-xs font-medium text-foreground">{item.label}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(item.time), "MMM d, yyyy 'at' h:mm a")}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> {item.method}</p>
+                                    {item.meta && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> {item.meta}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                              {/* Talent step (optional) - after Training, before Prompt */}
+                              {(() => {
+                                const hasIdentifiableTalent = (asset.creatorIds?.length ?? 0) > 0
+                                const talentRightsVerified = (asset as { talentRightsVerified?: boolean }).talentRightsVerified === true
+                                const talentTime = new Date(new Date(workflowContext.capturedAt).getTime() + 4000)
+                                if (!hasIdentifiableTalent) {
+                                  return (
+                                    <div className="relative flex gap-3 pb-4">
+                                      <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-muted flex items-center justify-center border-2 border-background shrink-0">
+                                        <Check className="h-3 w-3 text-muted-foreground" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pt-0.5">
+                                        <p className="text-xs font-medium text-foreground">Talent (N/A)</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> No identifiable individuals detected</p>
+                                        <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Optional step — skipped</p>
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                if (talentRightsVerified) {
+                                  return (
+                                    <div className="relative flex gap-3 pb-4">
+                                      <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                        <Check className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pt-0.5">
+                                        <p className="text-xs font-medium text-foreground">Talent verified</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> NILP rights confirmed</p>
+                                        <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Name, image, likeness, personality</p>
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                return (
+                                  <div className="relative flex gap-3 pb-4">
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Talent pending verification</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">{format(talentTime, "MMM d, yyyy 'at' h:mm a")}</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> —</p>
+                                      <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Identifiable individuals detected — verify NILP rights</p>
+                                    </div>
+                                  </div>
+                                )
+                              })()}
+                              {[
+                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
+                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 6000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
+                              ].map((item, i) => (
+                                <div key={i} className="relative flex gap-3 pb-4">
                                   <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
                                     <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                                   </div>
@@ -3004,31 +3152,53 @@ export default function AssetDetailPage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold">Compliance Chain</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">7-point provenance verification for insurance</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">8-point provenance verification for insurance (1 optional)</p>
                       </div>
                     </div>
-                    <AIComplianceWorkflow
-                      assetId={asset.id}
-                      copyrightCheckStatus={asset.copyrightCheckStatus}
-                    />
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            asset.copyrightCheckStatus === "completed"
-                              ? "bg-emerald-500"
-                              : "bg-amber-500"
-                          )}
-                          style={{
-                            width: asset.copyrightCheckStatus === "completed" ? "100%" : "85%",
-                          }}
-                        />
-                      </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">
-                        Risk Level: Medium
-                      </Badge>
-                    </div>
+                    {(() => {
+                      const copyrightComplete = asset.copyrightCheckStatus === "completed"
+                      const hasIdentifiableTalent = (asset.creatorIds?.length ?? 0) > 0
+                      const talentRightsVerified = (asset as { talentRightsVerified?: boolean }).talentRightsVerified === true
+                      const talentStepStatus: "not_applicable" | "pending" | "verified" =
+                        !hasIdentifiableTalent ? "not_applicable" : talentRightsVerified ? "verified" : "pending"
+                      const talentComplete = talentStepStatus === "not_applicable" || talentStepStatus === "verified"
+                      const completedRequired = 6 + (copyrightComplete ? 1 : 0)
+                      const completedOptional = talentComplete ? 1 : 0
+                      const completedTotal = completedRequired + completedOptional
+                      const totalSteps = 8
+                      const optionalPending = hasIdentifiableTalent && !talentRightsVerified && copyrightComplete
+                      const progressPct = (completedTotal / totalSteps) * 100
+                      return (
+                        <>
+                          <AIComplianceWorkflow
+                            assetId={asset.id}
+                            copyrightCheckStatus={asset.copyrightCheckStatus}
+                            talentStepStatus={talentStepStatus}
+                          />
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
+                              <div
+                                className={cn(
+                                  "h-full rounded-full transition-all",
+                                  completedTotal === totalSteps ? "bg-emerald-500" : optionalPending ? "bg-amber-500" : "bg-amber-500"
+                                )}
+                                style={{ width: `${progressPct}%` }}
+                              />
+                            </div>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              {optionalPending
+                                ? "7/8 Complete (1 optional pending)"
+                                : copyrightComplete
+                                  ? "7/7 Complete"
+                                  : "6/7 Complete"}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              Risk Level: Medium
+                            </Badge>
+                          </div>
+                        </>
+                      )
+                    })()}
                     {asset.copyrightCheckData ? (
                       <div className="mt-4 p-3 rounded-lg border bg-muted/20">
                         <div className="flex items-center justify-between">
