@@ -46,12 +46,12 @@ import {
   ExternalLink,
   Users,
   GitBranch,
+  Info,
 } from "lucide-react"
 import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import Image from "next/image"
 import Link from "next/link"
-import { PromptContent } from "@/components/creative/PromptContent"
 import { InlineEditField, ScoreBadge } from "@/components/creative"
 import { useCreators } from "@/contexts/creators-context"
 import { useContracts } from "@/contexts/contracts-context"
@@ -69,6 +69,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { VersionHistoryPanel, SubmitVersionDialog, VersionStatusBadge, AIComplianceWorkflow } from "@/components/assets"
 import { AssetTimeline } from "@/components/assets/AssetTimeline"
 import { VersionSelector } from "@/components/assets/VersionSelector"
@@ -85,6 +86,16 @@ const ASSET_TEAM_MEMBERS: TaskTeamMember[] = [
   { id: "user-4", name: "Alex Kim", initials: "AK", avatarColor: "#f59e0b" },
   { id: "user-5", name: "Jordan Lee", initials: "JL", avatarColor: "#ef4444" },
 ]
+
+function getPromptVersionDiff(prev: string, curr: string): { added: number; removed: number } {
+  const prevWords = prev.trim().split(/\s+/).filter(Boolean)
+  const currWords = curr.trim().split(/\s+/).filter(Boolean)
+  const prevSet = new Set(prevWords)
+  const currSet = new Set(currWords)
+  const added = [...currSet].filter((w) => !prevSet.has(w)).length
+  const removed = [...prevSet].filter((w) => !currSet.has(w)).length
+  return { added, removed }
+}
 
 export default function AssetDetailPage() {
   const router = useRouter()
@@ -1451,7 +1462,7 @@ export default function AssetDetailPage() {
           {/* Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* SECTION 1: PROVENANCE */}
                 <Card>
                   <CardContent className="p-5">
@@ -1460,12 +1471,77 @@ export default function AssetDetailPage() {
                         <GitBranch className="h-4 w-4 text-blue-500" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold">Provenance</h3>
+                        <h3 className="text-sm font-semibold">Workflow Provenance</h3>
                         <p className="text-[10px] text-muted-foreground">How this asset was created</p>
                       </div>
                     </div>
+                    {/* Risk Assessment summary */}
+                    {(() => {
+                      const isComplianceComplete = asset.copyrightCheckStatus === "completed"
+                      const promptChangeCount = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user")?.length ?? 0
+                      const lastModified = asset.updatedAt ?? asset.createdAt ?? new Date()
+                      return (
+                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/50 p-4 mb-4">
+                          <h4 className="text-xs font-semibold text-foreground mb-3">Risk Assessment</h4>
+                          <div className="space-y-2.5 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Compliance Status</span>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-[10px]",
+                                  isComplianceComplete
+                                    ? "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/30"
+                                    : "border-amber-400 text-amber-800 bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:bg-amber-900/30"
+                                )}
+                              >
+                                {isComplianceComplete ? "7/7 Verified" : "6/7 Verified"}
+                              </Badge>
+                            </div>
+                            {!isComplianceComplete && (
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">Outstanding Verification</span>
+                                <span className="flex items-center gap-2">
+                                  <span className="font-medium text-foreground">Copyright Check</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[10px] border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-900/40"
+                                    onClick={() => setActiveTab("quality")}
+                                  >
+                                    Run Check
+                                  </Button>
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Last Modified</span>
+                              <span className="font-medium">{format(new Date(lastModified), "MMM d, yyyy 'at' h:mm a")}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Modification Count</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="flex items-center gap-1 font-medium">
+                                      {promptChangeCount} prompt change{promptChangeCount !== 1 ? "s" : ""}
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[240px]">
+                                    <p className="text-xs">
+                                      Multiple prompt edits can affect reproducibility and compliance. This count helps auditors trace how the final asset was derived.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                     {workflowContext ? (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
                           <span className="text-2xl">{workflowContext.template.icon}</span>
                           <div className="flex-1 min-w-0">
@@ -1495,6 +1571,21 @@ export default function AssetDetailPage() {
                             )
                           })()}
                         </div>
+                        {asset.copyrightCheckStatus !== "completed" && (
+                          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-amber-900 dark:text-amber-100">
+                              ⚠️ Copyright verification required before policy issuance — Run copyright check to complete compliance chain
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100 dark:border-amber-500 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                              onClick={() => setActiveTab("quality")}
+                            >
+                              Run Copyright Check
+                            </Button>
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="p-3 rounded-lg border bg-card">
                             <p className="text-[10px] text-muted-foreground mb-0.5">AI Tool</p>
@@ -1518,42 +1609,201 @@ export default function AssetDetailPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-6 py-2">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <FileText className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> prompts captured</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> generations tracked</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Download className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> downloads recorded</span>
-                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> Prompt Modifications</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Multiple prompt changes may indicate content refinement or risk evolution</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                                    <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> Generation Attempts</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Number of times AI was invoked</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> Asset Downloads</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Tracked file exports</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                        {workflowContext.step.promptTemplate && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
-                            <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
-                              <p className="text-xs font-mono leading-relaxed text-foreground/80">{workflowContext.step.promptTemplate}</p>
+                        {/* Compliance Timeline */}
+                        <Collapsible>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                            <span className="text-xs font-medium text-muted-foreground">Compliance Timeline</span>
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-3 pl-4 border-l-2 border-muted space-y-0">
+                              {[
+                                { label: "Creator verified", time: workflowContext.capturedAt, method: "Session identity", meta: "Browser extension" },
+                                { label: "Tool verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 1000), method: "Tool capture", meta: workflowContext.toolUsed },
+                                { label: "Model verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 2000), method: "Model reported", meta: "Midjourney v6" },
+                                { label: "Training verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 3000), method: "Training data disclosure", meta: "Vendor documentation" },
+                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 4000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
+                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
+                              ].map((item, i) => (
+                                <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                                  <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 pt-0.5">
+                                    <p className="text-xs font-medium text-foreground">{item.label}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(item.time), "MMM d, yyyy 'at' h:mm a")}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> {item.method}</p>
+                                    {item.meta && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> {item.meta}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                              {/* Copyright step */}
+                              <div className="relative flex gap-3 pb-0">
+                                {asset.copyrightCheckStatus === "completed" && asset.copyrightCheckData?.checkedAt ? (
+                                  <>
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Copyright verified</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(asset.copyrightCheckData.checkedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> AI similarity scan</p>
+                                      {asset.copyrightCheckData.similarityScore != null && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Similarity {asset.copyrightCheckData.similarityScore}%</p>}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Copyright check pending</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">Not yet run</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> —</p>
+                                      <Button variant="outline" size="sm" className="mt-2 h-7 text-[10px] border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-900/40" onClick={() => setActiveTab("quality")}>
+                                        Run Check
+                                      </Button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {asset.promptHistory?.messages && asset.promptHistory.messages.length > 0 && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Prompt Conversation</p>
-                            <PromptContent history={asset.promptHistory} />
-                          </div>
-                        )}
+                          </CollapsibleContent>
+                        </Collapsible>
+                        {(() => {
+                          const promptVersions = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user") ?? []
+                          const lastPrompt = promptVersions[promptVersions.length - 1]
+                          if (promptVersions.length === 0) return null
+                          return (
+                            <div className="space-y-4">
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                                  <span className="text-xs font-medium text-muted-foreground">View {promptVersions.length} prompt version{promptVersions.length !== 1 ? "s" : ""}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="mt-2 space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+                                    {promptVersions.map((msg: { id: string; content: string; timestamp: Date }, i: number) => (
+                                      <div key={msg.id} className="rounded-md bg-background/80 p-3 border">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Version {i + 1}</span>
+                                          <span className="text-[10px] text-muted-foreground">{format(new Date(msg.timestamp), "MMM d, h:mm a")}</span>
+                                        </div>
+                                        <p className="text-xs font-mono whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                        {i > 0 &&
+                                          (() => {
+                                            const d = getPromptVersionDiff(promptVersions[i - 1].content, msg.content)
+                                            if (d.added === 0 && d.removed === 0) return <p className="text-[10px] text-muted-foreground mt-1.5">No text changes</p>
+                                            return (
+                                              <p className="text-[10px] text-muted-foreground mt-1.5">
+                                                Diff: +{d.added} words, −{d.removed} words
+                                              </p>
+                                            )
+                                          })()}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                              <div>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Final AI Instructions</p>
+                                <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                                  <p className="text-xs font-mono leading-relaxed text-foreground/80 whitespace-pre-wrap">{lastPrompt.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()}
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {asset.promptHistory?.messages && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
-                            <PromptContent history={asset.promptHistory} />
-                          </div>
-                        )}
+                      <div className="space-y-6">
+                        {(() => {
+                          const promptVersions = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user") ?? []
+                          const lastPrompt = promptVersions[promptVersions.length - 1]
+                          if (promptVersions.length === 0) return null
+                          return (
+                            <div className="space-y-4">
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                                  <span className="text-xs font-medium text-muted-foreground">View {promptVersions.length} prompt version{promptVersions.length !== 1 ? "s" : ""}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="mt-2 space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+                                    {promptVersions.map((msg: { id: string; content: string; timestamp: Date }, i: number) => (
+                                      <div key={msg.id} className="rounded-md bg-background/80 p-3 border">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Version {i + 1}</span>
+                                          <span className="text-[10px] text-muted-foreground">{format(new Date(msg.timestamp), "MMM d, h:mm a")}</span>
+                                        </div>
+                                        <p className="text-xs font-mono whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                        {i > 0 &&
+                                          (() => {
+                                            const d = getPromptVersionDiff(promptVersions[i - 1].content, msg.content)
+                                            if (d.added === 0 && d.removed === 0) return <p className="text-[10px] text-muted-foreground mt-1.5">No text changes</p>
+                                            return (
+                                              <p className="text-[10px] text-muted-foreground mt-1.5">
+                                                Diff: +{d.added} words, −{d.removed} words
+                                              </p>
+                                            )
+                                          })()}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                              <div>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Final AI Instructions</p>
+                                <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                                  <p className="text-xs font-mono leading-relaxed text-foreground/80 whitespace-pre-wrap">{lastPrompt.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()}
+                        {!workflowContext && (
                         <div>
                           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Technical Details</p>
                           <div className="grid md:grid-cols-2 gap-x-6 gap-y-2">
@@ -1569,6 +1819,7 @@ export default function AssetDetailPage() {
                             ))}
                           </div>
                         </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -1576,24 +1827,37 @@ export default function AssetDetailPage() {
                 {/* SECTION 2: COMPLIANCE PROVENANCE */}
                 <Card>
                   <CardContent className="p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                          <Shield className="h-4 w-4 text-emerald-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold">Compliance Chain</h3>
-                          <p className="text-[10px] text-muted-foreground">7-point provenance verification for insurance</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Shield className="h-4 w-4 text-emerald-500" />
                       </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {asset.copyrightCheckStatus === "completed" ? "7/7 Complete" : "6/7 Complete"}
-                      </Badge>
+                      <div>
+                        <h3 className="text-xl font-semibold">Compliance Chain</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">7-point provenance verification for insurance</p>
+                      </div>
                     </div>
                     <AIComplianceWorkflow
                       assetId={asset.id}
                       copyrightCheckStatus={asset.copyrightCheckStatus}
                     />
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            asset.copyrightCheckStatus === "completed"
+                              ? "bg-emerald-500"
+                              : "bg-amber-500"
+                          )}
+                          style={{
+                            width: asset.copyrightCheckStatus === "completed" ? "100%" : "85%",
+                          }}
+                        />
+                      </div>
+                      <Badge variant="outline" className="text-[10px] shrink-0">
+                        Risk Level: Medium
+                      </Badge>
+                    </div>
                     {asset.copyrightCheckData ? (
                       <div className="mt-4 p-3 rounded-lg border bg-muted/20">
                         <div className="flex items-center justify-between">
@@ -2369,7 +2633,7 @@ export default function AssetDetailPage() {
           {/* Workflow Tab Content */}
           {isAIGenerated && (
             <TabsContent value="ai-workflow" className="mt-2">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* SECTION 1: PROVENANCE */}
                 <Card>
                   <CardContent className="p-5">
@@ -2378,12 +2642,77 @@ export default function AssetDetailPage() {
                         <GitBranch className="h-4 w-4 text-blue-500" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold">Provenance</h3>
+                        <h3 className="text-sm font-semibold">Workflow Provenance</h3>
                         <p className="text-[10px] text-muted-foreground">How this asset was created</p>
                       </div>
                     </div>
+                    {/* Risk Assessment summary */}
+                    {(() => {
+                      const isComplianceComplete = asset.copyrightCheckStatus === "completed"
+                      const promptChangeCount = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user")?.length ?? 0
+                      const lastModified = asset.updatedAt ?? asset.createdAt ?? new Date()
+                      return (
+                        <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800/50 p-4 mb-4">
+                          <h4 className="text-xs font-semibold text-foreground mb-3">Risk Assessment</h4>
+                          <div className="space-y-2.5 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Compliance Status</span>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-[10px]",
+                                  isComplianceComplete
+                                    ? "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/30"
+                                    : "border-amber-400 text-amber-800 bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:bg-amber-900/30"
+                                )}
+                              >
+                                {isComplianceComplete ? "7/7 Verified" : "6/7 Verified"}
+                              </Badge>
+                            </div>
+                            {!isComplianceComplete && (
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">Outstanding Verification</span>
+                                <span className="flex items-center gap-2">
+                                  <span className="font-medium text-foreground">Copyright Check</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[10px] border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-900/40"
+                                    onClick={() => setActiveTab("quality")}
+                                  >
+                                    Run Check
+                                  </Button>
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Last Modified</span>
+                              <span className="font-medium">{format(new Date(lastModified), "MMM d, yyyy 'at' h:mm a")}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Modification Count</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="flex items-center gap-1 font-medium">
+                                      {promptChangeCount} prompt change{promptChangeCount !== 1 ? "s" : ""}
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[240px]">
+                                    <p className="text-xs">
+                                      Multiple prompt edits can affect reproducibility and compliance. This count helps auditors trace how the final asset was derived.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                     {workflowContext ? (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
                           <span className="text-2xl">{workflowContext.template.icon}</span>
                           <div className="flex-1 min-w-0">
@@ -2413,6 +2742,21 @@ export default function AssetDetailPage() {
                             )
                           })()}
                         </div>
+                        {asset.copyrightCheckStatus !== "completed" && (
+                          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-amber-900 dark:text-amber-100">
+                              ⚠️ Copyright verification required before policy issuance — Run copyright check to complete compliance chain
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100 dark:border-amber-500 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                              onClick={() => setActiveTab("quality")}
+                            >
+                              Run Copyright Check
+                            </Button>
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="p-3 rounded-lg border bg-card">
                             <p className="text-[10px] text-muted-foreground mb-0.5">AI Tool</p>
@@ -2436,42 +2780,201 @@ export default function AssetDetailPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-6 py-2">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <FileText className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> prompts captured</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> generations tracked</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Download className="h-3.5 w-3.5" />
-                            <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> downloads recorded</span>
-                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.promptsCount}</strong> Prompt Modifications</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Multiple prompt changes may indicate content refinement or risk evolution</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                                    <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.generationsCount}</strong> Generation Attempts</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Number of times AI was invoked</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                                  <div className="h-6 w-6 rounded-md bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <span><strong className="text-foreground">{workflowContext.downloadsCount}</strong> Asset Downloads</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Tracked file exports</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                        {workflowContext.step.promptTemplate && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
-                            <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
-                              <p className="text-xs font-mono leading-relaxed text-foreground/80">{workflowContext.step.promptTemplate}</p>
+                        {/* Compliance Timeline */}
+                        <Collapsible>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                            <span className="text-xs font-medium text-muted-foreground">Compliance Timeline</span>
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-3 pl-4 border-l-2 border-muted space-y-0">
+                              {[
+                                { label: "Creator verified", time: workflowContext.capturedAt, method: "Session identity", meta: "Browser extension" },
+                                { label: "Tool verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 1000), method: "Tool capture", meta: workflowContext.toolUsed },
+                                { label: "Model verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 2000), method: "Model reported", meta: "Midjourney v6" },
+                                { label: "Training verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 3000), method: "Training data disclosure", meta: "Vendor documentation" },
+                                { label: "Prompt verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 4000), method: "Prompt captured", meta: `${workflowContext.promptsCount} prompt(s)` },
+                                { label: "Output verified", time: new Date(new Date(workflowContext.capturedAt).getTime() + 5000), method: "Output recorded", meta: `${workflowContext.downloadsCount} download(s)` },
+                              ].map((item, i) => (
+                                <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                                  <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 pt-0.5">
+                                    <p className="text-xs font-medium text-foreground">{item.label}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(item.time), "MMM d, yyyy 'at' h:mm a")}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> {item.method}</p>
+                                    {item.meta && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> {item.meta}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                              {/* Copyright step */}
+                              <div className="relative flex gap-3 pb-0">
+                                {asset.copyrightCheckStatus === "completed" && asset.copyrightCheckData?.checkedAt ? (
+                                  <>
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Copyright verified</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(asset.copyrightCheckData.checkedAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> AI similarity scan</p>
+                                      {asset.copyrightCheckData.similarityScore != null && <p className="text-[10px] text-muted-foreground"><span className="font-medium">Metadata:</span> Similarity {asset.copyrightCheckData.similarityScore}%</p>}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="absolute -left-[1.125rem] h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center border-2 border-background shrink-0">
+                                      <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 pt-0.5">
+                                      <p className="text-xs font-medium text-foreground">Copyright check pending</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5">Not yet run</p>
+                                      <p className="text-[10px] text-muted-foreground mt-0.5"><span className="font-medium">Method:</span> —</p>
+                                      <Button variant="outline" size="sm" className="mt-2 h-7 text-[10px] border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-900/40" onClick={() => setActiveTab("quality")}>
+                                        Run Check
+                                      </Button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {asset.promptHistory?.messages && asset.promptHistory.messages.length > 0 && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Prompt Conversation</p>
-                            <PromptContent history={asset.promptHistory} />
-                          </div>
-                        )}
+                          </CollapsibleContent>
+                        </Collapsible>
+                        {(() => {
+                          const promptVersions = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user") ?? []
+                          const lastPrompt = promptVersions[promptVersions.length - 1]
+                          if (promptVersions.length === 0) return null
+                          return (
+                            <div className="space-y-4">
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                                  <span className="text-xs font-medium text-muted-foreground">View {promptVersions.length} prompt version{promptVersions.length !== 1 ? "s" : ""}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="mt-2 space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+                                    {promptVersions.map((msg: { id: string; content: string; timestamp: Date }, i: number) => (
+                                      <div key={msg.id} className="rounded-md bg-background/80 p-3 border">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Version {i + 1}</span>
+                                          <span className="text-[10px] text-muted-foreground">{format(new Date(msg.timestamp), "MMM d, h:mm a")}</span>
+                                        </div>
+                                        <p className="text-xs font-mono whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                        {i > 0 &&
+                                          (() => {
+                                            const d = getPromptVersionDiff(promptVersions[i - 1].content, msg.content)
+                                            if (d.added === 0 && d.removed === 0) return <p className="text-[10px] text-muted-foreground mt-1.5">No text changes</p>
+                                            return (
+                                              <p className="text-[10px] text-muted-foreground mt-1.5">
+                                                Diff: +{d.added} words, −{d.removed} words
+                                              </p>
+                                            )
+                                          })()}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                              <div>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Final AI Instructions</p>
+                                <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                                  <p className="text-xs font-mono leading-relaxed text-foreground/80 whitespace-pre-wrap">{lastPrompt.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()}
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {asset.promptHistory?.messages && (
-                          <div>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Generation Prompt</p>
-                            <PromptContent history={asset.promptHistory} />
-                          </div>
-                        )}
+                      <div className="space-y-6">
+                        {(() => {
+                          const promptVersions = asset.promptHistory?.messages?.filter((m: { role: string }) => m.role === "user") ?? []
+                          const lastPrompt = promptVersions[promptVersions.length - 1]
+                          if (promptVersions.length === 0) return null
+                          return (
+                            <div className="space-y-4">
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors text-left group">
+                                  <span className="text-xs font-medium text-muted-foreground">View {promptVersions.length} prompt version{promptVersions.length !== 1 ? "s" : ""}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="mt-2 space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3">
+                                    {promptVersions.map((msg: { id: string; content: string; timestamp: Date }, i: number) => (
+                                      <div key={msg.id} className="rounded-md bg-background/80 p-3 border">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Version {i + 1}</span>
+                                          <span className="text-[10px] text-muted-foreground">{format(new Date(msg.timestamp), "MMM d, h:mm a")}</span>
+                                        </div>
+                                        <p className="text-xs font-mono whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                        {i > 0 &&
+                                          (() => {
+                                            const d = getPromptVersionDiff(promptVersions[i - 1].content, msg.content)
+                                            if (d.added === 0 && d.removed === 0) return <p className="text-[10px] text-muted-foreground mt-1.5">No text changes</p>
+                                            return (
+                                              <p className="text-[10px] text-muted-foreground mt-1.5">
+                                                Diff: +{d.added} words, −{d.removed} words
+                                              </p>
+                                            )
+                                          })()}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                              <div>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Final AI Instructions</p>
+                                <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                                  <p className="text-xs font-mono leading-relaxed text-foreground/80 whitespace-pre-wrap">{lastPrompt.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()}
+                        {!workflowContext && (
                         <div>
                           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Technical Details</p>
                           <div className="grid md:grid-cols-2 gap-x-6 gap-y-2">
@@ -2487,6 +2990,7 @@ export default function AssetDetailPage() {
                             ))}
                           </div>
                         </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -2494,24 +2998,37 @@ export default function AssetDetailPage() {
                 {/* SECTION 2: COMPLIANCE PROVENANCE */}
                 <Card>
                   <CardContent className="p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                          <Shield className="h-4 w-4 text-emerald-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold">Compliance Chain</h3>
-                          <p className="text-[10px] text-muted-foreground">7-point provenance verification for insurance</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Shield className="h-4 w-4 text-emerald-500" />
                       </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {asset.copyrightCheckStatus === "completed" ? "7/7 Complete" : "6/7 Complete"}
-                      </Badge>
+                      <div>
+                        <h3 className="text-xl font-semibold">Compliance Chain</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">7-point provenance verification for insurance</p>
+                      </div>
                     </div>
                     <AIComplianceWorkflow
                       assetId={asset.id}
                       copyrightCheckStatus={asset.copyrightCheckStatus}
                     />
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden min-w-0">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            asset.copyrightCheckStatus === "completed"
+                              ? "bg-emerald-500"
+                              : "bg-amber-500"
+                          )}
+                          style={{
+                            width: asset.copyrightCheckStatus === "completed" ? "100%" : "85%",
+                          }}
+                        />
+                      </div>
+                      <Badge variant="outline" className="text-[10px] shrink-0">
+                        Risk Level: Medium
+                      </Badge>
+                    </div>
                     {asset.copyrightCheckData ? (
                       <div className="mt-4 p-3 rounded-lg border bg-muted/20">
                         <div className="flex items-center justify-between">

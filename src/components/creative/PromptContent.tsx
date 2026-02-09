@@ -45,8 +45,8 @@ export function PromptContent({ history, className }: PromptContentProps) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Generation Details</CardTitle>
-          <CardDescription>AI generation information for this asset</CardDescription>
+          <CardTitle className="text-base font-medium">Generation Details</CardTitle>
+          <CardDescription className="text-xs text-gray-500 dark:text-gray-400">AI generation information for this asset</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -60,8 +60,8 @@ export function PromptContent({ history, className }: PromptContentProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Generation Details</CardTitle>
-        <CardDescription>AI generation information for this asset</CardDescription>
+        <CardTitle className="text-base font-medium">Generation Details</CardTitle>
+        <CardDescription className="text-xs text-gray-500 dark:text-gray-400">AI generation information for this asset</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Prompt Section */}

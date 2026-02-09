@@ -20,33 +20,38 @@ const WORKFLOW_STEPS = [
 
 export function AIComplianceWorkflow({ assetId, copyrightCheckStatus }: AIComplianceWorkflowProps) {
   return (
-    <div className="flex items-center gap-2">
-      {WORKFLOW_STEPS.map((step, index) => {
-        const Icon = step.icon
-        // For now, all steps except copyright are completed
-        // Copyright depends on copyrightCheckStatus
-        const isCompleted = step.id === 7 
-          ? copyrightCheckStatus === "completed"
-          : true
-        
-        return (
-          <div key={step.id} className="flex items-center gap-2">
-            <div className={cn(
-              "flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-xs font-medium whitespace-nowrap",
-              isCompleted 
-                ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300" 
-                : "bg-muted border-border text-muted-foreground"
-            )}>
-              <Icon className="h-3 w-3 flex-shrink-0" />
-              <span>{step.name}</span>
-              {isCompleted && <Check className="h-3 w-3 flex-shrink-0" />}
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        {WORKFLOW_STEPS.map((step, index) => {
+          const Icon = step.icon
+          const isCompleted = step.id === 7
+            ? copyrightCheckStatus === "completed"
+            : true
+          const isCopyrightIncomplete = step.id === 7 && !isCompleted
+
+          return (
+            <div key={step.id} className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-xs font-medium whitespace-nowrap",
+                  isCompleted
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
+                    : "bg-muted border-border text-muted-foreground",
+                  isCopyrightIncomplete &&
+                    "animate-pulse border-amber-400/70 bg-amber-50/80 dark:bg-amber-950/20 dark:border-amber-600/50 shadow-[0_0_12px_rgba(245,158,11,0.25)] dark:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                )}
+              >
+                <Icon className="h-3 w-3 flex-shrink-0" />
+                <span>{step.name}</span>
+                {isCompleted && <Check className="h-3 w-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />}
+              </div>
+              {index < WORKFLOW_STEPS.length - 1 && (
+                <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              )}
             </div>
-            {index < WORKFLOW_STEPS.length - 1 && (
-              <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-            )}
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
