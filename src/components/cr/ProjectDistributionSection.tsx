@@ -1,9 +1,6 @@
 "use client"
 
 import { useFormContext } from "react-hook-form"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,7 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { ChevronDown } from "lucide-react"
 import type { ProjectDistributionPrimaryUse } from "@/types"
 
 const PRIMARY_USE_OPTIONS: { value: ProjectDistributionPrimaryUse; label: string }[] = [
@@ -77,25 +73,17 @@ export function ProjectDistributionSection({ disabled }: ProjectDistributionSect
   const primaryUse = form.watch("distribution.primary_use")
 
   return (
-    <Collapsible defaultOpen className="border rounded-lg">
-      <CollapsibleTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          className="flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50 rounded-t-lg"
-        >
-          <span className="text-sm font-medium">Distribution & Compliance</span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground data-[state=open]:rotate-180 transition-transform" />
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="px-4 pb-4 pt-1 space-y-4">
-          <FormField
-            control={form.control}
-            name="distribution.primary_use"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Primary Use</FormLabel>
+    <div>
+      <FormField
+        control={form.control}
+        name="distribution.primary_use"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-start gap-3 py-2.5">
+              <div className="w-32 flex-shrink-0 pt-2">
+                <FormLabel className="text-sm font-medium">Distribution</FormLabel>
+              </div>
+              <div className="flex-1">
                 <Select
                   disabled={disabled}
                   value={field.value ?? ""}
@@ -115,35 +103,39 @@ export function ProjectDistributionSection({ disabled }: ProjectDistributionSect
                   </SelectContent>
                 </Select>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </div>
+            </div>
+          </FormItem>
+        )}
+      />
 
-          {primaryUse === "advertising" && (
-            <>
-              <FormField
-                control={form.control}
-                name="distribution.us_states"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2 mb-2">
-                      <FormLabel className="mb-0">US States</FormLabel>
-                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                        <Checkbox
-                          checked={field.value?.includes("ALL") ?? false}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.onChange(["ALL"])
-                            } else {
-                              field.onChange([])
-                            }
-                          }}
-                          disabled={disabled}
-                        />
-                        All US States
-                      </label>
-                    </div>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-32 overflow-y-auto p-2 border rounded-md bg-muted/30">
+      {primaryUse === "advertising" && (
+        <>
+          <FormField
+            control={form.control}
+            name="distribution.us_states"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-start gap-3 py-2.5">
+                  <div className="w-32 flex-shrink-0 pt-2">
+                    <FormLabel className="text-sm font-medium">US States</FormLabel>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        checked={field.value?.includes("ALL") ?? false}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange(["ALL"])
+                          } else {
+                            field.onChange([])
+                          }
+                        }}
+                        disabled={disabled}
+                      />
+                      All US States
+                    </label>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-32 overflow-y-auto py-1">
                       {US_STATES.map((code) => (
                         <label
                           key={code}
@@ -171,17 +163,23 @@ export function ProjectDistributionSection({ disabled }: ProjectDistributionSect
                       ))}
                     </div>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </div>
+                </div>
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="distribution.countries"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>International Markets</FormLabel>
-                    <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
+          <FormField
+            control={form.control}
+            name="distribution.countries"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-start gap-3 py-2.5">
+                  <div className="w-32 flex-shrink-0 pt-2">
+                    <FormLabel className="text-sm font-medium">International Markets</FormLabel>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-2 py-1">
                       {INTERNATIONAL_MARKETS.map(({ value, label }) => (
                         <label
                           key={value}
@@ -204,17 +202,23 @@ export function ProjectDistributionSection({ disabled }: ProjectDistributionSect
                       ))}
                     </div>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </div>
+                </div>
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="distribution.platforms"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Platforms</FormLabel>
-                    <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
+          <FormField
+            control={form.control}
+            name="distribution.platforms"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-start gap-3 py-2.5">
+                  <div className="w-32 flex-shrink-0 pt-2">
+                    <FormLabel className="text-sm font-medium">Platforms</FormLabel>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-2 py-1">
                       {PLATFORMS.map((name) => (
                         <label
                           key={name}
@@ -237,52 +241,57 @@ export function ProjectDistributionSection({ disabled }: ProjectDistributionSect
                       ))}
                     </div>
                     <FormMessage />
+                  </div>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <div className="flex items-start gap-3 py-2.5">
+            <div className="w-32 flex-shrink-0 pt-2">
+              <FormLabel className="text-sm font-medium">Campaign dates</FormLabel>
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="distribution.start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Start</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        disabled={disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="distribution.start_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Campaign Start Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          disabled={disabled}
-                          value={field.value ?? ""}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="distribution.end_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Campaign End Date (optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          disabled={disabled}
-                          value={field.value ?? ""}
-                          onChange={(e) => field.onChange(e.target.value || undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+              <FormField
+                control={form.control}
+                name="distribution.end_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">End (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        disabled={disabled}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

@@ -95,7 +95,7 @@ export function NewProjectDialog({
       owner: "",
       companyId: companies[0]?.id ?? "company-1",
       distribution: {
-        primary_use: "internal",
+        primary_use: "advertising",
         us_states: [],
         countries: [],
         platforms: [],
@@ -141,7 +141,7 @@ export function NewProjectDialog({
         owner: "",
         companyId: companies[0]?.id ?? "company-1",
         distribution: {
-          primary_use: "internal",
+          primary_use: "advertising",
           us_states: [],
           countries: [],
           platforms: [],
@@ -325,13 +325,10 @@ export function NewProjectDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Select team members for this project
-                  </p>
                 </div>
               </div>
 
-              <div className="py-3">
+              <div className="pb-3">
                 <ProjectDistributionSection disabled={isSubmitting} />
               </div>
             </div>

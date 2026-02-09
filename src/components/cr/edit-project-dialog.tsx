@@ -49,7 +49,7 @@ type EditProjectFormValues = {
 function distributionToFormValues(d: ProjectDistribution | null | undefined): DistributionFormValues["distribution"] {
   if (!d) {
     return {
-      primary_use: "internal",
+      primary_use: "advertising",
       us_states: [],
       countries: [],
       platforms: [],
@@ -98,7 +98,7 @@ export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDi
       status: "Draft",
       risk: "Low",
       distribution: {
-        primary_use: "internal",
+        primary_use: "advertising",
         us_states: [],
         countries: [],
         platforms: [],
