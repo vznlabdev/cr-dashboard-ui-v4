@@ -54,6 +54,9 @@ import {
   Image,
   Plus,
   GitBranch,
+  Info,
+  MapPin,
+  Share2,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState, useMemo } from "react"
@@ -1235,6 +1238,71 @@ export default function TaskDetailPage() {
           { label: task.title }
         ]}
       />
+
+      {/* Project distribution (inherited) — only when project has distribution */}
+      {project?.distribution && (
+        <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 px-4 py-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="space-y-1.5 text-sm min-w-0">
+                <p className="font-medium text-foreground">
+                  Distribution settings (inherited from project)
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs">
+                  <span className="capitalize">{project.distribution.primary_use.replace("_", " ")}</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {project.distribution.us_states?.includes("ALL")
+                      ? "All US States"
+                      : (project.distribution.us_states?.length
+                          ? project.distribution.us_states.join(", ")
+                          : "—")}
+                    {(project.distribution.countries?.length ?? 0) > 0 && (
+                      <> · {(project.distribution.countries ?? []).join(", ")}</>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Share2 className="h-3 w-3" />
+                    {(project.distribution.platforms?.length ?? 0) > 0
+                      ? (project.distribution.platforms ?? []).join(", ")
+                      : "—"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {project.distribution.start_date
+                      ? new Date(project.distribution.start_date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "—"}
+                    {project.distribution.end_date && (
+                      <>
+                        {" – "}
+                        {new Date(project.distribution.end_date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Link
+              href={`/compliance/distribution-risk?project=${projectId}`}
+              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0 flex items-center gap-1"
+            >
+              View Compliance Analysis
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

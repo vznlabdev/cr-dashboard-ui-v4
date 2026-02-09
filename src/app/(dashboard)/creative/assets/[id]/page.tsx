@@ -76,6 +76,8 @@ import { VersionSelector } from "@/components/assets/VersionSelector"
 import { TaskComments, type TaskComment, type TeamMember as TaskTeamMember } from "@/components/task/TaskComments"
 import type { AssetVersion, MatchedSource, AssetReviewData, VersionComment } from "@/types/creative"
 import { useCopyrightCredits } from "@/lib/contexts/copyright-credits-context"
+import { useData } from "@/contexts/data-context"
+import { calculateAssetDistributionRisk } from "@/lib/distribution-compliance"
 import { LinearBreadcrumb } from "@/components/navigation/LinearBreadcrumb"
 
 // Team members for @mentions (match task page)
@@ -458,6 +460,21 @@ export default function AssetDetailPage() {
     }
     return null
   }, [assetId, versionGroup])
+
+  const { getProjectById } = useData()
+  const projectId = asset?.projectId ?? versionGroup?.projectId ?? "1"
+  const project = getProjectById(projectId)
+  const distributionRisk = useMemo(() => {
+    if (!project?.distribution || !asset) return null
+    return calculateAssetDistributionRisk(
+      {
+        contentType: asset.contentType,
+        creatorIds: asset.creatorIds,
+        talentRightsVerified: (asset as { talentRightsVerified?: boolean }).talentRightsVerified,
+      },
+      project.distribution
+    )
+  }, [project?.distribution, asset])
 
   // Initialize local asset on mount
   useEffect(() => {
@@ -1164,6 +1181,62 @@ export default function AssetDetailPage() {
                             {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
                           </span>
                         </div>
+                      </div>
+                    )}
+                    {/* Distribution Compliance - only when project has distribution */}
+                    {project?.distribution && distributionRisk && (
+                      <div className="px-3 py-2 space-y-2">
+                        <div className="flex items-center justify-between pb-2 border-b border-border -mx-3 px-3">
+                          <p className="text-xs font-semibold text-foreground">Distribution Compliance</p>
+                          <Link
+                            href={`/compliance/distribution-risk?project=${projectId}`}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            View Full Risk Report
+                          </Link>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px]",
+                              distributionRisk.status === "clear" && "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/30",
+                              distributionRisk.status === "needs_review" && "border-amber-400 text-amber-800 bg-amber-50 dark:border-amber-600 dark:text-amber-200 dark:bg-amber-950/30",
+                              distributionRisk.status === "blocked" && "border-red-400 text-red-800 bg-red-50 dark:border-red-600 dark:text-red-200 dark:bg-red-950/30"
+                            )}
+                          >
+                            {distributionRisk.status === "clear" && "Clear"}
+                            {distributionRisk.status === "needs_review" && "Needs Review"}
+                            {distributionRisk.status === "blocked" && "Blocked"}
+                          </Badge>
+                        </div>
+                        {distributionRisk.marketIssues.length > 0 && (
+                          <ul className="space-y-1.5 text-[11px] text-muted-foreground">
+                            {distributionRisk.marketIssues.map((issue) => (
+                              <li key={issue.market} className="flex flex-col gap-0.5">
+                                <span className="font-medium text-foreground">{issue.market}</span>
+                                <span className="text-muted-foreground">{issue.needed}</span>
+                                <Badge variant="secondary" className="w-fit text-[9px] h-4">
+                                  {issue.riskLevel}
+                                </Badge>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {distributionRisk.totalPenaltyExposure > 0 && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Est. penalty exposure:{" "}
+                            <span className="font-medium text-foreground">
+                              ${distributionRisk.totalPenaltyExposure.toLocaleString()}
+                            </span>
+                          </p>
+                        )}
+                        <Button variant="outline" size="sm" className="w-full mt-1 h-8 text-xs" asChild>
+                          <Link href={`/compliance/distribution-risk?project=${projectId}`}>
+                            View Full Risk Report
+                            <ChevronRight className="h-3 w-3 ml-1" />
+                          </Link>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -2420,6 +2493,62 @@ export default function AssetDetailPage() {
                         {asset.copyrightCheckData.riskBreakdown.riskLevel} risk
                       </span>
                     </div>
+                  </div>
+                )}
+                {/* Distribution Compliance - only when project has distribution */}
+                {project?.distribution && distributionRisk && (
+                  <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between pb-2 border-b border-border -mx-3 px-3">
+                      <p className="text-xs font-semibold text-foreground">Distribution Compliance</p>
+                      <Link
+                        href={`/compliance/distribution-risk?project=${projectId}`}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        View Full Risk Report
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px]",
+                          distributionRisk.status === "clear" && "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/30",
+                          distributionRisk.status === "needs_review" && "border-amber-400 text-amber-800 bg-amber-50 dark:border-amber-600 dark:text-amber-200 dark:bg-amber-950/30",
+                          distributionRisk.status === "blocked" && "border-red-400 text-red-800 bg-red-50 dark:border-red-600 dark:text-red-200 dark:bg-red-950/30"
+                        )}
+                      >
+                        {distributionRisk.status === "clear" && "Clear"}
+                        {distributionRisk.status === "needs_review" && "Needs Review"}
+                        {distributionRisk.status === "blocked" && "Blocked"}
+                      </Badge>
+                    </div>
+                    {distributionRisk.marketIssues.length > 0 && (
+                      <ul className="space-y-1.5 text-[11px] text-muted-foreground">
+                        {distributionRisk.marketIssues.map((issue) => (
+                          <li key={issue.market} className="flex flex-col gap-0.5">
+                            <span className="font-medium text-foreground">{issue.market}</span>
+                            <span className="text-muted-foreground">{issue.needed}</span>
+                            <Badge variant="secondary" className="w-fit text-[9px] h-4">
+                              {issue.riskLevel}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {distributionRisk.totalPenaltyExposure > 0 && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Est. penalty exposure:{" "}
+                        <span className="font-medium text-foreground">
+                          ${distributionRisk.totalPenaltyExposure.toLocaleString()}
+                        </span>
+                      </p>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full mt-1 h-8 text-xs" asChild>
+                      <Link href={`/compliance/distribution-risk?project=${projectId}`}>
+                        View Full Risk Report
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </div>

@@ -17,6 +17,7 @@ const breadcrumbMap: Record<string, string> = {
   "/compliance/scoring": "Scoring",
   "/compliance/evidence": "Evidence",
   "/compliance/jurisdictions": "Jurisdictions",
+  "/compliance/distribution-risk": "Distribution Risk",
 }
 
 function buildSegments(pathname: string): BreadcrumbSegment[] {

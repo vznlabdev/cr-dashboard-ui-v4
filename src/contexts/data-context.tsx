@@ -70,6 +70,14 @@ const initialProjects: Project[] = [
     members: ["Jeff Gordon", "Dev Vznlab", "JG"],
     targetDate: "2024-03-15",
     creatorIds: ["creator-1", "creator-2"], // Sarah Johnson (voice) and Brandy the Bear (mascot)
+    distribution: {
+      primary_use: "advertising",
+      us_states: ["ALL"],
+      countries: ["EU", "UK"],
+      platforms: ["Meta", "TikTok"],
+      start_date: "2024-06-01",
+      end_date: "2024-08-31",
+    },
   },
   {
     id: "2",

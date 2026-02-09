@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
 import { Edit, Loader2 } from "lucide-react";
 import { useData, type Project } from "@/contexts/data-context";
+import {
+  ProjectDistributionSection,
+  type DistributionFormValues,
+} from "./ProjectDistributionSection";
+import type { ProjectDistribution } from "@/types";
+
+type EditProjectFormValues = {
+  name: string;
+  description: string;
+  owner: string;
+  status: Project["status"];
+  risk: Project["risk"];
+} & DistributionFormValues;
+
+function distributionToFormValues(d: ProjectDistribution | null | undefined): DistributionFormValues["distribution"] {
+  if (!d) {
+    return {
+      primary_use: "internal",
+      us_states: [],
+      countries: [],
+      platforms: [],
+      start_date: "",
+      end_date: "",
+    };
+  }
+  return {
+    primary_use: d.primary_use,
+    us_states: d.us_states ?? [],
+    countries: d.countries ?? [],
+    platforms: d.platforms ?? [],
+    start_date: d.start_date instanceof Date ? d.start_date.toISOString().slice(0, 10) : "",
+    end_date: d.end_date instanceof Date ? d.end_date.toISOString().slice(0, 10) : "",
+  };
+}
+
+function formValuesToDistribution(values: EditProjectFormValues): Project["distribution"] {
+  const d = values.distribution;
+  if (!d || d.primary_use !== "advertising" || !d.start_date) {
+    return null;
+  }
+  return {
+    primary_use: d.primary_use,
+    us_states: d.us_states?.length ? d.us_states : [],
+    countries: d.countries ?? [],
+    platforms: d.platforms ?? [],
+    start_date: new Date(d.start_date),
+    end_date: d.end_date ? new Date(d.end_date) : undefined,
+  };
+}
 
 interface EditProjectDialogProps {
   open: boolean;
@@ -32,59 +90,60 @@ interface EditProjectDialogProps {
 
 export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDialogProps) {
   const { updateProject } = useData();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    owner: "",
-    status: "Draft" as Project["status"],
-    risk: "Low" as Project["risk"],
+  const form = useForm<EditProjectFormValues>({
+    defaultValues: {
+      name: "",
+      description: "",
+      owner: "",
+      status: "Draft",
+      risk: "Low",
+      distribution: {
+        primary_use: "internal",
+        us_states: [],
+        countries: [],
+        platforms: [],
+        start_date: "",
+        end_date: "",
+      },
+    },
   });
 
-  // Update form when project changes
   useEffect(() => {
-    if (project) {
-      setFormData({
+    if (project && open) {
+      form.reset({
         name: project.name,
         description: project.description,
         owner: project.owner,
         status: project.status,
         risk: project.risk,
+        distribution: distributionToFormValues(project.distribution),
       });
     }
-  }, [project]);
+  }, [project, open, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const isSubmitting = form.formState.isSubmitting;
+
+  const onSubmit = async (values: EditProjectFormValues) => {
     if (!project) return;
-    
-    // Validation
-    if (!formData.name.trim()) {
-      toast.error("Project name is required");
-      return;
-    }
-    if (!formData.owner.trim()) {
-      toast.error("Project owner is required");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
     try {
-      await updateProject(project.id, formData);
-      toast.success(`Project "${formData.name}" updated successfully!`);
+      await updateProject(project.id, {
+        name: values.name,
+        description: values.description,
+        owner: values.owner,
+        status: values.status,
+        risk: values.risk,
+        distribution: formValuesToDistribution(values),
+      });
+      toast.success(`Project "${values.name}" updated successfully!`);
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to update project");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
@@ -94,102 +153,133 @@ export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDi
             Update project details and settings
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-project-name">
-                Project Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="edit-project-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid gap-4 py-2">
+              <FormField
+                control={form.control}
+                name="name"
+                rules={{ required: "Project name is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Project Name <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-project-description">Description</Label>
-              <Textarea
-                id="edit-project-description"
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-project-owner">
-                Project Owner <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="edit-project-owner"
-                value={formData.owner}
-                onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                disabled={isSubmitting}
-                required
+              <FormField
+                control={form.control}
+                name="owner"
+                rules={{ required: "Project owner is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Project Owner <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: Project["status"]) => setFormData({ ...formData, status: value })}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="edit-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Review">Review</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isSubmitting}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Draft">Draft</SelectItem>
+                          <SelectItem value="Review">Review</SelectItem>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Approved">Approved</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="risk"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Risk Level</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isSubmitting}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Low">Low Risk</SelectItem>
+                          <SelectItem value="Medium">Medium Risk</SelectItem>
+                          <SelectItem value="High">High Risk</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-risk-level">Risk Level</Label>
-                <Select
-                  value={formData.risk}
-                  onValueChange={(value: Project["risk"]) => setFormData({ ...formData, risk: value })}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="edit-risk-level">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low Risk</SelectItem>
-                    <SelectItem value="Medium">Medium Risk</SelectItem>
-                    <SelectItem value="High">High Risk</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <ProjectDistributionSection disabled={isSubmitting} />
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 }
-

@@ -33,6 +33,22 @@ export interface Company {
   copyrightCheckCredits?: CopyrightCheckCredits; // Copyright check credit tracking
 }
 
+/** Primary use classification for project distribution */
+export type ProjectDistributionPrimaryUse = 'advertising' | 'editorial' | 'entertainment' | 'internal';
+
+/** Distribution scope and channels for a project (optional JSON on Project) */
+export interface ProjectDistribution {
+  primary_use: ProjectDistributionPrimaryUse;
+  /** US state codes (e.g. ['CA', 'NY']) or ['ALL'] */
+  us_states: string[];
+  /** Country codes (e.g. ['UK', 'EU']) */
+  countries: string[];
+  /** Platform names (e.g. ['Meta', 'Google Ads', 'TikTok']) */
+  platforms: string[];
+  start_date: Date;
+  end_date?: Date;
+}
+
 export interface Project {
   id: string;
   companyId: string;  // belongs to Company
@@ -51,6 +67,8 @@ export interface Project {
   creatorIds?: string[]; // Creators credited on this project
   updates?: ProjectUpdate[]; // Project status updates
   archived?: boolean; // Whether the project is archived
+  /** Optional distribution scope (primary use, regions, platforms, date range). Defaults to null if not set. */
+  distribution?: ProjectDistribution | null;
 }
 
 export interface Asset {

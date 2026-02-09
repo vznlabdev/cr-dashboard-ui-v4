@@ -27,6 +27,7 @@ import {
   Calculator,
   Archive,
   MapPin,
+  AlertTriangle,
 } from "lucide-react"
 import {
   Sheet,
@@ -125,6 +126,7 @@ const baseNavSections: NavSection[] = [
           { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
           { title: "Evidence", href: "/compliance/evidence", icon: Archive },
           { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+          { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
         ],
       },
       {
