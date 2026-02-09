@@ -285,6 +285,7 @@ export const mockTasks: Task[] = [
         }
       ]
     },
+    workflowTemplateId: 'wf-social-images',
   },
   {
     id: 'task-2',
@@ -422,6 +423,8 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 22, 2024',
     createdDate: '2024-12-03T00:00:00Z',
     updatedAt: '2024-12-15T16:00:00Z',  // 5 hours ago
+    mode: 'generative',
+    workflowTemplateId: 'wf-quick-image',
   },
   {
     id: 'task-4',
@@ -518,8 +521,10 @@ export const mockTasks: Task[] = [
     dueDate: 'Dec 10, 2024',
     createdDate: '2024-11-28T00:00:00Z',
     updatedAt: '2026-01-27T17:15:00Z',  // 4h ago
+    mode: 'generative',
     commentsCount: 15,
     attachmentsCount: 8,
+    workflowTemplateId: 'wf-campaign-bundle',
   },
   {
     id: 'task-8',

@@ -6,6 +6,7 @@
  */
 
 import type { MediaManagerData } from './mediaManager'
+import type { WorkflowInstance } from './workflows'
 
 // ==============================================
 // Core Domain Types
@@ -121,6 +122,9 @@ export interface Task {
   mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
   // Asset approval aggregation status
   assetApprovalStatus?: 'all_approved' | 'pending' | 'rejected' | 'none';  // Calculated based on linked assets
+  // Workflows module
+  workflowTemplateId?: string
+  workflowInstance?: WorkflowInstance
 }
 
 export interface Notification {

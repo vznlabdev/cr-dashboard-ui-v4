@@ -15,8 +15,10 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer"
 import { useData } from "@/contexts/data-context"
 import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
+import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -718,6 +720,21 @@ export default function UnifiedTasksPage() {
                             <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                               {task.title}
                             </h3>
+                            {task.workflowTemplateId && (() => {
+                              const tmpl = getWorkflowTemplateById(task.workflowTemplateId!)
+                              if (!tmpl) return null
+                              return (
+                                <span className="inline-flex items-center gap-1.5 ml-2">
+                                  <GitBranch className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-[10px] text-muted-foreground hidden sm:inline">{tmpl.name}</span>
+                                  <span className="inline-flex items-center gap-px">
+                                    {tmpl.steps.map((step) => (
+                                      <span key={step.id} className={cn("h-1.5 w-1.5 rounded-full", STEP_TYPE_CONFIG[step.stepType].color)} />
+                                    ))}
+                                  </span>
+                                </span>
+                              )
+                            })()}
                           </div>
                           {company && (
                             <p className="text-xs text-muted-foreground truncate">

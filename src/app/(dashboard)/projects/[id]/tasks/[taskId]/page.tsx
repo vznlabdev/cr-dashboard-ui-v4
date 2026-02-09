@@ -53,14 +53,18 @@ import {
   FileCheck,
   Image,
   Plus,
+  GitBranch,
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getTaskById, getTaskGroupById } from "@/lib/mock-data/projects-tasks"
+import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import { getVersionGroupsByTask } from "@/lib/mock-data/creative"
 import { useData } from "@/contexts/data-context"
 import type { Task } from "@/types"
+import type { WorkflowTemplate } from "@/types/workflows"
 import type { TabId } from "@/types/mediaManager"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -146,6 +150,8 @@ export default function TaskDetailPage() {
   const [taskGroup, setTaskGroup] = useState<any>(null)
   const [comments, setComments] = useState<TaskComment[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [workflowTemplate, setWorkflowTemplate] =
+    useState<WorkflowTemplate | null>(null)
   
   // Current user (mock - in real app, get from auth)
   const currentUserId = "user-1"
@@ -306,7 +312,12 @@ export default function TaskDetailPage() {
       if (foundTask) {
         const group = getTaskGroupById(foundTask.taskGroupId)
         setTaskGroup(group || null)
-        
+        if (foundTask.workflowTemplateId) {
+          const tmpl = getWorkflowTemplateById(foundTask.workflowTemplateId)
+          if (tmpl) setWorkflowTemplate(tmpl)
+        } else {
+          setWorkflowTemplate(null)
+        }
         // Set extension tracking status based on task mode
         if (foundTask.mode === 'generative' || foundTask.mode === 'assisted') {
           // For AI tasks, check if session already exists
@@ -2782,52 +2793,77 @@ export default function TaskDetailPage() {
         <div className="space-y-6">
           {/* Task Details & Actions - Unified */}
           <Card className="py-3 gap-0">
-            <CardHeader className="pb-1 px-4 pt-4">
-              <div className="flex items-center justify-between">
-                {/* Mode Badge */}
-                {task.mode && task.mode !== "manual" && (
-                  <Badge 
-                    variant="outline"
-                    className={cn(
-                      "text-[10px] font-semibold px-2 py-0.5 gap-1",
-                      task.mode === "generative" && "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-                      task.mode === "assisted" && "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800"
-                    )}
+            <CardContent className="px-4 py-3 space-y-3">
+              {workflowTemplate ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{workflowTemplate.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">
+                        {workflowTemplate.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {workflowTemplate.steps.length} steps • ~
+                        {workflowTemplate.estimatedTotalMinutes} min
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {workflowTemplate.steps.map((step) => {
+                      const stepConfig = STEP_TYPE_CONFIG[step.stepType]
+                      return (
+                        <span
+                          key={step.id}
+                          className={cn(
+                            "h-2 w-2 rounded-full",
+                            stepConfig.color
+                          )}
+                        />
+                      )
+                    })}
+                  </div>
+                  <Button className="w-full" size="sm" asChild>
+                    <Link
+                      href={`/projects/${projectId}/tasks/${taskId}/workflow`}
+                    >
+                      <Rocket className="mr-2 h-3.5 w-3.5" />
+                      Open Workflow
+                    </Link>
+                  </Button>
+                  <Link
+                    href={`/workflows/${workflowTemplate.id}`}
+                    className="text-[10px] text-muted-foreground hover:text-foreground transition-colors block text-center"
                   >
-                    <Zap className="h-2.5 w-2.5" />
-                    {task.mode === "generative" ? "AI Gen" : "AI Assist"}
-                  </Badge>
-                )}
-              </div>
-              
-              {/* Workflow Step - Compact */}
-              {task.mode && task.mode !== "manual" && (
-                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                  <span>Step {task.aiWorkflowStep || 1} / 7</span>
-                  {task.aiTool && (
-                    <>
-                      <span>•</span>
-                      <span>{task.aiTool}</span>
-                    </>
-                  )}
-                </div>
-              )}
-            </CardHeader>
-            
-            <CardContent className="space-y-2 px-4 pt-0 pb-4">
-              {/* Primary Action - Single button per task type */}
-              {task.mode && task.mode !== "manual" ? (
-                <Button className="w-full" asChild>
-                  <Link href={`/projects/${projectId}/tasks/${taskId}/workflow`}>
-                    <Rocket className="mr-2 h-4 w-4" />
-                    Start AI Workflow
+                    View template →
                   </Link>
-                </Button>
+                </>
+              ) : task?.mode && task.mode !== "manual" ? (
+                <>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <GitBranch className="h-3.5 w-3.5" />
+                    <span>No workflow template assigned</span>
+                  </div>
+                  <Button className="w-full" size="sm" asChild>
+                    <Link
+                      href={`/projects/${projectId}/tasks/${taskId}/workflow`}
+                    >
+                      <Rocket className="mr-2 h-3.5 w-3.5" />
+                      Start simple workflow
+                    </Link>
+                  </Button>
+                  <Button className="w-full" size="sm" variant="outline" asChild>
+                    <Link href="/workflows">
+                      <GitBranch className="mr-2 h-3.5 w-3.5" />
+                      Browse Workflows
+                    </Link>
+                  </Button>
+                </>
               ) : (
-                <Button className="w-full" onClick={() => toast.info("Upload asset")}>
-                  <Rocket className="mr-2 h-4 w-4" />
-                  Start Workflow
-                </Button>
+                <>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>Manual task — add assets from the task page</span>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

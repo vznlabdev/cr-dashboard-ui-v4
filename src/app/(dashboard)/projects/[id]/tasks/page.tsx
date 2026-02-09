@@ -30,8 +30,10 @@ import {
   getTasksByTaskGroup,
   getCompanyById
 } from "@/lib/mock-data/projects-tasks"
+import { getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task, TaskGroup, Project } from "@/types"
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow, Shield } from "lucide-react"
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Pencil, Trash2, GripVertical, LayoutGrid, List, Search, X, Clock, FolderKanban, Upload, User, Folder, Calendar, CheckCircle, Check, MoreVertical, Zap, Bot, Rocket, Paperclip, Maximize2, AlertCircle, AlertTriangle, Minus, Target, Eye, MessageSquare, Filter, Signal, SignalHigh, SignalMedium, SignalLow, Shield, GitBranch } from "lucide-react"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { TaskStatus } from "@/types"
@@ -152,7 +154,24 @@ function TaskCard({ task, projectId }: { task: Task; projectId: string }) {
                 return <QualityScoreBadge score={avgScore} />
               })()}
             </div>
-            <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-medium text-sm leading-tight">{task.title}</h3>
+              {task.workflowTemplateId && (() => {
+                const tmpl = getWorkflowTemplateById(task.workflowTemplateId!)
+                if (!tmpl) return null
+                return (
+                  <span className="inline-flex items-center gap-1.5 ml-2">
+                    <GitBranch className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">{tmpl.name}</span>
+                    <span className="inline-flex items-center gap-px">
+                      {tmpl.steps.map((step) => (
+                        <span key={step.id} className={cn("h-1.5 w-1.5 rounded-full", STEP_TYPE_CONFIG[step.stepType].color)} />
+                      ))}
+                    </span>
+                  </span>
+                )
+              })()}
+            </div>
           </div>
           <Badge variant={getStatusVariant(task.status)} className="text-xs shrink-0">
             {task.status}
@@ -345,6 +364,21 @@ function FlatKanbanBoard({
               >
                 {task.title}
               </h3>
+              {task.workflowTemplateId && (() => {
+                const tmpl = getWorkflowTemplateById(task.workflowTemplateId!)
+                if (!tmpl) return null
+                return (
+                  <span className="inline-flex items-center gap-1.5 ml-2">
+                    <GitBranch className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">{tmpl.name}</span>
+                    <span className="inline-flex items-center gap-px">
+                      {tmpl.steps.map((step) => (
+                        <span key={step.id} className={cn("h-1.5 w-1.5 rounded-full", STEP_TYPE_CONFIG[step.stepType].color)} />
+                      ))}
+                    </span>
+                  </span>
+                )
+              })()}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {getPriorityDot()}
@@ -824,6 +858,21 @@ function StreamView({
                               </Badge>
                             )}
                             <h3 className="font-medium text-sm truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{task.title}</h3>
+                            {task.workflowTemplateId && (() => {
+                              const tmpl = getWorkflowTemplateById(task.workflowTemplateId!)
+                              if (!tmpl) return null
+                              return (
+                                <span className="inline-flex items-center gap-1.5 ml-2">
+                                  <GitBranch className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-[10px] text-muted-foreground hidden sm:inline">{tmpl.name}</span>
+                                  <span className="inline-flex items-center gap-px">
+                                    {tmpl.steps.map((step) => (
+                                      <span key={step.id} className={cn("h-1.5 w-1.5 rounded-full", STEP_TYPE_CONFIG[step.stepType].color)} />
+                                    ))}
+                                  </span>
+                                </span>
+                              )
+                            })()}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
