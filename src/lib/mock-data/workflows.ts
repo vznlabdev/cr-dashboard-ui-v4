@@ -471,6 +471,15 @@ export function addWorkflowTemplate(template: WorkflowTemplate): void {
   userWorkflowTemplates.push(withId)
 }
 
+export function updateWorkflowTemplate(
+  id: string,
+  template: WorkflowTemplate
+): void {
+  const idx = userWorkflowTemplates.findIndex((t) => t.id === id)
+  if (idx === -1) return
+  userWorkflowTemplates[idx] = { ...template, id }
+}
+
 export function getWorkflowTemplatesByCategory(category: string): WorkflowTemplate[] {
   return MOCK_WORKFLOW_TEMPLATES.filter((t) => t.category === category)
 }
