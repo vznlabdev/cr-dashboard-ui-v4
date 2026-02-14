@@ -98,6 +98,13 @@ export interface TaskGroup {
   updatedAt: string;
 }
 
+export interface DistributionMarkets {
+  scope: 'us_only' | 'us_and_international' | 'global';
+  usStates: string[];   // state codes like 'CA', 'NY', 'TX'
+  countries: string[];  // country codes like 'UK', 'EU', 'CA', 'AU'
+  allUS: boolean;       // shortcut for all 50 states
+}
+
 export interface Task {
   id: string;
   taskGroupId: string;  // belongs to Task Group
@@ -112,6 +119,7 @@ export interface Task {
   updatedAt: string;  // ISO 8601 timestamp
   mode?: 'manual' | 'generative' | 'assisted';
   intendedUses?: string[];
+  distributionMarkets?: DistributionMarkets;
   deliverableType?: string;
   targetAudience?: string;  // Target audience description
   clientVisibility?: 'internal' | 'visible' | 'comment';  // Client visibility level

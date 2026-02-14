@@ -18,7 +18,8 @@ import { mockTasks, getCompanyById } from "@/lib/mock-data/projects-tasks"
 import { getWorkflowTemplateById, getWorkflowTemplates } from "@/lib/mock-data/workflows"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { Task } from "@/types"
-import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch } from "lucide-react"
+import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch, Globe, MapPin, AlertTriangle } from "lucide-react"
+import { US_STATES, US_STATE_PRESETS, INTERNATIONAL_MARKETS, HIGH_RISK_STATES, getHighRiskCount } from "@/lib/distribution-data"
 import { useState, useMemo, useRef, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -101,6 +102,10 @@ function UnifiedTasksPageContent() {
     dueDate: '',
     assignee: '' as string,
     intendedUses: [] as string[],
+    distributionScope: '' as '' | 'us_only' | 'us_and_international' | 'global',
+    distributionStates: [] as string[],
+    distributionAllUS: true,
+    distributionCountries: [] as string[],
     aiToolsRestriction: 'all' as 'all' | 'specific',
     selectedTools: [] as string[],
     selectedProjectId: '' as string, // No project pre-selected
@@ -122,6 +127,9 @@ function UnifiedTasksPageContent() {
   const [showBrandPicker, setShowBrandPicker] = useState(false)
   const [showModePicker, setShowModePicker] = useState(false)
   const [showIntendedUsesPicker, setShowIntendedUsesPicker] = useState(false)
+  const [showStatesPicker, setShowStatesPicker] = useState(false)
+  const [showCountriesPicker, setShowCountriesPicker] = useState(false)
+  const [statesSearchQuery, setStatesSearchQuery] = useState('')
   const [showAssigneePicker, setShowAssigneePicker] = useState(false)
   const [showWorkflowPicker, setShowWorkflowPicker] = useState(false)
   
@@ -156,6 +164,10 @@ function UnifiedTasksPageContent() {
       dueDate: '',
       assignee: '',
       intendedUses: [],
+      distributionScope: '',
+      distributionStates: [],
+      distributionAllUS: true,
+      distributionCountries: [],
       aiToolsRestriction: 'all',
       selectedTools: [],
       selectedProjectId: '', // NO PROJECT PRE-SELECTED
@@ -190,6 +202,10 @@ function UnifiedTasksPageContent() {
       dueDate: '',
       assignee: '',
       intendedUses: [],
+      distributionScope: '',
+      distributionStates: [],
+      distributionAllUS: true,
+      distributionCountries: [],
       aiToolsRestriction: 'all',
       selectedTools: [],
       selectedProjectId: '',
@@ -234,6 +250,12 @@ function UnifiedTasksPageContent() {
     const taskPayload = {
       ...taskFormData,
       workflowTemplateId: taskFormData.workflowTemplateId || undefined,
+      distributionMarkets: taskFormData.distributionScope ? {
+        scope: taskFormData.distributionScope,
+        usStates: taskFormData.distributionStates,
+        countries: taskFormData.distributionCountries,
+        allUS: taskFormData.distributionAllUS,
+      } : undefined,
     }
     // TODO: Create task via API
     console.log('Creating task:', taskPayload)
@@ -253,6 +275,10 @@ function UnifiedTasksPageContent() {
         dueDate: '',
         assignee: taskFormData.assignee, // Keep assignee
         intendedUses: taskFormData.intendedUses, // Keep intended uses
+        distributionScope: taskFormData.distributionScope,
+        distributionStates: taskFormData.distributionStates,
+        distributionAllUS: taskFormData.distributionAllUS,
+        distributionCountries: taskFormData.distributionCountries,
         aiToolsRestriction: taskFormData.aiToolsRestriction, // Keep AI tools setting
         selectedTools: taskFormData.selectedTools, // Keep selected tools
         selectedProjectId: taskFormData.selectedProjectId, // Keep selected project
@@ -1117,9 +1143,15 @@ function UnifiedTasksPageContent() {
                         <button
                           type="button"
                           onClick={() => {
-                            setTaskFormData({
-                              ...taskFormData,
-                              intendedUses: taskFormData.intendedUses.filter(u => u !== use)
+                            setTaskFormData(prev => {
+                              const updated = { ...prev, intendedUses: prev.intendedUses.filter(u => u !== use) }
+                              if (use === 'Advertising/Campaigns') {
+                                updated.distributionScope = ''
+                                updated.distributionStates = []
+                                updated.distributionAllUS = true
+                                updated.distributionCountries = []
+                              }
+                              return updated
                             })
                           }}
                           className="hover:text-blue-700 dark:hover:text-blue-300"
@@ -1171,9 +1203,15 @@ function UnifiedTasksPageContent() {
                               )}
                               onClick={() => {
                                 if (taskFormData.intendedUses.includes(use)) {
-                                  setTaskFormData({
-                                    ...taskFormData,
-                                    intendedUses: taskFormData.intendedUses.filter(u => u !== use)
+                                  setTaskFormData(prev => {
+                                    const updated = { ...prev, intendedUses: prev.intendedUses.filter(u => u !== use) }
+                                    if (use === 'Advertising/Campaigns') {
+                                      updated.distributionScope = ''
+                                      updated.distributionStates = []
+                                      updated.distributionAllUS = true
+                                      updated.distributionCountries = []
+                                    }
+                                    return updated
                                   })
                                 } else {
                                   setTaskFormData({
@@ -1194,6 +1232,240 @@ function UnifiedTasksPageContent() {
                 </div>
               </div>
             </div>
+
+            {/* Distribution Markets — only show when Advertising/Campaigns is selected */}
+            {taskFormData.intendedUses.includes('Advertising/Campaigns') && (
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-gray-900 dark:text-white" />
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">
+                      Distribution Markets
+                    </span>
+                    <span className="text-[10px] text-gray-500">Where will this ad run?</span>
+                  </div>
+
+                  {/* Scope Toggle — 3 options, one click */}
+                  <div className="flex gap-2">
+                    {[
+                      { value: 'us_only', label: 'US Only', icon: '🇺🇸' },
+                      { value: 'us_and_international', label: 'US + International', icon: '🌎' },
+                      { value: 'global', label: 'Global', icon: '🌐' },
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setTaskFormData(prev => ({
+                            ...prev,
+                            distributionScope: option.value as typeof prev.distributionScope,
+                            distributionAllUS: true,
+                            distributionStates: US_STATES.map(s => s.code),
+                            distributionCountries: option.value === 'global'
+                              ? INTERNATIONAL_MARKETS.map(m => m.code)
+                              : prev.distributionCountries,
+                          }))
+                        }}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                          taskFormData.distributionScope === option.value
+                            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
+                            : "text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-400"
+                        )}
+                      >
+                        <span>{option.icon}</span>
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* US States refinement — only show when scope is selected */}
+                  {taskFormData.distributionScope && (
+                    <div className="space-y-2">
+                      {/* State presets as quick-pick pills */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] text-gray-500 shrink-0">US:</span>
+                        {US_STATE_PRESETS.map(preset => {
+                          const isActive = preset.label === 'All US'
+                            ? taskFormData.distributionAllUS
+                            : JSON.stringify([...taskFormData.distributionStates].sort()) === JSON.stringify([...preset.states].sort())
+                          return (
+                            <button
+                              key={preset.label}
+                              type="button"
+                              onClick={() => {
+                                setTaskFormData(prev => ({
+                                  ...prev,
+                                  distributionAllUS: preset.label === 'All US',
+                                  distributionStates: preset.states,
+                                }))
+                              }}
+                              className={cn(
+                                "px-2 py-0.5 rounded text-[10px] font-medium transition-all",
+                                isActive
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                              )}
+                            >
+                              {preset.label}
+                            </button>
+                          )
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setShowStatesPicker(!showStatesPicker)}
+                          className="px-2 py-0.5 rounded text-[10px] font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 border border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400"
+                        >
+                          Custom...
+                        </button>
+                      </div>
+
+                      {/* Custom state picker — compact grid of state abbreviations */}
+                      {showStatesPicker && (
+                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-900/50">
+                          {/* Search */}
+                          <input
+                            type="text"
+                            placeholder="Search states..."
+                            value={statesSearchQuery}
+                            onChange={(e) => setStatesSearchQuery(e.target.value)}
+                            className="w-full text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 mb-2 outline-none focus:border-blue-500"
+                          />
+                          {/* Quick actions */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <button
+                              type="button"
+                              onClick={() => setTaskFormData(prev => ({ ...prev, distributionAllUS: true, distributionStates: US_STATES.map(s => s.code) }))}
+                              className="text-[10px] text-blue-600 hover:underline"
+                            >
+                              Select all
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTaskFormData(prev => ({ ...prev, distributionAllUS: false, distributionStates: [] }))}
+                              className="text-[10px] text-blue-600 hover:underline"
+                            >
+                              Clear all
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTaskFormData(prev => ({ ...prev, distributionAllUS: false, distributionStates: HIGH_RISK_STATES }))}
+                              className="text-[10px] text-orange-600 hover:underline"
+                            >
+                              High-risk only
+                            </button>
+                            <span className="text-[10px] text-gray-400 ml-auto">
+                              {taskFormData.distributionStates.length} selected
+                            </span>
+                          </div>
+                          {/* State grid — compact 2-letter codes */}
+                          <div className="grid grid-cols-10 gap-1 max-h-[140px] overflow-y-auto">
+                            {US_STATES
+                              .filter(s => !statesSearchQuery || s.name.toLowerCase().includes(statesSearchQuery.toLowerCase()) || s.code.toLowerCase().includes(statesSearchQuery.toLowerCase()))
+                              .map(state => {
+                                const isSelected = taskFormData.distributionStates.includes(state.code)
+                                const isHighRisk = HIGH_RISK_STATES.includes(state.code)
+                                return (
+                                  <button
+                                    key={state.code}
+                                    type="button"
+                                    title={state.name}
+                                    onClick={() => {
+                                      setTaskFormData(prev => ({
+                                        ...prev,
+                                        distributionAllUS: false,
+                                        distributionStates: isSelected
+                                          ? prev.distributionStates.filter(s => s !== state.code)
+                                          : [...prev.distributionStates, state.code],
+                                      }))
+                                    }}
+                                    className={cn(
+                                      "h-7 rounded text-[10px] font-mono font-medium transition-all",
+                                      isSelected
+                                        ? isHighRisk
+                                          ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700"
+                                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700"
+                                        : "bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700 hover:border-gray-400"
+                                    )}
+                                  >
+                                    {state.code}
+                                  </button>
+                                )
+                              })}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setShowStatesPicker(false); setStatesSearchQuery('') }}
+                            className="mt-2 text-[10px] text-gray-500 hover:text-gray-700"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Summary line */}
+                      {!showStatesPicker && taskFormData.distributionStates.length > 0 && (
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                          <MapPin className="h-3 w-3" />
+                          <span>
+                            {taskFormData.distributionAllUS
+                              ? 'All 51 US jurisdictions'
+                              : `${taskFormData.distributionStates.length} states selected`}
+                          </span>
+                          {getHighRiskCount(taskFormData.distributionStates) > 0 && (
+                            <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                              <AlertTriangle className="h-3 w-3" />
+                              {getHighRiskCount(taskFormData.distributionStates)} high-risk
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* International markets — only when scope includes international */}
+                      {(taskFormData.distributionScope === 'us_and_international' || taskFormData.distributionScope === 'global') && (
+                        <div className="space-y-2 pt-1">
+                          <span className="text-[10px] text-gray-500">International:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {INTERNATIONAL_MARKETS.map(market => {
+                              const isSelected = taskFormData.distributionCountries.includes(market.code)
+                              return (
+                                <button
+                                  key={market.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setTaskFormData(prev => ({
+                                      ...prev,
+                                      distributionCountries: isSelected
+                                        ? prev.distributionCountries.filter(c => c !== market.code)
+                                        : [...prev.distributionCountries, market.code],
+                                    }))
+                                  }}
+                                  className={cn(
+                                    "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all",
+                                    isSelected
+                                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
+                                      : "text-gray-500 border border-gray-200 dark:border-gray-700 hover:border-gray-400"
+                                  )}
+                                >
+                                  <span>{market.flag}</span>
+                                  {market.name}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {taskFormData.distributionScope === 'global' && (
+                            <p className="text-[10px] text-orange-500 flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Global distribution — all jurisdictions apply. Highest compliance requirements.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* AI Tools Section - Conditional */}
             {(taskFormData.mode === 'generative' || taskFormData.mode === 'assisted') && (
