@@ -14,6 +14,7 @@ import {
   User,
   FileImage,
   FolderKanban,
+  GitBranch,
   CheckCircle2,
   Inbox,
   BarChart3,
@@ -63,7 +64,7 @@ interface NavSection {
 
 // Base navigation sections (same as Sidebar.tsx)
 const baseNavSections: NavSection[] = [
-  // Personal section (Inbox badge will be dynamically set)
+  // Personal section (Inbox badge will be dynamically set); order: Inbox, Tasks, Workflows, Projects
   {
     items: [
       {
@@ -76,6 +77,11 @@ const baseNavSections: NavSection[] = [
         title: "Tasks",
         href: "/tasks",
         icon: Ticket,
+      },
+      {
+        title: "Workflows",
+        href: "/workflows",
+        icon: GitBranch,
       },
     ]
   },

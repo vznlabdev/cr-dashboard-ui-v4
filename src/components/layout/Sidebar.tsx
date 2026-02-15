@@ -56,12 +56,13 @@ interface NavSection {
 
 // Base navigation sections (will be modified dynamically for setup)
 const baseNavSections: NavSection[] = [
-  // Top nav (no label) — Inbox badge will be dynamically set
+  // Top nav (no label) — Inbox badge will be dynamically set; order: Inbox, Tasks, Workflows, Projects
   {
     items: [
       { title: "Inbox",      href: "/inbox",      icon: Inbox,       badge: 0 },
-      { title: "Projects",   href: "/projects",   icon: FolderKanban },
       { title: "Tasks",      href: "/tasks",      icon: Ticket },
+      { title: "Workflows",  href: "/workflows",  icon: GitBranch },
+      { title: "Projects",   href: "/projects",   icon: FolderKanban },
     ]
   },
   // Workspace section
@@ -70,7 +71,6 @@ const baseNavSections: NavSection[] = [
     items: [
       { title: "Assets",         href: "/creative/assets",        icon: FileImage },
       { title: "Talent Rights",   href: "/creative/talent-rights",  icon: User },
-      { title: "Workflows",      href: "/workflows",               icon: GitBranch },
       { title: "Brands",         href: "/creative/brands",         icon: Palette },
       { title: "Team",           href: "/creative/team",           icon: Users },
     ]

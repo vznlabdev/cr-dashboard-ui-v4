@@ -24,6 +24,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { getWorkflowTemplates, getWorkflowTemplateById } from "@/lib/mock-data/workflows"
+import { getSystemWorkflowTemplates } from "@/lib/data/workflow-templates"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
 import type { WorkflowTemplate } from "@/types/workflows"
 import { cn } from "@/lib/utils"
@@ -145,7 +146,7 @@ const MOCK_ACTIVE_WORKFLOWS: ActiveWorkflow[] = [
 ]
 
 export default function WorkflowsPage() {
-  const [activeTab, setActiveTab] = useState<"my-workflows" | "templates">("my-workflows")
+  const [activeTab, setActiveTab] = useState<"my-workflows" | "templates">("templates")
   const [statusFilter, setStatusFilter] = useState<
     "all" | "in_progress" | "completed" | "paused"
   >("all")
@@ -200,14 +201,29 @@ export default function WorkflowsPage() {
         </div>
         <Button asChild>
           <Link href="/workflows/new">
-            <Plus className="mr-2 h-4 w-4" /> New Workflow
+            <Plus className="mr-2 h-4 w-4" /> Create Workflow
           </Link>
         </Button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs: Templates first, then My Workflows */}
       <div className="border-b mb-6">
         <div className="flex gap-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab("templates")}
+            className={cn(
+              "pb-2.5 text-sm font-medium border-b-2 transition-colors",
+              activeTab === "templates"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5" />
+              Templates
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => setActiveTab("my-workflows")}
@@ -224,21 +240,6 @@ export default function WorkflowsPage() {
               <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
                 {MOCK_ACTIVE_WORKFLOWS.filter((w) => w.status === "in_progress").length}
               </Badge>
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("templates")}
-            className={cn(
-              "pb-2.5 text-sm font-medium border-b-2 transition-colors",
-              activeTab === "templates"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5" />
-              Templates
             </span>
           </button>
         </div>
@@ -425,6 +426,48 @@ export default function WorkflowsPage() {
       {/* Tab 2: Templates */}
       {activeTab === "templates" && (
         <div>
+          {/* Start from template — system templates */}
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold mb-3">Start from template</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Pre-built workflows to copy and customize. Use Template opens the builder with the workflow pre-loaded.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+              {getSystemWorkflowTemplates().map((template) => {
+                const stepCount = template.steps?.length ?? 0
+                const estMin = template.estimatedTotalMinutes ?? template.steps?.reduce((s, st) => s + (st.estimatedMinutes ?? 0), 0) ?? 0
+                return (
+                  <div
+                    key={template.id}
+                    className="border rounded-lg p-4 flex flex-col gap-3 bg-card hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-medium truncate">{template.name}</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        {template.description ?? "No description"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
+                      <span>{stepCount} steps</span>
+                      <span>·</span>
+                      <span>~{estMin} min</span>
+                      <Badge variant="outline" className="text-[9px] capitalize">
+                        {template.category}
+                      </Badge>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full mt-auto text-xs h-8"
+                      onClick={() => router.push(`/workflows/new?template=${encodeURIComponent(template.id)}`)}
+                    >
+                      Use Template
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Search + category filter */}
           <div className="flex items-center gap-3 mb-6">
             <div className="relative">

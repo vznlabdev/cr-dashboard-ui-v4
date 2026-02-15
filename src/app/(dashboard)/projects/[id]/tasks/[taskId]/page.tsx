@@ -2919,6 +2919,12 @@ export default function TaskDetailPage() {
                       Start Workflow
                     </Link>
                   </Button>
+                  <Button className="w-full" size="sm" asChild>
+                    <Link href="/workflows/new">
+                      <Rocket className="mr-2 h-3.5 w-3.5" />
+                      Create Workflow
+                    </Link>
+                  </Button>
                   <Button className="w-full" size="sm" variant="outline" asChild>
                     <Link href="/workflows">
                       <GitBranch className="mr-2 h-3.5 w-3.5" />
