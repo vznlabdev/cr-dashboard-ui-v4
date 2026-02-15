@@ -506,10 +506,10 @@ export default function ProjectsPage() {
                             "text-[10px] font-medium px-1.5 py-0.5",
                             project.risk === "Low" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
                             project.risk === "Medium" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-                            (project.risk === "High" || project.risk === "urgent") && "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
+                            project.risk === "High" && "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
                           )}
                         >
-                          {project.risk === "urgent" ? "Critical" : project.risk ?? "Low"}
+                          {project.risk === "High" ? "Critical" : project.risk ?? "Low"}
                         </Badge>
                       </TableCell>
 
