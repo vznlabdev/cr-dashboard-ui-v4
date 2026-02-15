@@ -4,7 +4,11 @@
  * Powers tool selection in the workflow builder — creators can only use tools their org has approved.
  */
 
-import type { ToolWhitelistConfig, WhitelistedTool } from "@/types/workflow-builder";
+import type {
+  ToolWhitelistConfig,
+  WhitelistedTool,
+  WorkflowStepType,
+} from "@/types/workflow-builder";
 
 export const MOCK_TOOL_WHITELIST: WhitelistedTool[] = [
   // --- Image Generation (approved) ---
@@ -155,7 +159,7 @@ export const MOCK_TOOL_WHITELIST: WhitelistedTool[] = [
 ];
 
 /** Default tool IDs per step type (approved tools only). */
-const defaultToolsByStepType = {
+const defaultToolsByStepType: Record<WorkflowStepType, string[]> = {
   image_generation: ["midjourney", "adobe-firefly", "dall-e-3", "stable-diffusion-xl"],
   video_generation: ["runway-gen-3", "heygen", "pika"],
   voice_audio: ["elevenlabs", "murf-ai"],
@@ -163,12 +167,12 @@ const defaultToolsByStepType = {
   enhancement: ["topaz-ai", "luminar-neo"],
   review_approval: [],
   custom: [],
-} as const;
+};
 
 export const MOCK_WHITELIST_CONFIG: ToolWhitelistConfig = {
   orgId: "org-1",
   tools: MOCK_TOOL_WHITELIST,
-  defaultToolsByStepType: { ...defaultToolsByStepType },
+  defaultToolsByStepType,
   allowToolRequests: true,
   requireApprovalForNewTools: true,
 };
