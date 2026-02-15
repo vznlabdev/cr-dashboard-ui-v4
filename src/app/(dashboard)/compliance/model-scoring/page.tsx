@@ -29,15 +29,15 @@ const statusIcons: Record<string, typeof CheckCircle2> = {
   PASS: CheckCircle2, WARNING: AlertTriangle, FAIL: XCircle,
 }
 
-export default function ScoringPage() {
+export default function ModelScoringPage() {
   return (
-    <Suspense fallback={<ComplianceLayout title="Scoring"><div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Loading...</div></ComplianceLayout>}>
-      <ScoringPageContent />
+    <Suspense fallback={<ComplianceLayout title="Model Scoring"><div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Loading...</div></ComplianceLayout>}>
+      <ModelScoringPageContent />
     </Suspense>
   )
 }
 
-function ScoringPageContent() {
+function ModelScoringPageContent() {
   const searchParams = useSearchParams()
   const [allModels, setAllModels] = useState<ModelRiskScore[]>([])
   const [selectedModel, setSelectedModel] = useState<ModelRiskScore | null>(null)
@@ -107,7 +107,7 @@ function ScoringPageContent() {
   const sortedWorst = useMemo(() => [...allModels].sort((a, b) => a.finalMRS - b.finalMRS).slice(0, 10), [allModels])
 
   return (
-    <ComplianceLayout title="Scoring">
+    <ComplianceLayout title="Model Scoring">
       {/* Search + Model list */}
       <div className="flex gap-4">
         <div className="w-56 shrink-0 space-y-2">

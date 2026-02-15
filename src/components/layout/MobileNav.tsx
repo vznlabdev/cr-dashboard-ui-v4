@@ -121,9 +121,9 @@ const baseNavSections: NavSection[] = [
         badge: 7,
         children: [
           { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
-          { title: "ALCAR Registry", href: "/compliance/alcar", icon: BookOpen },
+          { title: "ACLAR Registry", href: "/compliance/aclar", icon: BookOpen },
           { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
-          { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
+          { title: "Model Scoring", href: "/compliance/model-scoring", icon: Calculator },
           { title: "Evidence", href: "/compliance/evidence", icon: Archive },
           { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
           { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },

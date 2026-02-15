@@ -68,7 +68,7 @@ export default function KYAProfilerPage() {
   }
 
   return (
-    <ComplianceLayout title="KYA Asset Profiler">
+    <ComplianceLayout title="Know Your Asset Profiler">
       {/* Classification Queue */}
       {pendingAssets.length > 0 && (
         <div className="rounded-md border border-border/40">
@@ -252,8 +252,8 @@ export default function KYAProfilerPage() {
                               </div>
                             ))}
                             <div className="mt-2">
-                              <Link href={`/compliance/alcar`} className="text-foreground hover:underline flex items-center gap-1">
-                                <Tag className="h-3 w-3" /> ALCAR: {profile.linkedConsentIds.length} consent records
+                              <Link href={`/compliance/aclar`} className="text-foreground hover:underline flex items-center gap-1">
+                                <Tag className="h-3 w-3" /> ACLAR: {profile.linkedConsentIds.length} consent records
                               </Link>
                             </div>
                           </div>
@@ -265,7 +265,7 @@ export default function KYAProfilerPage() {
                               </Link>
                             )}
                             {profile.provenanceScoreId && (
-                              <Link href={`/compliance/scoring`} className="text-foreground hover:underline flex items-center gap-1">
+                              <Link href={`/compliance/model-scoring`} className="text-foreground hover:underline flex items-center gap-1">
                                 Provenance Score &rarr;
                               </Link>
                             )}

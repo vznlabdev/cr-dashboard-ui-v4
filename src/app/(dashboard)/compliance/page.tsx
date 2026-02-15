@@ -260,7 +260,7 @@ export default function ComplianceDashboardPage() {
                 {overview.topRiskModels.map((model) => (
                   <tr key={model.id} className="border-t border-border/20 hover:bg-muted/30 transition-colors">
                     <td className="py-1.5 pr-3">
-                      <Link href={`/compliance/scoring?model=${model.id}`} className="text-foreground hover:underline">
+                      <Link href={`/compliance/model-scoring?model=${model.id}`} className="text-foreground hover:underline">
                         {model.name}
                       </Link>
                     </td>

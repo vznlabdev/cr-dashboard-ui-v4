@@ -72,10 +72,10 @@ export function Header() {
             <Button variant="ghost" className="relative h-10 gap-2 rounded-full pl-2 pr-2 sm:pr-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                <AvatarFallback>CR</AvatarFallback>
+                <AvatarFallback>LT</AvatarFallback>
               </Avatar>
               <div className="hidden sm:flex flex-col items-start text-left text-sm">
-                <span className="font-medium">John Doe</span>
+                <span className="font-medium">Legal Team</span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
             </Button>
@@ -83,9 +83,9 @@ export function Header() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">John Doe</p>
+                <p className="text-sm font-medium leading-none">Legal Team</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  john@example.com
+                  legal@example.com
                 </p>
               </div>
             </DropdownMenuLabel>

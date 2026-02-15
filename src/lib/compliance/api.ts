@@ -46,7 +46,7 @@ export async function getComplianceOverview(filters?: ComplianceFilters): Promis
 }
 
 // ==============================================
-// Consent Records (ALCAR)
+// Consent Records (ACLAR)
 // ==============================================
 
 export interface ConsentRecordFilters extends ComplianceFilters {

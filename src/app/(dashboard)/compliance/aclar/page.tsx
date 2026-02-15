@@ -31,7 +31,7 @@ const typeColors: Record<string, string> = {
   AD_DISCLOSURE: "text-orange-600 bg-orange-500/10",
 }
 
-export default function ALCARRegistryPage() {
+export default function ACLARRegistryPage() {
   const [records, setRecords] = useState<ConsentRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -69,7 +69,7 @@ export default function ALCARRegistryPage() {
   }
 
   return (
-    <ComplianceLayout title="ALCAR Registry">
+    <ComplianceLayout title="ACLAR Registry">
       {/* Stats Bar */}
       <div className="flex items-center gap-2 flex-wrap">
         {[

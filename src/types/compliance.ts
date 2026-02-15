@@ -2,7 +2,7 @@
 // Compliance Dashboard Types
 // ==============================================
 
-// --- Consent & Attribution (ALCAR) ---
+// --- Consent & Attribution (ACLAR) ---
 
 export type ConsentType = "NIL" | "AI_CONTENT" | "AD_DISCLOSURE"
 

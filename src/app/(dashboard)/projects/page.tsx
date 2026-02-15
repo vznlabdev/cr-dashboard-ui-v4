@@ -80,6 +80,42 @@ const TEAM_MEMBERS = [
   { id: 'zlane', name: 'zlane', fullName: 'Zlane', avatarColor: '#10b981' },
 ]
 
+// Legal team: assigned attorneys and mock legal fields per project
+const ASSIGNED_ATTORNEYS = ["Sarah Chen", "Michael Torres", "Jennifer Walsh", "David Kim", "Emily Ross"]
+type ComplianceStatus = "Pending Review" | "Approved" | "Flagged" | "Rejected"
+type NILPStatus = "Cleared" | "Pending" | "Not Required" | "Under Review"
+
+function getLegalFields(project: Project & { tiv?: number }) {
+  const statusMap: Record<string, ComplianceStatus> = {
+    "1": "Flagged",
+    "2": "Pending Review",
+    "3": "Pending Review",
+    "4": "Rejected",
+    "5": "Approved",
+  }
+  const nilpMap: Record<string, NILPStatus> = {
+    "1": "Under Review",
+    "2": "Pending",
+    "3": "Cleared",
+    "4": "Not Required",
+    "5": "Cleared",
+  }
+  const lastReviewMap: Record<string, string> = {
+    "1": "Feb 1, 2025",
+    "2": "Jan 28, 2025",
+    "3": "Jan 15, 2025",
+    "4": "Jan 10, 2025",
+    "5": "Feb 5, 2025",
+  }
+  const attorneyIndex = parseInt(project.id, 10) % ASSIGNED_ATTORNEYS.length
+  return {
+    complianceStatus: statusMap[project.id] ?? (project.status === "Approved" ? "Approved" : "Pending Review"),
+    nilpRightsStatus: nilpMap[project.id] ?? "Pending",
+    lastReviewDate: lastReviewMap[project.id] ?? "—",
+    assignedAttorney: ASSIGNED_ATTORNEYS[attorneyIndex] ?? ASSIGNED_ATTORNEYS[0],
+  }
+}
+
 export default function ProjectsPage() {
   const router = useRouter()
   const { projects, updateProject, deleteProject } = useData()
@@ -106,32 +142,36 @@ export default function ProjectsPage() {
       
       const totalAssetValue = project.assets * baseValuePerAsset
       const tiv = calculateTIV(totalAssetValue, riskMultiplier, distributionMultiplier)
-      
-      return { ...project, tiv }
+      const legal = getLegalFields({ ...project, tiv })
+      return { ...project, tiv, ...legal }
     })
   }, [projects])
 
-  // Filter projects
+  // Filter projects (by compliance status, brand, lead)
+  const [complianceFilter, setComplianceFilter] = useState<string>("all")
   const filteredProjects = useMemo(() => {
     let filtered = projectsWithTIV.filter((project) => {
+      const legal = getLegalFields(project)
+      const matchesCompliance = complianceFilter === "all" || legal.complianceStatus === complianceFilter
       const matchesStatus = statusFilter === "all" || project.status === statusFilter
       const matchesBrand = brandFilter === "all" || project.companyId === brandFilter
       const matchesLead = leadFilter === "all" || project.owner === leadFilter
-      return matchesStatus && matchesBrand && matchesLead
+      return matchesCompliance && matchesStatus && matchesBrand && matchesLead
     })
 
     // Sort by name
     filtered.sort((a, b) => a.name.localeCompare(b.name))
 
     return filtered
-  }, [projectsWithTIV, statusFilter, brandFilter, leadFilter])
+  }, [projectsWithTIV, complianceFilter, statusFilter, brandFilter, leadFilter])
 
-  // Stats calculations - based on filtered results
-  const hasActiveFilters = statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all"
+  // Legal stats - based on filtered results
+  const hasActiveFilters = complianceFilter !== "all" || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all"
   const displayProjects = filteredProjects
-  const displayActiveProjects = displayProjects.filter(p => p.status === "Active").length
-  const displayCompletedProjects = displayProjects.filter(p => p.status === "Approved").length
-  const displayPendingProjects = displayProjects.filter(p => p.status === "Review").length
+  const totalUnderReview = displayProjects.filter(p => getLegalFields(p).complianceStatus === "Pending Review").length
+  const totalFlagged = displayProjects.filter(p => getLegalFields(p).complianceStatus === "Flagged").length
+  const totalApproved = displayProjects.filter(p => getLegalFields(p).complianceStatus === "Approved").length
+  const totalRejectedBlocked = displayProjects.filter(p => getLegalFields(p).complianceStatus === "Rejected").length
 
   return (
     <PageContainer className="space-y-6 animate-fade-in">
@@ -140,17 +180,19 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-xl font-semibold">Projects</h1>
           <div className="text-sm text-muted-foreground mt-1">
-            {displayProjects.length} {displayProjects.length === 1 ? 'project' : 'projects'}
+            {displayProjects.length} {displayProjects.length === 1 ? "case" : "cases"}
             {!hasActiveFilters && (
               <>
-                {' • '}
-                {displayActiveProjects} active
-                {' • '}
-                {displayPendingProjects} in review
-                {displayCompletedProjects > 0 && (
+                {" • "}
+                {totalUnderReview} under review
+                {" • "}
+                {totalFlagged} flagged
+                {" • "}
+                {totalApproved} approved
+                {totalRejectedBlocked > 0 && (
                   <>
-                    {' • '}
-                    {displayCompletedProjects} completed
+                    {" • "}
+                    {totalRejectedBlocked} rejected/blocked
                   </>
                 )}
               </>
@@ -162,12 +204,60 @@ export default function ProjectsPage() {
           onClick={() => setNewProjectDialogOpen(true)}
         >
           <Plus className="mr-2 h-4 w-4" />
-          New Project
+          New Legal Review
         </Button>
+      </div>
+
+      {/* Legal Stats Row */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total cases under review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <span className="text-2xl font-semibold">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Pending Review").length}</span>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Flagged for legal issues</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <span className="text-2xl font-semibold text-amber-600 dark:text-amber-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Flagged").length}</span>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Approved cases</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Approved").length}</span>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Rejected / Blocked</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <span className="text-2xl font-semibold text-destructive">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Rejected").length}</span>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters - Linear Style */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <Select value={complianceFilter} onValueChange={setComplianceFilter}>
+          <SelectTrigger className="w-full sm:w-[180px] h-9">
+            <SelectValue placeholder="Compliance Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Compliance</SelectItem>
+            <SelectItem value="Pending Review">Pending Review</SelectItem>
+            <SelectItem value="Approved">Approved</SelectItem>
+            <SelectItem value="Flagged">Flagged</SelectItem>
+            <SelectItem value="Rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[150px] h-9">
             <SelectValue placeholder="Status" />
@@ -209,12 +299,13 @@ export default function ProjectsPage() {
           </SelectContent>
         </Select>
 
-        {(statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
+        {(complianceFilter !== "all" || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
           <Button
             variant="ghost"
             size="sm"
             className="h-9"
             onClick={() => {
+              setComplianceFilter("all")
               setStatusFilter("all")
               setBrandFilter("all")
               setLeadFilter("all")
@@ -296,18 +387,20 @@ export default function ProjectsPage() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="h-11 w-[33%] text-xs font-medium">Project</TableHead>
-                  <TableHead className="h-11 w-[14%] text-xs font-medium">Brand</TableHead>
-                  <TableHead className="h-11 w-[11%] text-xs font-medium">Status</TableHead>
-                  <TableHead className="h-11 w-[14%] text-xs font-medium">Tasks</TableHead>
-                  <TableHead className="h-11 w-[12%] text-xs font-medium">Updated</TableHead>
-                  <TableHead className="h-11 w-[10%] text-xs font-medium text-right">Actions</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Project name</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Client / Brand</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Compliance Status</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Risk Level</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">NILP Rights Status</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Last Review Date</TableHead>
+                  <TableHead className="h-11 text-xs font-medium">Assigned Attorney</TableHead>
+                  <TableHead className="h-11 w-[80px] text-xs font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -328,7 +421,9 @@ export default function ProjectsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProjects.map((project) => (
+                  filteredProjects.map((project) => {
+                    const legal = getLegalFields(project)
+                    return (
                     <TableRow 
                       key={project.id}
                       className="h-12 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
@@ -349,40 +444,15 @@ export default function ProjectsPage() {
                         />
                       </TableCell>
 
-                      {/* Project Name with Lead Avatar */}
-                      <TableCell className="py-2">
-                        <div className="flex items-center gap-2">
-                          {/* Lead Avatar */}
-                          {project.owner ? (
-                            <div 
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0"
-                              style={{ 
-                                backgroundColor: TEAM_MEMBERS.find(m => m.fullName === project.owner)?.avatarColor || '#3b82f6' 
-                              }}
-                              title={project.owner}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {project.owner.charAt(0)}
-                            </div>
-                          ) : (
-                            <div 
-                              className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0" 
-                              title="Unassigned"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <User className="h-3 w-3 text-muted-foreground" />
-                            </div>
-                          )}
-                          <span 
-                            className="text-sm font-medium truncate cursor-pointer"
-                            onClick={() => router.push(`/projects/${project.id}`)}
-                          >
-                            {project.name}
-                          </span>
-                        </div>
+                      {/* Project name */}
+                      <TableCell 
+                        className="py-2 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
+                        <span className="text-sm font-medium truncate">{project.name}</span>
                       </TableCell>
 
-                      {/* Brand - Simple Display */}
+                      {/* Client / Brand */}
                       <TableCell 
                         className="py-2 cursor-pointer"
                         onClick={(e) => {
@@ -396,17 +466,17 @@ export default function ProjectsPage() {
                           <div 
                             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                             style={{ 
-                              backgroundColor: project.companyId === '1' ? '#3b82f6' : 
-                                             project.companyId === '2' ? '#8b5cf6' : '#10b981' 
+                              backgroundColor: project.companyId === "company-1" ? "#3b82f6" : 
+                                             project.companyId === "company-2" ? "#8b5cf6" : "#10b981" 
                             }}
                           />
                           <span className="text-xs truncate">
-                            {mockCompanies.find(c => c.id === project.companyId)?.name || 'No brand'}
+                            {mockCompanies.find(c => c.id === project.companyId)?.name ?? "No brand"}
                           </span>
                         </div>
                       </TableCell>
 
-                      {/* Status Badge */}
+                      {/* Compliance Status */}
                       <TableCell 
                         className="py-2 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
@@ -415,40 +485,58 @@ export default function ProjectsPage() {
                           variant="outline" 
                           className={cn(
                             "text-[10px] font-medium px-1.5 py-0.5",
-                            project.status === "Active" && "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-                            project.status === "Review" && "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-                            project.status === "Draft" && "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-                            project.status === "Approved" && "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            legal.complianceStatus === "Pending Review" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+                            legal.complianceStatus === "Approved" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+                            legal.complianceStatus === "Flagged" && "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+                            legal.complianceStatus === "Rejected" && "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
                           )}
                         >
-                          {project.status}
+                          {legal.complianceStatus}
                         </Badge>
                       </TableCell>
 
-                      {/* Tasks - Simple Display */}
+                      {/* Risk Level */}
                       <TableCell 
                         className="py-2 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        {(() => {
-                          const projectTasks = getTasksByProject(project.id);
-                          const totalTasks = projectTasks.length;
-                          const completedTasks = projectTasks.filter(t => t.status === 'delivered').length;
-                          
-                          return (
-                            <span className="text-xs text-muted-foreground">
-                              {totalTasks} {totalTasks === 1 ? 'task' : 'tasks'} • {completedTasks} done
-                            </span>
-                          );
-                        })()}
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "text-[10px] font-medium px-1.5 py-0.5",
+                            project.risk === "Low" && "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+                            project.risk === "Medium" && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+                            (project.risk === "High" || project.risk === "urgent") && "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400"
+                          )}
+                        >
+                          {project.risk === "urgent" ? "Critical" : project.risk ?? "Low"}
+                        </Badge>
                       </TableCell>
-                      {/* Updated */}
+
+                      {/* NILP Rights Status */}
+                      <TableCell 
+                        className="py-2 text-xs cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
+                        {legal.nilpRightsStatus}
+                      </TableCell>
+
+                      {/* Last Review Date */}
                       <TableCell 
                         className="py-2 text-xs text-muted-foreground cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        {project.updated}
+                        {legal.lastReviewDate}
                       </TableCell>
+
+                      {/* Assigned Attorney */}
+                      <TableCell 
+                        className="py-2 text-xs cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
+                        {legal.assignedAttorney}
+                      </TableCell>
+
                       <TableCell className="py-2 text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -495,7 +583,8 @@ export default function ProjectsPage() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
+                    )
+                  })
                 )}
               </TableBody>
             </Table>
