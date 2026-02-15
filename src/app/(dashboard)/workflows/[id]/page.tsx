@@ -2,7 +2,7 @@
 
 import { useState, Fragment } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -24,6 +24,7 @@ import { toast } from "sonner"
 
 export default function WorkflowTemplatePage() {
   const params = useParams()
+  const router = useRouter()
   const id = typeof params.id === "string" ? params.id : params.id?.[0]
   const template = id ? getWorkflowTemplateById(id) : null
   const [selectedStepIndex, setSelectedStepIndex] = useState(0)
@@ -95,7 +96,7 @@ export default function WorkflowTemplatePage() {
           <Button
             size="sm"
             className="text-xs"
-            onClick={() => toast.success("Template ready — assign to a task")}
+            onClick={() => router.push(`/tasks?newTask=true&workflow=${template.id}`)}
           >
             <Rocket className="mr-1.5 h-3.5 w-3.5" /> Use This Workflow
           </Button>

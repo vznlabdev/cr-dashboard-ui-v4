@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -184,6 +185,8 @@ export default function WorkflowsPage() {
     () => Math.max(...templates.map((t) => t.usageCount ?? 0), 0),
     [templates]
   )
+
+  const router = useRouter()
 
   return (
     <PageContainer>
@@ -549,7 +552,7 @@ export default function WorkflowsPage() {
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        toast.success("Template ready — assign to a task")
+                        router.push(`/tasks?newTask=true&workflow=${template.id}`)
                       }}
                     >
                       Use Template

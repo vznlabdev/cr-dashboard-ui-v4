@@ -222,16 +222,46 @@ function UnifiedTasksPageContent() {
     setCreateMore(false)
   }
 
-  // Open task modal from URL when navigating from workflows (e.g. /tasks?create=1&workflow=wf-xxx)
+  // Auto-open task modal if URL has ?newTask=true (and optionally ?workflow=id)
   useEffect(() => {
-    const create = searchParams.get('create')
+    const shouldOpenModal = searchParams.get('newTask') === 'true'
     const workflowId = searchParams.get('workflow')
-    if (create === '1' && workflowId) {
-      setTaskFormData((prev) => ({ ...prev, workflowTemplateId: workflowId }))
+
+    if (shouldOpenModal) {
+      setTaskFormData({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        taskGroupId: '',
+        designType: '',
+        mode: workflowId ? 'generative' : 'manual',
+        brand: '',
+        dueDate: '',
+        assignee: '',
+        intendedUses: [],
+        distributionScope: '',
+        distributionStates: [],
+        distributionAllUS: true,
+        distributionCountries: [],
+        aiToolsRestriction: 'all',
+        selectedTools: [],
+        selectedProjectId: '',
+        targetAudience: '',
+        detailedDescription: '',
+        clientVisibility: 'internal',
+        estimatedHours: null,
+        billable: false,
+        mediaData: null,
+        workflowTemplateId: workflowId || '',
+      })
       setIsTaskModalOpen(true)
-      router.replace('/tasks', { scroll: false })
+
+      const url = new URL(window.location.href)
+      url.searchParams.delete('newTask')
+      url.searchParams.delete('workflow')
+      window.history.replaceState({}, '', url.pathname)
     }
-  }, [searchParams, router])
+  }, [searchParams])
 
   const handleCreateTask = () => {
     // Validate title
@@ -1108,6 +1138,46 @@ function UnifiedTasksPageContent() {
                 )}
               </div>
             </div>
+
+            {/* Workflow Template — show when one is selected */}
+            {taskFormData.workflowTemplateId &&
+              (() => {
+                const wfTemplate = getWorkflowTemplateById(taskFormData.workflowTemplateId)
+                if (!wfTemplate) return null
+                return (
+                  <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/50">
+                      <span className="text-xl shrink-0">{wfTemplate.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <GitBranch className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                            Workflow
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium mt-0.5">{wfTemplate.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {wfTemplate.steps.length} steps · ~{wfTemplate.estimatedTotalMinutes ?? 0} min · {wfTemplate.category}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTaskFormData((prev) => ({
+                            ...prev,
+                            workflowTemplateId: '',
+                            mode: 'manual',
+                          }))
+                        }
+                        className="p-1 rounded-md hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors shrink-0"
+                        title="Remove workflow"
+                      >
+                        <X className="h-3.5 w-3.5 text-blue-400" />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
 
             {/* Target Audience */}
             <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-800">
