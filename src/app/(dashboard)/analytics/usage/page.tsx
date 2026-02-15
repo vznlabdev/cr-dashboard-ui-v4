@@ -446,11 +446,7 @@ export default function AnalyticsUsagePage() {
                   <div className="flex items-center justify-between mt-1.5 text-[9px] text-muted-foreground">
                     <span>{pct}% used</span>
                     <span>
-                      {typeof q.limit === 'number' && typeof q.used === 'number'
-                        ? (q.limit - q.used).toLocaleString()
-                        : Number(q.limit) - Number(q.used)}
-                      {' '}
-                      remaining
+                      {(Number(q.limit) - Number(q.used)).toLocaleString()} remaining
                     </span>
                   </div>
                 </Card>
