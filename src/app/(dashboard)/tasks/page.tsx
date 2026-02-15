@@ -1565,7 +1565,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowDesignTypePicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
                         <div className="p-1 max-h-60 overflow-auto">
                           {/* None Option */}
                           <button
@@ -1637,7 +1637,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowModePicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
                         <div className="p-1">
                           {[
                             { value: 'manual', label: 'Manual' },
@@ -1693,7 +1693,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowAssigneePicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
                         <div className="p-1 max-h-60 overflow-auto">
                           {/* None Option */}
                           <button
@@ -1754,7 +1754,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowWorkflowPicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
                         <div className="p-1 max-h-60 overflow-auto">
                           <button
                             type="button"
@@ -1817,7 +1817,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowPriorityPicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
                         <div className="p-1">
                           {/* Priority Options */}
                           {[
@@ -1875,7 +1875,7 @@ function UnifiedTasksPageContent() {
                         className="fixed inset-0 z-40" 
                         onClick={() => setShowDueDatePicker(false)}
                       />
-                      <div className="absolute z-50 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-[160px] overflow-y-auto">
+                      <div className="absolute z-50 bottom-full left-0 mb-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-[160px] overflow-y-auto">
                         <div className="p-1">
                           {/* Clear Option */}
                           <button

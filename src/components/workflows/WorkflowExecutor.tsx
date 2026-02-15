@@ -9,29 +9,28 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
   Check,
-  ChevronDown,
-  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
   Lock,
+  Rocket,
   SkipForward,
   ArrowLeft,
   Eye,
   Download,
   Upload,
+  Play,
   FileText,
   Sparkles,
+  ChevronRight,
+  Zap,
+  X,
 } from "lucide-react"
 import type {
   WorkflowTemplate,
   WorkflowInstance,
+  WorkflowStepConfig,
   WorkflowStepStatus,
 } from "@/types/workflows"
 import { STEP_TYPE_CONFIG } from "@/lib/workflow-step-config"
@@ -39,31 +38,19 @@ import { aiToolsWhitelist } from "@/lib/ai-tools-data"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
-export interface StepOutput {
-  thumbnailUrl?: string
-  fileName?: string
-  assetId?: string
-  toolUsed?: string
-  capturedPrompts?: number
-  capturedGenerations?: number
-  capturedDownloads?: number
-}
-
 export interface WorkflowExecutorProps {
   template: WorkflowTemplate
   instance: WorkflowInstance
   onUpdateInstance: (updated: WorkflowInstance) => void
 }
 
-function getRemainingMinutes(
-  template: WorkflowTemplate,
-  stepStatuses: WorkflowStepStatus[]
-): number {
-  return template.steps.reduce((sum, step, i) => {
-    const status = stepStatuses[i]?.status
-    if (status === "completed" || status === "skipped") return sum
-    return sum + (step.estimatedMinutes ?? 0)
-  }, 0)
+type StepOutputRecord = {
+  thumbnailUrl: string
+  fileName: string
+  toolUsed: string
+  capturedPrompts: number
+  capturedGenerations: number
+  capturedDownloads: number
 }
 
 export function WorkflowExecutor({
@@ -72,70 +59,59 @@ export function WorkflowExecutor({
   onUpdateInstance,
 }: WorkflowExecutorProps) {
   const [localInstance, setLocalInstance] = useState<WorkflowInstance>(instance)
-  const [viewingStepIndex, setViewingStepIndex] = useState<number | null>(null)
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
-  const [stepOutputs, setStepOutputs] = useState<Record<string, StepOutput>>({})
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number>(instance.currentStepIndex)
+  const [checkedItems, setCheckedItems] = useState<{ [key: string]: { [key: number]: boolean } }>({})
+  const [stepOutputs, setStepOutputs] = useState<{ [key: string]: StepOutputRecord }>({})
+  const [promptTexts, setPromptTexts] = useState<{ [key: string]: string }>({})
 
-  const currentStepIndex = localInstance.currentStepIndex
-  const currentStep = template.steps[currentStepIndex]
-  const displayIndex =
-    viewingStepIndex !== null ? viewingStepIndex : currentStepIndex
-  const step = template.steps[displayIndex]
-  const status = localInstance.stepStatuses[displayIndex]
-  const totalSteps = template.steps.length
+  useEffect(() => {
+    setLocalInstance(instance)
+    setSelectedStepIndex(instance.currentStepIndex)
+  }, [instance])
+
+  useEffect(() => {
+    const initial: { [key: string]: string } = {}
+    template.steps.forEach((step) => {
+      if (step.promptTemplate != null) {
+        initial[step.id] = step.promptTemplate
+      }
+    })
+    setPromptTexts((prev) => ({ ...initial, ...prev }))
+  }, [template.id])
+
   const completedCount = localInstance.stepStatuses.filter(
     (s) => s.status === "completed" || s.status === "skipped"
   ).length
-  const remainingMinutes = getRemainingMinutes(
-    template,
-    localInstance.stepStatuses
-  )
-  const isViewingCompletedStep =
-    viewingStepIndex !== null && viewingStepIndex !== currentStepIndex
-  const isLastStep = currentStepIndex === totalSteps - 1
-
-  useEffect(() => {
-    setCheckedItems({})
-  }, [displayIndex])
-
-  function handleMockUpload(stepId: string) {
-    const step = template.steps.find((s) => s.id === stepId)
-    if (!step) return
-    const tools = (step.recommendedToolIds ?? [])
-      .map((id) => aiToolsWhitelist.find((t) => t.id === id))
-      .filter((t): t is NonNullable<typeof t> => Boolean(t))
-    const toolName = tools[0]?.name ?? "Midjourney"
-    const seed = Math.floor(Math.random() * 1000)
-    setStepOutputs((prev) => ({
-      ...prev,
-      [stepId]: {
-        thumbnailUrl: `https://picsum.photos/seed/${seed}/800/500`,
-        fileName: `${step.name.toLowerCase().replace(/\s+/g, "-")}-output.png`,
-        toolUsed: toolName,
-        capturedPrompts: 3,
-        capturedGenerations: 8,
-        capturedDownloads: 2,
-      },
-    }))
-    toast.success("Asset uploaded and linked to this step")
-  }
+  const remainingMinutes = template.steps.reduce((sum, step, i) => {
+    const status = localInstance.stepStatuses[i]?.status
+    if (status === "completed" || status === "skipped") return sum
+    return sum + (step.estimatedMinutes ?? 0)
+  }, 0)
+  const isWorkflowComplete = localInstance.status === "completed"
 
   function handleCompleteStep() {
-    const next = { ...localInstance }
-    const stepStatus = next.stepStatuses[currentStepIndex]
+    const currentStepIndex = localInstance.currentStepIndex
+    const stepStatus = localInstance.stepStatuses[currentStepIndex]
     if (!stepStatus) return
-    stepStatus.status = "completed"
-    stepStatus.completedAt = new Date().toISOString()
-    const output = currentStep ? stepOutputs[currentStep.id] : undefined
-    if (output?.toolUsed) stepStatus.toolUsed = output.toolUsed
 
-    if (currentStepIndex < totalSteps - 1) {
+    const next: WorkflowInstance = {
+      ...localInstance,
+      stepStatuses: localInstance.stepStatuses.map((s) => ({ ...s })),
+    }
+    const nextStatus = next.stepStatuses[currentStepIndex]
+    nextStatus.status = "completed"
+    nextStatus.completedAt = new Date().toISOString()
+    const output = stepOutputs[template.steps[currentStepIndex]?.id]
+    if (output?.toolUsed) nextStatus.toolUsed = output.toolUsed
+
+    if (currentStepIndex < template.steps.length - 1) {
       next.currentStepIndex = currentStepIndex + 1
-      const nextStatus = next.stepStatuses[next.currentStepIndex]
-      if (nextStatus) {
-        nextStatus.status = "active"
-        nextStatus.startedAt = new Date().toISOString()
+      const nextStepStatus = next.stepStatuses[next.currentStepIndex]
+      if (nextStepStatus) {
+        nextStepStatus.status = "active"
+        nextStepStatus.startedAt = new Date().toISOString()
       }
+      setSelectedStepIndex(next.currentStepIndex)
     } else {
       next.status = "completed"
       next.completedAt = new Date().toISOString()
@@ -143,27 +119,34 @@ export function WorkflowExecutor({
 
     setLocalInstance(next)
     onUpdateInstance(next)
-    setViewingStepIndex(null)
-    setCheckedItems({})
     toast.success(
-      isLastStep ? "Workflow completed!" : "Step completed. Next step ready."
+      currentStepIndex === template.steps.length - 1
+        ? "Workflow completed!"
+        : "Step completed. Next step ready."
     )
   }
 
   function handleSkipStep() {
-    const next = { ...localInstance }
-    const stepStatus = next.stepStatuses[currentStepIndex]
+    const currentStepIndex = localInstance.currentStepIndex
+    const stepStatus = localInstance.stepStatuses[currentStepIndex]
     if (!stepStatus) return
-    stepStatus.status = "skipped"
-    stepStatus.completedAt = new Date().toISOString()
 
-    if (currentStepIndex < totalSteps - 1) {
+    const next: WorkflowInstance = {
+      ...localInstance,
+      stepStatuses: localInstance.stepStatuses.map((s) => ({ ...s })),
+    }
+    const nextStatus = next.stepStatuses[currentStepIndex]
+    nextStatus.status = "skipped"
+    nextStatus.completedAt = new Date().toISOString()
+
+    if (currentStepIndex < template.steps.length - 1) {
       next.currentStepIndex = currentStepIndex + 1
-      const nextStatus = next.stepStatuses[next.currentStepIndex]
-      if (nextStatus) {
-        nextStatus.status = "active"
-        nextStatus.startedAt = new Date().toISOString()
+      const nextStepStatus = next.stepStatuses[next.currentStepIndex]
+      if (nextStepStatus) {
+        nextStepStatus.status = "active"
+        nextStepStatus.startedAt = new Date().toISOString()
       }
+      setSelectedStepIndex(next.currentStepIndex)
     } else {
       next.status = "completed"
       next.completedAt = new Date().toISOString()
@@ -171,38 +154,26 @@ export function WorkflowExecutor({
 
     setLocalInstance(next)
     onUpdateInstance(next)
-    setViewingStepIndex(null)
-    setCheckedItems({})
     toast.success("Step skipped.")
   }
 
-  function goToPreviousStep() {
-    if (currentStepIndex > 0) {
-      setViewingStepIndex(currentStepIndex - 1)
-    }
-  }
-
-  if (localInstance.status === "completed") {
+  if (isWorkflowComplete) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-          <Check className="h-8 w-8 text-emerald-600" />
+      <div className="flex flex-col items-center justify-center h-full py-16 text-center">
+        <div className="h-20 w-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5">
+          <Check className="h-10 w-10 text-emerald-500" />
         </div>
-        <h2 className="text-xl font-bold">Workflow Complete</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          All {template.steps.length} steps completed
+        <h2 className="text-2xl font-bold">Workflow Complete</h2>
+        <p className="text-sm text-muted-foreground mt-2">
+          All {template.steps.length} steps finished · {completedCount} completed
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Completed{" "}
+        <p className="text-[10px] text-muted-foreground mt-1">
           {localInstance.completedAt
             ? new Date(localInstance.completedAt).toLocaleString()
             : ""}
         </p>
         <div className="flex gap-3 mt-6">
-          <Button
-            variant="outline"
-            onClick={() => toast.info("Evidence export coming soon")}
-          >
+          <Button variant="outline" onClick={() => toast.info("Evidence export coming soon")}>
             <Download className="mr-2 h-4 w-4" /> Export Evidence
           </Button>
         </div>
@@ -211,525 +182,532 @@ export function WorkflowExecutor({
   }
 
   return (
-    <Fragment>
-      {/* Top progress bar */}
-      <div className="border-b pb-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">{template.icon}</span>
-            <div>
-              <h2 className="text-sm font-semibold">{template.name}</h2>
-              <p className="text-xs text-muted-foreground">
-                Step {currentStepIndex + 1} of {totalSteps} —{" "}
-                {currentStep?.name ?? ""}
-              </p>
+    <div className="flex h-full overflow-hidden">
+      {/* ===== LEFT PANEL — LIVE FLOW ===== */}
+      <div className="w-[380px] shrink-0 border-r bg-muted/20 overflow-y-auto">
+        <div className="flex flex-col items-center py-6 px-4">
+          {/* Progress summary */}
+          <div className="w-full max-w-[320px] mb-6 px-2">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
+              <span>
+                {completedCount} of {template.steps.length} complete
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" /> ~{remainingMinutes}m left
+              </span>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="h-3 w-3" /> ~{remainingMinutes} min left
-            </span>
-            <div className="flex items-center gap-1">
-              {template.steps.map((s, i) => {
-                const st = localInstance.stepStatuses[i]
-                const config = STEP_TYPE_CONFIG[s.stepType]
-                const isCompleted =
-                  st?.status === "completed" || st?.status === "skipped"
-                const isActive = st?.status === "active"
-                const ringColor = config.color.replace("bg-", "ring-")
-                return (
-                  <div
-                    key={s.id}
-                    className={cn(
-                      "h-2 w-2 rounded-full shrink-0",
-                      isCompleted && config.color,
-                      isActive &&
-                        cn(config.color, "ring-2 ring-offset-1", ringColor),
-                      !isCompleted && !isActive && "bg-muted"
-                    )}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Two-column */}
-      <div className="flex gap-8">
-        {/* Left: Step navigator */}
-        <div className="w-56 shrink-0 space-y-1">
-          {template.steps.map((s, index) => {
-            const stepStatus = localInstance.stepStatuses[index]
-            const config = STEP_TYPE_CONFIG[s.stepType]
-            const isCompleted =
-              stepStatus?.status === "completed" ||
-              stepStatus?.status === "skipped"
-            const isActive = stepStatus?.status === "active"
-            const isLocked = stepStatus?.status === "locked"
-            const isReady = stepStatus?.status === "ready"
-
-            return (
-              <button
-                key={s.id}
-                type="button"
-                className={cn(
-                  "w-full text-left p-2.5 rounded-lg transition-all flex items-center gap-3",
-                  isActive &&
-                    cn(
-                      config.lightBg,
-                      "border-l-2",
-                      config.borderColor
-                    ),
-                  isCompleted && "hover:bg-muted/50",
-                  isLocked && "opacity-40 cursor-not-allowed",
-                  !isActive && !isLocked && "hover:bg-muted/50"
-                )}
-                onClick={() => {
-                  if (isCompleted) setViewingStepIndex(index)
-                  if (isActive || isLocked) return
-                  if (isReady) return // or could focus current
-                }}
-              >
-                <div
-                  className={cn(
-                    "h-7 w-7 rounded-full flex items-center justify-center shrink-0",
-                    isCompleted && "bg-emerald-500 text-white",
-                    isActive && cn(config.color, "text-white"),
-                    isReady &&
-                      cn(
-                        "border-2 bg-transparent",
-                        config.borderColor,
-                        config.textColor
-                      ),
-                    isLocked && "bg-muted"
-                  )}
-                >
-                  {isCompleted && <Check className="h-3.5 w-3.5" />}
-                  {(isActive || isReady) && (
-                    <span className="text-[10px] font-bold">{index + 1}</span>
-                  )}
-                  {isLocked && (
-                    <Lock className="h-3 w-3 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className={cn(
-                      "text-xs font-medium truncate",
-                      isActive ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  >
-                    {s.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {config.label}
-                  </p>
-                </div>
-              </button>
-            )
-          })}
-          <Separator className="my-2" />
-          <div className="pt-3 px-2">
-            <p className="text-[10px] text-muted-foreground mb-1">
-              {completedCount} of {totalSteps} complete
-            </p>
             <Progress
-              value={totalSteps ? (completedCount / totalSteps) * 100 : 0}
+              value={template.steps.length ? (completedCount / template.steps.length) * 100 : 0}
               className="h-1.5"
             />
           </div>
-        </div>
 
-        {/* Right: Active step content */}
-        <div className="flex-1 min-w-0">
-          {step && status && (() => {
+          {/* Flow start */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center">
+              <Play className="h-2.5 w-2.5 text-white fill-current" />
+            </div>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
+              Start
+            </span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+
+          {/* Step cards — LIVE status */}
+          {template.steps.map((step, index) => {
             const config = STEP_TYPE_CONFIG[step.stepType]
             const Icon = config.icon
-            const tools = (step.recommendedToolIds ?? [])
-              .map((id) => aiToolsWhitelist.find((t) => t.id === id))
-              .filter((t): t is NonNullable<typeof t> => Boolean(t))
+            const status = localInstance.stepStatuses[index]
+            const isSelected = selectedStepIndex === index
+            const isCompleted = status?.status === "completed" || status?.status === "skipped"
+            const isActive = status?.status === "active"
+            const isLocked = status?.status === "locked"
+            const isLast = index === template.steps.length - 1
+            const hasOutput = !!stepOutputs[step.id]
 
             return (
-              <Fragment>
-                {isViewingCompletedStep && (
-                  <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2.5 mb-4">
-                    <Check className="h-3.5 w-3.5 shrink-0" />
-                    <span>
-                      Completed{" "}
-                      {status.completedAt
-                        ? new Date(status.completedAt).toLocaleString()
-                        : ""}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="ml-auto text-[10px] h-6"
-                      onClick={() => setViewingStepIndex(null)}
+              <Fragment key={step.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isLocked) setSelectedStepIndex(index)
+                  }}
+                  disabled={isLocked}
+                  className={cn(
+                    "w-full max-w-[320px] rounded-xl border-2 p-3.5 text-left transition-all duration-150 relative",
+                    isLocked && "opacity-40 cursor-not-allowed",
+                    isSelected && !isLocked
+                      ? cn(
+                          "shadow-md bg-card",
+                          isCompleted ? "border-emerald-400" : "border-blue-400"
+                        )
+                      : "border-border bg-card hover:shadow-sm",
+                    !isSelected && isCompleted && "border-emerald-200 dark:border-emerald-800/50"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Status circle */}
+                    <div
+                      className={cn(
+                        "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                        isCompleted
+                          ? "bg-emerald-500 text-white"
+                          : isActive
+                            ? cn(config.color, "text-white")
+                            : isLocked
+                              ? "bg-muted border border-border"
+                              : cn(config.lightBg, "border", config.borderColor)
+                      )}
                     >
-                      Back to current step
-                    </Button>
-                  </div>
-                )}
+                      {isCompleted ? (
+                        <Check className="h-4 w-4" />
+                      ) : isLocked ? (
+                        <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                      ) : (
+                        <Icon
+                          className={cn("h-4 w-4", isActive ? "text-white" : config.textColor)}
+                        />
+                      )}
+                    </div>
 
-                <div className="flex items-center gap-3 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          Step {index + 1}
+                        </span>
+                        {isActive && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                        )}
+                      </div>
+                      <p
+                        className={cn(
+                          "text-sm font-medium truncate",
+                          isLocked && "text-muted-foreground"
+                        )}
+                      >
+                        {step.name}
+                      </p>
+                    </div>
+
+                    {/* Output indicator */}
+                    {hasOutput && (
+                      <div
+                        className="h-6 w-6 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0"
+                        title="Output uploaded"
+                      >
+                        <FileText className="h-3 w-3 text-emerald-600" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Completed timestamp */}
+                  {isCompleted && status?.completedAt && (
+                    <p className="text-[9px] text-muted-foreground mt-1.5 ml-12">
+                      Completed{" "}
+                      {new Date(status.completedAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
+                </button>
+
+                {!isLast && (
                   <div
                     className={cn(
-                      "h-8 w-8 rounded-lg flex items-center justify-center border",
+                      "w-px h-4",
+                      isCompleted ? "bg-emerald-300 dark:bg-emerald-700" : "bg-border"
+                    )}
+                  />
+                )}
+              </Fragment>
+            )
+          })}
+
+          {/* Flow end */}
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-2 mt-0">
+            <div
+              className={cn(
+                "h-5 w-5 rounded-full flex items-center justify-center",
+                isWorkflowComplete ? "bg-emerald-500" : "bg-muted border border-border"
+              )}
+            >
+              <Check
+                className={cn(
+                  "h-2.5 w-2.5",
+                  isWorkflowComplete ? "text-white" : "text-muted-foreground"
+                )}
+              />
+            </div>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">
+              {isWorkflowComplete ? "Done!" : "Complete"}
+            </span>
+          </div>
+
+          <div className="h-8" />
+        </div>
+      </div>
+
+      {/* ===== RIGHT PANEL — ACTIVE STEP ===== */}
+      <div className="flex-1 overflow-y-auto">
+        {(() => {
+          const step = template.steps[selectedStepIndex]
+          if (!step) return null
+          const config = STEP_TYPE_CONFIG[step.stepType]
+          const Icon = config.icon
+          const status = localInstance.stepStatuses[selectedStepIndex]
+          const isCompleted = status?.status === "completed" || status?.status === "skipped"
+          const isActive = status?.status === "active"
+          const isLocked = status?.status === "locked"
+          const tools = (step.recommendedToolIds || [])
+            .map((id) => aiToolsWhitelist.find((t) => t.id === id))
+            .filter((t): t is NonNullable<typeof t> => Boolean(t))
+          const stepChecks = checkedItems[step.id] || {}
+
+          return (
+            <div className="p-6 max-w-2xl">
+              {/* Locked state */}
+              {isLocked && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border/50 mb-4">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Complete the previous step to unlock this one
+                  </span>
+                </div>
+              )}
+
+              {/* Completed banner */}
+              {isCompleted && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 mb-4">
+                  <Check className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs text-emerald-700 dark:text-emerald-400">
+                    Completed{" "}
+                    {status?.completedAt
+                      ? new Date(status.completedAt).toLocaleString()
+                      : ""}
+                  </span>
+                </div>
+              )}
+
+              {/* Step header */}
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                Step {selectedStepIndex + 1} of {template.steps.length}
+              </div>
+              <div className="flex items-center gap-3 mb-1">
+                <div
+                  className={cn(
+                    "h-10 w-10 rounded-lg flex items-center justify-center border",
+                    config.lightBg,
+                    config.borderColor
+                  )}
+                >
+                  <Icon className={cn("h-5 w-5", config.textColor)} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">{step.name}</h2>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px]",
+                      config.textColor,
                       config.lightBg,
                       config.borderColor
                     )}
                   >
-                    <Icon
-                      className={cn("h-4 w-4", config.textColor)}
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold">{step.name}</h3>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[10px]",
-                          config.textColor,
-                          config.lightBg,
-                          config.borderColor
-                        )}
+                    {config.label}
+                  </Badge>
+                </div>
+              </div>
+
+              <Separator className="my-5" />
+
+              {/* How it works mini-stepper (only for active step) */}
+              {isActive && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border/30 mb-5">
+                  {[
+                    { num: "1", label: "Launch tool", color: "bg-blue-500" },
+                    { num: "2", label: "Create content", color: "bg-purple-500" },
+                    { num: "3", label: "Upload output", color: "bg-emerald-500" },
+                    { num: "4", label: "Complete", color: "bg-amber-500" },
+                  ].map((item, i) => (
+                    <Fragment key={i}>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "h-5 w-5 rounded-full text-white flex items-center justify-center text-[9px] font-bold",
+                            item.color
+                          )}
+                        >
+                          {item.num}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          {item.label}
+                        </span>
+                      </div>
+                      {i < 3 && (
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                      )}
+                    </Fragment>
+                  ))}
+                </div>
+              )}
+
+              {/* Tools */}
+              {tools.length > 0 && (
+                <div className="mb-5">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Launch Tool
+                  </h3>
+                  <div className="space-y-2">
+                    {tools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => {
+                          window.open(tool.baseUrl, "_blank")
+                          toast.success(
+                            `Launched ${tool.name} — extension tracking active`
+                          )
+                        }}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:border-blue-400 hover:shadow-md transition-all group"
                       >
-                        {config.label}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> ~
-                        {step.estimatedMinutes ?? 0} min
-                      </span>
+                        <span className="text-3xl">{tool.icon}</span>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-semibold group-hover:text-blue-600 transition-colors">
+                            {tool.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {tool.category} · {tool.trackingLevel}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Launch <ExternalLink className="h-3.5 w-3.5" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 px-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] text-muted-foreground">
+                      Extension will track prompts, generations, and downloads
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt guide */}
+              {step.promptTemplate && (
+                <div className="mb-5">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Prompt
+                  </h3>
+                  <div className="relative group">
+                    <Textarea
+                      className="font-mono text-xs min-h-[80px] resize-y bg-muted/30"
+                      value={promptTexts[step.id] ?? step.promptTemplate}
+                      onChange={(e) =>
+                        setPromptTexts((prev) => ({ ...prev, [step.id]: e.target.value }))
+                      }
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute top-2 right-2 h-7 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          promptTexts[step.id] ?? step.promptTemplate ?? ""
+                        )
+                        toast.success("Copied")
+                      }}
+                    >
+                      <Copy className="mr-1 h-3 w-3" /> Copy
+                    </Button>
+                  </div>
+                  {step.tips && step.tips.length > 0 && (
+                    <div
+                      className={cn(
+                        "rounded-lg p-3 border mt-2",
+                        config.lightBg,
+                        config.borderColor
+                      )}
+                    >
+                      <ul className="space-y-1">
+                        {step.tips.map((tip, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-[11px] text-muted-foreground"
+                          >
+                            <span className="mt-1.5 h-1 w-1 rounded-full bg-current shrink-0" />
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Output (active) */}
+              {isActive && (
+                <div className="mb-5">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Output
+                  </h3>
+                  {!stepOutputs[step.id] ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const seed = Math.floor(Math.random() * 1000)
+                        setStepOutputs((prev) => ({
+                          ...prev,
+                          [step.id]: {
+                            thumbnailUrl: `https://picsum.photos/seed/${seed}/800/500`,
+                            fileName: `${step.name
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}-output.png`,
+                            toolUsed: tools[0]?.name || "AI Tool",
+                            capturedPrompts: Math.floor(Math.random() * 5) + 1,
+                            capturedGenerations: Math.floor(Math.random() * 10) + 3,
+                            capturedDownloads: Math.floor(Math.random() * 3) + 1,
+                          },
+                        }))
+                        toast.success("Asset uploaded")
+                      }}
+                      className="w-full border-2 border-dashed rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all group"
+                    >
+                      <Upload className="h-8 w-8 mx-auto text-muted-foreground group-hover:text-blue-500 transition-colors" />
+                      <p className="text-sm font-medium mt-2">Upload Output</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Drop your generated asset or click to browse
+                      </p>
+                    </button>
+                  ) : (
+                    <div className="border rounded-xl overflow-hidden">
+                      <div className="relative h-40 bg-muted">
+                        <img
+                          src={stepOutputs[step.id].thumbnailUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+                          <span className="text-xs text-white font-medium">
+                            {stepOutputs[step.id].fileName}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-6 text-[10px]"
+                            onClick={() => {
+                              const next = { ...stepOutputs }
+                              delete next[step.id]
+                              setStepOutputs(next)
+                            }}
+                          >
+                            Replace
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="p-3 flex items-center gap-4 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />{" "}
+                          {stepOutputs[step.id].capturedPrompts} prompts
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />{" "}
+                          {stepOutputs[step.id].capturedGenerations} generations
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Download className="h-3 w-3" />{" "}
+                          {stepOutputs[step.id].capturedDownloads} downloads
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Output (completed, read-only) */}
+              {isCompleted && stepOutputs[step.id] && (
+                <div className="mb-5">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Output
+                  </h3>
+                  <div className="border rounded-xl overflow-hidden opacity-80">
+                    <div className="relative h-32 bg-muted">
+                      <img
+                        src={stepOutputs[step.id].thumbnailUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span>{stepOutputs[step.id].fileName}</span>
+                      <span>· {stepOutputs[step.id].toolUsed}</span>
                     </div>
                   </div>
                 </div>
-                {step.description && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {step.description}
-                  </p>
-                )}
+              )}
 
-                {/* Tools */}
-                {tools.length > 0 && (
-                  <Collapsible defaultOpen className="mt-6">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Recommended Tools{" "}
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        {tools.map((tool) => (
-                          <Card
-                            key={tool.id}
-                            className="hover:border-blue-400 transition-colors"
-                          >
-                            <CardContent className="p-3 flex flex-col">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xl">{tool.icon}</span>
-                                <div>
-                                  <p className="text-xs font-medium">
-                                    {tool.name}
-                                  </p>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {tool.category}
-                                  </p>
-                                </div>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className="text-[9px] w-fit mb-3"
-                              >
-                                {tool.trackingLevel}
-                              </Badge>
-                              <Button
-                                size="default"
-                                variant="default"
-                                className="w-full mt-auto"
-                                onClick={() => {
-                                  window.open(tool.baseUrl, "_blank")
-                                  toast.success(
-                                    `Launched ${tool.name} — extension will track your session`
-                                  )
-                                }}
-                              >
-                                <ExternalLink className="mr-1.5 h-4 w-4" />
-                                Launch {tool.name} ↗
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 mt-3 p-2.5 rounded-lg bg-muted/50 border border-border/50">
-                        <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="text-[10px] text-muted-foreground">
-                          Browser extension will automatically capture prompts,
-                          generations, and downloads
-                        </span>
-                      </div>
-                      {!isViewingCompletedStep && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50 mt-4">
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold">1</span>
-                            Launch tool
-                          </div>
-                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span className="h-5 w-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-[9px] font-bold">2</span>
-                            Create content
-                          </div>
-                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">3</span>
-                            Upload output
-                          </div>
-                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span className="h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold">4</span>
-                            Complete step
-                          </div>
-                        </div>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-
-                {/* Prompt guide */}
-                <Collapsible
-                  defaultOpen={!!step.promptTemplate}
-                  className="mt-4"
-                >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Prompt Guide <ChevronDown className="h-3.5 w-3.5" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3 space-y-3">
-                    {step.promptTemplate && (
-                      <div className="relative">
-                        <Textarea
-                          className="font-mono text-xs min-h-[80px] resize-y"
-                          defaultValue={step.promptTemplate}
-                        />
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-1.5 right-1.5 h-6 w-6"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            navigator.clipboard.writeText(
-                              step.promptTemplate ?? ""
-                            )
-                            toast.success("Prompt copied")
-                          }}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                    {step.tips && step.tips.length > 0 && (
-                      <div
-                        className={cn(
-                          "rounded-lg p-3 border",
-                          config.lightBg,
-                          config.borderColor
-                        )}
-                      >
-                        <p className="text-xs font-semibold mb-1.5">Tips</p>
-                        <ul className="list-disc list-inside text-xs text-muted-foreground space-y-0.5">
-                          {step.tips.map((tip, i) => (
-                            <li key={i}>{tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Checklist */}
-                {step.acceptanceCriteria && step.acceptanceCriteria.length > 0 && (
-                  <Collapsible
-                    defaultOpen={!!step.acceptanceCriteria?.length}
-                    className="mt-4"
-                  >
-                    <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {/* Checklist */}
+              {step.acceptanceCriteria &&
+                step.acceptanceCriteria.length > 0 &&
+                !isLocked && (
+                  <div className="mb-5">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                       Checklist (
-                      {Object.values(checkedItems).filter(Boolean).length}/
-                      {step.acceptanceCriteria?.length ?? 0}){" "}
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3 space-y-1.5">
-                      {step.acceptanceCriteria.map((criteria, i) => (
+                      {Object.values(stepChecks).filter(Boolean).length}/
+                      {step.acceptanceCriteria.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {step.acceptanceCriteria.map((c, i) => (
                         <label
                           key={i}
-                          className="flex items-center gap-2.5 py-1 cursor-pointer group"
+                          className="flex items-center gap-2.5 cursor-pointer group"
                         >
                           <input
                             type="checkbox"
-                            checked={!!checkedItems[i]}
+                            checked={!!stepChecks[i]}
                             onChange={() =>
                               setCheckedItems((prev) => ({
                                 ...prev,
-                                [i]: !prev[i],
+                                [step.id]: {
+                                  ...(prev[step.id] || {}),
+                                  [i]: !prev[step.id]?.[i],
+                                },
                               }))
                             }
+                            disabled={isCompleted}
                             className="rounded border-gray-300 h-3.5 w-3.5"
                           />
                           <span
                             className={cn(
                               "text-xs",
-                              checkedItems[i] &&
-                                "line-through text-muted-foreground"
+                              stepChecks[i] && "line-through text-muted-foreground"
                             )}
                           >
-                            {criteria}
+                            {c}
                           </span>
                         </label>
                       ))}
-                    </CollapsibleContent>
-                  </Collapsible>
+                    </div>
+                  </div>
                 )}
 
-                {/* Output & Evidence — for active step (editable) or completed step (read-only) */}
-                {(() => {
-                  const output = stepOutputs[step.id]
-                  const toolNameForStep =
-                    (step.recommendedToolIds ?? [])
-                      .map((id) => aiToolsWhitelist.find((t) => t.id === id))
-                      .find((t): t is NonNullable<typeof t> => Boolean(t))
-                      ?.name ?? "Midjourney"
-                  const prompts = output?.capturedPrompts ?? 3
-                  const generations = output?.capturedGenerations ?? 8
-                  const downloads = output?.capturedDownloads ?? 2
-                  return (
-                    <div className="mt-6 space-y-3">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Output & Evidence
-                      </p>
-                      {/* Extension Capture Status */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <div className="flex-1">
-                          <p className="text-xs font-medium">
-                            Browser Extension Active
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            Tracking {toolNameForStep} session • {prompts}{" "}
-                            prompts • {generations} generations • {downloads}{" "}
-                            downloads captured
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-[9px]">
-                          Live
-                        </Badge>
-                      </div>
-                      {/* Upload area or preview */}
-                      {!output?.thumbnailUrl ? (
-                        !isViewingCompletedStep ? (
-                          <button
-                            type="button"
-                            onClick={() => handleMockUpload(step.id)}
-                            className="w-full border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group"
-                          >
-                            <Upload className="h-8 w-8 mx-auto text-muted-foreground group-hover:text-blue-500 transition-colors" />
-                            <p className="text-sm font-medium mt-2">
-                              Upload Output
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Drop your generated asset here or click to browse
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-2">
-                              PNG, JPG, MP4, MP3, WAV up to 50MB
-                            </p>
-                          </button>
-                        ) : null
-                      ) : (
-                        <div className="border rounded-xl overflow-hidden">
-                          <div className="relative bg-muted h-40 flex items-center justify-center">
-                            <img
-                              src={output.thumbnailUrl}
-                              alt="Output"
-                              className="h-full w-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                              <span className="text-xs text-white font-medium">
-                                {output.fileName}
-                              </span>
-                              {!isViewingCompletedStep && (
-                                <div className="flex gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="h-6 text-[10px]"
-                                    onClick={() => toast.info("Replace file")}
-                                  >
-                                    Replace
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="h-6 text-[10px]"
-                                    onClick={() => {
-                                      const newOutputs = { ...stepOutputs }
-                                      delete newOutputs[step.id]
-                                      setStepOutputs(newOutputs)
-                                    }}
-                                  >
-                                    Remove
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="p-3 space-y-2">
-                            <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <FileText className="h-3 w-3" />{" "}
-                                {output.capturedPrompts ?? 3} prompts captured
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Sparkles className="h-3 w-3" />{" "}
-                                {output.capturedGenerations ?? 8} generations
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Download className="h-3 w-3" />{" "}
-                                {output.capturedDownloads ?? 2} downloads
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[9px]">
-                                {output.toolUsed ? `🎨 ${output.toolUsed}` : "🎨 Midjourney"}
-                              </Badge>
-                              <Badge variant="outline" className="text-[9px]">
-                                Session: ext-sid-a8f3
-                              </Badge>
-                            </div>
-                            <Link
-                              href="/creative/assets/vg-1/v/3"
-                              className="text-[10px] text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              View in Asset Library{" "}
-                              <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-
-                {/* Action buttons — only for active step */}
-                {!isViewingCompletedStep && (
-                  <div className="mt-8 border-t pt-4 flex items-center gap-3">
-                    {currentStepIndex > 0 && (
+              {/* Action buttons (active) */}
+              {isActive && (
+                <>
+                  <Separator className="my-5" />
+                  <div className="flex items-center gap-3">
+                    {selectedStepIndex > 0 && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={goToPreviousStep}
+                        className="text-xs"
+                        onClick={() => setSelectedStepIndex((prev) => prev - 1)}
                       >
-                        <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Previous
+                        ← Previous
                       </Button>
                     )}
                     <div className="flex-1" />
@@ -737,22 +715,52 @@ export function WorkflowExecutor({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleSkipStep}
+                        className="text-xs"
+                        onClick={() => handleSkipStep()}
                       >
-                        <SkipForward className="mr-1.5 h-3.5 w-3.5" /> Skip
+                        Skip
                       </Button>
                     )}
-                    <Button size="sm" onClick={handleCompleteStep}>
-                      {isLastStep ? "Complete Workflow" : "Complete Step"}
+                    <Button size="sm" onClick={() => handleCompleteStep()}>
+                      {selectedStepIndex === template.steps.length - 1
+                        ? "Complete Workflow"
+                        : "Complete Step"}
                       <Check className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   </div>
-                )}
-              </Fragment>
-            )
-          })()}
-        </div>
+                </>
+              )}
+
+              {/* Navigation (completed step) */}
+              {isCompleted && !isActive && (
+                <>
+                  <Separator className="my-5" />
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      disabled={selectedStepIndex === 0}
+                      onClick={() => setSelectedStepIndex((prev) => prev - 1)}
+                    >
+                      ← Previous
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      disabled={selectedStepIndex === template.steps.length - 1}
+                      onClick={() => setSelectedStepIndex((prev) => prev + 1)}
+                    >
+                      Next →
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )
+        })()}
       </div>
-    </Fragment>
+    </div>
   )
 }
