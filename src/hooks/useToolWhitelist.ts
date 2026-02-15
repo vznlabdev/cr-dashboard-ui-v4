@@ -57,7 +57,7 @@ export function useToolWhitelist(): UseToolWhitelistReturn {
 
   const canUseTool = useCallback((toolId: string) => {
     const tool = MOCK_TOOL_WHITELIST.find((t) => t.id === toolId);
-    return tool?.approvalStatus === "approved" ?? false;
+    return tool?.approvalStatus === "approved";
   }, []);
 
   const requestToolAccess = useCallback((toolId: string) => {
