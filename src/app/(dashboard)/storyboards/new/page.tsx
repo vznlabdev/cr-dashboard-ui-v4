@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStoryboard } from "@/hooks/useStoryboard";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -17,7 +17,7 @@ const VALID_FORMATS: StoryboardFormat[] = [
   "custom",
 ];
 
-export default function NewStoryboardPage() {
+function NewStoryboardRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { createStoryboard } = useStoryboard();
@@ -47,5 +47,19 @@ export default function NewStoryboardPage() {
     <PageContainer>
       <p className="text-sm text-muted-foreground">Creating storyboard…</p>
     </PageContainer>
+  );
+}
+
+export default function NewStoryboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageContainer>
+          <p className="text-sm text-muted-foreground">Creating storyboard…</p>
+        </PageContainer>
+      }
+    >
+      <NewStoryboardRedirect />
+    </Suspense>
   );
 }
