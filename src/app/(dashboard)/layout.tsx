@@ -6,6 +6,7 @@ import { AccountProvider } from "@/contexts/account-context";
 import { CreatorsProvider } from "@/contexts/creators-context";
 import { CreatorAccountProvider } from "@/contexts/creator-account-context";
 import { ContractsProvider } from "@/contexts/contracts-context";
+import { SearchShortcutsProvider } from "@/contexts/search-shortcuts-context";
 import { SetupProvider } from "@/lib/contexts/setup-context";
 import { InboxProvider } from "@/lib/contexts/inbox-context";
 import { CopyrightCreditsProvider } from "@/lib/contexts/copyright-credits-context";
@@ -30,7 +31,9 @@ export default function DashboardLayout({
                   <CreatorsProvider>
                     <ContractsProvider>
                       <CreatorAccountProvider>
-                        <MainLayout>{children}</MainLayout>
+                        <SearchShortcutsProvider>
+                          <MainLayout>{children}</MainLayout>
+                        </SearchShortcutsProvider>
                       </CreatorAccountProvider>
                     </ContractsProvider>
                   </CreatorsProvider>

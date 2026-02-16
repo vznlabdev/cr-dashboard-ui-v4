@@ -745,6 +745,12 @@ export default function AssetsPage() {
               autoFocus
             />
           </div>
+          <Link
+            href={`/search?type=asset${searchQuery.trim() ? `&q=${encodeURIComponent(searchQuery.trim())}` : ""}`}
+            className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap"
+          >
+            Search in all →
+          </Link>
           <Button variant="ghost" size="sm" onClick={() => setSearchOpen(false)}>
             Cancel
           </Button>
@@ -753,7 +759,7 @@ export default function AssetsPage() {
 
       {/* Bulk Actions Bar - Shopify Style */}
       {selectionCount > 0 && !selectAllPages ? (
-        <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
+        <div className="sticky top-12 z-20 flex items-center justify-between py-2 border-b bg-background">
           <div className="flex items-center gap-2">
             {/* "Showing X selected" dropdown */}
             <DropdownMenu>
@@ -811,7 +817,7 @@ export default function AssetsPage() {
 
       {/* Bulk Actions Bar when all pages selected */}
       {selectAllPages && (
-        <div className="sticky top-0 z-20 flex items-center justify-between py-2 border-b bg-background">
+        <div className="sticky top-12 z-20 flex items-center justify-between py-2 border-b bg-background">
           <div className="flex items-center gap-2">
             {/* "All X selected" dropdown */}
             <DropdownMenu>

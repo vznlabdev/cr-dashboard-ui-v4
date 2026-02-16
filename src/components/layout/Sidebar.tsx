@@ -29,6 +29,7 @@ import {
   Archive,
   MapPin,
   AlertTriangle,
+  Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -56,9 +57,10 @@ interface NavSection {
 
 // Base navigation sections (will be modified dynamically for setup)
 const baseNavSections: NavSection[] = [
-  // Top nav (no label) — Inbox badge will be dynamically set; order: Inbox, Tasks, Workflows, Projects
+  // Top nav (no label) — Search first, then Inbox, Tasks, Workflows, Projects
   {
     items: [
+      { title: "Search",     href: "/search",     icon: Search },
       { title: "Inbox",      href: "/inbox",      icon: Inbox,       badge: 0 },
       { title: "Tasks",      href: "/tasks",      icon: Ticket },
       { title: "Workflows",  href: "/workflows",  icon: GitBranch },

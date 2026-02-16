@@ -249,7 +249,7 @@ export default function WorkflowsPage() {
       {activeTab === "my-workflows" && (
         <div className="space-y-4">
           {/* Status filter pills */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {[
               { value: "all", label: "All", count: MOCK_ACTIVE_WORKFLOWS.length },
               {
@@ -282,6 +282,12 @@ export default function WorkflowsPage() {
                 {f.label} ({f.count})
               </button>
             ))}
+            <Link
+              href="/search?type=workflow"
+              className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap"
+            >
+              Search in all →
+            </Link>
           </div>
 
           {/* Workflow list */}

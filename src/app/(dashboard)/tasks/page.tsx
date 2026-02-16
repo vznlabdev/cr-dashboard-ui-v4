@@ -21,6 +21,7 @@ import type { Task } from "@/types"
 import { Search, Zap, Clock, X, Filter, ChevronDown, Paperclip, ArrowUpDown, ArrowUp, ArrowDown, Plus, Check, Minus, Rocket, Bot, Pencil, User, Calendar, MoreVertical, Trash2, UserX, List, AlertCircle, GitBranch, Globe, MapPin, AlertTriangle } from "lucide-react"
 import { US_STATES, US_STATE_PRESETS, INTERNATIONAL_MARKETS, HIGH_RISK_STATES, getHighRiskCount } from "@/lib/distribution-data"
 import { useState, useMemo, useRef, useEffect, Suspense } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -603,8 +604,8 @@ function UnifiedTasksPageContent() {
 
       {/* Compact Header with Search and Sort */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
+        <div className="flex-1 max-w-md flex items-center gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search tasks..."
@@ -613,6 +614,12 @@ function UnifiedTasksPageContent() {
               className="pl-9 h-9"
             />
           </div>
+          <Link
+            href={`/search?type=task${searchQuery.trim() ? `&q=${encodeURIComponent(searchQuery.trim())}` : ""}`}
+            className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0"
+          >
+            Search in all →
+          </Link>
         </div>
 
         {/* Sort and Filter Group */}

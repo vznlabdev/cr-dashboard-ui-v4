@@ -299,6 +299,13 @@ export default function ProjectsPage() {
           </SelectContent>
         </Select>
 
+        <Link
+          href="/search?type=project"
+          className="text-sm text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0 flex items-center"
+        >
+          Search in all →
+        </Link>
+
         {(complianceFilter !== "all" || statusFilter !== "all" || brandFilter !== "all" || leadFilter !== "all") && (
           <Button
             variant="ghost"
