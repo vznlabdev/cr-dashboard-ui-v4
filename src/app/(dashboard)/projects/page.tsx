@@ -80,10 +80,8 @@ const TEAM_MEMBERS = [
   { id: 'zlane', name: 'zlane', fullName: 'Zlane', avatarColor: '#10b981' },
 ]
 
-// Legal team: assigned attorneys and mock legal fields per project
-const ASSIGNED_ATTORNEYS = ["Sarah Chen", "Michael Torres", "Jennifer Walsh", "David Kim", "Emily Ross"]
+// Mock legal fields per project (compliance status, last review date)
 type ComplianceStatus = "Pending Review" | "Approved" | "Flagged" | "Rejected"
-type NILPStatus = "Cleared" | "Pending" | "Not Required" | "Under Review"
 
 function getLegalFields(project: Project & { tiv?: number }) {
   const statusMap: Record<string, ComplianceStatus> = {
@@ -93,13 +91,6 @@ function getLegalFields(project: Project & { tiv?: number }) {
     "4": "Rejected",
     "5": "Approved",
   }
-  const nilpMap: Record<string, NILPStatus> = {
-    "1": "Under Review",
-    "2": "Pending",
-    "3": "Cleared",
-    "4": "Not Required",
-    "5": "Cleared",
-  }
   const lastReviewMap: Record<string, string> = {
     "1": "Feb 1, 2025",
     "2": "Jan 28, 2025",
@@ -107,12 +98,9 @@ function getLegalFields(project: Project & { tiv?: number }) {
     "4": "Jan 10, 2025",
     "5": "Feb 5, 2025",
   }
-  const attorneyIndex = parseInt(project.id, 10) % ASSIGNED_ATTORNEYS.length
   return {
     complianceStatus: statusMap[project.id] ?? (project.status === "Approved" ? "Approved" : "Pending Review"),
-    nilpRightsStatus: nilpMap[project.id] ?? "Pending",
     lastReviewDate: lastReviewMap[project.id] ?? "—",
-    assignedAttorney: ASSIGNED_ATTORNEYS[attorneyIndex] ?? ASSIGNED_ATTORNEYS[0],
   }
 }
 
@@ -204,7 +192,7 @@ export default function ProjectsPage() {
           onClick={() => setNewProjectDialogOpen(true)}
         >
           <Plus className="mr-2 h-4 w-4" />
-          New Legal Review
+          New Project
         </Button>
       </div>
 
@@ -398,16 +386,14 @@ export default function ProjectsPage() {
                   <TableHead className="h-11 text-xs font-medium">Client / Brand</TableHead>
                   <TableHead className="h-11 text-xs font-medium">Compliance Status</TableHead>
                   <TableHead className="h-11 text-xs font-medium">Risk Level</TableHead>
-                  <TableHead className="h-11 text-xs font-medium">NILP Rights Status</TableHead>
                   <TableHead className="h-11 text-xs font-medium">Last Review Date</TableHead>
-                  <TableHead className="h-11 text-xs font-medium">Assigned Attorney</TableHead>
                   <TableHead className="h-11 w-[80px] text-xs font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <FolderKanban className="h-8 w-8 opacity-50" />
                         <p>No projects found</p>
@@ -520,28 +506,12 @@ export default function ProjectsPage() {
                         </Badge>
                       </TableCell>
 
-                      {/* NILP Rights Status */}
-                      <TableCell 
-                        className="py-2 text-xs cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}`)}
-                      >
-                        {legal.nilpRightsStatus}
-                      </TableCell>
-
                       {/* Last Review Date */}
                       <TableCell 
                         className="py-2 text-xs text-muted-foreground cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         {legal.lastReviewDate}
-                      </TableCell>
-
-                      {/* Assigned Attorney */}
-                      <TableCell 
-                        className="py-2 text-xs cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}`)}
-                      >
-                        {legal.assignedAttorney}
                       </TableCell>
 
                       <TableCell className="py-2 text-right" onClick={(e) => e.stopPropagation()}>
