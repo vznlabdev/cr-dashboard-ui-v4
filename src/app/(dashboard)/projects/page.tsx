@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
@@ -196,40 +195,20 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Legal Stats Row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total cases under review</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-semibold">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Pending Review").length}</span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Flagged for legal issues</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-semibold text-amber-600 dark:text-amber-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Flagged").length}</span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Approved cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Approved").length}</span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Rejected / Blocked</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-semibold text-destructive">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Rejected").length}</span>
-          </CardContent>
-        </Card>
+      {/* Legal Stats - compact single row */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 py-2 text-xs">
+        <span className="text-muted-foreground">
+          Under review <span className="font-semibold text-foreground">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Pending Review").length}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Flagged <span className="font-semibold text-amber-600 dark:text-amber-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Flagged").length}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Approved <span className="font-semibold text-emerald-600 dark:text-emerald-400">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Approved").length}</span>
+        </span>
+        <span className="text-muted-foreground">
+          Rejected / Blocked <span className="font-semibold text-destructive">{projectsWithTIV.filter(p => getLegalFields(p).complianceStatus === "Rejected").length}</span>
+        </span>
       </div>
 
       {/* Filters - Linear Style */}

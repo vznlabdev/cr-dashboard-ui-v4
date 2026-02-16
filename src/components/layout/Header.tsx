@@ -72,7 +72,7 @@ export function Header() {
                   <AvatarImage src="https://github.com/shadcn.png" alt="User" />
                   <AvatarFallback>LT</AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline text-sm font-medium">Legal Team</span>
+                <span className="hidden sm:inline text-xs font-medium">Legal Team</span>
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
               </Button>
             </DropdownMenuTrigger>
