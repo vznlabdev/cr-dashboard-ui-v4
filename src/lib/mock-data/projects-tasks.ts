@@ -286,6 +286,8 @@ export const mockTasks: Task[] = [
       ]
     },
     workflowTemplateId: 'wf-social-images',
+    storyboardId: 'sb-nike',
+    storyboardFrameId: 'nike-f3',
   },
   {
     id: 'task-2',

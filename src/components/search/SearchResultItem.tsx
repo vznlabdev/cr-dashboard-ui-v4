@@ -6,6 +6,7 @@ import {
   FolderKanban,
   CheckSquare,
   GitBranch,
+  Clapperboard,
   Palette,
   User,
   Users,
@@ -24,6 +25,7 @@ const ENTITY_ICONS: Record<
   project: { Icon: FolderKanban, color: "text-purple-600" },
   task: { Icon: CheckSquare, color: "text-green-600" },
   workflow: { Icon: GitBranch, color: "text-orange-600" },
+  storyboard: { Icon: Clapperboard, color: "text-violet-600" },
   brand: { Icon: Palette, color: "text-pink-600" },
   talent: { Icon: User, color: "text-indigo-600" },
   team_member: { Icon: Users, color: "text-gray-600" },
@@ -204,6 +206,15 @@ function getSubtitle(result: SearchResult): string {
       ].filter(Boolean).join(" · ");
     case "workflow":
       return [result.subtitle, m.status, date].filter(Boolean).join(" · ");
+    case "storyboard":
+      return [
+        m.storyboardFormat ?? null,
+        m.frameCount != null ? `${m.frameCount} frames` : null,
+        m.totalDurationSeconds != null ? `~${m.totalDurationSeconds}s` : null,
+        m.project ?? m.brand ?? result.subtitle,
+        m.status,
+        date,
+      ].filter(Boolean).join(" · ");
     case "brand":
       return [result.description, date].filter(Boolean).join(" · ");
     case "talent":

@@ -11,6 +11,7 @@ export type SearchEntityType =
   | "project"
   | "task"
   | "workflow"
+  | "storyboard"
   | "brand"
   | "talent"
   | "team_member"
@@ -78,6 +79,14 @@ export interface SearchResultMetadata {
   riskLevel?: "low" | "moderate" | "high" | "critical";
   /** Insurance: policy number. */
   policyNumber?: string;
+  /** Storyboard: format (e.g. Commercial, Short Form). */
+  storyboardFormat?: string;
+  /** Storyboard: frame count. */
+  frameCount?: number;
+  /** Storyboard: total duration in seconds. */
+  totalDurationSeconds?: number;
+  /** Storyboard: project name. */
+  project?: string;
 }
 
 /** A highlighted snippet for a matched field. */

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutGrid, ListTodo } from "lucide-react"
+import { LayoutGrid, ListTodo, Clapperboard } from "lucide-react"
 
 interface ProjectTabsProps {
   projectId: string
@@ -24,7 +24,13 @@ export function ProjectTabs({ projectId, rightContent }: ProjectTabsProps) {
       name: "Tasks",
       href: `/projects/${projectId}/tasks`,
       icon: ListTodo,
-      isActive: pathname.includes(`/projects/${projectId}/tasks`),
+      isActive: pathname.includes(`/projects/${projectId}/tasks`) && !pathname.includes("/storyboards"),
+    },
+    {
+      name: "Storyboards",
+      href: `/projects/${projectId}/storyboards`,
+      icon: Clapperboard,
+      isActive: pathname.includes(`/projects/${projectId}/storyboards`),
     },
   ]
 

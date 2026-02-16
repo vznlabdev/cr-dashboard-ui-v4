@@ -29,6 +29,8 @@ import {
   Archive,
   MapPin,
   AlertTriangle,
+  Search,
+  Clapperboard,
 } from "lucide-react"
 import {
   Sheet,
@@ -64,56 +66,30 @@ interface NavSection {
 
 // Base navigation sections (same as Sidebar.tsx)
 const baseNavSections: NavSection[] = [
-  // Personal section (Inbox badge will be dynamically set); order: Inbox, Tasks, Workflows, Projects
+  // Top section: Search, Inbox, Projects, Tasks, Workflows
   {
     items: [
+      { title: "Search", href: "/search", icon: Search },
       {
         title: "Inbox",
         href: "/inbox",
         icon: Inbox,
         badge: 0, // Will be replaced with actual unreadCount
       },
-      {
-        title: "Tasks",
-        href: "/tasks",
-        icon: Ticket,
-      },
-      {
-        title: "Workflows",
-        href: "/workflows",
-        icon: GitBranch,
-      },
+      { title: "Projects", href: "/projects", icon: FolderKanban },
+      { title: "Tasks", href: "/tasks", icon: Ticket },
+      { title: "Workflows", href: "/workflows", icon: GitBranch },
     ]
   },
   // Workspace section
   {
     label: "Workspace",
     items: [
-      {
-        title: "Projects",
-        href: "/projects",
-        icon: FolderKanban,
-      },
-      {
-        title: "Brands",
-        href: "/creative/brands",
-        icon: Palette,
-      },
-      {
-        title: "Assets",
-        href: "/creative/assets",
-        icon: FileImage,
-      },
-      {
-        title: "Talent Rights",
-        href: "/creative/talent-rights",
-        icon: User,
-      },
-      {
-        title: "Team",
-        href: "/creative/team",
-        icon: Users,
-      },
+      { title: "Storyboards", href: "/storyboards", icon: Clapperboard },
+      { title: "Assets", href: "/creative/assets", icon: FileImage },
+      { title: "Talent Rights", href: "/creative/talent-rights", icon: User },
+      { title: "Brands", href: "/creative/brands", icon: Palette },
+      { title: "Team", href: "/creative/team", icon: Users },
     ]
   },
   // Compliance section

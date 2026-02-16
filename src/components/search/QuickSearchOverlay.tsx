@@ -29,6 +29,7 @@ const TYPE_ORDER: SearchEntityType[] = [
   "project",
   "task",
   "workflow",
+  "storyboard",
   "brand",
   "talent",
   "team_member",
@@ -42,6 +43,7 @@ const TYPE_LABELS: Record<SearchEntityType, string> = {
   project: "Projects",
   task: "Tasks",
   workflow: "Workflows",
+  storyboard: "Storyboards",
   brand: "Brands",
   talent: "Talent",
   team_member: "Team",
@@ -94,6 +96,13 @@ function resultSubtitle(r: SearchResult): string {
     return [m.status, m.assetCount != null ? `${m.assetCount} assets` : null].filter(Boolean).join(" · ");
   if (r.entityType === "contract")
     return [m.status, m.contractValue != null ? `$${(m.contractValue / 1000).toFixed(0)}K` : null].filter(Boolean).join(" · ");
+  if (r.entityType === "storyboard")
+    return [
+      m.storyboardFormat,
+      m.frameCount != null ? `${m.frameCount} frames` : null,
+      m.totalDurationSeconds != null ? `~${m.totalDurationSeconds}s` : null,
+      m.project ?? m.brand ?? r.subtitle,
+    ].filter(Boolean).join(" · ");
   return [m.status, m.brand ?? r.subtitle].filter(Boolean).join(" · ");
 }
 

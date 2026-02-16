@@ -30,6 +30,7 @@ import {
   MapPin,
   AlertTriangle,
   Search,
+  Clapperboard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -57,20 +58,21 @@ interface NavSection {
 
 // Base navigation sections (will be modified dynamically for setup)
 const baseNavSections: NavSection[] = [
-  // Top nav (no label) — Search first, then Inbox, Tasks, Workflows, Projects
+  // Top nav (no label) — Search, Inbox, Tasks, Workflows, Projects
   {
     items: [
       { title: "Search",     href: "/search",     icon: Search },
       { title: "Inbox",      href: "/inbox",      icon: Inbox,       badge: 0 },
+      { title: "Projects",   href: "/projects",   icon: FolderKanban },
       { title: "Tasks",      href: "/tasks",      icon: Ticket },
       { title: "Workflows",  href: "/workflows",  icon: GitBranch },
-      { title: "Projects",   href: "/projects",   icon: FolderKanban },
     ]
   },
   // Workspace section
   {
     label: "Workspace",
     items: [
+      { title: "Storyboards", href: "/storyboards", icon: Clapperboard },
       { title: "Assets",         href: "/creative/assets",        icon: FileImage },
       { title: "Talent Rights",   href: "/creative/talent-rights",  icon: User },
       { title: "Brands",         href: "/creative/brands",         icon: Palette },
@@ -316,6 +318,12 @@ export function Sidebar() {
             <>
               {navSections.map((section, sectionIndex) => (
                 <div key={sectionIndex}>
+                  {/* Section Label (like MobileNav) */}
+                  {section.label && !collapsed && (
+                    <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {section.label}
+                    </div>
+                  )}
                   {/* Section Items */}
                   <div className="space-y-px">
                     {section.items.map((item) => {

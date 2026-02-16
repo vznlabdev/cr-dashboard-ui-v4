@@ -11,6 +11,7 @@ const ALL_ENTITY_TYPES: SearchEntityType[] = [
   "project",
   "task",
   "workflow",
+  "storyboard",
   "brand",
   "talent",
   "team_member",

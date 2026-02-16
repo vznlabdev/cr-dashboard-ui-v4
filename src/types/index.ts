@@ -151,6 +151,9 @@ export interface Task {
   // Workflows module
   workflowTemplateId?: string
   workflowInstance?: WorkflowInstance
+  // Storyboard link (task produces content for this frame)
+  storyboardId?: string
+  storyboardFrameId?: string
 }
 
 export interface Notification {

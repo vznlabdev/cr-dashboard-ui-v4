@@ -94,6 +94,8 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { TaskComments, type TaskComment, type TeamMember as TaskTeamMember } from "@/components/task/TaskComments"
+import { StoryboardContext } from "@/components/tasks/StoryboardContext"
+import { useStoryboard } from "@/hooks/useStoryboard"
 
 // Team members for @mentions
 const TEAM_MEMBERS: TaskTeamMember[] = [
@@ -151,6 +153,7 @@ export default function TaskDetailPage() {
   
   const [task, setTask] = useState<Task | null>(null)
   const [taskGroup, setTaskGroup] = useState<any>(null)
+  const { getStoryboard } = useStoryboard()
   const [comments, setComments] = useState<TaskComment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [workflowTemplate, setWorkflowTemplate] =
@@ -1577,6 +1580,24 @@ export default function TaskDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Storyboard context (when this task is linked to a storyboard frame) */}
+          {task?.storyboardId && task?.storyboardFrameId && (() => {
+            const storyboard = getStoryboard(task.storyboardId)
+            if (!storyboard) return null
+            const orderedFrames = [...storyboard.frames].sort((a, b) => a.order - b.order)
+            const frame = orderedFrames.find((f) => f.id === task.storyboardFrameId)
+            if (!frame) return null
+            return (
+              <StoryboardContext
+                storyboardId={storyboard.id}
+                storyboardTitle={storyboard.title}
+                frameId={frame.id}
+                frame={frame}
+                orderedFrames={orderedFrames}
+              />
+            )
+          })()}
+
           {/* Description */}
           <Card>
             <CardHeader>
