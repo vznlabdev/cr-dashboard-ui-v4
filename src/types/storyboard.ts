@@ -41,6 +41,7 @@ export type CameraMovement =
   | "crane_down"
   | "handheld"
   | "orbit"
+  | "tracking"
   | "none";
 
 // --- Frame ---

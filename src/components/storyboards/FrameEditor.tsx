@@ -77,6 +77,7 @@ const CAMERA_OPTIONS: { value: CameraMovement; label: string }[] = [
   { value: "dolly_out", label: "Dolly out" },
   { value: "handheld", label: "Handheld" },
   { value: "orbit", label: "Orbit" },
+  { value: "tracking", label: "Tracking" },
   { value: "none", label: "None" },
 ];
 
