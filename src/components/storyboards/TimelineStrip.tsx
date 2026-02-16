@@ -123,6 +123,7 @@ export function TimelineStrip({
   showAudioLane = true,
 }: TimelineStripProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const justDraggedIdRef = useRef<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoveredGapAfter, setHoveredGapAfter] = useState<string | "__start" | "__end" | null>(null);
   const GAP_WIDTH = 24;
@@ -176,8 +177,12 @@ export function TimelineStrip({
 
   const handleDragEnd = useCallback(
     (e: DragEndEvent) => {
-      setActiveId(null);
       const { active, over } = e;
+      setActiveId(null);
+      justDraggedIdRef.current = active.id as string;
+      setTimeout(() => {
+        justDraggedIdRef.current = null;
+      }, 100);
       if (!over || active.id === over.id) return;
       const overId = over.id as string;
       const newIndex = orderedFrames.findIndex((f) => f.id === overId);
@@ -271,7 +276,10 @@ export function TimelineStrip({
                       index={i}
                       cardWidth={cardWidth}
                       isSelected={selectedFrameId === frame.id}
-                      onSelect={() => onSelectFrame(frame.id)}
+                      onSelect={() => {
+                        if (justDraggedIdRef.current === frame.id) return;
+                        onSelectFrame(frame.id);
+                      }}
                       onDelete={onDeleteFrame}
                     />
                   </div>
@@ -555,6 +563,10 @@ function SortableFrameCard({
         data-frame-id={frame.id}
         {...attributes}
         {...listeners}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
         className={cn(
           "rounded-lg border overflow-hidden cursor-grab active:cursor-grabbing",
           "transition-all duration-150",
