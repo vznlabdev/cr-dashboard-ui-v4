@@ -17,6 +17,7 @@ const ENTITY_LABELS: Record<SearchEntityType, string> = {
   project: "Project",
   task: "Task",
   workflow: "Workflow",
+  storyboard: "Storyboard",
   brand: "Brand",
   talent: "Talent",
   team_member: "Team",
