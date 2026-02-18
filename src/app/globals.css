@@ -44,6 +44,8 @@
 }
 
 :root {
+  --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, monospace;
   --radius: 0.5rem;
   /* Light theme - Modern blue-purple palette */
   --background: oklch(0.99 0.002 280); /* Clean white with subtle blue tint */
